@@ -9,7 +9,7 @@ const Index = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
   const [clubsCount, setClubsCount] = useState(0);
 
   const { scrollY } = useScroll();
