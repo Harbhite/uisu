@@ -94,6 +94,7 @@ export type Database = {
           founded: string | null
           icon_name: string | null
           id: string
+          image_url: string | null
           motto: string | null
           name: string
           president: string | null
@@ -109,6 +110,7 @@ export type Database = {
           founded?: string | null
           icon_name?: string | null
           id?: string
+          image_url?: string | null
           motto?: string | null
           name: string
           president?: string | null
@@ -124,6 +126,7 @@ export type Database = {
           founded?: string | null
           icon_name?: string | null
           id?: string
+          image_url?: string | null
           motto?: string | null
           name?: string
           president?: string | null
