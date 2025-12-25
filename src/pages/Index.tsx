@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Menu, X, ChevronDown, Users, Building2, BookOpen, Calendar, MapPin, Award } from "lucide-react";
+import { Menu, X, Users, Building2, BookOpen, Award, Star, ArrowRight, MapPin, Calendar, FileText, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
-import { AnnouncementsPage } from "@/components/Announcements";
-import { TimelineDiagram, StructureDiagram, PopulationChart } from "@/components/Diagrams";
+import { TimelineDiagram } from "@/components/Diagrams";
 import { TriviaSection } from "@/components/Trivia";
 import { CampusMap } from "@/components/CampusMap";
 import { HeroScene } from "@/components/QuantumScene";
@@ -35,6 +34,41 @@ const Index = () => {
     { icon: Award, label: "Years", value: "40+" },
   ];
 
+  const quickLinks = [
+    { 
+      title: "Governance", 
+      subtitle: "Structure & Leadership",
+      desc: "Explore the constitutional framework and leadership hierarchy of the union.", 
+      href: "/governance", 
+      icon: Building2,
+      color: "bg-ui-blue"
+    },
+    { 
+      title: "Past Leaders", 
+      subtitle: "Hall of Fame",
+      desc: "Celebrate the presidents and executives who shaped our history.", 
+      href: "/past-leaders", 
+      icon: Award,
+      color: "bg-nobel-gold"
+    },
+    { 
+      title: "Documents", 
+      subtitle: "Archive Repository",
+      desc: "Access constitutions, manifestos, speeches, and historical records.", 
+      href: "/documents", 
+      icon: FileText,
+      color: "bg-ui-blue"
+    },
+    { 
+      title: "Communities", 
+      subtitle: "Clubs & Societies",
+      desc: "Discover the vibrant student organizations on campus.", 
+      href: "/communities", 
+      icon: Users,
+      color: "bg-nobel-gold"
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Floating Navbar */}
@@ -42,23 +76,23 @@ const Index = () => {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled ? "bg-background/80 backdrop-blur-xl shadow-lg" : "bg-transparent"
+          scrolled ? "bg-background/80 backdrop-blur-xl shadow-lg border-b border-border" : "bg-transparent"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+        <div className="container mx-auto px-6">
+          <div className="flex items-center justify-between h-20">
             <Link to="/" className="flex items-center gap-3">
               <img src="/uisu-logo.png" alt="UISU Logo" className="h-10 w-10 object-contain" />
-              <span className="font-display text-xl font-bold text-primary">UISU Archive</span>
+              <span className="font-serif text-xl text-ui-blue">UISU Archive</span>
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-6">
+            <div className="hidden md:flex items-center gap-8">
               {navLinks.map((link) => (
                 <Link
                   key={link.name}
                   to={link.href}
-                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                  className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground hover:text-nobel-gold transition-colors"
                 >
                   {link.name}
                 </Link>
@@ -68,7 +102,7 @@ const Index = () => {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 text-muted-foreground hover:text-primary"
+              className="md:hidden p-2 text-muted-foreground hover:text-ui-blue"
             >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -82,13 +116,13 @@ const Index = () => {
             animate={{ opacity: 1, y: 0 }}
             className="md:hidden bg-background/95 backdrop-blur-xl border-t border-border"
           >
-            <div className="px-4 py-4 space-y-2">
+            <div className="px-6 py-6 space-y-2">
               {navLinks.map((link) => (
                 <Link
                   key={link.name}
                   to={link.href}
                   onClick={() => setIsMenuOpen(false)}
-                  className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-primary hover:bg-muted rounded-lg transition-colors"
+                  className="block px-4 py-3 text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground hover:text-nobel-gold hover:bg-muted rounded-lg transition-colors"
                 >
                   {link.name}
                 </Link>
@@ -103,30 +137,39 @@ const Index = () => {
         <div className="absolute inset-0 z-0">
           <HeroScene />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background z-10" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/50 to-background z-10" />
         
-        <div className="relative z-20 text-center px-4 max-w-4xl mx-auto">
+        <div className="relative z-20 container mx-auto px-6 pt-32">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
+            className="max-w-4xl"
           >
-            <h1 className="font-display text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-              UISU Archive
+            <div className="flex items-center gap-4 mb-6">
+              <Star className="text-nobel-gold w-6 h-6" fill="currentColor" />
+              <span className="text-xs font-bold tracking-[0.2em] uppercase text-muted-foreground">Digital Archive</span>
+            </div>
+            
+            <h1 className="text-6xl md:text-8xl lg:text-9xl font-serif text-ui-blue leading-[0.9] mb-8">
+              The <br/> <span className="italic text-muted-foreground">Union</span>
             </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Preserving the legacy and celebrating the journey of the Uganda Islamic Students Union
+            
+            <p className="text-xl md:text-2xl text-muted-foreground font-light max-w-2xl mb-12 leading-relaxed">
+              Preserving the legacy and celebrating the journey of the Students Union. Decades of leadership, activism, and student empowerment.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            
+            <div className="flex flex-col sm:flex-row gap-4">
               <Link
                 to="/governance"
-                className="px-8 py-3 bg-primary text-primary-foreground rounded-full font-medium hover:bg-primary/90 transition-colors"
+                className="group inline-flex items-center gap-3 px-8 py-4 bg-ui-blue text-white rounded-full text-xs font-bold uppercase tracking-widest hover:bg-nobel-gold hover:text-foreground transition-all shadow-lg"
               >
-                Explore Governance
+                Explore Archive
+                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
                 to="/documents"
-                className="px-8 py-3 border border-border text-foreground rounded-full font-medium hover:bg-muted transition-colors"
+                className="inline-flex items-center gap-3 px-8 py-4 border border-border text-foreground rounded-full text-xs font-bold uppercase tracking-widest hover:border-nobel-gold hover:text-nobel-gold transition-all"
               >
                 Browse Documents
               </Link>
@@ -136,40 +179,18 @@ const Index = () => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1, duration: 1 }}
-            className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
+            transition={{ delay: 1.5, duration: 1 }}
+            className="absolute bottom-12 left-1/2 transform -translate-x-1/2"
           >
             <ChevronDown className="w-8 h-8 text-muted-foreground animate-bounce" />
           </motion.div>
         </div>
       </section>
 
-      {/* Marquee Ticker */}
-      <div className="bg-primary/10 py-4 overflow-hidden">
-        <motion.div
-          animate={{ x: [0, -1000] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="flex gap-8 whitespace-nowrap"
-        >
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="flex gap-8">
-              <span className="text-primary font-medium">📚 Document Archive Updated</span>
-              <span className="text-muted-foreground">•</span>
-              <span className="text-primary font-medium">🏛️ New Governance Records</span>
-              <span className="text-muted-foreground">•</span>
-              <span className="text-primary font-medium">👥 Community Highlights</span>
-              <span className="text-muted-foreground">•</span>
-              <span className="text-primary font-medium">🗺️ Campus Map Available</span>
-              <span className="text-muted-foreground">•</span>
-            </div>
-          ))}
-        </motion.div>
-      </div>
-
       {/* Stats Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <section className="py-24 bg-muted/30 border-y border-border">
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
             {stats.map((stat, index) => (
               <motion.div
                 key={stat.label}
@@ -179,11 +200,11 @@ const Index = () => {
                 transition={{ delay: index * 0.1 }}
                 className="text-center"
               >
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 text-primary mb-4">
-                  <stat.icon className="w-8 h-8" />
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-card border border-border text-nobel-gold mb-4">
+                  <stat.icon className="w-6 h-6" />
                 </div>
-                <div className="text-3xl md:text-4xl font-bold text-foreground mb-2">{stat.value}</div>
-                <div className="text-muted-foreground">{stat.label}</div>
+                <div className="text-4xl md:text-5xl font-serif text-ui-blue mb-2">{stat.value}</div>
+                <div className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">{stat.label}</div>
               </motion.div>
             ))}
           </div>
@@ -191,84 +212,49 @@ const Index = () => {
       </section>
 
       {/* Timeline Section */}
-      <section className="py-20 px-4 bg-muted/30">
-        <div className="max-w-6xl mx-auto">
+      <section className="py-32">
+        <div className="container mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="mb-20"
           >
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Our History
+            <div className="flex items-center gap-4 mb-4">
+              <Star className="text-nobel-gold w-6 h-6" fill="currentColor" />
+              <span className="text-xs font-bold tracking-[0.2em] uppercase text-muted-foreground">Chronicle</span>
+            </div>
+            <h2 className="text-5xl md:text-7xl font-serif text-ui-blue leading-[0.9] mb-6">
+              Historical <br/> <span className="italic text-muted-foreground">Timeline</span>
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Key moments in the journey of the union
+            <p className="text-xl text-muted-foreground font-light max-w-2xl">
+              Key moments that shaped the union's legacy across decades of student activism and leadership.
             </p>
           </motion.div>
           <TimelineDiagram />
         </div>
       </section>
 
-      {/* Campus Map Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Campus Halls
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Explore the halls of residence
-            </p>
-          </motion.div>
-          <CampusMap />
-        </div>
-      </section>
-
-      {/* Trivia Section */}
-      <section className="py-20 px-4 bg-muted/30">
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Test Your Knowledge
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              How well do you know the union's history?
-            </p>
-          </motion.div>
-          <TriviaSection />
-        </div>
-      </section>
-
       {/* Quick Links Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
+      <section className="py-32 bg-muted/30 border-y border-border">
+        <div className="container mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="mb-20"
           >
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Explore More
+            <div className="flex items-center gap-4 mb-4">
+              <Star className="text-nobel-gold w-6 h-6" fill="currentColor" />
+              <span className="text-xs font-bold tracking-[0.2em] uppercase text-muted-foreground">Navigation</span>
+            </div>
+            <h2 className="text-5xl md:text-7xl font-serif text-ui-blue leading-[0.9]">
+              Explore <br/> <span className="italic text-muted-foreground">The Archive</span>
             </h2>
           </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { title: "Governance", desc: "Learn about our leadership structure", href: "/governance", icon: Building2 },
-              { title: "Past Leaders", desc: "Hall of Fame of union presidents", href: "/past-leaders", icon: Award },
-              { title: "Communities", desc: "Student clubs and societies", href: "/communities", icon: Users },
-            ].map((item, index) => (
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {quickLinks.map((item, index) => (
               <motion.div
                 key={item.title}
                 initial={{ opacity: 0, y: 20 }}
@@ -278,11 +264,24 @@ const Index = () => {
               >
                 <Link
                   to={item.href}
-                  className="block p-6 bg-card border border-border rounded-xl hover:border-primary/50 hover:shadow-lg transition-all group"
+                  className="group block bg-card p-8 md:p-10 border border-border hover:border-nobel-gold hover:shadow-xl transition-all duration-500 relative overflow-hidden"
                 >
-                  <item.icon className="w-10 h-10 text-primary mb-4 group-hover:scale-110 transition-transform" />
-                  <h3 className="font-display text-xl font-semibold text-foreground mb-2">{item.title}</h3>
-                  <p className="text-muted-foreground text-sm">{item.desc}</p>
+                  {/* Selection Bar */}
+                  <div className="absolute left-0 top-0 h-full w-1 bg-muted group-hover:bg-nobel-gold transition-colors duration-300"></div>
+                  
+                  <div className="flex items-start gap-6">
+                    <div className={`w-14 h-14 rounded-full ${item.color} text-white flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}>
+                      <item.icon className="w-6 h-6" />
+                    </div>
+                    
+                    <div className="flex-1">
+                      <div className="text-xs font-bold uppercase tracking-[0.2em] text-nobel-gold mb-2">{item.subtitle}</div>
+                      <h3 className="font-serif text-2xl md:text-3xl text-ui-blue mb-3 group-hover:text-nobel-gold transition-colors">{item.title}</h3>
+                      <p className="text-muted-foreground font-light leading-relaxed">{item.desc}</p>
+                    </div>
+                    
+                    <ArrowRight className="text-muted-foreground group-hover:text-nobel-gold group-hover:translate-x-2 transition-all shrink-0 mt-2" size={20} />
+                  </div>
                 </Link>
               </motion.div>
             ))}
@@ -290,47 +289,102 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-12 px-4 bg-muted/50 border-t border-border">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="md:col-span-2">
-              <div className="flex items-center gap-3 mb-4">
-                <img src="/uisu-logo.png" alt="UISU Logo" className="h-10 w-10 object-contain" />
-                <span className="font-display text-xl font-bold text-primary">UISU Archive</span>
-              </div>
-              <p className="text-muted-foreground max-w-md">
-                Preserving the rich history and legacy of the Students Union for future generations.
-              </p>
+      {/* Campus Map Section */}
+      <section className="py-32">
+        <div className="container mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-20"
+          >
+            <div className="flex items-center gap-4 mb-4">
+              <Star className="text-nobel-gold w-6 h-6" fill="currentColor" />
+              <span className="text-xs font-bold tracking-[0.2em] uppercase text-muted-foreground">Residence</span>
             </div>
+            <h2 className="text-5xl md:text-7xl font-serif text-ui-blue leading-[0.9] mb-6">
+              Campus <br/> <span className="italic text-muted-foreground">Halls</span>
+            </h2>
+            <p className="text-xl text-muted-foreground font-light max-w-2xl">
+              Explore the halls of residence that form the backbone of student life.
+            </p>
+          </motion.div>
+          <CampusMap />
+        </div>
+      </section>
+
+      {/* Trivia Section */}
+      <section className="py-32 bg-muted/30 border-y border-border">
+        <div className="container mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-20"
+          >
+            <div className="flex items-center gap-4 mb-4">
+              <Star className="text-nobel-gold w-6 h-6" fill="currentColor" />
+              <span className="text-xs font-bold tracking-[0.2em] uppercase text-muted-foreground">Interactive</span>
+            </div>
+            <h2 className="text-5xl md:text-7xl font-serif text-ui-blue leading-[0.9] mb-6">
+              Test Your <br/> <span className="italic text-muted-foreground">Knowledge</span>
+            </h2>
+            <p className="text-xl text-muted-foreground font-light max-w-2xl">
+              How well do you know the union's history? Take our trivia challenge.
+            </p>
+          </motion.div>
+          <TriviaSection />
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-20 bg-card border-t border-border">
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+            <div className="md:col-span-2">
+              <div className="flex items-center gap-3 mb-6">
+                <img src="/uisu-logo.png" alt="UISU Logo" className="h-12 w-12 object-contain" />
+                <span className="font-serif text-2xl text-ui-blue">UISU Archive</span>
+              </div>
+              <p className="text-muted-foreground font-light leading-relaxed max-w-md mb-6">
+                Preserving the rich history and legacy of the Students Union for future generations. A digital repository of our collective memory.
+              </p>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <MapPin className="w-4 h-4 text-nobel-gold" />
+                <span>Campus, University</span>
+                <span className="text-border">•</span>
+                <Calendar className="w-4 h-4 text-nobel-gold" />
+                <span>Est. 1948</span>
+              </div>
+            </div>
+            
             <div>
-              <h3 className="font-semibold text-foreground mb-4">Quick Links</h3>
-              <ul className="space-y-2">
+              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-6">Quick Links</h3>
+              <ul className="space-y-3">
                 {navLinks.map((link) => (
                   <li key={link.name}>
-                    <Link to={link.href} className="text-muted-foreground hover:text-primary transition-colors">
+                    <Link to={link.href} className="text-foreground hover:text-nobel-gold transition-colors font-light">
                       {link.name}
                     </Link>
                   </li>
                 ))}
               </ul>
             </div>
+            
             <div>
-              <h3 className="font-semibold text-foreground mb-4">Info</h3>
-              <ul className="space-y-2 text-muted-foreground">
-                <li className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  <span>Campus, University</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  <span>Est. 1948</span>
-                </li>
+              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-6">Archive</h3>
+              <ul className="space-y-3 text-foreground font-light">
+                <li>Constitutions</li>
+                <li>Manifestos</li>
+                <li>Speeches</li>
+                <li>Reports</li>
               </ul>
             </div>
           </div>
-          <div className="mt-12 pt-8 border-t border-border text-center text-muted-foreground text-sm">
-            <p>© {new Date().getFullYear()} UISU Archive. All rights reserved.</p>
+          
+          <div className="pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} UISU Archive. All rights reserved.</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-widest">Crafted with purpose</p>
           </div>
         </div>
       </footer>
