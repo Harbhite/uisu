@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Menu, X, Users, Building2, BookOpen, Award, Star, ArrowRight, MapPin, Calendar, FileText, ChevronDown, LogIn, LogOut } from "lucide-react";
+import { Menu, X, Users, Building2, BookOpen, Award, Star, ArrowRight, MapPin, Calendar, FileText, ChevronDown, LogIn, LogOut, Bell } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { TimelineDiagram } from "@/components/Diagrams";
 import { TriviaSection } from "@/components/Trivia";
 import { CampusMap } from "@/components/CampusMap";
 import { HeroScene } from "@/components/QuantumScene";
+import { AnnouncementsBanner } from "@/components/AnnouncementsBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 
@@ -47,6 +48,7 @@ const Index = () => {
     { name: "Campus Map", href: "/campus-map" },
     { name: "Communities", href: "/communities" },
     { name: "Events", href: "/events" },
+    { name: "Announcements", href: "/announcements" },
   ];
 
   const stats = [
@@ -93,6 +95,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      {/* Announcements Banner */}
+      <AnnouncementsBanner />
+      
       {/* Floating Navbar */}
       <motion.nav
         initial={{ y: -100 }}
