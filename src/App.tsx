@@ -13,6 +13,7 @@ const PastLeadersPage = lazy(() => import("./pages/PastLeadersPage"));
 const DocumentsPage = lazy(() => import("./pages/DocumentsPage"));
 const CampusMapPage = lazy(() => import("./pages/CampusMapPage"));
 const CommunitiesPage = lazy(() => import("./pages/CommunitiesPage"));
+const EventsPage = lazy(() => import("./pages/EventsPage"));
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/documents" element={<DocumentsPage />} />
             <Route path="/campus-map" element={<CampusMapPage />} />
             <Route path="/communities" element={<CommunitiesPage />} />
+            <Route path="/events" element={<EventsPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
