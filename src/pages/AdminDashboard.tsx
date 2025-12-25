@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { 
   ArrowLeft, Star, Plus, Trash2, Edit2, Calendar, FileText, 
-  Megaphone, X, Upload, Loader2, Check
+  Megaphone, X, Upload, Loader2, Check, Users, Award
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -33,7 +33,34 @@ const documentSchema = z.object({
   doc_type: z.enum(["Constitution", "Bill", "Manifesto", "Speech", "Report", "Memo"]),
 });
 
-type TabType = "events" | "announcements" | "documents";
+const clubSchema = z.object({
+  name: z.string().min(1, "Name is required").max(200),
+  acronym: z.string().max(20).optional(),
+  category: z.string().min(1, "Category is required"),
+  founded: z.string().max(10).optional(),
+  motto: z.string().max(200).optional(),
+  description: z.string().max(2000).optional(),
+  activities: z.array(z.string()).optional(),
+  president: z.string().max(100).optional(),
+  color: z.string().max(20).optional(),
+  icon_name: z.string().max(50).optional(),
+});
+
+const administrationSchema = z.object({
+  session: z.string().min(1, "Session is required").max(20),
+  president: z.string().min(1, "President name is required").max(200),
+  alias: z.string().max(100).optional(),
+  motto: z.string().max(200).optional(),
+  notable_events: z.string().max(2000).optional(),
+  status: z.enum(["Active", "Completed", "Suspended", "Impeached"]),
+  team: z.array(z.object({
+    role: z.string(),
+    name: z.string(),
+    alias: z.string().optional()
+  })).optional(),
+});
+
+type TabType = "events" | "announcements" | "documents" | "clubs" | "administrations";
 
 interface Event {
   id: string;
@@ -64,6 +91,31 @@ interface Document {
   file_size: string | null;
 }
 
+interface Club {
+  id: string;
+  name: string;
+  acronym: string | null;
+  category: string;
+  founded: string | null;
+  motto: string | null;
+  description: string | null;
+  activities: string[] | null;
+  president: string | null;
+  color: string | null;
+  icon_name: string | null;
+}
+
+interface Administration {
+  id: string;
+  session: string;
+  president: string;
+  alias: string | null;
+  motto: string | null;
+  notable_events: string | null;
+  status: string | null;
+  team: any;
+}
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -76,6 +128,8 @@ const AdminDashboard = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [clubs, setClubs] = useState<Club[]>([]);
+  const [administrations, setAdministrations] = useState<Administration[]>([]);
   
   // Modal states
   const [showModal, setShowModal] = useState(false);
@@ -85,6 +139,8 @@ const AdminDashboard = () => {
   const [formData, setFormData] = useState<any>({});
   const [uploadingFile, setUploadingFile] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [teamMembers, setTeamMembers] = useState<{role: string; name: string; alias?: string}[]>([]);
+  const [activitiesInput, setActivitiesInput] = useState("");
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -134,6 +190,20 @@ const AdminDashboard = () => {
           .order("year", { ascending: false });
         if (error) throw error;
         setDocuments(data || []);
+      } else if (activeTab === "clubs") {
+        const { data, error } = await supabase
+          .from("clubs")
+          .select("*")
+          .order("name");
+        if (error) throw error;
+        setClubs(data || []);
+      } else if (activeTab === "administrations") {
+        const { data, error } = await supabase
+          .from("administrations")
+          .select("*")
+          .order("session", { ascending: false });
+        if (error) throw error;
+        setAdministrations(data || []);
       }
     } catch (error: any) {
       toast({
@@ -150,6 +220,8 @@ const AdminDashboard = () => {
     setEditingItem(null);
     setFormData(getDefaultFormData());
     setSelectedFile(null);
+    setTeamMembers([]);
+    setActivitiesInput("");
     setShowModal(true);
   };
 
@@ -157,6 +229,16 @@ const AdminDashboard = () => {
     setEditingItem(item);
     setFormData(item);
     setSelectedFile(null);
+    if (activeTab === "administrations" && item.team) {
+      setTeamMembers(item.team);
+    } else {
+      setTeamMembers([]);
+    }
+    if (activeTab === "clubs" && item.activities) {
+      setActivitiesInput(item.activities.join(", "));
+    } else {
+      setActivitiesInput("");
+    }
     setShowModal(true);
   };
 
@@ -177,12 +259,35 @@ const AdminDashboard = () => {
         priority: "normal",
         is_active: true,
       };
-    } else {
+    } else if (activeTab === "documents") {
       return {
         title: "",
         description: "",
         year: new Date().getFullYear(),
         doc_type: "Report",
+      };
+    } else if (activeTab === "clubs") {
+      return {
+        name: "",
+        acronym: "",
+        category: "Sociocultural",
+        founded: "",
+        motto: "",
+        description: "",
+        activities: [],
+        president: "",
+        color: "#6d28d9",
+        icon_name: "Star",
+      };
+    } else {
+      return {
+        session: "",
+        president: "",
+        alias: "",
+        motto: "",
+        notable_events: "",
+        status: "Active",
+        team: [],
       };
     }
   };
@@ -216,6 +321,20 @@ const AdminDashboard = () => {
     } finally {
       setUploadingFile(false);
     }
+  };
+
+  const addTeamMember = () => {
+    setTeamMembers([...teamMembers, { role: "", name: "", alias: "" }]);
+  };
+
+  const updateTeamMember = (index: number, field: string, value: string) => {
+    const updated = [...teamMembers];
+    updated[index] = { ...updated[index], [field]: value };
+    setTeamMembers(updated);
+  };
+
+  const removeTeamMember = (index: number) => {
+    setTeamMembers(teamMembers.filter((_, i) => i !== index));
   };
 
   const handleSave = async () => {
@@ -263,7 +382,6 @@ const AdminDashboard = () => {
         });
         validatedData.uploaded_by = user?.id;
         
-        // Handle file upload
         if (selectedFile) {
           const fileUrl = await handleFileUpload(selectedFile);
           if (fileUrl) {
@@ -281,6 +399,43 @@ const AdminDashboard = () => {
         } else {
           const { error } = await supabase
             .from("documents")
+            .insert(validatedData);
+          if (error) throw error;
+        }
+      } else if (activeTab === "clubs") {
+        const activities = activitiesInput.split(",").map(a => a.trim()).filter(a => a);
+        validatedData = clubSchema.parse({
+          ...formData,
+          activities,
+        });
+        
+        if (editingItem) {
+          const { error } = await supabase
+            .from("clubs")
+            .update(validatedData)
+            .eq("id", editingItem.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("clubs")
+            .insert(validatedData);
+          if (error) throw error;
+        }
+      } else if (activeTab === "administrations") {
+        validatedData = administrationSchema.parse({
+          ...formData,
+          team: teamMembers.filter(m => m.role && m.name),
+        });
+        
+        if (editingItem) {
+          const { error } = await supabase
+            .from("administrations")
+            .update(validatedData)
+            .eq("id", editingItem.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("administrations")
             .insert(validatedData);
           if (error) throw error;
         }
@@ -348,6 +503,8 @@ const AdminDashboard = () => {
     { id: "events" as TabType, label: "Events", icon: Calendar },
     { id: "announcements" as TabType, label: "Announcements", icon: Megaphone },
     { id: "documents" as TabType, label: "Documents", icon: FileText },
+    { id: "clubs" as TabType, label: "Clubs", icon: Users },
+    { id: "administrations" as TabType, label: "Leaders", icon: Award },
   ];
 
   if (!user) {
@@ -390,17 +547,17 @@ const AdminDashboard = () => {
             onClick={openAddModal}
             className="flex items-center gap-2 px-6 py-3 bg-ui-blue text-white rounded-full shadow-lg hover:bg-nobel-gold hover:text-foreground transition-all text-xs font-bold uppercase tracking-widest"
           >
-            <Plus size={14} /> Add {activeTab.slice(0, -1)}
+            <Plus size={14} /> Add {activeTab === "administrations" ? "Leader" : activeTab.slice(0, -1)}
           </motion.button>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-8 border-b border-border pb-4">
+        <div className="flex gap-2 mb-8 border-b border-border pb-4 overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-6 py-3 text-xs font-bold uppercase tracking-widest rounded-full transition-all relative ${
+              className={`flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest rounded-full transition-all relative whitespace-nowrap ${
                 activeTab === tab.id 
                   ? "text-white" 
                   : "text-muted-foreground hover:bg-muted"
@@ -541,16 +698,107 @@ const AdminDashboard = () => {
               </motion.div>
             ))}
 
+            {activeTab === "clubs" && clubs.map((club) => (
+              <motion.div
+                key={club.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-card border border-border p-6 flex justify-between items-center hover:border-nobel-gold transition-colors"
+              >
+                <div className="flex items-center gap-4">
+                  <div 
+                    className="w-12 h-12 rounded-lg flex items-center justify-center text-white"
+                    style={{ backgroundColor: club.color || '#6d28d9' }}
+                  >
+                    <Users size={20} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-3 mb-1">
+                      <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 bg-muted text-muted-foreground rounded-full">
+                        {club.category}
+                      </span>
+                      {club.acronym && (
+                        <span className="text-xs text-nobel-gold font-bold">{club.acronym}</span>
+                      )}
+                    </div>
+                    <h3 className="font-serif text-xl text-foreground">{club.name}</h3>
+                    {club.founded && (
+                      <p className="text-xs text-muted-foreground">Est. {club.founded}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => openEditModal(club)}
+                    className="p-2 text-muted-foreground hover:text-nobel-gold transition-colors"
+                  >
+                    <Edit2 size={18} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(club.id)}
+                    className="p-2 text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+
+            {activeTab === "administrations" && administrations.map((admin) => (
+              <motion.div
+                key={admin.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-card border border-border p-6 flex justify-between items-center hover:border-nobel-gold transition-colors"
+              >
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-ui-blue">
+                      {admin.session}
+                    </span>
+                    <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${
+                      admin.status === 'Active' ? 'bg-green-50 text-green-700' :
+                      admin.status === 'Suspended' ? 'bg-red-50 text-red-700' :
+                      admin.status === 'Impeached' ? 'bg-orange-50 text-orange-700' :
+                      'bg-muted text-muted-foreground'
+                    }`}>
+                      {admin.status}
+                    </span>
+                  </div>
+                  <h3 className="font-serif text-xl text-foreground">{admin.president}</h3>
+                  {admin.alias && (
+                    <p className="text-sm text-nobel-gold italic">"{admin.alias}"</p>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => openEditModal(admin)}
+                    className="p-2 text-muted-foreground hover:text-nobel-gold transition-colors"
+                  >
+                    <Edit2 size={18} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(admin.id)}
+                    className="p-2 text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+
             {((activeTab === "events" && events.length === 0) ||
               (activeTab === "announcements" && announcements.length === 0) ||
-              (activeTab === "documents" && documents.length === 0)) && (
+              (activeTab === "documents" && documents.length === 0) ||
+              (activeTab === "clubs" && clubs.length === 0) ||
+              (activeTab === "administrations" && administrations.length === 0)) && (
               <div className="text-center py-20 text-muted-foreground">
                 <p className="font-serif text-xl italic">No {activeTab} found.</p>
                 <button
                   onClick={openAddModal}
                   className="mt-4 text-nobel-gold hover:underline"
                 >
-                  Create your first {activeTab.slice(0, -1)}
+                  Create your first {activeTab === "administrations" ? "leader" : activeTab.slice(0, -1)}
                 </button>
               </div>
             )}
@@ -577,7 +825,7 @@ const AdminDashboard = () => {
             >
               <div className="p-6 border-b border-border flex justify-between items-center">
                 <h2 className="font-serif text-2xl text-foreground">
-                  {editingItem ? "Edit" : "Add"} {activeTab.slice(0, -1)}
+                  {editingItem ? "Edit" : "Add"} {activeTab === "administrations" ? "Leader" : activeTab.slice(0, -1)}
                 </h2>
                 <button
                   onClick={() => setShowModal(false)}
@@ -771,6 +1019,226 @@ const AdminDashboard = () => {
                             <p className="text-sm">Click to upload document</p>
                           </div>
                         )}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {activeTab === "clubs" && (
+                  <>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Club Name</label>
+                      <input
+                        type="text"
+                        value={formData.name || ""}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        className="w-full px-4 py-3 bg-background border border-border focus:border-nobel-gold focus:outline-none"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Acronym</label>
+                        <input
+                          type="text"
+                          value={formData.acronym || ""}
+                          onChange={(e) => setFormData({ ...formData, acronym: e.target.value })}
+                          placeholder="e.g. GDSC"
+                          className="w-full px-4 py-3 bg-background border border-border focus:border-nobel-gold focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Category</label>
+                        <select
+                          value={formData.category || "Sociocultural"}
+                          onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                          className="w-full px-4 py-3 bg-background border border-border focus:border-nobel-gold focus:outline-none"
+                        >
+                          <option value="Sociocultural">Sociocultural</option>
+                          <option value="Academic">Academic</option>
+                          <option value="Religious">Religious</option>
+                          <option value="Press">Press</option>
+                          <option value="Tech">Tech</option>
+                          <option value="Sports">Sports</option>
+                          <option value="Politics">Politics</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Founded</label>
+                        <input
+                          type="text"
+                          value={formData.founded || ""}
+                          onChange={(e) => setFormData({ ...formData, founded: e.target.value })}
+                          placeholder="e.g. 1950"
+                          className="w-full px-4 py-3 bg-background border border-border focus:border-nobel-gold focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Color</label>
+                        <input
+                          type="color"
+                          value={formData.color || "#6d28d9"}
+                          onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                          className="w-full h-12 bg-background border border-border focus:border-nobel-gold focus:outline-none cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Motto</label>
+                      <input
+                        type="text"
+                        value={formData.motto || ""}
+                        onChange={(e) => setFormData({ ...formData, motto: e.target.value })}
+                        className="w-full px-4 py-3 bg-background border border-border focus:border-nobel-gold focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Description</label>
+                      <textarea
+                        value={formData.description || ""}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        rows={3}
+                        className="w-full px-4 py-3 bg-background border border-border focus:border-nobel-gold focus:outline-none resize-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Activities (comma-separated)</label>
+                      <input
+                        type="text"
+                        value={activitiesInput}
+                        onChange={(e) => setActivitiesInput(e.target.value)}
+                        placeholder="e.g. Hackathons, Coding Bootcamps, Meetups"
+                        className="w-full px-4 py-3 bg-background border border-border focus:border-nobel-gold focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Icon</label>
+                      <select
+                        value={formData.icon_name || "Star"}
+                        onChange={(e) => setFormData({ ...formData, icon_name: e.target.value })}
+                        className="w-full px-4 py-3 bg-background border border-border focus:border-nobel-gold focus:outline-none"
+                      >
+                        <option value="Star">Star</option>
+                        <option value="Award">Award</option>
+                        <option value="Globe">Globe</option>
+                        <option value="Heart">Heart</option>
+                        <option value="Cpu">Cpu</option>
+                        <option value="Users">Users</option>
+                        <option value="Gavel">Gavel</option>
+                        <option value="Palette">Palette</option>
+                      </select>
+                    </div>
+                  </>
+                )}
+
+                {activeTab === "administrations" && (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Session</label>
+                        <input
+                          type="text"
+                          value={formData.session || ""}
+                          onChange={(e) => setFormData({ ...formData, session: e.target.value })}
+                          placeholder="e.g. 2024/2025"
+                          className="w-full px-4 py-3 bg-background border border-border focus:border-nobel-gold focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Status</label>
+                        <select
+                          value={formData.status || "Active"}
+                          onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                          className="w-full px-4 py-3 bg-background border border-border focus:border-nobel-gold focus:outline-none"
+                        >
+                          <option value="Active">Active</option>
+                          <option value="Completed">Completed</option>
+                          <option value="Suspended">Suspended</option>
+                          <option value="Impeached">Impeached</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">President Name</label>
+                      <input
+                        type="text"
+                        value={formData.president || ""}
+                        onChange={(e) => setFormData({ ...formData, president: e.target.value })}
+                        className="w-full px-4 py-3 bg-background border border-border focus:border-nobel-gold focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Alias/Nickname</label>
+                      <input
+                        type="text"
+                        value={formData.alias || ""}
+                        onChange={(e) => setFormData({ ...formData, alias: e.target.value })}
+                        className="w-full px-4 py-3 bg-background border border-border focus:border-nobel-gold focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Motto</label>
+                      <input
+                        type="text"
+                        value={formData.motto || ""}
+                        onChange={(e) => setFormData({ ...formData, motto: e.target.value })}
+                        className="w-full px-4 py-3 bg-background border border-border focus:border-nobel-gold focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Notable Events</label>
+                      <textarea
+                        value={formData.notable_events || ""}
+                        onChange={(e) => setFormData({ ...formData, notable_events: e.target.value })}
+                        rows={3}
+                        className="w-full px-4 py-3 bg-background border border-border focus:border-nobel-gold focus:outline-none resize-none"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex justify-between items-center mb-3">
+                        <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Executive Team</label>
+                        <button
+                          type="button"
+                          onClick={addTeamMember}
+                          className="text-xs text-nobel-gold hover:underline flex items-center gap-1"
+                        >
+                          <Plus size={12} /> Add Member
+                        </button>
+                      </div>
+                      <div className="space-y-3">
+                        {teamMembers.map((member, idx) => (
+                          <div key={idx} className="flex gap-2 items-start">
+                            <input
+                              type="text"
+                              value={member.role}
+                              onChange={(e) => updateTeamMember(idx, 'role', e.target.value)}
+                              placeholder="Role"
+                              className="flex-1 px-3 py-2 bg-background border border-border focus:border-nobel-gold focus:outline-none text-sm"
+                            />
+                            <input
+                              type="text"
+                              value={member.name}
+                              onChange={(e) => updateTeamMember(idx, 'name', e.target.value)}
+                              placeholder="Name"
+                              className="flex-1 px-3 py-2 bg-background border border-border focus:border-nobel-gold focus:outline-none text-sm"
+                            />
+                            <input
+                              type="text"
+                              value={member.alias || ''}
+                              onChange={(e) => updateTeamMember(idx, 'alias', e.target.value)}
+                              placeholder="Alias"
+                              className="w-24 px-3 py-2 bg-background border border-border focus:border-nobel-gold focus:outline-none text-sm"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeTeamMember(idx)}
+                              className="p-2 text-muted-foreground hover:text-destructive"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </>
