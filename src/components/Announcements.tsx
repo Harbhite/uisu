@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Megaphone, Calendar, Tag, ChevronRight, Bell, Clock, X } from 'lucide-react';
+import { ArrowLeft, Megaphone, Calendar, Tag, ChevronRight, Bell, Clock, X, Loader2 } from 'lucide-react';
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Props for the AnnouncementsPage component.
@@ -35,54 +36,6 @@ interface Announcement {
     author: string;
 }
 
-const announcementsData: Announcement[] = [
-    {
-        id: '1',
-        title: 'Resumption Date for 2024/2025 Session',
-        date: 'Oct 24, 2024',
-        category: 'Urgent',
-        summary: 'The University Senate has officially approved the resumption date for fresh and returning students.',
-        content: 'The University of Ibadan Management has announced that the 2024/2025 academic session will commence on Monday, November 4th, 2024. Fresh students are expected to begin clearance immediately upon resumption. Returning students should ensure all outstanding levies are paid before the portal closes.',
-        author: 'Office of the Registrar'
-    },
-    {
-        id: '2',
-        title: 'Students Union Week Schedule',
-        date: 'Oct 20, 2024',
-        category: 'Event',
-        summary: 'Get ready for the biggest cultural and intellectual festival on campus. See the full lineup of events.',
-        content: 'The highly anticipated SU Week is here! \n\nDay 1: Gyration at SUB\nDay 2: Inter-Faculty Debate\nDay 3: Cultural Night\nDay 4: Sports Festival at Awo Stadium\nDay 5: Grand Dinner & Awards Night.\n\nTickets are available at the SUB secretariat.',
-        author: 'Director of Socials'
-    },
-    {
-        id: '3',
-        title: 'Maintenance Work at Kuti Hall',
-        date: 'Oct 18, 2024',
-        category: 'Memo',
-        summary: 'Scheduled power outage and water maintenance in Kuti Hall this weekend.',
-        content: 'This is to inform all residents of Kuti Hall that there will be a scheduled maintenance of the water pumping machine on Saturday, Oct 26th. Consequently, water supply will be interrupted from 8am to 4pm. Please store water accordingly.',
-        author: 'Hall Warden'
-    },
-    {
-        id: '4',
-        title: 'Library Opening Hours Extended',
-        date: 'Oct 15, 2024',
-        category: 'News',
-        summary: 'Kenneth Dike Library extends reading hours in preparation for upcoming exams.',
-        content: 'In response to the SRC request, the Kenneth Dike Library (KDL) will now remain open 24/7 starting from next week Monday to facilitate exam preparations. Security measures have been beefed up around the library vicinity.',
-        author: 'University Librarian'
-    },
-    {
-        id: '5',
-        title: 'Call for Scholarship Applications',
-        date: 'Oct 10, 2024',
-        category: 'News',
-        summary: 'The UI Alumni Association is accepting applications for the Annual Indigent Students Scholarship.',
-        content: 'Applications are invited from suitably qualified undergraduate students for the UI Alumni Scholarship. Requirements: Must have a CGPA of 3.5 and above. Must demonstrate financial need. Deadline: Nov 30th, 2024.',
-        author: 'UI Alumni Association'
-    }
-];
-
 /**
  * A component that displays a list of announcements, news, and events.
  * Users can filter announcements by category and view details in a modal.
@@ -91,14 +44,57 @@ const announcementsData: Announcement[] = [
  * @returns {JSX.Element} The rendered AnnouncementsPage component.
  */
 export const AnnouncementsPage: React.FC<AnnouncementsProps> = ({ onBack }) => {
+    const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+    const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('All');
     const [selectedItem, setSelectedItem] = useState<Announcement | null>(null);
 
+    useEffect(() => {
+        const fetchAnnouncements = async () => {
+            setLoading(true);
+            try {
+                const { data, error } = await supabase
+                    .from('announcements')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                const formattedAnnouncements: Announcement[] = (data || []).map(a => ({
+                    id: a.id,
+                    title: a.title,
+                    date: new Date(a.created_at || '').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                    category: (a.priority === 'urgent' ? 'Urgent' : 'News') as Announcement['category'],
+                    summary: a.content.substring(0, 150) + (a.content.length > 150 ? '...' : ''),
+                    content: a.content,
+                    author: 'UISU Admin'
+                }));
+                
+                setAnnouncements(formattedAnnouncements);
+            } catch (error) {
+                console.error('Error fetching announcements:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchAnnouncements();
+    }, []);
+
     const filteredData = filter === 'All' 
-        ? announcementsData 
-        : announcementsData.filter(item => item.category === filter);
+        ? announcements 
+        : announcements.filter(item => item.category === filter);
 
     const categories = ['All', 'News', 'Event', 'Memo', 'Urgent'];
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-nobel-gold" />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-background pt-32 pb-16 text-foreground">
