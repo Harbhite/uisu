@@ -15,6 +15,7 @@ const CampusMapPage = lazy(() => import("./pages/CampusMapPage"));
 const CommunitiesPage = lazy(() => import("./pages/CommunitiesPage"));
 const EventsPage = lazy(() => import("./pages/EventsPage"));
 const AuthPage = lazy(() => import("./pages/AuthPage"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/communities" element={<CommunitiesPage />} />
             <Route path="/events" element={<EventsPage />} />
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

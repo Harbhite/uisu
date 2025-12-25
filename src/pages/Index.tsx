@@ -121,13 +121,21 @@ const Index = () => {
               ))}
               
               {user ? (
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-nobel-gold transition-colors border border-border rounded-full hover:border-nobel-gold"
-                >
-                  <LogOut size={14} />
-                  Logout
-                </button>
+                <div className="flex items-center gap-3">
+                  <Link
+                    to="/admin"
+                    className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-nobel-gold transition-colors border border-border rounded-full hover:border-nobel-gold"
+                  >
+                    Admin
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-nobel-gold transition-colors border border-border rounded-full hover:border-nobel-gold"
+                  >
+                    <LogOut size={14} />
+                    Logout
+                  </button>
+                </div>
               ) : (
                 <Link
                   to="/auth"
