@@ -25,6 +25,7 @@ const Index = () => {
     { name: "Documents", href: "/documents" },
     { name: "Campus Map", href: "/campus-map" },
     { name: "Communities", href: "/communities" },
+    { name: "Events", href: "/events" },
   ];
 
   const stats = [
