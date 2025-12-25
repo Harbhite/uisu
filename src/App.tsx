@@ -5,8 +5,25 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import { lazy, Suspense } from "react";
+
+// Lazy load pages for better performance
+const GovernancePage = lazy(() => import("./pages/GovernancePage"));
+const PastLeadersPage = lazy(() => import("./pages/PastLeadersPage"));
+const DocumentsPage = lazy(() => import("./pages/DocumentsPage"));
+const CampusMapPage = lazy(() => import("./pages/CampusMapPage"));
+const CommunitiesPage = lazy(() => import("./pages/CommunitiesPage"));
 
 const queryClient = new QueryClient();
+
+const LoadingFallback = () => (
+  <div className="flex min-h-screen items-center justify-center bg-background">
+    <div className="text-center">
+      <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+      <p className="text-muted-foreground">Loading...</p>
+    </div>
+  </div>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -14,11 +31,18 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/governance" element={<GovernancePage />} />
+            <Route path="/past-leaders" element={<PastLeadersPage />} />
+            <Route path="/documents" element={<DocumentsPage />} />
+            <Route path="/campus-map" element={<CampusMapPage />} />
+            <Route path="/communities" element={<CommunitiesPage />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
