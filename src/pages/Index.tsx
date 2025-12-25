@@ -1,15 +1,31 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Menu, X, Users, Building2, BookOpen, Award, Star, ArrowRight, MapPin, Calendar, FileText, ChevronDown } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Menu, X, Users, Building2, BookOpen, Award, Star, ArrowRight, MapPin, Calendar, FileText, ChevronDown, LogIn, LogOut } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { TimelineDiagram } from "@/components/Diagrams";
 import { TriviaSection } from "@/components/Trivia";
 import { CampusMap } from "@/components/CampusMap";
 import { HeroScene } from "@/components/QuantumScene";
+import { supabase } from "@/integrations/supabase/client";
+import { User } from "@supabase/supabase-js";
 
 const Index = () => {
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -18,6 +34,11 @@ const Index = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
 
   const navLinks = [
     { name: "Governance", href: "/governance" },
@@ -88,7 +109,7 @@ const Index = () => {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-8">
+            <div className="hidden md:flex items-center gap-6">
               {navLinks.map((link) => (
                 <Link
                   key={link.name}
@@ -98,6 +119,24 @@ const Index = () => {
                   {link.name}
                 </Link>
               ))}
+              
+              {user ? (
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-nobel-gold transition-colors border border-border rounded-full hover:border-nobel-gold"
+                >
+                  <LogOut size={14} />
+                  Logout
+                </button>
+              ) : (
+                <Link
+                  to="/auth"
+                  className="flex items-center gap-2 px-4 py-2 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest rounded-full hover:bg-nobel-gold hover:text-foreground transition-all"
+                >
+                  <LogIn size={14} />
+                  Sign In
+                </Link>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -128,6 +167,27 @@ const Index = () => {
                   {link.name}
                 </Link>
               ))}
+              
+              {user ? (
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-nobel-gold hover:bg-muted rounded-lg transition-colors"
+                >
+                  <LogOut size={14} />
+                  Logout
+                </button>
+              ) : (
+                <Link
+                  to="/auth"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-4 py-3 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest rounded-lg hover:bg-nobel-gold hover:text-foreground transition-all text-center"
+                >
+                  Sign In
+                </Link>
+              )}
             </div>
           </motion.div>
         )}
