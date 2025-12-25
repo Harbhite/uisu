@@ -3,14 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Search, Users, Star, Globe, BookOpen, Heart, Gavel, Cpu, Palette, X, Calendar, Award, ChevronRight, ArrowRight } from 'lucide-react';
-
-// Helper icon component moved up
-const ActivityIcon = ({size}: {size: number}) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-);
+import { ArrowLeft, Search, Users, Star, Globe, BookOpen, Heart, Gavel, Cpu, Palette, Calendar, Award, ChevronRight, ArrowRight, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Props for the Communities component.
@@ -38,7 +34,7 @@ export interface Club {
     /** Optional acronym or abbreviation. */
     acronym?: string;
     /** The category the club belongs to. */
-    category: Category;
+    category: string;
     /** The year the club was founded. */
     founded: string;
     /** The club's motto or slogan. */
@@ -51,107 +47,23 @@ export interface Club {
     president?: string;
     /** Brand color for the club. */
     color: string;
-    /** Icon representing the club. */
-    icon: React.ReactNode;
+    /** Icon name for the club. */
+    iconName?: string;
 }
 
-export const clubsData: Club[] = [
-    // Sociocultural & Philanthropic
-    {
-        id: '1',
-        name: 'Sigma Club',
-        category: 'Sociocultural',
-        founded: '1950',
-        motto: 'For All that is Pure',
-        description: 'The oldest surviving socio-philanthropic organization in Sub-Saharan Africa. Known for the Havelock Trophy and the admission of men of character and integrity (Loyal Sigmites).',
-        activities: ['Havelock Quiz Competition', 'Sigma Chief Scholarship', 'Philanthropic Outreaches'],
-        color: '#6d28d9',
-        icon: <Award size={24} />
-    },
-    {
-        id: '2',
-        name: 'Junior Chamber International (JCI)',
-        acronym: 'JCI UI',
-        category: 'Sociocultural',
-        founded: '1981',
-        motto: 'Be Better',
-        description: 'A worldwide federation of young leaders and entrepreneurs. JCI UI focuses on individual development, business opportunities, and community impact.',
-        activities: ['FOTI (Fifteen Outstanding Persons Awards)', 'Leadership Training', 'I-Care Projects'],
-        color: '#0ea5e9',
-        icon: <Globe size={24} />
-    },
-    {
-        id: '3',
-        name: 'Rotaract Club',
-        category: 'Sociocultural',
-        founded: '1983',
-        motto: 'Service Above Self',
-        description: 'The youth wing of Rotary International. Dedicated to community service, professional development, and promoting international understanding.',
-        activities: ['Blood Donation Drives', 'Basic Education & Literacy', 'Economic Development Projects'],
-        color: '#be123c',
-        icon: <Heart size={24} />
-    },
-    {
-        id: '4',
-        name: 'Google Developer Student Clubs',
-        acronym: 'GDSC UI',
-        category: 'Tech',
-        founded: '2017',
-        motto: 'Connect. Learn. Grow.',
-        description: 'Community groups for students interested in Google developer technologies. Students from all undergraduate or graduate programs with an interest in growing as a developer are welcome.',
-        activities: ['Coding Bootcamps', 'Hackathons', 'Cloud Study Jams'],
-        color: '#4285F4',
-        icon: <Cpu size={24} />
-    },
-    {
-        id: '5',
-        name: 'The Literary and Debating Society',
-        acronym: 'TLDS',
-        category: 'Press',
-        founded: '1958',
-        motto: 'Molding Orators',
-        description: 'The premier public speaking body in the university. Organizes the Jaw War, the biggest public speaking competition in Sub-Saharan Africa.',
-        activities: ['Jaw War', 'Freshers Oratory Competition', 'Public Speaking Training'],
-        color: '#b91c1c',
-        icon: <Users size={24} />
-    },
-    {
-        id: '6',
-        name: 'Law Students Society',
-        acronym: 'LSS',
-        category: 'Academic',
-        founded: '1981',
-        motto: 'Justice and Equity',
-        description: 'The association for students of the Faculty of Law. Known for its rigorous moot and mock trials and political vibrancy.',
-        activities: ['Law Week', 'Moot Court Competition', 'Chambers Activities'],
-        color: '#000000',
-        icon: <Gavel size={24} />
-    },
-    {
-        id: '7',
-        name: 'Theatre Arts Student Association',
-        acronym: 'TASA',
-        category: 'Sociocultural',
-        founded: '1965',
-        motto: 'Creativity',
-        description: 'The heart of entertainment in UI. They manage the Arts Theatre productions.',
-        activities: ['Induction Play', 'Final Year Production', 'Dance Drama'],
-        color: '#7c3aed',
-        icon: <Palette size={24} />
-    },
-    {
-        id: '8',
-        name: 'Muslim Students Society of Nigeria',
-        acronym: 'MSSN UI',
-        category: 'Religious',
-        founded: '1954',
-        motto: 'Service to Allah',
-        description: 'The umbrella body for all Muslim students on campus. Organizes prayers, lectures, and welfare activities for the Muslim Ummah.',
-        activities: ['Orientation Week', 'Ramadan Lectures', 'Tutorial Classes'],
-        color: '#15803d',
-        icon: <Users size={24} />
-    },
-];
+// Helper function to get icon component from icon name
+const getIconComponent = (iconName?: string, size: number = 24) => {
+    switch (iconName) {
+        case 'Award': return <Award size={size} />;
+        case 'Globe': return <Globe size={size} />;
+        case 'Heart': return <Heart size={size} />;
+        case 'Cpu': return <Cpu size={size} />;
+        case 'Users': return <Users size={size} />;
+        case 'Gavel': return <Gavel size={size} />;
+        case 'Palette': return <Palette size={size} />;
+        default: return <Star size={size} />;
+    }
+};
 
 // --- COMPONENT FOR EXPANDABLE ACTIVITY ITEMS ---
 const ActivityCard: React.FC<{ activity: string }> = ({ activity }) => {
@@ -210,7 +122,47 @@ interface ClubDetailProps {
 }
 
 export const ClubDetailPage: React.FC<ClubDetailProps> = ({ clubId, onBack }) => {
-    const club = clubsData.find(c => c.id === clubId);
+    const [club, setClub] = useState<Club | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchClub = async () => {
+            const { data, error } = await supabase
+                .from('clubs')
+                .select('*')
+                .eq('id', clubId)
+                .maybeSingle();
+
+            if (error) {
+                console.error('Error fetching club:', error);
+            } else if (data) {
+                setClub({
+                    id: data.id,
+                    name: data.name,
+                    acronym: data.acronym || undefined,
+                    category: data.category,
+                    founded: data.founded || '',
+                    motto: data.motto || '',
+                    description: data.description || '',
+                    activities: data.activities || [],
+                    president: data.president || undefined,
+                    color: data.color || '#6d28d9',
+                    iconName: data.icon_name || undefined
+                });
+            }
+            setLoading(false);
+        };
+
+        fetchClub();
+    }, [clubId]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-nobel-gold" />
+            </div>
+        );
+    }
 
     if (!club) return (
         <div className="min-h-screen bg-background flex items-center justify-center">
@@ -220,6 +172,8 @@ export const ClubDetailPage: React.FC<ClubDetailProps> = ({ clubId, onBack }) =>
             </div>
         </div>
     );
+
+    const icon = getIconComponent(club.iconName);
 
     return (
         <div className="min-h-screen bg-background pt-32 pb-16">
@@ -242,7 +196,7 @@ export const ClubDetailPage: React.FC<ClubDetailProps> = ({ clubId, onBack }) =>
                         <div className="absolute inset-0 opacity-80" style={{ backgroundColor: club.color }}></div>
                         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-40"></div>
                         <div className="absolute inset-0 flex items-center justify-center opacity-10 scale-150 text-white">
-                            {club.icon}
+                            {icon}
                         </div>
                     </div>
                     
@@ -254,7 +208,7 @@ export const ClubDetailPage: React.FC<ClubDetailProps> = ({ clubId, onBack }) =>
                                 className="w-32 h-32 md:w-40 md:h-40 bg-card rounded-2xl shadow-xl flex items-center justify-center text-5xl md:text-6xl border-4 border-card"
                                 style={{ color: club.color }}
                             >
-                                {club.icon}
+                                {icon}
                             </motion.div>
                             
                             <div className="flex-1 pt-4 md:pt-16">
@@ -359,10 +313,43 @@ export const ClubDetailPage: React.FC<ClubDetailProps> = ({ clubId, onBack }) =>
 export const CommunitiesPage: React.FC<CommunitiesProps> = ({ onBack, onClubSelect }) => {
     const [searchTerm, setSearchTerm] = useState("");
     const [activeCategory, setActiveCategory] = useState<Category>('All');
+    const [clubs, setClubs] = useState<Club[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchClubs = async () => {
+            const { data, error } = await supabase
+                .from('clubs')
+                .select('*')
+                .order('name');
+
+            if (error) {
+                console.error('Error fetching clubs:', error);
+            } else if (data) {
+                const mapped: Club[] = data.map(club => ({
+                    id: club.id,
+                    name: club.name,
+                    acronym: club.acronym || undefined,
+                    category: club.category,
+                    founded: club.founded || '',
+                    motto: club.motto || '',
+                    description: club.description || '',
+                    activities: club.activities || [],
+                    president: club.president || undefined,
+                    color: club.color || '#6d28d9',
+                    iconName: club.icon_name || undefined
+                }));
+                setClubs(mapped);
+            }
+            setLoading(false);
+        };
+
+        fetchClubs();
+    }, []);
 
     const categories: Category[] = ['All', 'Sociocultural', 'Academic', 'Religious', 'Press', 'Tech', 'Sports', 'Politics'];
 
-    const filteredClubs = clubsData.filter(club => {
+    const filteredClubs = clubs.filter(club => {
         const matchesSearch = club.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                               (club.acronym && club.acronym.toLowerCase().includes(searchTerm.toLowerCase()));
         const matchesCategory = activeCategory === 'All' || club.category === activeCategory;
@@ -444,48 +431,54 @@ export const CommunitiesPage: React.FC<CommunitiesProps> = ({ onBack, onClubSele
                 </div>
 
                 {/* Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <AnimatePresence mode="popLayout">
-                        {filteredClubs.map((club) => (
-                            <motion.div
-                                layout
-                                key={club.id}
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.95 }}
-                                onClick={() => onClubSelect(club.id)}
-                                className="bg-card p-8 rounded-xl border border-border hover:border-nobel-gold hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col justify-between min-h-[320px]"
-                            >
-                                <div>
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-ui-blue group-hover:bg-ui-blue group-hover:text-white transition-colors">
-                                            {club.icon}
+                {loading ? (
+                    <div className="flex justify-center items-center py-20">
+                        <Loader2 className="w-8 h-8 animate-spin text-nobel-gold" />
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <AnimatePresence mode="popLayout">
+                            {filteredClubs.map((club) => (
+                                <motion.div
+                                    layout
+                                    key={club.id}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    onClick={() => onClubSelect(club.id)}
+                                    className="bg-card p-8 rounded-xl border border-border hover:border-nobel-gold hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col justify-between min-h-[320px]"
+                                >
+                                    <div>
+                                        <div className="flex justify-between items-start mb-6">
+                                            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-ui-blue group-hover:bg-ui-blue group-hover:text-white transition-colors">
+                                                {getIconComponent(club.iconName)}
+                                            </div>
+                                            <div className="px-2 py-1 bg-muted text-muted-foreground text-[10px] font-bold uppercase tracking-widest rounded border border-border">
+                                                {club.category}
+                                            </div>
                                         </div>
-                                        <div className="px-2 py-1 bg-muted text-muted-foreground text-[10px] font-bold uppercase tracking-widest rounded border border-border">
-                                            {club.category}
-                                        </div>
+
+                                        <h3 className="font-serif text-2xl text-ui-blue mb-2 group-hover:text-nobel-gold transition-colors leading-tight">
+                                            {club.name}
+                                        </h3>
+                                        {club.acronym && <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">{club.acronym}</div>}
+                                        
+                                        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 font-light">
+                                            {club.description}
+                                        </p>
                                     </div>
 
-                                    <h3 className="font-serif text-2xl text-ui-blue mb-2 group-hover:text-nobel-gold transition-colors leading-tight">
-                                        {club.name}
-                                    </h3>
-                                    {club.acronym && <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">{club.acronym}</div>}
-                                    
-                                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 font-light">
-                                        {club.description}
-                                    </p>
-                                </div>
-
-                                <div className="mt-6 pt-6 border-t border-border flex justify-between items-center">
-                                    <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                                        <Calendar size={12} /> Est. {club.founded}
+                                    <div className="mt-6 pt-6 border-t border-border flex justify-between items-center">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                                            <Calendar size={12} /> Est. {club.founded}
+                                        </div>
+                                        <ArrowRight size={16} className="text-muted group-hover:text-nobel-gold group-hover:translate-x-1 transition-all" />
                                     </div>
-                                    <ArrowRight size={16} className="text-muted group-hover:text-nobel-gold group-hover:translate-x-1 transition-all" />
-                                </div>
-                            </motion.div>
-                        ))}
-                    </AnimatePresence>
-                </div>
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
+                    </div>
+                )}
             </div>
         </div>
     );
