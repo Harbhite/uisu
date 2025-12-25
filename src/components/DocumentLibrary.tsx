@@ -5,7 +5,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, FileText, Download, Search, Filter, Check, Upload, X, Star, Volume2, StopCircle } from 'lucide-react';
+import { ArrowLeft, FileText, Download, Search, Filter, Check, Upload, X, Star, Volume2, StopCircle, Loader2 } from 'lucide-react';
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Props for the DocumentLibrary component.
@@ -31,22 +32,9 @@ interface Doc {
     size: string;
     /** Brief description of the document's content. */
     description: string;
+    /** URL to the document file */
+    file_url?: string;
 }
-
-const initialDocuments: Doc[] = [
-    { id: '1', title: 'The 1952 Students Union Constitution', year: 1952, type: 'Constitution', size: '2.4 MB', description: 'The founding legal document of the Union.' },
-    { id: '2', title: 'Gamaliel Onosode: The Mellamby Address', year: 1955, type: 'Speech', size: '450 KB', description: 'Address delivered at the first hall dinner of Mellamby Hall.' },
-    { id: '3', title: 'Independence Day Union Memo', year: 1960, type: 'Report', size: '800 KB', description: 'Official union stance on Nigerian Independence.' },
-    { id: '4', title: 'Kunle Adepeju Memorial Committee Report', year: 1971, type: 'Report', size: '1.2 MB', description: 'Findings on the police brutality incident.' },
-    { id: '5', title: 'Ali Must Go: Charter of Demands', year: 1978, type: 'Manifesto', size: '1.5 MB', description: 'The list of demands presented to the Federal Military Government.' },
-    { id: '6', title: 'Student Welfare Bill 1985', year: 1985, type: 'Bill', size: '600 KB', description: 'Legislative bill for improving cafeteria services.' },
-    { id: '7', title: 'Anti-Cultism Decree', year: 1999, type: 'Bill', size: '900 KB', description: 'Union regulations against secret cult activities on campus.' },
-    { id: '8', title: '2001 Amended Constitution', year: 2001, type: 'Constitution', size: '3.1 MB', description: 'Major amendments following the return to democracy.' },
-    { id: '9', title: 'The "Book of Life" Speech Transcript', year: 2017, type: 'Speech', size: '300 KB', description: 'Transcript of Ojo Aderemi\'s budget speech.' },
-    { id: '10', title: 'Students Union Restoration Agreement', year: 2019, type: 'Report', size: '2.0 MB', description: 'Agreement between the University Management and Student Leaders.' },
-    { id: '11', title: '2023 Appropriation Bill', year: 2023, type: 'Bill', size: '1.8 MB', description: 'Approved budget for the 2023/2024 academic session.' },
-    { id: '12', title: '2024 Constitution (Digital Edition)', year: 2024, type: 'Constitution', size: '4.2 MB', description: 'The current operating constitution of the Union.' },
-];
 
 /**
  * A component displaying a library of historical documents.
@@ -56,7 +44,8 @@ const initialDocuments: Doc[] = [
  * @returns {JSX.Element} The rendered DocumentLibrary component.
  */
 export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
-    const [documents, setDocuments] = useState<Doc[]>(initialDocuments);
+    const [documents, setDocuments] = useState<Doc[]>([]);
+    const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedDecade, setSelectedDecade] = useState<string>("All");
     const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
@@ -75,6 +64,39 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
 
     const decades = ["All", "2020s", "2010s", "2000s", "1990s", "1980s", "1970s", "1960s", "1950s"];
     const docTypes = ['Constitution', 'Bill', 'Manifesto', 'Speech', 'Report', 'Memo'];
+
+    // Fetch documents from database
+    useEffect(() => {
+        const fetchDocuments = async () => {
+            setLoading(true);
+            try {
+                const { data, error } = await supabase
+                    .from('documents')
+                    .select('*')
+                    .order('year', { ascending: false });
+                
+                if (error) throw error;
+                
+                const formattedDocs: Doc[] = (data || []).map(doc => ({
+                    id: doc.id,
+                    title: doc.title,
+                    year: doc.year,
+                    type: doc.doc_type as Doc['type'],
+                    size: doc.file_size || 'N/A',
+                    description: doc.description || '',
+                    file_url: doc.file_url || undefined,
+                }));
+                
+                setDocuments(formattedDocs);
+            } catch (error) {
+                console.error('Error fetching documents:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDocuments();
+    }, []);
 
     // Initialize Speech Synthesis
     useEffect(() => {
@@ -157,6 +179,14 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
         const matchesType = selectedTypes.length === 0 || selectedTypes.includes(doc.type);
         return matchesSearch && matchesDecade && matchesType;
     });
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-nobel-gold" />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-background pt-32 pb-16">

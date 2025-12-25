@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Star, Calendar, Clock, MapPin, ChevronLeft, ChevronRight, Users, Award, FileText, Megaphone } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, isToday } from 'date-fns';
+import { ArrowLeft, Star, Calendar, Clock, MapPin, ChevronLeft, ChevronRight, Users, Award, FileText, Megaphone, Loader2 } from 'lucide-react';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, isToday, parseISO } from 'date-fns';
+import { supabase } from "@/integrations/supabase/client";
 
 interface EventsCalendarProps {
   onBack: () => void;
@@ -22,79 +23,6 @@ interface CalendarEvent {
   time?: string;
 }
 
-const events: CalendarEvent[] = [
-  // Upcoming Events
-  {
-    id: '1',
-    title: 'General Assembly Meeting',
-    date: new Date(2025, 0, 15),
-    type: 'meeting',
-    description: 'Quarterly general assembly for all union members. Attendance is mandatory for representatives.',
-    location: 'Union Hall',
-    time: '10:00 AM'
-  },
-  {
-    id: '2',
-    title: 'Leadership Workshop',
-    date: new Date(2025, 0, 22),
-    type: 'upcoming',
-    description: 'Training workshop for aspiring student leaders on governance and public speaking.',
-    location: 'Conference Room A',
-    time: '2:00 PM'
-  },
-  {
-    id: '3',
-    title: 'Union Elections 2025',
-    date: new Date(2025, 1, 14),
-    type: 'election',
-    description: 'Annual union elections. All registered students are eligible to vote.',
-    location: 'Main Campus',
-    time: '8:00 AM - 6:00 PM'
-  },
-  {
-    id: '4',
-    title: 'Founders Day Celebration',
-    date: new Date(2025, 2, 8),
-    type: 'anniversary',
-    description: 'Celebrating 77 years since the founding of the Students Union.',
-    location: 'Ceremonial Ground',
-    time: '11:00 AM'
-  },
-  // Historical Anniversaries
-  {
-    id: '5',
-    title: 'Ali Must Go Anniversary',
-    date: new Date(2025, 3, 18),
-    type: 'anniversary',
-    description: 'Commemorating the 1978 nationwide student protests against education commercialization.',
-  },
-  {
-    id: '6',
-    title: 'Constitution Day',
-    date: new Date(2025, 4, 12),
-    type: 'anniversary',
-    description: 'Anniversary of the adoption of the first union constitution in 1952.',
-  },
-  {
-    id: '7',
-    title: 'Executive Council Meeting',
-    date: new Date(2025, 0, 28),
-    type: 'meeting',
-    description: 'Monthly executive council session to discuss ongoing projects and budget.',
-    location: 'Executive Chamber',
-    time: '3:00 PM'
-  },
-  {
-    id: '8',
-    title: 'Cultural Week Opening',
-    date: new Date(2025, 1, 3),
-    type: 'upcoming',
-    description: 'Week-long celebration of cultural diversity featuring performances and exhibitions.',
-    location: 'Arts Theatre',
-    time: '5:00 PM'
-  },
-];
-
 const eventTypeConfig = {
   upcoming: { label: 'Upcoming', color: 'bg-ui-blue', icon: Megaphone },
   anniversary: { label: 'Anniversary', color: 'bg-nobel-gold', icon: Award },
@@ -106,6 +34,40 @@ export const EventsCalendar: React.FC<EventsCalendarProps> = ({ onBack }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [activeFilter, setActiveFilter] = useState<string>('all');
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('events')
+          .select('*')
+          .order('event_date', { ascending: true });
+        
+        if (error) throw error;
+        
+        const formattedEvents: CalendarEvent[] = (data || []).map(event => ({
+          id: event.id,
+          title: event.title,
+          date: parseISO(event.event_date),
+          type: event.event_type as CalendarEvent['type'],
+          description: event.description || '',
+          location: event.location || undefined,
+          time: event.event_time || undefined,
+        }));
+        
+        setEvents(formattedEvents);
+      } catch (error) {
+        console.error('Error fetching events:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -130,6 +92,14 @@ export const EventsCalendar: React.FC<EventsCalendarProps> = ({ onBack }) => {
     .filter(event => event.date >= new Date())
     .sort((a, b) => a.date.getTime() - b.date.getTime())
     .slice(0, 5);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-nobel-gold" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pt-32 pb-16">
