@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, FileText, Download, Search, Filter, Check, Upload, X, Star, Volume2, StopCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, FileText, Download, Search, Filter, Check, Upload, X, Star, Volume2, StopCircle, Loader2, File, FileType, FileType2, ScrollText, FileCheck, FileWarning } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -366,16 +366,43 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                                             />
                                         )}
 
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{doc.type}</span>
-                                                <div className="w-1 h-1 rounded-full bg-border"></div>
-                                                <span className="text-[10px] font-bold uppercase tracking-widest text-nobel-gold">{doc.year}</span>
+                                        <div className="flex items-start gap-4 flex-1">
+                                            {/* File Type Icon */}
+                                            <div className={`shrink-0 w-14 h-14 rounded-lg flex items-center justify-center ${
+                                                doc.type === 'Constitution' ? 'bg-ui-blue/10 text-ui-blue' :
+                                                doc.type === 'Bill' ? 'bg-purple-100 text-purple-600' :
+                                                doc.type === 'Manifesto' ? 'bg-nobel-gold/20 text-nobel-gold' :
+                                                doc.type === 'Speech' ? 'bg-green-100 text-green-600' :
+                                                doc.type === 'Report' ? 'bg-orange-100 text-orange-600' :
+                                                'bg-muted text-muted-foreground'
+                                            }`}>
+                                                {doc.type === 'Constitution' && <ScrollText size={24} />}
+                                                {doc.type === 'Bill' && <FileCheck size={24} />}
+                                                {doc.type === 'Manifesto' && <FileType size={24} />}
+                                                {doc.type === 'Speech' && <FileType2 size={24} />}
+                                                {doc.type === 'Report' && <FileText size={24} />}
+                                                {doc.type === 'Memo' && <File size={24} />}
                                             </div>
-                                            <h3 className={`font-serif text-2xl mb-2 transition-colors ${playingDocId === doc.id ? 'text-nobel-gold' : 'text-ui-blue group-hover:text-nobel-gold'}`}>
-                                                {doc.title}
-                                            </h3>
-                                            <p className="text-sm text-muted-foreground font-light max-w-lg">{doc.description}</p>
+                                            
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{doc.type}</span>
+                                                    <div className="w-1 h-1 rounded-full bg-border"></div>
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-nobel-gold">{doc.year}</span>
+                                                    {doc.file_url && (
+                                                        <>
+                                                            <div className="w-1 h-1 rounded-full bg-border"></div>
+                                                            <span className="text-[10px] font-bold uppercase tracking-widest text-green-600">
+                                                                {doc.file_url.split('.').pop()?.toUpperCase() || 'FILE'}
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                                <h3 className={`font-serif text-2xl mb-2 transition-colors ${playingDocId === doc.id ? 'text-nobel-gold' : 'text-ui-blue group-hover:text-nobel-gold'}`}>
+                                                    {doc.title}
+                                                </h3>
+                                                <p className="text-sm text-muted-foreground font-light max-w-lg">{doc.description}</p>
+                                            </div>
                                         </div>
                                         
                                         <div className="shrink-0 flex items-center gap-3">
