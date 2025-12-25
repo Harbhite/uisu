@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Search, Users, ChevronDown, ChevronUp, Star } from 'lucide-react';
+import { ArrowLeft, Search, Users, ChevronDown, ChevronUp, Star, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Props for the PastLeadersPage component.
@@ -31,6 +32,8 @@ interface ExecutiveMember {
  * Represents a Union administration tenure.
  */
 interface Administration {
+    /** Unique identifier */
+    id: string;
     /** The academic session year (e.g., "2023/2024"). */
     session: string;
     /** The name of the President. */
@@ -47,115 +50,6 @@ interface Administration {
     team: ExecutiveMember[];
 }
 
-const administrations: Administration[] = [
-    {
-        session: "2024/2025",
-        president: "Aweda Bolaji",
-        alias: "Oloye",
-        motto: "Team Inclusive",
-        notableEvents: "Current administration focusing on inclusivity, digital ID cards, and student welfare amid rising economic costs.",
-        status: "Active",
-        team: [
-            { role: "Vice President", name: "Bolutife", alias: "Abderry" },
-            { role: "General Secretary", name: "Ogundipo", alias: "Global" },
-            { role: "Asst. Gen. Sec", name: "Elemide Daniel" },
-            { role: "House Secretary", name: "Tunde-Ipaye" },
-            { role: "Public Relations Officer", name: "Adetona" },
-            { role: "Treasurer", name: "Hassan" },
-            { role: "Sports Secretary", name: "Olatunji" }
-        ]
-    },
-    {
-        session: "2023/2024",
-        president: "Samuel Samson Tobiloba",
-        alias: "Host",
-        motto: "Team Reform",
-        notableEvents: "Focused on reforming union processes, constitutional review, and digitalizing the secretariat.",
-        status: "Completed",
-        team: [
-            { role: "Vice President", name: "Ogunsesan Nafisat" },
-            { role: "General Secretary", name: "Salami Olufisayo" },
-            { role: "Asst. Gen. Sec", name: "Oluwole Ayomide" },
-            { role: "House Secretary", name: "Sanjay" },
-            { role: "Public Relations Officer", name: "Adeona Tosin" },
-            { role: "Treasurer", name: "Busari" },
-            { role: "Sports Secretary", name: "Josh" }
-        ]
-    },
-    {
-        session: "2021/2022",
-        president: "Adewole Adeyinka",
-        alias: "Mascot",
-        motto: "Team Restoration",
-        notableEvents: "Restored the union after a long period of suspension and caretaker committees. Rebuilt student confidence.",
-        status: "Completed",
-        team: [
-            { role: "Vice President", name: "Zainab" },
-            { role: "General Secretary", name: "Bamidele Taiwo" },
-            { role: "Asst. Gen. Sec", name: "Federal" },
-            { role: "House Secretary", name: "Michael" },
-            { role: "Public Relations Officer", name: "Jagaban" },
-            { role: "Treasurer", name: "Daniel" },
-            { role: "Sports Secretary", name: "Felix" }
-        ]
-    },
-    {
-        session: "2019/2020",
-        president: "Akeju Olusegun",
-        alias: "Akeju",
-        motto: "Unification",
-        notableEvents: "Managed student affairs during the COVID-19 pandemic transition and ASUU strikes.",
-        status: "Completed",
-        team: [
-            { role: "Vice President", name: "Oloyede" },
-            { role: "General Secretary", name: "Mustapha" },
-            { role: "Public Relations Officer", name: "Ajao" },
-            { role: "House Secretary", name: "Elijah" },
-            { role: "Sports Secretary", name: "Coach" }
-        ]
-    },
-    {
-        session: "2017/2018",
-        president: "Ojo Aderemi",
-        alias: "Patriotic Intelligentsia",
-        motto: "Patriotic Intelligentsia",
-        notableEvents: "Historically suspended for leading a protest against ID card fees. Delivered the famous 'Book of Life' budget speech.",
-        status: "Suspended",
-        team: [
-            { role: "Vice President", name: "Oluwafunke" },
-            { role: "General Secretary", name: "Iyanuoluwa" },
-            { role: "Asst. Gen. Sec", name: "Nifemi" },
-            { role: "House Secretary", name: "Pascal", alias: "P. Manager" },
-            { role: "Public Relations Officer", name: "Adebayo" },
-            { role: "Treasurer", name: "Ajibola" },
-            { role: "Sports Secretary", name: "Sporty" }
-        ]
-    },
-    {
-        session: "1994/1995",
-        president: "Sowore Omoyele",
-        alias: "Sowore",
-        motto: "Anti-Military",
-        notableEvents: "Led fierce anti-military protests during the Abacha regime. Expelled/Suspended multiple times.",
-        status: "Suspended",
-        team: [
-             { role: "Movement", name: "Student Activists Collective" }
-        ]
-    },
-    {
-        session: "1978/1979",
-        president: "Segun Okeowo",
-        alias: "Okeowo",
-        motto: "Ali Must Go",
-        notableEvents: "Led the nationwide 'Ali Must Go' protests against the commercialization of education.",
-        status: "Impeached",
-        team: [
-            { role: "General Secretary", name: "Comrade Arogundade" },
-            { role: "PRO", name: "Comrade Labinjo" }
-        ]
-    }
-];
-
 /**
  * A page displaying a list of past Union administrations (Hall of Fame).
  * Allows searching and expanding details for each administration.
@@ -167,6 +61,36 @@ export const PastLeadersPage: React.FC<PastLeadersProps> = ({ onBack }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [administrations, setAdministrations] = useState<Administration[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAdministrations = async () => {
+      const { data, error } = await supabase
+        .from('administrations')
+        .select('*')
+        .order('session', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching administrations:', error);
+      } else if (data) {
+        const mapped: Administration[] = data.map(admin => ({
+          id: admin.id,
+          session: admin.session,
+          president: admin.president,
+          alias: admin.alias || '',
+          motto: admin.motto || '',
+          notableEvents: admin.notable_events || '',
+          status: (admin.status as Administration['status']) || 'Completed',
+          team: (admin.team as unknown as ExecutiveMember[]) || []
+        }));
+        setAdministrations(mapped);
+      }
+      setLoading(false);
+    };
+
+    fetchAdministrations();
+  }, []);
 
   const filteredAdmins = administrations.filter(admin => 
     admin.president.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -222,81 +146,87 @@ export const PastLeadersPage: React.FC<PastLeadersProps> = ({ onBack }) => {
             </motion.div>
         </div>
 
-        <div className="flex flex-col gap-6">
-            {filteredAdmins.length > 0 ? (
-                filteredAdmins.map((admin, index) => (
-                    <motion.div 
-                        key={admin.session}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        className="bg-card group relative overflow-hidden border border-transparent hover:border-border hover:shadow-xl transition-all duration-500 rounded-sm"
-                    >
-                        {/* Selection Bar */}
-                        <div className={`absolute left-0 top-0 h-full w-1 transition-colors duration-300 ${expandedId === admin.session ? 'bg-nobel-gold' : 'bg-muted group-hover:bg-nobel-gold/50'}`}></div>
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-nobel-gold" />
+          </div>
+        ) : (
+          <div className="flex flex-col gap-6">
+              {filteredAdmins.length > 0 ? (
+                  filteredAdmins.map((admin, index) => (
+                      <motion.div 
+                          key={admin.session}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          className="bg-card group relative overflow-hidden border border-transparent hover:border-border hover:shadow-xl transition-all duration-500 rounded-sm"
+                      >
+                          {/* Selection Bar */}
+                          <div className={`absolute left-0 top-0 h-full w-1 transition-colors duration-300 ${expandedId === admin.session ? 'bg-nobel-gold' : 'bg-muted group-hover:bg-nobel-gold/50'}`}></div>
 
-                        <div className="p-8 cursor-pointer" onClick={() => toggleExpand(admin.session)}>
-                            <div className="flex flex-col lg:flex-row gap-8 lg:items-center">
-                                {/* Date */}
-                                <div className="min-w-[120px]">
-                                    <div className="text-xs font-bold tracking-[0.2em] uppercase text-muted-foreground mb-1">Session</div>
-                                    <div className="font-serif text-2xl text-ui-blue">{admin.session}</div>
-                                </div>
-                                
-                                {/* Name */}
-                                <div className="flex-1">
-                                    <div className="flex flex-col md:flex-row md:items-baseline gap-3 mb-2">
-                                        <h3 className="font-serif text-3xl text-ui-blue">{admin.president}</h3>
-                                        <span className="text-sm font-bold tracking-widest uppercase text-nobel-gold">"{admin.alias}"</span>
-                                    </div>
-                                    <p className="text-muted-foreground leading-relaxed max-w-2xl font-light">{admin.notableEvents}</p>
-                                </div>
+                          <div className="p-8 cursor-pointer" onClick={() => toggleExpand(admin.session)}>
+                              <div className="flex flex-col lg:flex-row gap-8 lg:items-center">
+                                  {/* Date */}
+                                  <div className="min-w-[120px]">
+                                      <div className="text-xs font-bold tracking-[0.2em] uppercase text-muted-foreground mb-1">Session</div>
+                                      <div className="font-serif text-2xl text-ui-blue">{admin.session}</div>
+                                  </div>
+                                  
+                                  {/* Name */}
+                                  <div className="flex-1">
+                                      <div className="flex flex-col md:flex-row md:items-baseline gap-3 mb-2">
+                                          <h3 className="font-serif text-3xl text-ui-blue">{admin.president}</h3>
+                                          <span className="text-sm font-bold tracking-widest uppercase text-nobel-gold">"{admin.alias}"</span>
+                                      </div>
+                                      <p className="text-muted-foreground leading-relaxed max-w-2xl font-light">{admin.notableEvents}</p>
+                                  </div>
 
-                                {/* Status & Toggle */}
-                                <div className="min-w-[160px] flex flex-row lg:flex-col justify-between lg:justify-center items-center lg:items-end gap-4">
-                                    <StatusBadge status={admin.status} />
-                                    
-                                    <button className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted-foreground group-hover:border-foreground group-hover:text-foreground transition-all">
-                                        {expandedId === admin.session ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        {/* Expanded Team Section */}
-                        <AnimatePresence>
-                            {expandedId === admin.session && (
-                                <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    className="bg-muted"
-                                >
-                                    <div className="p-8 border-t border-border ml-1">
-                                        <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-                                            <Users size={14} /> The Executive Council
-                                        </h4>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                                            {admin.team.map((member, idx) => (
-                                                <div key={idx} className="bg-card p-6 border border-border hover:border-muted-foreground transition-colors">
-                                                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">{member.role}</div>
-                                                    <div className="font-serif text-lg text-ui-blue">{member.name}</div>
-                                                    {member.alias && <div className="text-xs text-nobel-gold mt-1 italic">"{member.alias}"</div>}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </motion.div>
-                ))
-            ) : (
-                <div className="py-20 text-center text-muted-foreground">
-                    <p className="font-serif text-xl italic">No records found for "{searchTerm}"</p>
-                </div>
-            )}
-        </div>
+                                  {/* Status & Toggle */}
+                                  <div className="min-w-[160px] flex flex-row lg:flex-col justify-between lg:justify-center items-center lg:items-end gap-4">
+                                      <StatusBadge status={admin.status} />
+                                      
+                                      <button className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted-foreground group-hover:border-foreground group-hover:text-foreground transition-all">
+                                          {expandedId === admin.session ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
+                                      </button>
+                                  </div>
+                              </div>
+                          </div>
+                          
+                          {/* Expanded Team Section */}
+                          <AnimatePresence>
+                              {expandedId === admin.session && (
+                                  <motion.div
+                                      initial={{ height: 0, opacity: 0 }}
+                                      animate={{ height: 'auto', opacity: 1 }}
+                                      exit={{ height: 0, opacity: 0 }}
+                                      className="bg-muted"
+                                  >
+                                      <div className="p-8 border-t border-border ml-1">
+                                          <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                                              <Users size={14} /> The Executive Council
+                                          </h4>
+                                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                              {admin.team.map((member, idx) => (
+                                                  <div key={idx} className="bg-card p-6 border border-border hover:border-muted-foreground transition-colors">
+                                                      <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">{member.role}</div>
+                                                      <div className="font-serif text-lg text-ui-blue">{member.name}</div>
+                                                      {member.alias && <div className="text-xs text-nobel-gold mt-1 italic">"{member.alias}"</div>}
+                                                  </div>
+                                              ))}
+                                          </div>
+                                      </div>
+                                  </motion.div>
+                              )}
+                          </AnimatePresence>
+                      </motion.div>
+                  ))
+              ) : (
+                  <div className="py-20 text-center text-muted-foreground">
+                      <p className="font-serif text-xl italic">No records found for "{searchTerm}"</p>
+                  </div>
+              )}
+          </div>
+        )}
       </div>
     </div>
   );
