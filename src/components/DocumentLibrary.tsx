@@ -61,6 +61,8 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
     const [newType, setNewType] = useState("Report");
     const [newDesc, setNewDesc] = useState("");
     const [isUploading, setIsUploading] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const decades = ["All", "2020s", "2010s", "2000s", "1990s", "1980s", "1970s", "1960s", "1950s"];
     const docTypes = ['Constitution', 'Bill', 'Manifesto', 'Speech', 'Report', 'Memo'];
@@ -148,23 +150,74 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
         );
     };
 
-    const handleUpload = (e: React.FormEvent) => {
+    const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsUploading(true);
-        setTimeout(() => {
+        
+        try {
+            let fileUrl: string | null = null;
+            let fileSize: string = 'N/A';
+            
+            // Upload file to storage if selected
+            if (selectedFile) {
+                const fileExt = selectedFile.name.split('.').pop();
+                const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+                
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('documents')
+                    .upload(fileName, selectedFile);
+                
+                if (uploadError) throw uploadError;
+                
+                // Get public URL
+                const { data: urlData } = supabase.storage
+                    .from('documents')
+                    .getPublicUrl(fileName);
+                
+                fileUrl = urlData.publicUrl;
+                fileSize = `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB`;
+            }
+            
+            // Insert document record into database
+            const { data: newDocData, error: insertError } = await supabase
+                .from('documents')
+                .insert({
+                    title: newTitle,
+                    year: parseInt(newYear) || new Date().getFullYear(),
+                    doc_type: newType,
+                    description: newDesc,
+                    file_url: fileUrl,
+                    file_size: fileSize,
+                })
+                .select()
+                .single();
+            
+            if (insertError) throw insertError;
+            
+            // Add to local state
             const newDoc: Doc = {
-                id: (documents.length + 1).toString() + Date.now(),
-                title: newTitle,
-                year: parseInt(newYear) || new Date().getFullYear(),
-                type: newType as any,
-                size: "1.5 MB",
-                description: newDesc
+                id: newDocData.id,
+                title: newDocData.title,
+                year: newDocData.year,
+                type: newDocData.doc_type as Doc['type'],
+                size: newDocData.file_size || 'N/A',
+                description: newDocData.description || '',
+                file_url: newDocData.file_url || undefined,
             };
+            
             setDocuments([newDoc, ...documents]);
-            setIsUploading(false);
             setIsUploadModalOpen(false);
-            setNewTitle(""); setNewYear(""); setNewType("Report"); setNewDesc("");
-        }, 2000);
+            setNewTitle(""); 
+            setNewYear(""); 
+            setNewType("Report"); 
+            setNewDesc("");
+            setSelectedFile(null);
+        } catch (error) {
+            console.error('Upload error:', error);
+            alert('Failed to upload document. Please try again.');
+        } finally {
+            setIsUploading(false);
+        }
     };
 
     const filteredDocs = documents.filter(doc => {
@@ -344,9 +397,24 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                                                 )}
                                             </button>
 
-                                            <button className="flex items-center gap-2 px-6 py-3 bg-muted hover:bg-ui-blue hover:text-white text-foreground text-xs font-bold uppercase tracking-widest transition-all">
-                                                <Download size={14} /> <span className="hidden md:inline">Download</span>
-                                            </button>
+                                            {doc.file_url ? (
+                                                <a 
+                                                    href={doc.file_url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    download
+                                                    className="flex items-center gap-2 px-6 py-3 bg-muted hover:bg-ui-blue hover:text-white text-foreground text-xs font-bold uppercase tracking-widest transition-all"
+                                                >
+                                                    <Download size={14} /> <span className="hidden md:inline">Download</span>
+                                                </a>
+                                            ) : (
+                                                <button 
+                                                    disabled
+                                                    className="flex items-center gap-2 px-6 py-3 bg-muted text-muted-foreground text-xs font-bold uppercase tracking-widest cursor-not-allowed opacity-50"
+                                                >
+                                                    <Download size={14} /> <span className="hidden md:inline">No File</span>
+                                                </button>
+                                            )}
                                         </div>
                                     </motion.div>
                                 ))
@@ -420,6 +488,28 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                                         rows={3}
                                         className="w-full px-4 py-3 bg-card border border-border focus:border-nobel-gold focus:outline-none transition-colors resize-none"
                                     />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Document File</label>
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept=".pdf,.doc,.docx,.txt"
+                                        onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                                        className="hidden"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="w-full px-4 py-3 bg-card border border-dashed border-border hover:border-nobel-gold focus:border-nobel-gold focus:outline-none transition-colors text-left"
+                                    >
+                                        {selectedFile ? (
+                                            <span className="text-foreground">{selectedFile.name}</span>
+                                        ) : (
+                                            <span className="text-muted-foreground">Click to select a file...</span>
+                                        )}
+                                    </button>
                                 </div>
 
                                 <div className="pt-4">
