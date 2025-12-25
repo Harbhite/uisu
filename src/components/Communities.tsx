@@ -49,6 +49,8 @@ export interface Club {
     color: string;
     /** Icon name for the club. */
     iconName?: string;
+    /** Image/logo URL for the club. */
+    imageUrl?: string;
 }
 
 // Helper function to get icon component from icon name
@@ -147,7 +149,8 @@ export const ClubDetailPage: React.FC<ClubDetailProps> = ({ clubId, onBack }) =>
                     activities: data.activities || [],
                     president: data.president || undefined,
                     color: data.color || '#6d28d9',
-                    iconName: data.icon_name || undefined
+                    iconName: data.icon_name || undefined,
+                    imageUrl: data.image_url || undefined
                 });
             }
             setLoading(false);
@@ -200,16 +203,24 @@ export const ClubDetailPage: React.FC<ClubDetailProps> = ({ clubId, onBack }) =>
                         </div>
                     </div>
                     
-                    <div className="px-8 pb-8 md:px-12 md:pb-12 -mt-16 relative z-10">
-                        <div className="flex flex-col md:flex-row gap-8 items-start">
-                            <motion.div 
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                className="w-32 h-32 md:w-40 md:h-40 bg-card rounded-2xl shadow-xl flex items-center justify-center text-5xl md:text-6xl border-4 border-card"
-                                style={{ color: club.color }}
-                            >
-                                {icon}
-                            </motion.div>
+                        <div className="px-8 pb-8 md:px-12 md:pb-12 -mt-16 relative z-10">
+                            <div className="flex flex-col md:flex-row gap-8 items-start">
+                                <motion.div 
+                                    initial={{ scale: 0.9, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    className="w-32 h-32 md:w-40 md:h-40 bg-card rounded-2xl shadow-xl flex items-center justify-center text-5xl md:text-6xl border-4 border-card overflow-hidden"
+                                    style={{ color: club.color }}
+                                >
+                                    {club.imageUrl ? (
+                                        <img 
+                                            src={club.imageUrl} 
+                                            alt={`${club.name} logo`}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        icon
+                                    )}
+                                </motion.div>
                             
                             <div className="flex-1 pt-4 md:pt-16">
                                 <div className="flex flex-wrap gap-3 mb-3">
@@ -337,7 +348,8 @@ export const CommunitiesPage: React.FC<CommunitiesProps> = ({ onBack, onClubSele
                     activities: club.activities || [],
                     president: club.president || undefined,
                     color: club.color || '#6d28d9',
-                    iconName: club.icon_name || undefined
+                    iconName: club.icon_name || undefined,
+                    imageUrl: club.image_url || undefined
                 }));
                 setClubs(mapped);
             }
@@ -450,9 +462,19 @@ export const CommunitiesPage: React.FC<CommunitiesProps> = ({ onBack, onClubSele
                                 >
                                     <div>
                                         <div className="flex justify-between items-start mb-6">
-                                            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-ui-blue group-hover:bg-ui-blue group-hover:text-white transition-colors">
-                                                {getIconComponent(club.iconName)}
-                                            </div>
+                                            {club.imageUrl ? (
+                                                <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted">
+                                                    <img 
+                                                        src={club.imageUrl} 
+                                                        alt={`${club.name} logo`}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-ui-blue group-hover:bg-ui-blue group-hover:text-white transition-colors">
+                                                    {getIconComponent(club.iconName)}
+                                                </div>
+                                            )}
                                             <div className="px-2 py-1 bg-muted text-muted-foreground text-[10px] font-bold uppercase tracking-widest rounded border border-border">
                                                 {club.category}
                                             </div>
