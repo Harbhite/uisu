@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { 
   ArrowLeft, Star, Plus, Trash2, Edit2, Calendar, FileText, 
   Megaphone, X, Upload, Loader2, Check, Users, Award, ShieldAlert,
-  ArrowUpDown, History
+  ArrowUpDown, History, Search, Download, Filter
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
@@ -161,6 +161,11 @@ const AdminDashboard = () => {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [newUserRole, setNewUserRole] = useState<"admin" | "moderator">("moderator");
+  
+  // Audit log filters
+  const [auditSearchQuery, setAuditSearchQuery] = useState("");
+  const [auditActionFilter, setAuditActionFilter] = useState<string>("all");
+  const [auditTableFilter, setAuditTableFilter] = useState<string>("all");
   
   // Modal states
   const [showModal, setShowModal] = useState(false);
@@ -437,41 +442,56 @@ const AdminDashboard = () => {
     setSaving(true);
     try {
       let validatedData: any;
+      let tableName = "";
+      let recordId: string | null = null;
       
       if (activeTab === "events") {
+        tableName = "events";
         validatedData = eventSchema.parse(formData);
         validatedData.created_by = user?.id;
         
         if (editingItem) {
+          recordId = editingItem.id;
           const { error } = await supabase
             .from("events")
             .update(validatedData)
             .eq("id", editingItem.id);
           if (error) throw error;
+          await logAuditAction('update', tableName, recordId, editingItem, validatedData);
         } else {
-          const { error } = await supabase
+          const { data, error } = await supabase
             .from("events")
-            .insert(validatedData);
+            .insert(validatedData)
+            .select('id')
+            .single();
           if (error) throw error;
+          await logAuditAction('create', tableName, data?.id, null, validatedData);
         }
       } else if (activeTab === "announcements") {
+        tableName = "announcements";
         validatedData = announcementSchema.parse(formData);
         validatedData.created_by = user?.id;
         validatedData.is_active = formData.is_active ?? true;
         
         if (editingItem) {
+          recordId = editingItem.id;
           const { error } = await supabase
             .from("announcements")
             .update(validatedData)
             .eq("id", editingItem.id);
           if (error) throw error;
+          await logAuditAction('update', tableName, recordId, editingItem, validatedData);
         } else {
-          const { error } = await supabase
+          const { data, error } = await supabase
             .from("announcements")
-            .insert(validatedData);
+            .insert(validatedData)
+            .select('id')
+            .single();
           if (error) throw error;
+          await logAuditAction('create', tableName, data?.id, null, validatedData);
         }
       } else if (activeTab === "documents") {
+        tableName = "documents";
         validatedData = documentSchema.parse({
           ...formData,
           year: parseInt(formData.year),
@@ -487,18 +507,24 @@ const AdminDashboard = () => {
         }
         
         if (editingItem) {
+          recordId = editingItem.id;
           const { error } = await supabase
             .from("documents")
             .update(validatedData)
             .eq("id", editingItem.id);
           if (error) throw error;
+          await logAuditAction('update', tableName, recordId, editingItem, validatedData);
         } else {
-          const { error } = await supabase
+          const { data, error } = await supabase
             .from("documents")
-            .insert(validatedData);
+            .insert(validatedData)
+            .select('id')
+            .single();
           if (error) throw error;
+          await logAuditAction('create', tableName, data?.id, null, validatedData);
         }
       } else if (activeTab === "clubs") {
+        tableName = "clubs";
         const activities = activitiesInput.split(",").map(a => a.trim()).filter(a => a);
         validatedData = clubSchema.parse({
           ...formData,
@@ -506,34 +532,45 @@ const AdminDashboard = () => {
         });
         
         if (editingItem) {
+          recordId = editingItem.id;
           const { error } = await supabase
             .from("clubs")
             .update(validatedData)
             .eq("id", editingItem.id);
           if (error) throw error;
+          await logAuditAction('update', tableName, recordId, editingItem, validatedData);
         } else {
-          const { error } = await supabase
+          const { data, error } = await supabase
             .from("clubs")
-            .insert(validatedData);
+            .insert(validatedData)
+            .select('id')
+            .single();
           if (error) throw error;
+          await logAuditAction('create', tableName, data?.id, null, validatedData);
         }
       } else if (activeTab === "administrations") {
+        tableName = "administrations";
         validatedData = administrationSchema.parse({
           ...formData,
           team: teamMembers.filter(m => m.role && m.name),
         });
         
         if (editingItem) {
+          recordId = editingItem.id;
           const { error } = await supabase
             .from("administrations")
             .update(validatedData)
             .eq("id", editingItem.id);
           if (error) throw error;
+          await logAuditAction('update', tableName, recordId, editingItem, validatedData);
         } else {
-          const { error } = await supabase
+          const { data, error } = await supabase
             .from("administrations")
-            .insert(validatedData);
+            .insert(validatedData)
+            .select('id')
+            .single();
           if (error) throw error;
+          await logAuditAction('create', tableName, data?.id, null, validatedData);
         }
       }
       
@@ -674,6 +711,59 @@ const AdminDashboard = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  // Filtered audit logs
+  const filteredAuditLogs = auditLogs.filter((log) => {
+    const matchesSearch = auditSearchQuery === "" || 
+      log.profile?.full_name?.toLowerCase().includes(auditSearchQuery.toLowerCase()) ||
+      log.profile?.email?.toLowerCase().includes(auditSearchQuery.toLowerCase()) ||
+      log.action.toLowerCase().includes(auditSearchQuery.toLowerCase()) ||
+      log.table_name.toLowerCase().includes(auditSearchQuery.toLowerCase());
+    
+    const matchesAction = auditActionFilter === "all" || log.action === auditActionFilter;
+    const matchesTable = auditTableFilter === "all" || log.table_name === auditTableFilter;
+    
+    return matchesSearch && matchesAction && matchesTable;
+  });
+
+  // Get unique actions and tables for filter dropdowns
+  const uniqueActions = [...new Set(auditLogs.map(log => log.action))];
+  const uniqueTables = [...new Set(auditLogs.map(log => log.table_name))];
+
+  // Export audit logs to CSV
+  const exportAuditLogs = () => {
+    const headers = ["Timestamp", "User", "Email", "Action", "Table", "Record ID", "Old Data", "New Data"];
+    const rows = filteredAuditLogs.map(log => [
+      new Date(log.created_at).toISOString(),
+      log.profile?.full_name || "Unknown",
+      log.profile?.email || "",
+      log.action,
+      log.table_name,
+      log.record_id || "",
+      log.old_data ? JSON.stringify(log.old_data) : "",
+      log.new_data ? JSON.stringify(log.new_data) : ""
+    ]);
+    
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+    ].join("\n");
+    
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `audit-logs-${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Export complete",
+      description: `Exported ${filteredAuditLogs.length} audit log entries.`,
+    });
   };
 
   const addStaffMember = async () => {
@@ -1192,13 +1282,65 @@ const AdminDashboard = () => {
             {/* Audit Logs Tab */}
             {activeTab === "audit" && (
               <div className="space-y-4">
-                <div className="bg-card border border-border p-4">
+                {/* Filters and Export */}
+                <div className="bg-card border border-border p-4 space-y-4">
+                  <div className="flex flex-col md:flex-row gap-4">
+                    {/* Search */}
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <input
+                        type="text"
+                        placeholder="Search by user, action, or table..."
+                        value={auditSearchQuery}
+                        onChange={(e) => setAuditSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 bg-background border border-border text-foreground focus:border-nobel-gold focus:outline-none transition-colors text-sm"
+                      />
+                    </div>
+                    
+                    {/* Action Filter */}
+                    <div className="flex items-center gap-2">
+                      <Filter className="w-4 h-4 text-muted-foreground" />
+                      <select
+                        value={auditActionFilter}
+                        onChange={(e) => setAuditActionFilter(e.target.value)}
+                        className="px-3 py-2 bg-background border border-border text-foreground focus:border-nobel-gold focus:outline-none transition-colors text-sm"
+                      >
+                        <option value="all">All Actions</option>
+                        {uniqueActions.map(action => (
+                          <option key={action} value={action}>{action}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    {/* Table Filter */}
+                    <select
+                      value={auditTableFilter}
+                      onChange={(e) => setAuditTableFilter(e.target.value)}
+                      className="px-3 py-2 bg-background border border-border text-foreground focus:border-nobel-gold focus:outline-none transition-colors text-sm"
+                    >
+                      <option value="all">All Tables</option>
+                      {uniqueTables.map(table => (
+                        <option key={table} value={table}>{table}</option>
+                      ))}
+                    </select>
+                    
+                    {/* Export Button */}
+                    <button
+                      onClick={exportAuditLogs}
+                      disabled={filteredAuditLogs.length === 0}
+                      className="flex items-center gap-2 px-4 py-2 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest hover:bg-nobel-gold hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    >
+                      <Download size={14} />
+                      Export CSV
+                    </button>
+                  </div>
+                  
                   <p className="text-xs text-muted-foreground">
-                    Showing the last 100 actions. Audit logs help track who made changes to content and when.
+                    Showing {filteredAuditLogs.length} of {auditLogs.length} logs. Audit logs help track who made changes to content and when.
                   </p>
                 </div>
                 
-                {auditLogs.map((log) => (
+                {filteredAuditLogs.map((log) => (
                   <motion.div
                     key={log.id}
                     initial={{ opacity: 0, y: 10 }}
@@ -1214,6 +1356,10 @@ const AdminDashboard = () => {
                               ? 'bg-destructive/10 text-destructive' 
                               : log.action === 'role_change'
                               ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+                              : log.action === 'create'
+                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                              : log.action === 'update'
+                              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
                               : 'bg-muted text-muted-foreground'
                           }`}>
                             {log.action}
@@ -1247,6 +1393,14 @@ const AdminDashboard = () => {
                     </div>
                   </motion.div>
                 ))}
+
+                {filteredAuditLogs.length === 0 && auditLogs.length > 0 && (
+                  <div className="text-center py-20 text-muted-foreground">
+                    <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p className="font-serif text-xl italic">No matching logs found.</p>
+                    <p className="text-sm mt-2">Try adjusting your search or filters.</p>
+                  </div>
+                )}
 
                 {auditLogs.length === 0 && (
                   <div className="text-center py-20 text-muted-foreground">
