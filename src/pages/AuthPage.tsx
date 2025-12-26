@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { Star, Mail, Lock, User, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { Star, Mail, Lock, User, ArrowLeft, Eye, EyeOff, CheckCircle, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
@@ -11,8 +11,10 @@ const passwordSchema = z.string().min(6, "Password must be at least 6 characters
 
 const AuthPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const [mode, setMode] = useState<"login" | "signup" | "forgot" | "reset">("login");
+  const [mode, setMode] = useState<"login" | "signup" | "forgot" | "reset" | "forgot-success" | "reset-success">("login");
+  const [resetEmail, setResetEmail] = useState("");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,6 +22,9 @@ const AuthPage = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  // Check for invite params
+  const isInvited = searchParams.get('invited') === 'true';
+  const invitedRole = searchParams.get('role');
 
   const isLogin = mode === "login";
 
@@ -161,11 +166,8 @@ const AuthPage = () => {
             variant: "destructive",
           });
         } else {
-          toast({
-            title: "Check your email",
-            description: "We sent a password reset link to your email address.",
-          });
-          setMode("login");
+          setResetEmail(email);
+          setMode("forgot-success");
         }
       }
 
@@ -179,12 +181,8 @@ const AuthPage = () => {
             variant: "destructive",
           });
         } else {
-          toast({
-            title: "Password updated",
-            description: "You can now sign in with your new password.",
-          });
           setPassword("");
-          setMode("login");
+          setMode("reset-success");
         }
       }
     } catch {
@@ -216,9 +214,11 @@ const AuthPage = () => {
             <Star className="text-nobel-gold w-6 h-6" fill="currentColor" />
             <span className="text-xs font-bold tracking-[0.2em] uppercase text-muted-foreground">
               {mode === "login" && "Welcome Back"}
-              {mode === "signup" && "Join Us"}
+              {mode === "signup" && (isInvited ? "Staff Invitation" : "Join Us")}
               {mode === "forgot" && "Reset Password"}
               {mode === "reset" && "Choose New Password"}
+              {mode === "forgot-success" && "Check Your Email"}
+              {mode === "reset-success" && "Password Updated"}
             </span>
           </div>
           
@@ -235,7 +235,81 @@ const AuthPage = () => {
             {mode === "reset" && (
               <>New <br /> <span className="italic text-muted-foreground">Password</span></>
             )}
+            {mode === "forgot-success" && (
+              <>Email <br /> <span className="italic text-muted-foreground">Sent</span></>
+            )}
+            {mode === "reset-success" && (
+              <>Success <br /> <span className="italic text-muted-foreground">!</span></>
+            )}
           </h1>
+
+          {/* Success screens */}
+          {mode === "forgot-success" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-card border border-border p-8"
+            >
+              <div className="text-center">
+                <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Send className="w-10 h-10 text-green-600 dark:text-green-400" />
+                </div>
+                <h3 className="font-serif text-2xl text-foreground mb-4">Check Your Inbox</h3>
+                <p className="text-muted-foreground mb-6">
+                  We've sent a password reset link to:
+                </p>
+                <p className="text-lg font-medium text-foreground bg-muted px-4 py-2 rounded mb-6 break-all">
+                  {resetEmail}
+                </p>
+                <div className="space-y-4 text-sm text-muted-foreground">
+                  <p>Click the link in the email to reset your password.</p>
+                  <p className="text-xs">
+                    Didn't receive the email? Check your spam folder or{" "}
+                    <button
+                      onClick={() => setMode("forgot")}
+                      className="text-nobel-gold hover:underline"
+                    >
+                      try again
+                    </button>
+                    .
+                  </p>
+                </div>
+                <button
+                  onClick={() => setMode("login")}
+                  className="mt-8 w-full py-4 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest hover:bg-nobel-gold hover:text-foreground transition-all"
+                >
+                  Return to Sign In
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {mode === "reset-success" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-card border border-border p-8"
+            >
+              <div className="text-center">
+                <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <CheckCircle className="w-10 h-10 text-green-600 dark:text-green-400" />
+                </div>
+                <h3 className="font-serif text-2xl text-foreground mb-4">Password Updated!</h3>
+                <p className="text-muted-foreground mb-6">
+                  Your password has been successfully changed. You can now sign in with your new password.
+                </p>
+                <button
+                  onClick={() => setMode("login")}
+                  className="w-full py-4 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest hover:bg-nobel-gold hover:text-foreground transition-all"
+                >
+                  Sign In Now
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Regular form */}
+          {mode !== "forgot-success" && mode !== "reset-success" && (
 
           <motion.form
             initial={{ opacity: 0, y: 20 }}
@@ -393,6 +467,7 @@ const AuthPage = () => {
               )}
             </div>
           </motion.form>
+          )}
         </div>
       </div>
     </div>
