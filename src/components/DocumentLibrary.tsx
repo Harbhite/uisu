@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, FileText, Download, Search, Filter, Check, Upload, X, Star, Volume2, StopCircle, Loader2, File, FileType, FileType2, ScrollText, FileCheck, FileWarning, Eye, ExternalLink, LogIn, Tag, FileImage, FileCode, FileSpreadsheet, Share2, Link, Copy, CheckCircle } from 'lucide-react';
+import { ArrowLeft, FileText, Download, Search, Filter, Check, Upload, X, Star, Volume2, StopCircle, Loader2, File, FileType, FileType2, ScrollText, FileCheck, FileWarning, Eye, ExternalLink, LogIn, Tag, FileImage, FileCode, FileSpreadsheet, Share2, Link, Copy, CheckCircle, Trash2, AlertCircle } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
@@ -354,6 +354,42 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
         } catch (error) {
             console.error('Error revoking share link:', error);
             toast.error('Failed to revoke share link');
+        }
+    };
+
+    const handleDelete = async (doc: Doc) => {
+        if (!user) {
+            toast.error('Please log in to delete documents');
+            return;
+        }
+
+        if (!confirm(`Are you sure you want to delete "${doc.title}"? This action cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            // Delete from storage if file exists
+            if (doc.file_url) {
+                const fileName = doc.file_url.split('/').pop();
+                if (fileName) {
+                    await supabase.storage.from('documents').remove([fileName]);
+                }
+            }
+
+            // Delete from database
+            const { error } = await supabase
+                .from('documents')
+                .delete()
+                .eq('id', doc.id);
+
+            if (error) throw error;
+
+            // Update local state
+            setDocuments(prev => prev.filter(d => d.id !== doc.id));
+            toast.success('Document deleted successfully');
+        } catch (error) {
+            console.error('Error deleting document:', error);
+            toast.error('Failed to delete document. You can only delete documents you uploaded.');
         }
     };
 
@@ -743,12 +779,14 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                                                     </a>
                                                 </>
                                             ) : (
-                                                <button 
-                                                    disabled
-                                                    className="flex items-center gap-2 px-6 py-3 bg-muted text-muted-foreground text-xs font-bold uppercase tracking-widest cursor-not-allowed opacity-50"
+                                                <div 
+                                                    className="flex items-center gap-2 px-4 py-3 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 text-xs font-bold uppercase tracking-widest"
+                                                    title="This historical document is awaiting digitization"
                                                 >
-                                                    <Download size={14} /> <span className="hidden md:inline">No File</span>
-                                                </button>
+                                                    <AlertCircle size={14} /> 
+                                                    <span className="hidden md:inline">Awaiting Digitization</span>
+                                                    <span className="md:hidden">Pending</span>
+                                                </div>
                                             )}
 
                                             {/* Share Button */}
@@ -766,6 +804,18 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                                                     {doc.share_token ? 'Shared' : 'Share'}
                                                 </span>
                                             </button>
+
+                                            {/* Delete Button - only for user's own uploads */}
+                                            {user && (
+                                                <button 
+                                                    onClick={() => handleDelete(doc)}
+                                                    className="flex items-center gap-2 w-10 h-10 md:w-auto md:h-auto md:px-4 md:py-3 rounded-full md:rounded-none bg-muted text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition-all justify-center"
+                                                    title="Delete Document"
+                                                >
+                                                    <Trash2 size={14} />
+                                                    <span className="hidden md:inline text-xs font-bold uppercase tracking-widest">Delete</span>
+                                                </button>
+                                            )}
                                         </div>
                                     </motion.div>
                                 ))
