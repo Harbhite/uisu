@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, ChevronRight, X, AlertTriangle, Loader2 } from "lucide-react";
+import { Bell, ChevronRight, X, AlertTriangle, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface Announcement {
   id: string;
@@ -10,6 +11,7 @@ interface Announcement {
   content: string;
   priority: string | null;
   created_at: string | null;
+  is_active?: boolean | null;
 }
 
 export const AnnouncementsBanner = () => {
@@ -17,6 +19,8 @@ export const AnnouncementsBanner = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [dismissed, setDismissed] = useState(false);
+  const [newAnnouncementId, setNewAnnouncementId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
@@ -38,7 +42,74 @@ export const AnnouncementsBanner = () => {
     };
 
     fetchAnnouncements();
-  }, []);
+
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('announcements-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'announcements',
+          filter: 'is_active=eq.true'
+        },
+        (payload) => {
+          console.log('New announcement received:', payload);
+          const newAnnouncement = payload.new as Announcement;
+          setAnnouncements(prev => [newAnnouncement, ...prev.slice(0, 4)]);
+          setCurrentIndex(0);
+          setNewAnnouncementId(newAnnouncement.id);
+          setDismissed(false);
+          
+          // Show toast notification
+          toast({
+            title: "New Announcement",
+            description: newAnnouncement.title,
+          });
+          
+          // Clear the "new" indicator after 5 seconds
+          setTimeout(() => setNewAnnouncementId(null), 5000);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'announcements'
+        },
+        (payload) => {
+          const updatedAnnouncement = payload.new as Announcement;
+          if (updatedAnnouncement.is_active === false) {
+            // Remove deactivated announcements
+            setAnnouncements(prev => prev.filter(a => a.id !== updatedAnnouncement.id));
+          } else {
+            // Update existing announcement
+            setAnnouncements(prev => 
+              prev.map(a => a.id === updatedAnnouncement.id ? updatedAnnouncement : a)
+            );
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'announcements'
+        },
+        (payload) => {
+          const deletedId = payload.old.id;
+          setAnnouncements(prev => prev.filter(a => a.id !== deletedId));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [toast]);
 
   useEffect(() => {
     if (announcements.length <= 1) return;
@@ -67,6 +138,15 @@ export const AnnouncementsBanner = () => {
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between py-3">
           <div className="flex items-center gap-4 flex-1 min-w-0">
+            {current.id === newAnnouncementId && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="shrink-0"
+              >
+                <Sparkles className="w-5 h-5 text-yellow-300 animate-pulse" />
+              </motion.div>
+            )}
             {isUrgent ? (
               <AlertTriangle className="w-5 h-5 text-white shrink-0" />
             ) : (
