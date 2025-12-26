@@ -36,25 +36,29 @@ export const useAdminCheck = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setUser(session?.user ?? null);
+
         if (session?.user) {
-          setTimeout(() => {
-            checkUserRole(session.user.id);
+          setLoading(true);
+          setTimeout(async () => {
+            await checkUserRole(session.user.id);
+            setLoading(false);
           }, 0);
         } else {
           setRole('user');
           setIsAdmin(false);
           setIsModerator(false);
           setIsStaff(false);
+          setLoading(false);
         }
-        setLoading(false);
       }
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        checkUserRole(session.user.id);
+        setLoading(true);
+        await checkUserRole(session.user.id);
       }
       setLoading(false);
     });

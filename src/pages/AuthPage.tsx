@@ -12,7 +12,8 @@ const passwordSchema = z.string().min(6, "Password must be at least 6 characters
 const AuthPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isLogin, setIsLogin] = useState(true);
+  const [mode, setMode] = useState<"login" | "signup" | "forgot" | "reset">("login");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -20,25 +21,41 @@ const AuthPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
+  const isLogin = mode === "login";
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
+      // When user clicks the recovery link, Supabase emits PASSWORD_RECOVERY
+      if (event === "PASSWORD_RECOVERY") {
+        setMode("reset");
+        return;
+      }
+
+      // For normal login/signup, go home
+      if (session && mode !== "reset") {
         navigate("/");
       }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+      if (session && mode !== "reset") {
         navigate("/");
       }
     });
 
+    // If user landed on /auth with a recovery token, show reset UI.
+    // Supabase puts tokens in the URL hash; the auth client will parse it and emit PASSWORD_RECOVERY.
+    if (window.location.hash.includes("type=recovery")) {
+      setMode("reset");
+    }
+
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, mode]);
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
-    
+
+    // Email always required
     try {
       emailSchema.parse(email);
     } catch (e) {
@@ -47,11 +64,14 @@ const AuthPage = () => {
       }
     }
 
-    try {
-      passwordSchema.parse(password);
-    } catch (e) {
-      if (e instanceof z.ZodError) {
-        newErrors.password = e.errors[0].message;
+    // Password required for login/signup/reset
+    if (mode === "login" || mode === "signup" || mode === "reset") {
+      try {
+        passwordSchema.parse(password);
+      } catch (e) {
+        if (e instanceof z.ZodError) {
+          newErrors.password = e.errors[0].message;
+        }
       }
     }
 
@@ -61,13 +81,13 @@ const AuthPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     setLoading(true);
 
     try {
-      if (isLogin) {
+      if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -93,7 +113,9 @@ const AuthPage = () => {
             description: "You have successfully logged in.",
           });
         }
-      } else {
+      }
+
+      if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -126,7 +148,46 @@ const AuthPage = () => {
           });
         }
       }
-    } catch (error) {
+
+      if (mode === "forgot") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth`,
+        });
+
+        if (error) {
+          toast({
+            title: "Error",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Check your email",
+            description: "We sent a password reset link to your email address.",
+          });
+          setMode("login");
+        }
+      }
+
+      if (mode === "reset") {
+        const { error } = await supabase.auth.updateUser({ password });
+
+        if (error) {
+          toast({
+            title: "Error",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Password updated",
+            description: "You can now sign in with your new password.",
+          });
+          setPassword("");
+          setMode("login");
+        }
+      }
+    } catch {
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
@@ -154,13 +215,26 @@ const AuthPage = () => {
           <div className="flex items-center gap-4 mb-4">
             <Star className="text-nobel-gold w-6 h-6" fill="currentColor" />
             <span className="text-xs font-bold tracking-[0.2em] uppercase text-muted-foreground">
-              {isLogin ? "Welcome Back" : "Join Us"}
+              {mode === "login" && "Welcome Back"}
+              {mode === "signup" && "Join Us"}
+              {mode === "forgot" && "Reset Password"}
+              {mode === "reset" && "Choose New Password"}
             </span>
           </div>
           
           <h1 className="text-5xl md:text-6xl font-serif text-ui-blue leading-[0.9] mb-8">
-            {isLogin ? "Sign" : "Create"} <br/> 
-            <span className="italic text-muted-foreground">{isLogin ? "In" : "Account"}</span>
+            {mode === "login" && (
+              <>Sign <br /> <span className="italic text-muted-foreground">In</span></>
+            )}
+            {mode === "signup" && (
+              <>Create <br /> <span className="italic text-muted-foreground">Account</span></>
+            )}
+            {mode === "forgot" && (
+              <>Forgot <br /> <span className="italic text-muted-foreground">Password</span></>
+            )}
+            {mode === "reset" && (
+              <>New <br /> <span className="italic text-muted-foreground">Password</span></>
+            )}
           </h1>
 
           <motion.form
@@ -169,7 +243,7 @@ const AuthPage = () => {
             onSubmit={handleSubmit}
             className="bg-card border border-border p-8 space-y-6"
           >
-            {!isLogin && (
+            {(mode === "signup") && (
               <div>
                 <label className="block text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
                   Full Name
@@ -207,32 +281,34 @@ const AuthPage = () => {
               )}
             </div>
 
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className={`w-full pl-12 pr-12 py-4 bg-background border ${errors.password ? 'border-destructive' : 'border-border'} focus:border-nobel-gold focus:outline-none font-serif text-lg transition-colors`}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
+            {mode !== "forgot" && (
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className={`w-full pl-12 pr-12 py-4 bg-background border ${errors.password ? 'border-destructive' : 'border-border'} focus:border-nobel-gold focus:outline-none font-serif text-lg transition-colors`}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-destructive text-sm mt-1">{errors.password}</p>
+                )}
               </div>
-              {errors.password && (
-                <p className="text-destructive text-sm mt-1">{errors.password}</p>
-              )}
-            </div>
+            )}
 
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -241,21 +317,80 @@ const AuthPage = () => {
               disabled={loading}
               className="w-full py-4 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest hover:bg-nobel-gold hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Processing..." : isLogin ? "Sign In" : "Create Account"}
+              {loading
+                ? "Processing..."
+                : mode === "login"
+                  ? "Sign In"
+                  : mode === "signup"
+                    ? "Create Account"
+                    : mode === "forgot"
+                      ? "Send Reset Link"
+                      : "Update Password"}
             </motion.button>
 
-            <div className="text-center pt-4 border-t border-border">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsLogin(!isLogin);
-                  setErrors({});
-                }}
-                className="text-muted-foreground hover:text-nobel-gold transition-colors font-light"
-              >
-                {isLogin ? "Don't have an account? " : "Already have an account? "}
-                <span className="font-bold text-ui-blue">{isLogin ? "Sign Up" : "Sign In"}</span>
-              </button>
+            <div className="pt-4 border-t border-border space-y-3">
+              {mode === "login" && (
+                <div className="flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("forgot");
+                      setErrors({});
+                      setPassword("");
+                    }}
+                    className="text-xs text-muted-foreground hover:text-nobel-gold transition-colors"
+                  >
+                    Forgot password?
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("signup");
+                      setErrors({});
+                    }}
+                    className="text-xs text-muted-foreground hover:text-nobel-gold transition-colors font-light"
+                  >
+                    Don&apos;t have an account? <span className="font-bold text-ui-blue">Sign Up</span>
+                  </button>
+                </div>
+              )}
+
+              {mode === "signup" && (
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("login");
+                      setErrors({});
+                    }}
+                    className="text-muted-foreground hover:text-nobel-gold transition-colors font-light"
+                  >
+                    Already have an account? <span className="font-bold text-ui-blue">Sign In</span>
+                  </button>
+                </div>
+              )}
+
+              {mode === "forgot" && (
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("login");
+                      setErrors({});
+                    }}
+                    className="text-muted-foreground hover:text-nobel-gold transition-colors font-light"
+                  >
+                    Back to <span className="font-bold text-ui-blue">Sign In</span>
+                  </button>
+                </div>
+              )}
+
+              {mode === "reset" && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Enter a new password to complete your reset.
+                </p>
+              )}
             </div>
           </motion.form>
         </div>
