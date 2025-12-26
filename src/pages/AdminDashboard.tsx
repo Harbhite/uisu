@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   ArrowLeft, Star, Plus, Trash2, Edit2, Calendar, FileText, 
-  Megaphone, X, Upload, Loader2, Check, Users, Award, ShieldAlert
+  Megaphone, X, Upload, Loader2, Check, Users, Award, ShieldAlert,
+  ArrowUpDown, History
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
@@ -60,7 +61,22 @@ const administrationSchema = z.object({
   })).optional(),
 });
 
-type TabType = "events" | "announcements" | "documents" | "clubs" | "administrations" | "admins";
+type TabType = "events" | "announcements" | "documents" | "clubs" | "administrations" | "admins" | "audit";
+
+interface AuditLog {
+  id: string;
+  user_id: string | null;
+  action: string;
+  table_name: string;
+  record_id: string | null;
+  old_data: any;
+  new_data: any;
+  created_at: string;
+  profile?: {
+    full_name: string | null;
+    email: string | null;
+  };
+}
 
 interface Event {
   id: string;
@@ -142,6 +158,7 @@ const AdminDashboard = () => {
   const [clubs, setClubs] = useState<Club[]>([]);
   const [administrations, setAdministrations] = useState<Administration[]>([]);
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [newUserRole, setNewUserRole] = useState<"admin" | "moderator">("moderator");
   
@@ -177,6 +194,22 @@ const AdminDashboard = () => {
       fetchData();
     }
   }, [user, isStaff, activeTab]);
+
+  // Audit logging helper
+  const logAuditAction = async (action: string, tableName: string, recordId: string | null, oldData: any, newData: any) => {
+    try {
+      await supabase.from("audit_logs" as any).insert({
+        user_id: user?.id,
+        action,
+        table_name: tableName,
+        record_id: recordId,
+        old_data: oldData,
+        new_data: newData,
+      });
+    } catch (error) {
+      console.error("Failed to log audit action:", error);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -244,6 +277,29 @@ const AdminDashboard = () => {
           })
         );
         setAdminUsers(adminUsersWithProfiles);
+      } else if (activeTab === "audit") {
+        const { data, error } = await supabase
+          .from("audit_logs" as any)
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(100);
+        if (error) throw error;
+        
+        // Fetch profile names for each log entry
+        const logsWithProfiles = await Promise.all(
+          (data || []).map(async (log: any) => {
+            if (log.user_id) {
+              const { data: profileData } = await supabase
+                .from("profiles")
+                .select("full_name, email")
+                .eq("id", log.user_id)
+                .maybeSingle();
+              return { ...log, profile: profileData || { full_name: null, email: null } };
+            }
+            return { ...log, profile: { full_name: null, email: null } };
+          })
+        );
+        setAuditLogs(logsWithProfiles);
       }
     } catch (error: any) {
       toast({
@@ -518,10 +574,15 @@ const AdminDashboard = () => {
         documents: "documents",
         clubs: "clubs",
         administrations: "administrations",
-        admins: "user_roles"
+        admins: "user_roles",
+        audit: "audit_logs"
       };
       
       const tableName = tableMap[activeTab];
+      
+      // Log deletion action
+      await logAuditAction('delete', tableName, id, null, null);
+      
       const { error } = await supabase
         .from(tableName as any)
         .delete()
@@ -557,8 +618,63 @@ const AdminDashboard = () => {
     { id: "documents" as TabType, label: "Documents", icon: FileText },
     { id: "clubs" as TabType, label: "Clubs", icon: Users },
     { id: "administrations" as TabType, label: "Leaders", icon: Award },
-    ...(isAdmin ? [{ id: "admins" as TabType, label: "Staff", icon: ShieldAlert }] : []),
+    ...(isAdmin ? [
+      { id: "admins" as TabType, label: "Staff", icon: ShieldAlert },
+      { id: "audit" as TabType, label: "Audit Log", icon: History },
+    ] : []),
   ];
+
+  // Promote/demote staff member
+  const changeStaffRole = async (roleId: string, userId: string, currentRole: string, userName: string) => {
+    const newRole = currentRole === 'admin' ? 'moderator' : 'admin';
+    
+    // Check if demoting last admin
+    if (currentRole === 'admin') {
+      const adminCount = adminUsers.filter(u => u.role === 'admin').length;
+      if (adminCount <= 1) {
+        toast({
+          title: "Cannot demote",
+          description: "There must be at least one admin.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    if (!confirm(`${currentRole === 'admin' ? 'Demote' : 'Promote'} ${userName || "this user"} to ${newRole}?`)) return;
+
+    setSaving(true);
+    try {
+      // Delete existing role
+      await supabase.from("user_roles").delete().eq("id", roleId);
+      
+      // Insert new role
+      const { error } = await supabase.from("user_roles").insert({ 
+        user_id: userId, 
+        role: newRole 
+      });
+
+      if (error) throw error;
+
+      // Log the action
+      await logAuditAction('role_change', 'user_roles', roleId, { role: currentRole }, { role: newRole });
+
+      toast({
+        title: "Role updated",
+        description: `${userName || "User"} is now a ${newRole}.`,
+      });
+
+      fetchData();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const addStaffMember = async () => {
     if (!newAdminEmail.trim()) {
@@ -624,6 +740,13 @@ const AdminDashboard = () => {
 
       if (error) throw error;
 
+      // Log the action
+      await logAuditAction('add_staff', 'user_roles', null, null, { 
+        email: profileData.email, 
+        role: newUserRole,
+        full_name: profileData.full_name 
+      });
+
       toast({
         title: "Staff member added",
         description: `${profileData.full_name || "User"} has been granted ${newUserRole} access.`,
@@ -663,6 +786,12 @@ const AdminDashboard = () => {
         .eq("id", roleId);
 
       if (error) throw error;
+
+      // Log the action
+      await logAuditAction('remove_staff', 'user_roles', roleId, { 
+        name: userName, 
+        role 
+      }, null);
 
       toast({
         title: "Staff member removed",
@@ -714,7 +843,7 @@ const AdminDashboard = () => {
             </h1>
           </div>
           
-          {activeTab !== "admins" && (
+          {activeTab !== "admins" && activeTab !== "audit" && (
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -1034,6 +1163,13 @@ const AdminDashboard = () => {
                     </div>
                     <div className="flex gap-2">
                       <button
+                        onClick={() => changeStaffRole(adminUser.id, adminUser.user_id, adminUser.role, adminUser.profile?.full_name || "this user")}
+                        className="p-2 text-muted-foreground hover:text-nobel-gold transition-colors"
+                        title={adminUser.role === 'admin' ? 'Demote to Moderator' : 'Promote to Admin'}
+                      >
+                        <ArrowUpDown size={18} />
+                      </button>
+                      <button
                         onClick={() => removeStaffMember(adminUser.id, adminUser.profile?.full_name || "this user", adminUser.role)}
                         className="p-2 text-muted-foreground hover:text-destructive transition-colors"
                         title={`Remove ${adminUser.role} access`}
@@ -1048,6 +1184,75 @@ const AdminDashboard = () => {
                   <div className="text-center py-20 text-muted-foreground">
                     <ShieldAlert className="w-12 h-12 mx-auto mb-4 opacity-50" />
                     <p className="font-serif text-xl italic">No staff members found.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Audit Logs Tab */}
+            {activeTab === "audit" && (
+              <div className="space-y-4">
+                <div className="bg-card border border-border p-4">
+                  <p className="text-xs text-muted-foreground">
+                    Showing the last 100 actions. Audit logs help track who made changes to content and when.
+                  </p>
+                </div>
+                
+                {auditLogs.map((log) => (
+                  <motion.div
+                    key={log.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-card border border-border p-6 hover:border-nobel-gold transition-colors"
+                  >
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <History className="w-4 h-4 text-muted-foreground" />
+                          <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${
+                            log.action === 'delete' 
+                              ? 'bg-destructive/10 text-destructive' 
+                              : log.action === 'role_change'
+                              ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+                              : 'bg-muted text-muted-foreground'
+                          }`}>
+                            {log.action}
+                          </span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-ui-blue">
+                            {log.table_name}
+                          </span>
+                        </div>
+                        <p className="text-sm text-foreground">
+                          <span className="font-medium">{log.profile?.full_name || log.profile?.email || 'Unknown User'}</span>
+                          {' '}performed <span className="text-nobel-gold">{log.action}</span> on <span className="text-ui-blue">{log.table_name}</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {new Date(log.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                      {(log.old_data || log.new_data) && (
+                        <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded max-w-xs overflow-hidden">
+                          {log.old_data && (
+                            <div className="mb-1">
+                              <span className="font-bold">Old:</span> {JSON.stringify(log.old_data).slice(0, 50)}...
+                            </div>
+                          )}
+                          {log.new_data && (
+                            <div>
+                              <span className="font-bold">New:</span> {JSON.stringify(log.new_data).slice(0, 50)}...
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+
+                {auditLogs.length === 0 && (
+                  <div className="text-center py-20 text-muted-foreground">
+                    <History className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p className="font-serif text-xl italic">No audit logs yet.</p>
+                    <p className="text-sm mt-2">Actions will be logged as staff make changes.</p>
                   </div>
                 )}
               </div>
