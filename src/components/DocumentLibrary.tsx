@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, FileText, Download, Search, Filter, Check, Upload, X, Star, Volume2, StopCircle, Loader2, File, FileType, FileType2, ScrollText, FileCheck, FileWarning, Eye, ExternalLink, LogIn } from 'lucide-react';
+import { ArrowLeft, FileText, Download, Search, Filter, Check, Upload, X, Star, Volume2, StopCircle, Loader2, File, FileType, FileType2, ScrollText, FileCheck, FileWarning, Eye, ExternalLink, LogIn, Tag, FileImage, FileCode, FileSpreadsheet } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
@@ -37,6 +37,8 @@ interface Doc {
     description: string;
     /** URL to the document file */
     file_url?: string;
+    /** Tags for categorization */
+    tags?: string[];
 }
 
 /**
@@ -52,6 +54,7 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedDecade, setSelectedDecade] = useState<string>("All");
     const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+    const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [previewDoc, setPreviewDoc] = useState<Doc | null>(null);
     
@@ -71,12 +74,40 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
     const [newYear, setNewYear] = useState("");
     const [newType, setNewType] = useState("Report");
     const [newDesc, setNewDesc] = useState("");
+    const [newTags, setNewTags] = useState<string[]>([]);
+    const [tagInput, setTagInput] = useState("");
     const [isUploading, setIsUploading] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const decades = ["All", "2020s", "2010s", "2000s", "1990s", "1980s", "1970s", "1960s", "1950s"];
     const docTypes = ['Constitution', 'Bill', 'Manifesto', 'Speech', 'Report', 'Memo'];
+    const availableTags = ['governance', 'official', 'legislation', 'political', 'historical', 'archive', 'general'];
+
+    // Helper to get file extension icon
+    const getFileExtensionIcon = (fileUrl?: string) => {
+        if (!fileUrl) return null;
+        const ext = fileUrl.split('.').pop()?.toLowerCase();
+        switch (ext) {
+            case 'pdf':
+                return <FileText className="w-4 h-4 text-red-500" />;
+            case 'doc':
+            case 'docx':
+                return <FileType className="w-4 h-4 text-blue-500" />;
+            case 'txt':
+                return <FileCode className="w-4 h-4 text-gray-500" />;
+            case 'xls':
+            case 'xlsx':
+                return <FileSpreadsheet className="w-4 h-4 text-green-500" />;
+            default:
+                return <File className="w-4 h-4 text-muted-foreground" />;
+        }
+    };
+
+    const getFileExtension = (fileUrl?: string) => {
+        if (!fileUrl) return null;
+        return fileUrl.split('.').pop()?.toUpperCase() || 'FILE';
+    };
 
     // Fetch documents from database
     useEffect(() => {
@@ -98,6 +129,7 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                     size: doc.file_size || 'N/A',
                     description: doc.description || '',
                     file_url: doc.file_url || undefined,
+                    tags: doc.tags || [],
                 }));
                 
                 setDocuments(formattedDocs);
@@ -224,6 +256,26 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
         );
     };
 
+    const toggleTag = (tag: string) => {
+        setSelectedTags(prev => 
+            prev.includes(tag) 
+                ? prev.filter(t => t !== tag) 
+                : [...prev, tag]
+        );
+    };
+
+    const addNewTag = () => {
+        const trimmedTag = tagInput.trim().toLowerCase();
+        if (trimmedTag && !newTags.includes(trimmedTag)) {
+            setNewTags([...newTags, trimmedTag]);
+            setTagInput("");
+        }
+    };
+
+    const removeNewTag = (tag: string) => {
+        setNewTags(newTags.filter(t => t !== tag));
+    };
+
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
         
@@ -268,6 +320,7 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                     description: newDesc,
                     file_url: fileUrl,
                     file_size: fileSize,
+                    tags: newTags.length > 0 ? newTags : null,
                 })
                 .select()
                 .single();
@@ -283,6 +336,7 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                 size: newDocData.file_size || 'N/A',
                 description: newDocData.description || '',
                 file_url: newDocData.file_url || undefined,
+                tags: newDocData.tags || [],
             };
             
             setDocuments([newDoc, ...documents]);
@@ -291,6 +345,7 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
             setNewYear(""); 
             setNewType("Report"); 
             setNewDesc("");
+            setNewTags([]);
             setSelectedFile(null);
             toast.success('Document uploaded successfully!');
         } catch (error) {
@@ -304,14 +359,16 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
     const filteredDocs = documents.filter(doc => {
         const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                               doc.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                              doc.description.toLowerCase().includes(searchTerm.toLowerCase());
+                              doc.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              (doc.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
         const matchesDecade = selectedDecade === "All" || (() => {
              const startYear = parseInt(selectedDecade.replace("s", ""));
              const endYear = startYear + 9;
              return doc.year >= startYear && doc.year <= endYear;
         })();
         const matchesType = selectedTypes.length === 0 || selectedTypes.includes(doc.type);
-        return matchesSearch && matchesDecade && matchesType;
+        const matchesTags = selectedTags.length === 0 || selectedTags.some(tag => doc.tags?.includes(tag));
+        return matchesSearch && matchesDecade && matchesType && matchesTags;
     });
 
     if (loading) {
@@ -459,6 +516,34 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                                 })}
                             </div>
                         </div>
+
+                        {/* Tags Filter */}
+                        <div>
+                            <div className="flex items-center justify-between mb-4 text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em]">
+                                <div className="flex items-center gap-2"><Tag size={12} /> Tags</div>
+                                {selectedTags.length > 0 && (
+                                    <button onClick={() => setSelectedTags([])} className="text-destructive hover:text-destructive/80">Reset</button>
+                                )}
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {availableTags.map(tag => {
+                                    const isSelected = selectedTags.includes(tag);
+                                    return (
+                                        <button
+                                            key={tag}
+                                            onClick={() => toggleTag(tag)}
+                                            className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
+                                                isSelected 
+                                                    ? 'bg-nobel-gold text-white' 
+                                                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                            }`}
+                                        >
+                                            {tag}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     </div>
 
                     {/* Main Content */}
@@ -507,16 +592,31 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                                                     {doc.file_url && (
                                                         <>
                                                             <div className="w-1 h-1 rounded-full bg-border"></div>
-                                                            <span className="text-[10px] font-bold uppercase tracking-widest text-green-600">
-                                                                {doc.file_url.split('.').pop()?.toUpperCase() || 'FILE'}
-                                                            </span>
+                                                            <div className="flex items-center gap-1">
+                                                                {getFileExtensionIcon(doc.file_url)}
+                                                                <span className="text-[10px] font-bold uppercase tracking-widest">
+                                                                    {getFileExtension(doc.file_url)}
+                                                                </span>
+                                                            </div>
                                                         </>
                                                     )}
                                                 </div>
                                                 <h3 className={`font-serif text-2xl mb-2 transition-colors ${playingDocId === doc.id ? 'text-nobel-gold' : 'text-ui-blue group-hover:text-nobel-gold'}`}>
                                                     {doc.title}
                                                 </h3>
-                                                <p className="text-sm text-muted-foreground font-light max-w-lg">{doc.description}</p>
+                                                <p className="text-sm text-muted-foreground font-light max-w-lg mb-2">{doc.description}</p>
+                                                {doc.tags && doc.tags.length > 0 && (
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {doc.tags.map(tag => (
+                                                            <span 
+                                                                key={tag} 
+                                                                className="px-2 py-0.5 text-[10px] font-medium bg-muted text-muted-foreground rounded-full"
+                                                            >
+                                                                {tag}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                         
@@ -640,6 +740,65 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                                         rows={3}
                                         className="w-full px-4 py-3 bg-card border border-border focus:border-nobel-gold focus:outline-none transition-colors resize-none"
                                     />
+                                </div>
+
+                                {/* Tags Input */}
+                                <div>
+                                    <label className="block text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Tags</label>
+                                    <div className="flex gap-2 mb-2">
+                                        <input 
+                                            type="text" 
+                                            value={tagInput}
+                                            onChange={(e) => setTagInput(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    addNewTag();
+                                                }
+                                            }}
+                                            placeholder="Add a tag..."
+                                            className="flex-1 px-4 py-2 bg-card border border-border focus:border-nobel-gold focus:outline-none transition-colors text-sm"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={addNewTag}
+                                            className="px-4 py-2 bg-muted hover:bg-ui-blue hover:text-white text-muted-foreground text-xs font-bold uppercase transition-all"
+                                        >
+                                            Add
+                                        </button>
+                                    </div>
+                                    {newTags.length > 0 && (
+                                        <div className="flex flex-wrap gap-2">
+                                            {newTags.map(tag => (
+                                                <span 
+                                                    key={tag} 
+                                                    className="px-3 py-1 text-xs font-medium bg-nobel-gold/20 text-nobel-gold rounded-full flex items-center gap-2"
+                                                >
+                                                    {tag}
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => removeNewTag(tag)}
+                                                        className="hover:text-destructive"
+                                                    >
+                                                        <X size={12} />
+                                                    </button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <div className="flex flex-wrap gap-1.5 mt-2">
+                                        <span className="text-[10px] text-muted-foreground">Suggestions:</span>
+                                        {availableTags.filter(t => !newTags.includes(t)).slice(0, 4).map(tag => (
+                                            <button
+                                                key={tag}
+                                                type="button"
+                                                onClick={() => setNewTags([...newTags, tag])}
+                                                className="px-2 py-0.5 text-[10px] bg-muted text-muted-foreground rounded-full hover:bg-muted/80"
+                                            >
+                                                +{tag}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 <div>
