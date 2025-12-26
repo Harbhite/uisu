@@ -364,32 +364,31 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
             toast.error('Please log in to upload documents');
             return;
         }
+
+        if (!selectedFile) {
+            toast.error('Please select a file to upload');
+            return;
+        }
         
         setIsUploading(true);
         
         try {
-            let fileUrl: string | null = null;
-            let fileSize: string = 'N/A';
+            const fileExt = selectedFile.name.split('.').pop();
+            const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
             
-            // Upload file to storage if selected
-            if (selectedFile) {
-                const fileExt = selectedFile.name.split('.').pop();
-                const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-                
-                const { data: uploadData, error: uploadError } = await supabase.storage
-                    .from('documents')
-                    .upload(fileName, selectedFile);
-                
-                if (uploadError) throw uploadError;
-                
-                // Get public URL
-                const { data: urlData } = supabase.storage
-                    .from('documents')
-                    .getPublicUrl(fileName);
-                
-                fileUrl = urlData.publicUrl;
-                fileSize = `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB`;
-            }
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('documents')
+                .upload(fileName, selectedFile);
+            
+            if (uploadError) throw uploadError;
+            
+            // Get public URL
+            const { data: urlData } = supabase.storage
+                .from('documents')
+                .getPublicUrl(fileName);
+            
+            const fileUrl = urlData.publicUrl;
+            const fileSize = `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB`;
             
             // Insert document record into database
             const { data: newDocData, error: insertError } = await supabase
@@ -902,7 +901,9 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Document File</label>
+                                    <label className="block text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">
+                                        Document File <span className="text-destructive">*</span>
+                                    </label>
                                     <input
                                         ref={fileInputRef}
                                         type="file"
