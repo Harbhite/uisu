@@ -142,6 +142,7 @@ export type Database = {
           file_size: string | null
           file_url: string | null
           id: string
+          tags: string[] | null
           title: string
           updated_at: string | null
           uploaded_by: string | null
@@ -154,6 +155,7 @@ export type Database = {
           file_size?: string | null
           file_url?: string | null
           id?: string
+          tags?: string[] | null
           title: string
           updated_at?: string | null
           uploaded_by?: string | null
@@ -166,6 +168,7 @@ export type Database = {
           file_size?: string | null
           file_url?: string | null
           id?: string
+          tags?: string[] | null
           title?: string
           updated_at?: string | null
           uploaded_by?: string | null
