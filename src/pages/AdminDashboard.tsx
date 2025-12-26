@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@supabase/supabase-js";
 import { 
   ArrowLeft, Star, Plus, Trash2, Edit2, Calendar, FileText, 
-  Megaphone, X, Upload, Loader2, Check, Users, Award
+  Megaphone, X, Upload, Loader2, Check, Users, Award, ShieldAlert
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { z } from "zod";
 
 // Validation schemas
@@ -119,7 +119,7 @@ interface Administration {
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, isAdmin, loading: authLoading } = useAdminCheck();
   const [activeTab, setActiveTab] = useState<TabType>("events");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -142,29 +142,27 @@ const AdminDashboard = () => {
   const [teamMembers, setTeamMembers] = useState<{role: string; name: string; alias?: string}[]>([]);
   const [activitiesInput, setActivitiesInput] = useState("");
 
+  // Redirect non-admins
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      if (!session?.user) {
+    if (!authLoading) {
+      if (!user) {
         navigate("/auth");
+      } else if (!isAdmin) {
+        toast({
+          title: "Access Denied",
+          description: "You don't have permission to access the admin dashboard.",
+          variant: "destructive",
+        });
+        navigate("/");
       }
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (!session?.user) {
-        navigate("/auth");
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    }
+  }, [user, isAdmin, authLoading, navigate, toast]);
 
   useEffect(() => {
-    if (user) {
+    if (user && isAdmin) {
       fetchData();
     }
-  }, [user, activeTab]);
+  }, [user, isAdmin, activeTab]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -507,10 +505,11 @@ const AdminDashboard = () => {
     { id: "administrations" as TabType, label: "Leaders", icon: Award },
   ];
 
-  if (!user) {
+  if (authLoading || !user || !isAdmin) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-nobel-gold" />
+        <p className="text-muted-foreground text-sm">Verifying access...</p>
       </div>
     );
   }

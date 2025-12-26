@@ -43,6 +43,8 @@ interface Doc {
     share_token?: string;
     /** Whether the document is publicly accessible */
     is_public?: boolean;
+    /** ID of the user who uploaded the document */
+    uploaded_by?: string;
 }
 
 /**
@@ -66,6 +68,7 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
     
     // Auth State
     const [user, setUser] = useState<User | null>(null);
+    const [isAdmin, setIsAdmin] = useState(false);
     const navigate = useNavigate();
     
     // Drag and drop state
@@ -138,6 +141,7 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                     tags: doc.tags || [],
                     share_token: (doc as any).share_token || undefined,
                     is_public: (doc as any).is_public || false,
+                    uploaded_by: doc.uploaded_by || undefined,
                 }));
                 
                 setDocuments(formattedDocs);
@@ -164,16 +168,37 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
         };
     }, []);
 
-    // Check auth state
+    // Check auth state and admin status
     useEffect(() => {
+        const checkAdminStatus = async (userId: string) => {
+            try {
+                const { data, error } = await supabase.rpc('is_admin', { _user_id: userId });
+                if (error) throw error;
+                setIsAdmin(data === true);
+            } catch (error) {
+                console.error('Error checking admin status:', error);
+                setIsAdmin(false);
+            }
+        };
+
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (event, session) => {
                 setUser(session?.user ?? null);
+                if (session?.user) {
+                    setTimeout(() => {
+                        checkAdminStatus(session.user.id);
+                    }, 0);
+                } else {
+                    setIsAdmin(false);
+                }
             }
         );
 
         supabase.auth.getSession().then(({ data: { session } }) => {
             setUser(session?.user ?? null);
+            if (session?.user) {
+                checkAdminStatus(session.user.id);
+            }
         });
 
         return () => subscription.unsubscribe();
@@ -805,12 +830,12 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                                                 </span>
                                             </button>
 
-                                            {/* Delete Button - only for user's own uploads */}
-                                            {user && (
+                                            {/* Delete Button - for owner or admin */}
+                                            {user && (isAdmin || doc.uploaded_by === user.id) && (
                                                 <button 
                                                     onClick={() => handleDelete(doc)}
                                                     className="flex items-center gap-2 w-10 h-10 md:w-auto md:h-auto md:px-4 md:py-3 rounded-full md:rounded-none bg-muted text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition-all justify-center"
-                                                    title="Delete Document"
+                                                    title={isAdmin && doc.uploaded_by !== user.id ? "Delete Document (Admin)" : "Delete Document"}
                                                 >
                                                     <Trash2 size={14} />
                                                     <span className="hidden md:inline text-xs font-bold uppercase tracking-widest">Delete</span>
