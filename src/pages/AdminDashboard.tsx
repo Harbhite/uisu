@@ -60,7 +60,7 @@ const administrationSchema = z.object({
   })).optional(),
 });
 
-type TabType = "events" | "announcements" | "documents" | "clubs" | "administrations";
+type TabType = "events" | "announcements" | "documents" | "clubs" | "administrations" | "admins";
 
 interface Event {
   id: string;
@@ -116,6 +116,16 @@ interface Administration {
   team: any;
 }
 
+interface AdminUser {
+  id: string;
+  user_id: string;
+  role: string;
+  created_at: string;
+  profile?: {
+    full_name: string | null;
+  };
+}
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -130,6 +140,8 @@ const AdminDashboard = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [clubs, setClubs] = useState<Club[]>([]);
   const [administrations, setAdministrations] = useState<Administration[]>([]);
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
+  const [newAdminEmail, setNewAdminEmail] = useState("");
   
   // Modal states
   const [showModal, setShowModal] = useState(false);
@@ -202,6 +214,34 @@ const AdminDashboard = () => {
           .order("session", { ascending: false });
         if (error) throw error;
         setAdministrations(data || []);
+      } else if (activeTab === "admins") {
+        const { data, error } = await supabase
+          .from("user_roles")
+          .select(`
+            id,
+            user_id,
+            role,
+            created_at
+          `)
+          .eq("role", "admin")
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        
+        // Fetch profile names for each admin
+        const adminUsersWithProfiles = await Promise.all(
+          (data || []).map(async (adminRole) => {
+            const { data: profileData } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("id", adminRole.user_id)
+              .maybeSingle();
+            return {
+              ...adminRole,
+              profile: profileData
+            };
+          })
+        );
+        setAdminUsers(adminUsersWithProfiles);
       }
     } catch (error: any) {
       toast({
@@ -469,8 +509,19 @@ const AdminDashboard = () => {
     if (!confirm("Are you sure you want to delete this item?")) return;
     
     try {
+      // Map tab to actual table name
+      const tableMap: Record<TabType, string> = {
+        events: "events",
+        announcements: "announcements", 
+        documents: "documents",
+        clubs: "clubs",
+        administrations: "administrations",
+        admins: "user_roles"
+      };
+      
+      const tableName = tableMap[activeTab];
       const { error } = await supabase
-        .from(activeTab)
+        .from(tableName as any)
         .delete()
         .eq("id", id);
       
@@ -478,7 +529,7 @@ const AdminDashboard = () => {
       
       toast({
         title: "Deleted",
-        description: `${activeTab.slice(0, -1)} deleted successfully.`,
+        description: `${activeTab === "admins" ? "Admin" : activeTab.slice(0, -1)} deleted successfully.`,
       });
       
       fetchData();
@@ -503,7 +554,114 @@ const AdminDashboard = () => {
     { id: "documents" as TabType, label: "Documents", icon: FileText },
     { id: "clubs" as TabType, label: "Clubs", icon: Users },
     { id: "administrations" as TabType, label: "Leaders", icon: Award },
+    { id: "admins" as TabType, label: "Admins", icon: ShieldAlert },
   ];
+
+  const addAdmin = async () => {
+    if (!newAdminEmail.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a user ID",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // Check if user exists in profiles
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .eq("id", newAdminEmail.trim())
+        .maybeSingle();
+
+      if (profileError) throw profileError;
+      if (!profileData) {
+        toast({
+          title: "User not found",
+          description: "No user found with that ID. Make sure they have logged in at least once.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if already admin
+      const { data: existingRole } = await supabase
+        .from("user_roles")
+        .select("id")
+        .eq("user_id", newAdminEmail.trim())
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (existingRole) {
+        toast({
+          title: "Already admin",
+          description: `${profileData.full_name || "This user"} is already an admin.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Add admin role
+      const { error } = await supabase
+        .from("user_roles")
+        .insert({ user_id: newAdminEmail.trim(), role: "admin" });
+
+      if (error) throw error;
+
+      toast({
+        title: "Admin added",
+        description: `${profileData.full_name || "User"} has been granted admin access.`,
+      });
+
+      setNewAdminEmail("");
+      fetchData();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const removeAdmin = async (adminId: string, userName: string) => {
+    if (adminUsers.length <= 1) {
+      toast({
+        title: "Cannot remove",
+        description: "There must be at least one admin.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!confirm(`Remove admin access from ${userName || "this user"}?`)) return;
+
+    try {
+      const { error } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("id", adminId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Admin removed",
+        description: `${userName || "User"} no longer has admin access.`,
+      });
+
+      fetchData();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   if (authLoading || !user || !isAdmin) {
     return (
@@ -540,14 +698,16 @@ const AdminDashboard = () => {
             </h1>
           </div>
           
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={openAddModal}
-            className="flex items-center gap-2 px-6 py-3 bg-ui-blue text-white rounded-full shadow-lg hover:bg-nobel-gold hover:text-foreground transition-all text-xs font-bold uppercase tracking-widest"
-          >
-            <Plus size={14} /> Add {activeTab === "administrations" ? "Leader" : activeTab.slice(0, -1)}
-          </motion.button>
+          {activeTab !== "admins" && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={openAddModal}
+              className="flex items-center gap-2 px-6 py-3 bg-ui-blue text-white rounded-full shadow-lg hover:bg-nobel-gold hover:text-foreground transition-all text-xs font-bold uppercase tracking-widest"
+            >
+              <Plus size={14} /> Add {activeTab === "administrations" ? "Leader" : activeTab.slice(0, -1)}
+            </motion.button>
+          )}
         </div>
 
         {/* Tabs */}
@@ -785,6 +945,80 @@ const AdminDashboard = () => {
                 </div>
               </motion.div>
             ))}
+
+            {/* Admin Users Tab */}
+            {activeTab === "admins" && (
+              <div className="space-y-6">
+                {/* Add Admin Form */}
+                <div className="bg-card border border-border p-6">
+                  <h3 className="font-serif text-lg text-foreground mb-4">Add New Admin</h3>
+                  <div className="flex gap-4">
+                    <input
+                      type="text"
+                      placeholder="Enter User ID (from profiles)"
+                      value={newAdminEmail}
+                      onChange={(e) => setNewAdminEmail(e.target.value)}
+                      className="flex-1 px-4 py-3 bg-background border border-border text-foreground focus:border-nobel-gold focus:outline-none transition-colors text-sm"
+                    />
+                    <button
+                      onClick={addAdmin}
+                      disabled={saving || !newAdminEmail.trim()}
+                      className="px-6 py-3 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest hover:bg-nobel-gold hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus size={14} />}
+                      Add Admin
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Users must have logged in at least once to be added as admins.
+                  </p>
+                </div>
+
+                {/* Admin List */}
+                {adminUsers.map((adminUser) => (
+                  <motion.div
+                    key={adminUser.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-card border border-border p-6 flex justify-between items-center hover:border-nobel-gold transition-colors"
+                  >
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <ShieldAlert className="w-4 h-4 text-ui-blue" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 bg-ui-blue/10 text-ui-blue rounded-full">
+                          {adminUser.role}
+                        </span>
+                      </div>
+                      <h3 className="font-serif text-xl text-foreground">
+                        {adminUser.profile?.full_name || "Unknown User"}
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-1 font-mono">
+                        ID: {adminUser.user_id}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Added: {new Date(adminUser.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => removeAdmin(adminUser.id, adminUser.profile?.full_name || "this user")}
+                        className="p-2 text-muted-foreground hover:text-destructive transition-colors"
+                        title="Remove admin access"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+
+                {adminUsers.length === 0 && (
+                  <div className="text-center py-20 text-muted-foreground">
+                    <ShieldAlert className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p className="font-serif text-xl italic">No admins found.</p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {((activeTab === "events" && events.length === 0) ||
               (activeTab === "announcements" && announcements.length === 0) ||
