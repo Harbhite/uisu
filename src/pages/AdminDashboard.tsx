@@ -5,11 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { 
   ArrowLeft, Star, Plus, Trash2, Edit2, Calendar, FileText, 
   Megaphone, X, Upload, Loader2, Check, Users, Award, ShieldAlert,
-  ArrowUpDown, History, Search, Download, Filter
+  ArrowUpDown, History, Search, Download, Filter, Eye, Mail
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { z } from "zod";
+import AuditLogDetailsModal from "@/components/AuditLogDetailsModal";
+import InviteStaffModal from "@/components/InviteStaffModal";
 
 // Validation schemas
 const eventSchema = z.object({
@@ -172,6 +174,9 @@ const AdminDashboard = () => {
   // Modal states
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
+  const [selectedAuditLog, setSelectedAuditLog] = useState<AuditLog | null>(null);
+  const [showAuditDetailModal, setShowAuditDetailModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   
   // Form states
   const [formData, setFormData] = useState<any>({});
@@ -1193,7 +1198,16 @@ const AdminDashboard = () => {
               <div className="space-y-6">
                 {/* Add Staff Form */}
                 <div className="bg-card border border-border p-6">
-                  <h3 className="font-serif text-lg text-foreground mb-4">Add Staff Member</h3>
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+                    <h3 className="font-serif text-lg text-foreground">Add Staff Member</h3>
+                    <button
+                      onClick={() => setShowInviteModal(true)}
+                      className="px-4 py-2 border border-border text-foreground text-xs font-bold uppercase tracking-widest hover:border-nobel-gold hover:text-nobel-gold transition-all flex items-center gap-2"
+                    >
+                      <Mail size={14} />
+                      Invite via Link
+                    </button>
+                  </div>
                   <div className="flex flex-col md:flex-row gap-4">
                     <input
                       type="email"
@@ -1414,20 +1428,32 @@ const AdminDashboard = () => {
                           {new Date(log.created_at).toLocaleString()}
                         </p>
                       </div>
-                      {(log.old_data || log.new_data) && (
-                        <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded max-w-xs overflow-hidden">
-                          {log.old_data && (
-                            <div className="mb-1">
-                              <span className="font-bold">Old:</span> {JSON.stringify(log.old_data).slice(0, 50)}...
-                            </div>
-                          )}
-                          {log.new_data && (
-                            <div>
-                              <span className="font-bold">New:</span> {JSON.stringify(log.new_data).slice(0, 50)}...
-                            </div>
-                          )}
-                        </div>
-                      )}
+                      <div className="flex items-center gap-3">
+                        {(log.old_data || log.new_data) && (
+                          <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded max-w-xs overflow-hidden hidden md:block">
+                            {log.old_data && (
+                              <div className="mb-1">
+                                <span className="font-bold">Old:</span> {JSON.stringify(log.old_data).slice(0, 50)}...
+                              </div>
+                            )}
+                            {log.new_data && (
+                              <div>
+                                <span className="font-bold">New:</span> {JSON.stringify(log.new_data).slice(0, 50)}...
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        <button
+                          onClick={() => {
+                            setSelectedAuditLog(log);
+                            setShowAuditDetailModal(true);
+                          }}
+                          className="p-2 text-muted-foreground hover:text-nobel-gold transition-colors shrink-0"
+                          title="View full details"
+                        >
+                          <Eye size={18} />
+                        </button>
+                      </div>
                     </div>
                   </motion.div>
                 ))}
@@ -1928,6 +1954,23 @@ const AdminDashboard = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Audit Log Details Modal */}
+      <AuditLogDetailsModal
+        isOpen={showAuditDetailModal}
+        onClose={() => {
+          setShowAuditDetailModal(false);
+          setSelectedAuditLog(null);
+        }}
+        log={selectedAuditLog}
+      />
+
+      {/* Invite Staff Modal */}
+      <InviteStaffModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        currentUserId={user?.id}
+      />
     </div>
   );
 };
