@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, FileText, Download, Search, Filter, Check, Upload, X, Star, Volume2, StopCircle, Loader2, File, FileType, FileType2, ScrollText, FileCheck, FileWarning } from 'lucide-react';
+import { ArrowLeft, FileText, Download, Search, Filter, Check, Upload, X, Star, Volume2, StopCircle, Loader2, File, FileType, FileType2, ScrollText, FileCheck, FileWarning, Eye, ExternalLink } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -50,6 +50,7 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
     const [selectedDecade, setSelectedDecade] = useState<string>("All");
     const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+    const [previewDoc, setPreviewDoc] = useState<Doc | null>(null);
     
     // Audio State
     const [playingDocId, setPlayingDocId] = useState<string | null>(null);
@@ -425,15 +426,25 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                                             </button>
 
                                             {doc.file_url ? (
-                                                <a 
-                                                    href={doc.file_url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    download
-                                                    className="flex items-center gap-2 px-6 py-3 bg-muted hover:bg-ui-blue hover:text-white text-foreground text-xs font-bold uppercase tracking-widest transition-all"
-                                                >
-                                                    <Download size={14} /> <span className="hidden md:inline">Download</span>
-                                                </a>
+                                                <>
+                                                    {doc.file_url.toLowerCase().endsWith('.pdf') && (
+                                                        <button 
+                                                            onClick={() => setPreviewDoc(doc)}
+                                                            className="flex items-center gap-2 px-4 py-3 bg-muted hover:bg-nobel-gold hover:text-foreground text-foreground text-xs font-bold uppercase tracking-widest transition-all"
+                                                        >
+                                                            <Eye size={14} /> <span className="hidden md:inline">Preview</span>
+                                                        </button>
+                                                    )}
+                                                    <a 
+                                                        href={doc.file_url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        download
+                                                        className="flex items-center gap-2 px-6 py-3 bg-muted hover:bg-ui-blue hover:text-white text-foreground text-xs font-bold uppercase tracking-widest transition-all"
+                                                    >
+                                                        <Download size={14} /> <span className="hidden md:inline">Download</span>
+                                                    </a>
+                                                </>
                                             ) : (
                                                 <button 
                                                     disabled
@@ -551,6 +562,67 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                             </form>
                         </motion.div>
                     </div>
+                )}
+            </AnimatePresence>
+
+            {/* PDF Preview Modal */}
+            <AnimatePresence>
+                {previewDoc && previewDoc.file_url && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/90 backdrop-blur-sm"
+                        onClick={() => setPreviewDoc(null)}
+                    >
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-background w-full max-w-5xl h-[85vh] shadow-2xl overflow-hidden flex flex-col"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="flex justify-between items-center p-4 border-b border-border">
+                                <div className="flex-1">
+                                    <h3 className="font-serif text-xl text-ui-blue truncate">{previewDoc.title}</h3>
+                                    <p className="text-xs text-muted-foreground uppercase tracking-widest">
+                                        {previewDoc.type} • {previewDoc.year}
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <a 
+                                        href={previewDoc.file_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-ui-blue hover:text-white text-foreground text-xs font-bold uppercase tracking-widest transition-all rounded"
+                                    >
+                                        <ExternalLink size={14} /> Open
+                                    </a>
+                                    <a 
+                                        href={previewDoc.file_url}
+                                        download
+                                        className="flex items-center gap-2 px-4 py-2 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest hover:bg-nobel-gold hover:text-foreground transition-all rounded"
+                                    >
+                                        <Download size={14} /> Download
+                                    </a>
+                                    <button 
+                                        onClick={() => setPreviewDoc(null)} 
+                                        className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                                    >
+                                        <X size={24} />
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div className="flex-1 bg-muted">
+                                <iframe 
+                                    src={`${previewDoc.file_url}#toolbar=1&navpanes=0`}
+                                    className="w-full h-full border-0"
+                                    title={`Preview of ${previewDoc.title}`}
+                                />
+                            </div>
+                        </motion.div>
+                    </motion.div>
                 )}
             </AnimatePresence>
         </div>

@@ -7,6 +7,7 @@ import { TriviaSection } from "@/components/Trivia";
 import { CampusMap } from "@/components/CampusMap";
 import { HeroScene } from "@/components/QuantumScene";
 import { AnnouncementsBanner } from "@/components/AnnouncementsBanner";
+import { NotificationPrompt } from "@/components/NotificationPrompt";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 
@@ -97,6 +98,9 @@ const Index = () => {
     <div className="min-h-screen bg-background text-foreground">
       {/* Announcements Banner */}
       <AnnouncementsBanner />
+      
+      {/* Notification Prompt */}
+      <NotificationPrompt />
       
       {/* Floating Navbar */}
       <motion.nav
