@@ -123,13 +123,14 @@ interface AdminUser {
   created_at: string;
   profile?: {
     full_name: string | null;
+    email: string | null;
   };
 }
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, isAdmin, loading: authLoading } = useAdminCheck();
+  const { user, isAdmin, isStaff, role: userRole, loading: authLoading } = useAdminCheck();
   const [activeTab, setActiveTab] = useState<TabType>("events");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -142,6 +143,7 @@ const AdminDashboard = () => {
   const [administrations, setAdministrations] = useState<Administration[]>([]);
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const [newAdminEmail, setNewAdminEmail] = useState("");
+  const [newUserRole, setNewUserRole] = useState<"admin" | "moderator">("moderator");
   
   // Modal states
   const [showModal, setShowModal] = useState(false);
@@ -154,12 +156,12 @@ const AdminDashboard = () => {
   const [teamMembers, setTeamMembers] = useState<{role: string; name: string; alias?: string}[]>([]);
   const [activitiesInput, setActivitiesInput] = useState("");
 
-  // Redirect non-admins
+  // Redirect non-staff
   useEffect(() => {
     if (!authLoading) {
       if (!user) {
         navigate("/auth");
-      } else if (!isAdmin) {
+      } else if (!isStaff) {
         toast({
           title: "Access Denied",
           description: "You don't have permission to access the admin dashboard.",
@@ -168,13 +170,13 @@ const AdminDashboard = () => {
         navigate("/");
       }
     }
-  }, [user, isAdmin, authLoading, navigate, toast]);
+  }, [user, isStaff, authLoading, navigate, toast]);
 
   useEffect(() => {
-    if (user && isAdmin) {
+    if (user && isStaff) {
       fetchData();
     }
-  }, [user, isAdmin, activeTab]);
+  }, [user, isStaff, activeTab]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -223,21 +225,21 @@ const AdminDashboard = () => {
             role,
             created_at
           `)
-          .eq("role", "admin")
+          .in("role", ["admin", "moderator"])
           .order("created_at", { ascending: false });
         if (error) throw error;
         
-        // Fetch profile names for each admin
+        // Fetch profile names and emails for each admin/moderator
         const adminUsersWithProfiles = await Promise.all(
           (data || []).map(async (adminRole) => {
             const { data: profileData } = await supabase
               .from("profiles")
-              .select("full_name")
+              .select("full_name, email")
               .eq("id", adminRole.user_id)
               .maybeSingle();
             return {
               ...adminRole,
-              profile: profileData
+              profile: profileData || { full_name: null, email: null }
             };
           })
         );
@@ -548,20 +550,32 @@ const AdminDashboard = () => {
     return (bytes / (1024 * 1024)).toFixed(1) + " MB";
   };
 
+  // Only show tabs the user has access to (admins see all, moderators don't see admin management)
   const tabs = [
     { id: "events" as TabType, label: "Events", icon: Calendar },
     { id: "announcements" as TabType, label: "Announcements", icon: Megaphone },
     { id: "documents" as TabType, label: "Documents", icon: FileText },
     { id: "clubs" as TabType, label: "Clubs", icon: Users },
     { id: "administrations" as TabType, label: "Leaders", icon: Award },
-    { id: "admins" as TabType, label: "Admins", icon: ShieldAlert },
+    ...(isAdmin ? [{ id: "admins" as TabType, label: "Staff", icon: ShieldAlert }] : []),
   ];
 
-  const addAdmin = async () => {
+  const addStaffMember = async () => {
     if (!newAdminEmail.trim()) {
       toast({
         title: "Error",
-        description: "Please enter a user ID",
+        description: "Please enter an email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newAdminEmail.trim())) {
+      toast({
+        title: "Invalid email",
+        description: "Please enter a valid email address.",
         variant: "destructive",
       });
       return;
@@ -569,50 +583,50 @@ const AdminDashboard = () => {
 
     setSaving(true);
     try {
-      // Check if user exists in profiles
+      // Look up user by email in profiles
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("id, full_name")
-        .eq("id", newAdminEmail.trim())
+        .select("id, full_name, email")
+        .eq("email", newAdminEmail.trim().toLowerCase())
         .maybeSingle();
 
       if (profileError) throw profileError;
       if (!profileData) {
         toast({
           title: "User not found",
-          description: "No user found with that ID. Make sure they have logged in at least once.",
+          description: "No user found with that email. Make sure they have signed up and logged in at least once.",
           variant: "destructive",
         });
         return;
       }
 
-      // Check if already admin
+      // Check if already has this role
       const { data: existingRole } = await supabase
         .from("user_roles")
-        .select("id")
-        .eq("user_id", newAdminEmail.trim())
-        .eq("role", "admin")
+        .select("id, role")
+        .eq("user_id", profileData.id)
+        .in("role", ["admin", "moderator"])
         .maybeSingle();
 
       if (existingRole) {
         toast({
-          title: "Already admin",
-          description: `${profileData.full_name || "This user"} is already an admin.`,
+          title: "Already has role",
+          description: `${profileData.full_name || "This user"} is already a ${existingRole.role}.`,
           variant: "destructive",
         });
         return;
       }
 
-      // Add admin role
+      // Add role
       const { error } = await supabase
         .from("user_roles")
-        .insert({ user_id: newAdminEmail.trim(), role: "admin" });
+        .insert({ user_id: profileData.id, role: newUserRole });
 
       if (error) throw error;
 
       toast({
-        title: "Admin added",
-        description: `${profileData.full_name || "User"} has been granted admin access.`,
+        title: "Staff member added",
+        description: `${profileData.full_name || "User"} has been granted ${newUserRole} access.`,
       });
 
       setNewAdminEmail("");
@@ -628,8 +642,10 @@ const AdminDashboard = () => {
     }
   };
 
-  const removeAdmin = async (adminId: string, userName: string) => {
-    if (adminUsers.length <= 1) {
+  const removeStaffMember = async (roleId: string, userName: string, role: string) => {
+    // Check if this is the last admin
+    const adminCount = adminUsers.filter(u => u.role === 'admin').length;
+    if (role === 'admin' && adminCount <= 1) {
       toast({
         title: "Cannot remove",
         description: "There must be at least one admin.",
@@ -638,19 +654,19 @@ const AdminDashboard = () => {
       return;
     }
 
-    if (!confirm(`Remove admin access from ${userName || "this user"}?`)) return;
+    if (!confirm(`Remove ${role} access from ${userName || "this user"}?`)) return;
 
     try {
       const { error } = await supabase
         .from("user_roles")
         .delete()
-        .eq("id", adminId);
+        .eq("id", roleId);
 
       if (error) throw error;
 
       toast({
-        title: "Admin removed",
-        description: `${userName || "User"} no longer has admin access.`,
+        title: "Staff member removed",
+        description: `${userName || "User"} no longer has ${role} access.`,
       });
 
       fetchData();
@@ -663,7 +679,7 @@ const AdminDashboard = () => {
     }
   };
 
-  if (authLoading || !user || !isAdmin) {
+  if (authLoading || !user || !isStaff) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-nobel-gold" />
@@ -949,32 +965,45 @@ const AdminDashboard = () => {
             {/* Admin Users Tab */}
             {activeTab === "admins" && (
               <div className="space-y-6">
-                {/* Add Admin Form */}
+                {/* Add Staff Form */}
                 <div className="bg-card border border-border p-6">
-                  <h3 className="font-serif text-lg text-foreground mb-4">Add New Admin</h3>
-                  <div className="flex gap-4">
+                  <h3 className="font-serif text-lg text-foreground mb-4">Add Staff Member</h3>
+                  <div className="flex flex-col md:flex-row gap-4">
                     <input
-                      type="text"
-                      placeholder="Enter User ID (from profiles)"
+                      type="email"
+                      placeholder="Enter user's email address"
                       value={newAdminEmail}
                       onChange={(e) => setNewAdminEmail(e.target.value)}
                       className="flex-1 px-4 py-3 bg-background border border-border text-foreground focus:border-nobel-gold focus:outline-none transition-colors text-sm"
                     />
+                    <select
+                      value={newUserRole}
+                      onChange={(e) => setNewUserRole(e.target.value as "admin" | "moderator")}
+                      className="px-4 py-3 bg-background border border-border text-foreground focus:border-nobel-gold focus:outline-none transition-colors text-sm"
+                    >
+                      <option value="moderator">Moderator</option>
+                      <option value="admin">Admin</option>
+                    </select>
                     <button
-                      onClick={addAdmin}
+                      onClick={addStaffMember}
                       disabled={saving || !newAdminEmail.trim()}
-                      className="px-6 py-3 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest hover:bg-nobel-gold hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      className="px-6 py-3 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest hover:bg-nobel-gold hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
                     >
                       {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus size={14} />}
-                      Add Admin
+                      Add Staff
                     </button>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Users must have logged in at least once to be added as admins.
-                  </p>
+                  <div className="mt-3 space-y-1">
+                    <p className="text-xs text-muted-foreground">
+                      <strong>Admin:</strong> Full access to all features including staff management.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      <strong>Moderator:</strong> Can manage content (events, announcements, documents) but cannot manage staff.
+                    </p>
+                  </div>
                 </div>
 
-                {/* Admin List */}
+                {/* Staff List */}
                 {adminUsers.map((adminUser) => (
                   <motion.div
                     key={adminUser.id}
@@ -985,15 +1014,19 @@ const AdminDashboard = () => {
                     <div>
                       <div className="flex items-center gap-3 mb-2">
                         <ShieldAlert className="w-4 h-4 text-ui-blue" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 bg-ui-blue/10 text-ui-blue rounded-full">
+                        <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${
+                          adminUser.role === 'admin' 
+                            ? 'bg-ui-blue/10 text-ui-blue' 
+                            : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                        }`}>
                           {adminUser.role}
                         </span>
                       </div>
                       <h3 className="font-serif text-xl text-foreground">
                         {adminUser.profile?.full_name || "Unknown User"}
                       </h3>
-                      <p className="text-xs text-muted-foreground mt-1 font-mono">
-                        ID: {adminUser.user_id}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {adminUser.profile?.email || adminUser.user_id}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         Added: {new Date(adminUser.created_at).toLocaleDateString()}
@@ -1001,9 +1034,9 @@ const AdminDashboard = () => {
                     </div>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => removeAdmin(adminUser.id, adminUser.profile?.full_name || "this user")}
+                        onClick={() => removeStaffMember(adminUser.id, adminUser.profile?.full_name || "this user", adminUser.role)}
                         className="p-2 text-muted-foreground hover:text-destructive transition-colors"
-                        title="Remove admin access"
+                        title={`Remove ${adminUser.role} access`}
                       >
                         <Trash2 size={18} />
                       </button>
@@ -1014,7 +1047,7 @@ const AdminDashboard = () => {
                 {adminUsers.length === 0 && (
                   <div className="text-center py-20 text-muted-foreground">
                     <ShieldAlert className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p className="font-serif text-xl italic">No admins found.</p>
+                    <p className="font-serif text-xl italic">No staff members found.</p>
                   </div>
                 )}
               </div>
