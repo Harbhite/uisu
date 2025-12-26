@@ -165,6 +165,8 @@ const AdminDashboard = () => {
   // Audit log filters
   const [auditSearchQuery, setAuditSearchQuery] = useState("");
   const [auditActionFilter, setAuditActionFilter] = useState<string>("all");
+  const [auditStartDate, setAuditStartDate] = useState<string>("");
+  const [auditEndDate, setAuditEndDate] = useState<string>("");
   const [auditTableFilter, setAuditTableFilter] = useState<string>("all");
   
   // Modal states
@@ -724,7 +726,12 @@ const AdminDashboard = () => {
     const matchesAction = auditActionFilter === "all" || log.action === auditActionFilter;
     const matchesTable = auditTableFilter === "all" || log.table_name === auditTableFilter;
     
-    return matchesSearch && matchesAction && matchesTable;
+    // Date range filtering
+    const logDate = new Date(log.created_at);
+    const matchesStartDate = !auditStartDate || logDate >= new Date(auditStartDate);
+    const matchesEndDate = !auditEndDate || logDate <= new Date(auditEndDate + 'T23:59:59');
+    
+    return matchesSearch && matchesAction && matchesTable && matchesStartDate && matchesEndDate;
   });
 
   // Get unique actions and tables for filter dropdowns
@@ -1284,9 +1291,9 @@ const AdminDashboard = () => {
               <div className="space-y-4">
                 {/* Filters and Export */}
                 <div className="bg-card border border-border p-4 space-y-4">
-                  <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex flex-col md:flex-row gap-4 flex-wrap">
                     {/* Search */}
-                    <div className="relative flex-1">
+                    <div className="relative flex-1 min-w-[200px]">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <input
                         type="text"
@@ -1323,12 +1330,43 @@ const AdminDashboard = () => {
                         <option key={table} value={table}>{table}</option>
                       ))}
                     </select>
+                  </div>
+                  
+                  {/* Date Range Filters */}
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">Date Range:</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2 items-center">
+                      <input
+                        type="date"
+                        value={auditStartDate}
+                        onChange={(e) => setAuditStartDate(e.target.value)}
+                        className="px-3 py-2 bg-background border border-border text-foreground focus:border-nobel-gold focus:outline-none transition-colors text-sm"
+                      />
+                      <span className="text-xs text-muted-foreground">to</span>
+                      <input
+                        type="date"
+                        value={auditEndDate}
+                        onChange={(e) => setAuditEndDate(e.target.value)}
+                        className="px-3 py-2 bg-background border border-border text-foreground focus:border-nobel-gold focus:outline-none transition-colors text-sm"
+                      />
+                      {(auditStartDate || auditEndDate) && (
+                        <button
+                          onClick={() => { setAuditStartDate(""); setAuditEndDate(""); }}
+                          className="text-xs text-destructive hover:underline"
+                        >
+                          Clear dates
+                        </button>
+                      )}
+                    </div>
                     
                     {/* Export Button */}
                     <button
                       onClick={exportAuditLogs}
                       disabled={filteredAuditLogs.length === 0}
-                      className="flex items-center gap-2 px-4 py-2 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest hover:bg-nobel-gold hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                      className="flex items-center gap-2 px-4 py-2 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest hover:bg-nobel-gold hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap ml-auto"
                     >
                       <Download size={14} />
                       Export CSV

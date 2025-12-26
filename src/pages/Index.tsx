@@ -107,14 +107,14 @@ const Index = () => {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled ? "bg-background/80 backdrop-blur-xl shadow-lg border-b border-border" : "bg-transparent"
+          scrolled ? "bg-primary/95 backdrop-blur-xl shadow-lg border-b border-primary-foreground/10" : "bg-primary"
         }`}
       >
         <div className="container mx-auto px-6">
           <div className="flex items-center justify-between h-20">
             <Link to="/" className="flex items-center gap-3">
               <img src="/uisu-logo.png" alt="UISU Logo" className="h-10 w-10 object-contain" />
-              <span className="font-serif text-xl text-ui-blue">UISU Archive</span>
+              <span className="font-serif text-xl text-primary-foreground">UISU Archive</span>
             </Link>
 
             {/* Desktop Navigation */}
@@ -123,7 +123,7 @@ const Index = () => {
                 <Link
                   key={link.name}
                   to={link.href}
-                  className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground hover:text-nobel-gold transition-colors"
+                  className="text-xs font-bold uppercase tracking-[0.15em] text-primary-foreground/80 hover:text-nobel-gold transition-colors"
                 >
                   {link.name}
                 </Link>
@@ -133,13 +133,13 @@ const Index = () => {
                 <div className="flex items-center gap-3">
                   <Link
                     to="/admin"
-                    className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-nobel-gold transition-colors border border-border rounded-full hover:border-nobel-gold"
+                    className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-primary-foreground/80 hover:text-nobel-gold transition-colors border border-primary-foreground/30 rounded-full hover:border-nobel-gold"
                   >
                     Admin
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-nobel-gold transition-colors border border-border rounded-full hover:border-nobel-gold"
+                    className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-widest text-primary-foreground/80 hover:text-nobel-gold transition-colors border border-primary-foreground/30 rounded-full hover:border-nobel-gold"
                   >
                     <LogOut size={14} />
                     Logout
@@ -148,7 +148,7 @@ const Index = () => {
               ) : (
                 <Link
                   to="/auth"
-                  className="flex items-center gap-2 px-4 py-2 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest rounded-full hover:bg-nobel-gold hover:text-foreground transition-all"
+                  className="flex items-center gap-2 px-4 py-2 bg-nobel-gold text-foreground text-xs font-bold uppercase tracking-widest rounded-full hover:bg-primary-foreground hover:text-primary transition-all"
                 >
                   <LogIn size={14} />
                   Sign In
@@ -159,7 +159,7 @@ const Index = () => {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 text-muted-foreground hover:text-ui-blue"
+              className="md:hidden p-2 text-primary-foreground hover:text-nobel-gold"
             >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -171,7 +171,7 @@ const Index = () => {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="md:hidden bg-background/95 backdrop-blur-xl border-t border-border"
+            className="md:hidden bg-primary/95 backdrop-blur-xl border-t border-primary-foreground/10"
           >
             <div className="px-6 py-6 space-y-2">
               {navLinks.map((link) => (
@@ -179,7 +179,7 @@ const Index = () => {
                   key={link.name}
                   to={link.href}
                   onClick={() => setIsMenuOpen(false)}
-                  className="block px-4 py-3 text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground hover:text-nobel-gold hover:bg-muted rounded-lg transition-colors"
+                  className="block px-4 py-3 text-xs font-bold uppercase tracking-[0.15em] text-primary-foreground/80 hover:text-nobel-gold hover:bg-primary-foreground/10 rounded-lg transition-colors"
                 >
                   {link.name}
                 </Link>
@@ -191,7 +191,7 @@ const Index = () => {
                     handleLogout();
                     setIsMenuOpen(false);
                   }}
-                  className="w-full flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-nobel-gold hover:bg-muted rounded-lg transition-colors"
+                  className="w-full flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest text-primary-foreground/80 hover:text-nobel-gold hover:bg-primary-foreground/10 rounded-lg transition-colors"
                 >
                   <LogOut size={14} />
                   Logout
@@ -200,7 +200,7 @@ const Index = () => {
                 <Link
                   to="/auth"
                   onClick={() => setIsMenuOpen(false)}
-                  className="block px-4 py-3 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest rounded-lg hover:bg-nobel-gold hover:text-foreground transition-all text-center"
+                  className="block px-4 py-3 bg-nobel-gold text-foreground text-xs font-bold uppercase tracking-widest rounded-lg hover:bg-primary-foreground transition-all text-center"
                 >
                   Sign In
                 </Link>

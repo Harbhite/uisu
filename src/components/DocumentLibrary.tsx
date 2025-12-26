@@ -594,9 +594,9 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                     </p>
                 </div>
 
-                <div className="flex flex-col lg:flex-row gap-12 items-start">
+                <div className="flex flex-col lg:flex-row gap-12 relative">
                     {/* Sidebar Filters */}
-                    <div className="w-full lg:w-72 flex-shrink-0 space-y-8 sticky top-32">
+                    <div className="w-full lg:w-72 shrink-0 space-y-8 lg:sticky lg:top-32 lg:self-start">
                         
                         {/* Search */}
                         <div className="relative">
@@ -691,7 +691,7 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                     </div>
 
                     {/* Main Content */}
-                    <div className="flex-1 w-full">
+                    <div className="flex-1 min-w-0">
                         <div className="grid grid-cols-1 gap-6">
                             {filteredDocs.length > 0 ? (
                                 filteredDocs.map((doc) => (
