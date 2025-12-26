@@ -3,10 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, FileText, Download, Search, Filter, Check, Upload, X, Star, Volume2, StopCircle, Loader2, File, FileType, FileType2, ScrollText, FileCheck, FileWarning, Eye, ExternalLink } from 'lucide-react';
+import { ArrowLeft, FileText, Download, Search, Filter, Check, Upload, X, Star, Volume2, StopCircle, Loader2, File, FileType, FileType2, ScrollText, FileCheck, FileWarning, Eye, ExternalLink, LogIn } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
+import { User } from '@supabase/supabase-js';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 /**
  * Props for the DocumentLibrary component.
@@ -51,6 +54,13 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
     const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [previewDoc, setPreviewDoc] = useState<Doc | null>(null);
+    
+    // Auth State
+    const [user, setUser] = useState<User | null>(null);
+    const navigate = useNavigate();
+    
+    // Drag and drop state
+    const [isDragging, setIsDragging] = useState(false);
     
     // Audio State
     const [playingDocId, setPlayingDocId] = useState<string | null>(null);
@@ -114,6 +124,69 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
         };
     }, []);
 
+    // Check auth state
+    useEffect(() => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+            (event, session) => {
+                setUser(session?.user ?? null);
+            }
+        );
+
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setUser(session?.user ?? null);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    // Drag and drop handlers
+    const handleDragOver = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (user) {
+            setIsDragging(true);
+        }
+    }, [user]);
+
+    const handleDragLeave = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+    }, []);
+
+    const handleDrop = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+
+        if (!user) {
+            toast.error('Please log in to upload documents');
+            return;
+        }
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+            if (validTypes.includes(file.type) || file.name.match(/\.(pdf|doc|docx|txt)$/i)) {
+                setSelectedFile(file);
+                setIsUploadModalOpen(true);
+                toast.info(`File "${file.name}" ready to upload. Please fill in the details.`);
+            } else {
+                toast.error('Please upload a PDF, DOC, DOCX, or TXT file');
+            }
+        }
+    }, [user]);
+
+    const handleUploadClick = () => {
+        if (!user) {
+            toast.error('Please log in to upload documents');
+            navigate('/auth');
+            return;
+        }
+        setIsUploadModalOpen(true);
+    };
+
     const toggleSpeech = (doc: Doc) => {
         if (!synthesisRef.current) return;
 
@@ -153,6 +226,12 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
 
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        if (!user) {
+            toast.error('Please log in to upload documents');
+            return;
+        }
+        
         setIsUploading(true);
         
         try {
@@ -213,9 +292,10 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
             setNewType("Report"); 
             setNewDesc("");
             setSelectedFile(null);
+            toast.success('Document uploaded successfully!');
         } catch (error) {
             console.error('Upload error:', error);
-            alert('Failed to upload document. Please try again.');
+            toast.error('Failed to upload document. Please try again.');
         } finally {
             setIsUploading(false);
         }
@@ -243,7 +323,30 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
     }
 
     return (
-        <div className="min-h-screen bg-background pt-32 pb-16">
+        <div 
+            className="min-h-screen bg-background pt-32 pb-16 relative"
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+        >
+            {/* Drag overlay */}
+            <AnimatePresence>
+                {isDragging && user && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 bg-ui-blue/20 backdrop-blur-sm flex items-center justify-center pointer-events-none"
+                    >
+                        <div className="bg-background border-4 border-dashed border-ui-blue rounded-2xl p-16 text-center">
+                            <Upload className="w-16 h-16 text-ui-blue mx-auto mb-4" />
+                            <h3 className="text-2xl font-serif text-ui-blue mb-2">Drop your document here</h3>
+                            <p className="text-muted-foreground">PDF, DOC, DOCX, or TXT files accepted</p>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <div className="container mx-auto px-6">
                 <div className="flex justify-between items-start">
                      <button 
@@ -256,14 +359,25 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                         <span>Back to Home</span>
                     </button>
 
-                     <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setIsUploadModalOpen(true)}
-                        className="flex items-center gap-2 px-6 py-3 bg-ui-blue text-white rounded-full shadow-lg hover:bg-nobel-gold hover:text-foreground transition-all text-xs font-bold uppercase tracking-widest"
-                    >
-                        <Upload size={14} /> Upload
-                    </motion.button>
+                    {user ? (
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={handleUploadClick}
+                            className="flex items-center gap-2 px-6 py-3 bg-ui-blue text-white rounded-full shadow-lg hover:bg-nobel-gold hover:text-foreground transition-all text-xs font-bold uppercase tracking-widest"
+                        >
+                            <Upload size={14} /> Upload
+                        </motion.button>
+                    ) : (
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => navigate('/auth')}
+                            className="flex items-center gap-2 px-6 py-3 bg-muted text-muted-foreground rounded-full shadow-lg hover:bg-ui-blue hover:text-white transition-all text-xs font-bold uppercase tracking-widest"
+                        >
+                            <LogIn size={14} /> Login to Upload
+                        </motion.button>
+                    )}
                 </div>
 
                 <div className="mb-20">
@@ -537,17 +651,37 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                                         onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                                         className="hidden"
                                     />
-                                    <button
-                                        type="button"
+                                    <div
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="w-full px-4 py-3 bg-card border border-dashed border-border hover:border-nobel-gold focus:border-nobel-gold focus:outline-none transition-colors text-left"
+                                        onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                        onDrop={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            const file = e.dataTransfer.files?.[0];
+                                            if (file) setSelectedFile(file);
+                                        }}
+                                        className="w-full px-4 py-8 bg-card border-2 border-dashed border-border hover:border-nobel-gold focus:border-nobel-gold transition-colors cursor-pointer text-center"
                                     >
                                         {selectedFile ? (
-                                            <span className="text-foreground">{selectedFile.name}</span>
+                                            <div className="flex items-center justify-center gap-3">
+                                                <FileText className="w-6 h-6 text-ui-blue" />
+                                                <span className="text-foreground font-medium">{selectedFile.name}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => { e.stopPropagation(); setSelectedFile(null); }}
+                                                    className="p-1 hover:bg-destructive/10 rounded"
+                                                >
+                                                    <X size={16} className="text-destructive" />
+                                                </button>
+                                            </div>
                                         ) : (
-                                            <span className="text-muted-foreground">Click to select a file...</span>
+                                            <div>
+                                                <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                                                <p className="text-muted-foreground">Click or drag & drop a file here</p>
+                                                <p className="text-xs text-muted-foreground/60 mt-1">PDF, DOC, DOCX, or TXT</p>
+                                            </div>
                                         )}
-                                    </button>
+                                    </div>
                                 </div>
 
                                 <div className="pt-4">
