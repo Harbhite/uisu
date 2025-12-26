@@ -142,6 +142,8 @@ export type Database = {
           file_size: string | null
           file_url: string | null
           id: string
+          is_public: boolean | null
+          share_token: string | null
           tags: string[] | null
           title: string
           updated_at: string | null
@@ -155,6 +157,8 @@ export type Database = {
           file_size?: string | null
           file_url?: string | null
           id?: string
+          is_public?: boolean | null
+          share_token?: string | null
           tags?: string[] | null
           title: string
           updated_at?: string | null
@@ -168,6 +172,8 @@ export type Database = {
           file_size?: string | null
           file_url?: string | null
           id?: string
+          is_public?: boolean | null
+          share_token?: string | null
           tags?: string[] | null
           title?: string
           updated_at?: string | null

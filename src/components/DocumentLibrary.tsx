@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, FileText, Download, Search, Filter, Check, Upload, X, Star, Volume2, StopCircle, Loader2, File, FileType, FileType2, ScrollText, FileCheck, FileWarning, Eye, ExternalLink, LogIn, Tag, FileImage, FileCode, FileSpreadsheet } from 'lucide-react';
+import { ArrowLeft, FileText, Download, Search, Filter, Check, Upload, X, Star, Volume2, StopCircle, Loader2, File, FileType, FileType2, ScrollText, FileCheck, FileWarning, Eye, ExternalLink, LogIn, Tag, FileImage, FileCode, FileSpreadsheet, Share2, Link, Copy, CheckCircle } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
@@ -39,6 +39,10 @@ interface Doc {
     file_url?: string;
     /** Tags for categorization */
     tags?: string[];
+    /** Share token for public sharing */
+    share_token?: string;
+    /** Whether the document is publicly accessible */
+    is_public?: boolean;
 }
 
 /**
@@ -57,6 +61,8 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [previewDoc, setPreviewDoc] = useState<Doc | null>(null);
+    const [shareModalDoc, setShareModalDoc] = useState<Doc | null>(null);
+    const [copiedLink, setCopiedLink] = useState(false);
     
     // Auth State
     const [user, setUser] = useState<User | null>(null);
@@ -130,6 +136,8 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                     description: doc.description || '',
                     file_url: doc.file_url || undefined,
                     tags: doc.tags || [],
+                    share_token: (doc as any).share_token || undefined,
+                    is_public: (doc as any).is_public || false,
                 }));
                 
                 setDocuments(formattedDocs);
@@ -276,6 +284,79 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
         setNewTags(newTags.filter(t => t !== tag));
     };
 
+    const generateShareToken = () => {
+        return `${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 10)}`;
+    };
+
+    const handleShare = async (doc: Doc) => {
+        if (!user) {
+            toast.error('Please log in to share documents');
+            return;
+        }
+
+        setShareModalDoc(doc);
+        setCopiedLink(false);
+
+        // If no share token exists, generate one
+        if (!doc.share_token) {
+            const shareToken = generateShareToken();
+            try {
+                const { error } = await supabase
+                    .from('documents')
+                    .update({ share_token: shareToken, is_public: true })
+                    .eq('id', doc.id);
+
+                if (error) throw error;
+
+                // Update local state
+                setDocuments(prev => prev.map(d => 
+                    d.id === doc.id ? { ...d, share_token: shareToken, is_public: true } : d
+                ));
+                setShareModalDoc({ ...doc, share_token: shareToken, is_public: true });
+            } catch (error) {
+                console.error('Error generating share link:', error);
+                toast.error('Failed to generate share link');
+            }
+        }
+    };
+
+    const getShareUrl = (doc: Doc) => {
+        if (!doc.share_token) return '';
+        return `${window.location.origin}/documents?share=${doc.share_token}`;
+    };
+
+    const copyShareLink = async (doc: Doc) => {
+        const url = getShareUrl(doc);
+        try {
+            await navigator.clipboard.writeText(url);
+            setCopiedLink(true);
+            toast.success('Link copied to clipboard!');
+            setTimeout(() => setCopiedLink(false), 3000);
+        } catch (error) {
+            toast.error('Failed to copy link');
+        }
+    };
+
+    const revokeShareLink = async (doc: Doc) => {
+        try {
+            const { error } = await supabase
+                .from('documents')
+                .update({ share_token: null, is_public: false })
+                .eq('id', doc.id);
+
+            if (error) throw error;
+
+            setDocuments(prev => prev.map(d => 
+                d.id === doc.id ? { ...d, share_token: undefined, is_public: false } : d
+            ));
+            setShareModalDoc(null);
+            toast.success('Share link revoked');
+        } catch (error) {
+            console.error('Error revoking share link:', error);
+            toast.error('Failed to revoke share link');
+        }
+    };
+
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
         
@@ -321,6 +402,7 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                     file_url: fileUrl,
                     file_size: fileSize,
                     tags: newTags.length > 0 ? newTags : null,
+                    uploaded_by: user?.id,
                 })
                 .select()
                 .single();
@@ -337,6 +419,8 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                 description: newDocData.description || '',
                 file_url: newDocData.file_url || undefined,
                 tags: newDocData.tags || [],
+                share_token: (newDocData as any).share_token || undefined,
+                is_public: (newDocData as any).is_public || false,
             };
             
             setDocuments([newDoc, ...documents]);
@@ -667,6 +751,22 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                                                     <Download size={14} /> <span className="hidden md:inline">No File</span>
                                                 </button>
                                             )}
+
+                                            {/* Share Button */}
+                                            <button 
+                                                onClick={() => handleShare(doc)}
+                                                className={`flex items-center gap-2 w-10 h-10 md:w-auto md:h-auto md:px-4 md:py-3 rounded-full md:rounded-none transition-all justify-center ${
+                                                    doc.share_token 
+                                                        ? 'bg-green-100 text-green-600 hover:bg-green-200' 
+                                                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                                }`}
+                                                title={doc.share_token ? "Manage Share Link" : "Share Document"}
+                                            >
+                                                <Share2 size={14} />
+                                                <span className="hidden md:inline text-xs font-bold uppercase tracking-widest">
+                                                    {doc.share_token ? 'Shared' : 'Share'}
+                                                </span>
+                                            </button>
                                         </div>
                                     </motion.div>
                                 ))
@@ -913,6 +1013,88 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                                     className="w-full h-full border-0"
                                     title={`Preview of ${previewDoc.title}`}
                                 />
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Share Modal */}
+            <AnimatePresence>
+                {shareModalDoc && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/90 backdrop-blur-sm"
+                        onClick={() => setShareModalDoc(null)}
+                    >
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-background w-full max-w-md shadow-2xl overflow-hidden"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="flex justify-between items-center p-6 border-b border-border">
+                                <div className="flex items-center gap-3">
+                                    <Share2 className="w-5 h-5 text-ui-blue" />
+                                    <h3 className="font-serif text-xl text-ui-blue">Share Document</h3>
+                                </div>
+                                <button 
+                                    onClick={() => setShareModalDoc(null)} 
+                                    className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            
+                            <div className="p-6 space-y-4">
+                                <div>
+                                    <p className="text-sm text-muted-foreground mb-2">Document</p>
+                                    <p className="font-serif text-lg text-foreground">{shareModalDoc.title}</p>
+                                </div>
+
+                                {shareModalDoc.share_token ? (
+                                    <>
+                                        <div>
+                                            <p className="text-sm text-muted-foreground mb-2">Shareable Link</p>
+                                            <div className="flex items-center gap-2">
+                                                <input 
+                                                    type="text" 
+                                                    readOnly 
+                                                    value={getShareUrl(shareModalDoc)}
+                                                    className="flex-1 px-3 py-2 bg-muted border border-border text-sm text-foreground truncate"
+                                                />
+                                                <button 
+                                                    onClick={() => copyShareLink(shareModalDoc)}
+                                                    className={`px-4 py-2 flex items-center gap-2 text-xs font-bold uppercase transition-all ${
+                                                        copiedLink 
+                                                            ? 'bg-green-100 text-green-600' 
+                                                            : 'bg-ui-blue text-white hover:bg-nobel-gold hover:text-foreground'
+                                                    }`}
+                                                >
+                                                    {copiedLink ? <CheckCircle size={14} /> : <Copy size={14} />}
+                                                    {copiedLink ? 'Copied' : 'Copy'}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="pt-4 border-t border-border">
+                                            <button 
+                                                onClick={() => revokeShareLink(shareModalDoc)}
+                                                className="w-full py-3 bg-destructive/10 text-destructive text-xs font-bold uppercase tracking-widest hover:bg-destructive hover:text-white transition-all"
+                                            >
+                                                Revoke Share Link
+                                            </button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="text-center py-8">
+                                        <Loader2 className="w-8 h-8 animate-spin text-ui-blue mx-auto mb-4" />
+                                        <p className="text-muted-foreground">Generating share link...</p>
+                                    </div>
+                                )}
                             </div>
                         </motion.div>
                     </motion.div>
