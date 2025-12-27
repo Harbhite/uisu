@@ -22,7 +22,7 @@ const itemVariants = {
 };
 
 export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
-  const [activeTab, setActiveTab] = useState<'cec' | 'src' | 'judiciary'>('cec');
+  const [activeTab, setActiveTab] = useState<'cec' | 'src'>('cec');
 
   return (
     <div className="min-h-screen bg-slate-50 pt-32 pb-16">
@@ -67,7 +67,7 @@ export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
         </div>
 
         <div className="flex flex-wrap gap-8 mb-16 border-b border-slate-200">
-            {['cec', 'src', 'judiciary'].map((tab) => (
+            {['cec', 'src'].map((tab) => (
                 <button 
                     key={tab}
                     onClick={() => setActiveTab(tab as any)}
@@ -76,7 +76,6 @@ export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
                     <span className="flex items-center gap-3">
                         {tab === 'cec' && "The Executive"}
                         {tab === 'src' && "The Legislative"}
-                        {tab === 'judiciary' && "The Judiciary"}
                     </span>
                     {activeTab === tab && (
                         <motion.div 
@@ -209,48 +208,6 @@ export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
                 </motion.div>
             )}
 
-            {activeTab === 'judiciary' && (
-                <motion.div 
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate="visible"
-                    className="grid grid-cols-1 lg:grid-cols-2 gap-12"
-                >
-                     <motion.div variants={itemVariants} className="bg-ui-blue text-white p-10 rounded-sm relative overflow-hidden flex flex-col justify-between min-h-[400px]">
-                         <div className="relative z-10">
-                            <div className="inline-block px-3 py-1 border border-white/20 rounded-full text-xs font-bold uppercase tracking-widest mb-6 text-nobel-gold">
-                                The Third Arm
-                            </div>
-                            <h3 className="font-serif text-5xl mb-6 leading-tight">The Judicial Council</h3>
-                            <p className="text-slate-400 text-lg leading-relaxed max-w-md">
-                                The interpreter of the Constitution. Adjudicates disputes between students and the government.
-                            </p>
-                         </div>
-                         <div className="relative z-10 mt-12">
-                             <p className="font-serif italic text-2xl text-white/80">
-                                "Justice must not only be done, but must be seen to be done."
-                             </p>
-                         </div>
-                         
-                         <Scale size={300} className="absolute -bottom-10 -right-10 text-white/5 rotate-12" />
-                     </motion.div>
-
-                     <div className="space-y-6">
-                         <motion.div variants={itemVariants} className="p-8 bg-white border border-slate-200 hover:border-nobel-gold transition-colors group cursor-default">
-                             <h4 className="font-serif text-2xl mb-2 text-ui-blue group-hover:text-nobel-gold transition-colors">The Chief Justice</h4>
-                             <p className="text-slate-600">Head of the Judicial Council. Appointed by the President on recommendation of the SRC.</p>
-                         </motion.div>
-                         <motion.div variants={itemVariants} className="p-8 bg-white border border-slate-200 hover:border-nobel-gold transition-colors group cursor-default">
-                             <h4 className="font-serif text-2xl mb-2 text-ui-blue group-hover:text-nobel-gold transition-colors">Judges</h4>
-                             <p className="text-slate-600">Representatives from various halls of residence who sit on the council to ensure fair hearing.</p>
-                         </motion.div>
-                         <motion.div variants={itemVariants} className="p-8 bg-white border border-slate-200 hover:border-nobel-gold transition-colors group cursor-default">
-                             <h4 className="font-serif text-2xl mb-2 text-ui-blue group-hover:text-nobel-gold transition-colors">The Registrar</h4>
-                             <p className="text-slate-600">Administrative head of the court. Manages case files and court schedules.</p>
-                         </motion.div>
-                     </div>
-                </motion.div>
-            )}
         </div>
       </div>
     </div>
