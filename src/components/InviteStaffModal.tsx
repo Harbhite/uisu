@@ -40,64 +40,7 @@ const InviteStaffModal = ({ isOpen, onClose, currentUserId }: InviteStaffModalPr
     
     setLoading(true);
     try {
-      // Generate the invite using Supabase's invite functionality
-      const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
-        redirectTo: `${window.location.origin}/auth`,
-        data: {
-          invited_role: role,
-          invited_by: currentUserId,
-        }
-      });
-
-      if (error) {
-        // If admin API fails (not enabled), fall back to magic link approach
-        // Generate a signup link they can use
-        const signupLink = `${window.location.origin}/auth?invited=true&role=${role}`;
-        setInviteLink(signupLink);
-        
-        // Log the invite to audit
-        await supabase.from("audit_logs" as any).insert({
-          user_id: currentUserId,
-          action: "staff_invite",
-          table_name: "user_roles",
-          record_id: null,
-          old_data: null,
-          new_data: { 
-            invited_email: email, 
-            invited_role: role,
-            invite_type: "signup_link"
-          },
-        });
-
-        toast({
-          title: "Invite Link Generated",
-          description: `Share this link with ${email} to invite them as ${role}.`,
-        });
-      } else {
-        // Admin invite succeeded
-        setInviteLink(`Invite email sent to ${email}`);
-        
-        // Log the invite to audit
-        await supabase.from("audit_logs" as any).insert({
-          user_id: currentUserId,
-          action: "staff_invite",
-          table_name: "user_roles",
-          record_id: data?.user?.id || null,
-          old_data: null,
-          new_data: { 
-            invited_email: email, 
-            invited_role: role,
-            invite_type: "email_invite"
-          },
-        });
-
-        toast({
-          title: "Invite Sent",
-          description: `An invite email has been sent to ${email}.`,
-        });
-      }
-    } catch (error: any) {
-      // Fallback: create a simple invite link
+      // Generate a signup link
       const signupLink = `${window.location.origin}/auth?invited=true&role=${role}`;
       setInviteLink(signupLink);
       
@@ -115,9 +58,40 @@ const InviteStaffModal = ({ isOpen, onClose, currentUserId }: InviteStaffModalPr
         },
       });
 
+      // Send email notification
+      try {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", currentUserId)
+          .maybeSingle();
+        
+        await supabase.functions.invoke('send-staff-notification', {
+          body: {
+            type: 'invite',
+            email: email,
+            role: role,
+            invitedBy: profileData?.full_name || 'An administrator',
+            inviteLink: signupLink,
+          }
+        });
+        
+        toast({
+          title: "Invite Sent",
+          description: `Invite link generated and email sent to ${email}.`,
+        });
+      } catch (emailError) {
+        console.error("Email notification failed:", emailError);
+        toast({
+          title: "Invite Link Generated",
+          description: `Share this link with ${email}. Email notification could not be sent.`,
+        });
+      }
+    } catch (error: any) {
       toast({
-        title: "Invite Link Generated",
-        description: "Share this link to invite new staff members.",
+        title: "Error",
+        description: error.message || "Failed to generate invite",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);

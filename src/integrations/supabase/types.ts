@@ -125,6 +125,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           founded: string | null
+          header_image_url: string | null
           icon_name: string | null
           id: string
           image_url: string | null
@@ -141,6 +142,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           founded?: string | null
+          header_image_url?: string | null
           icon_name?: string | null
           id?: string
           image_url?: string | null
@@ -157,6 +159,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           founded?: string | null
+          header_image_url?: string | null
           icon_name?: string | null
           id?: string
           image_url?: string | null
