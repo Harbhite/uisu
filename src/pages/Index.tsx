@@ -44,6 +44,7 @@ const Index = () => {
 
   const navLinks = [
     { name: "Governance", href: "/governance" },
+    { name: "Leaders", href: "/current-leaders" },
     { name: "Past Leaders", href: "/past-leaders" },
     { name: "Documents", href: "/documents" },
     { name: "Campus Map", href: "/campus-map" },
