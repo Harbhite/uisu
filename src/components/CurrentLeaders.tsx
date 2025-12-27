@@ -48,6 +48,38 @@ const executives: Leader[] = [
     email: "pro@uisu.org",
     socials: { twitter: "#", instagram: "#" }
   },
+  {
+    name: "Emmanuel Nwachukwu",
+    role: "Treasurer",
+    image: "/placeholder.svg",
+    bio: "The custodian of the union's funds, ensuring transparency and accountability in all financial matters.",
+    email: "treasurer@uisu.org",
+    socials: { linkedin: "#" }
+  },
+  {
+    name: "Grace Oladipo",
+    role: "House Secretary",
+    image: "/placeholder.svg",
+    bio: "Responsible for the maintenance of the Union building and the general welfare of students in halls.",
+    email: "housesecretary@uisu.org",
+    socials: { twitter: "#" }
+  },
+  {
+    name: "Tobi Adewale",
+    role: "Sport Secretary",
+    image: "/placeholder.svg",
+    bio: "Promotes physical fitness and organizes sporting activities to foster unity among students.",
+    email: "sports@uisu.org",
+    socials: { instagram: "#" }
+  },
+  {
+    name: "Zainab Ali",
+    role: "Assistant General Secretary",
+    image: "/placeholder.svg",
+    bio: "Assists the General Secretary and manages the union's correspondence and records.",
+    email: "ags@uisu.org",
+    socials: { twitter: "#" }
+  },
 ];
 
 const principalOfficers: Leader[] = [
@@ -73,6 +105,57 @@ const principalOfficers: Leader[] = [
         image: "/placeholder.svg",
         bio: "Head of the legislative administration.",
         email: "clerk@uisu.org",
+        socials: {}
+    },
+    {
+        name: "Hon. Chisom Okafor",
+        role: "Deputy Clerk",
+        image: "/placeholder.svg",
+        bio: "Assists the Clerk in administrative duties and record keeping.",
+        email: "deputyclerk@uisu.org",
+        socials: {}
+    },
+    {
+        name: "Hon. Bello Yusuf",
+        role: "Chief Whip",
+        image: "/placeholder.svg",
+        bio: "Maintains order and discipline within the house.",
+        email: "chiefwhip@uisu.org",
+        socials: { twitter: "#" }
+    }
+];
+
+const hallLeaders: Leader[] = [
+    {
+        name: "Hon. John Doe",
+        role: "Majority Leader (Mellamby)",
+        image: "/placeholder.svg",
+        bio: "Leading the Mellamby Hall caucus in the SRC.",
+        email: "mellamby.leader@uisu.org",
+        socials: {}
+    },
+    {
+        name: "Hon. Jane Smith",
+        role: "Majority Leader (Queens)",
+        image: "/placeholder.svg",
+        bio: "Representing the interests of Queen Elizabeth II Hall.",
+        email: "queens.leader@uisu.org",
+        socials: {}
+    },
+    {
+        name: "Hon. David Lee",
+        role: "Majority Leader (Tedder)",
+        image: "/placeholder.svg",
+        bio: "Voice of the Tedderites in the house.",
+        email: "tedder.leader@uisu.org",
+        socials: {}
+    },
+    {
+        name: "Hon. Amina Bello",
+        role: "Majority Leader (Idia)",
+        image: "/placeholder.svg",
+        bio: "Championing the cause of Queen Idia Hall residents.",
+        email: "idia.leader@uisu.org",
         socials: {}
     }
 ];
@@ -186,6 +269,20 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {principalOfficers.map((leader, index) => (
+                         <LeaderCard key={index} leader={leader} />
+                    ))}
+                </div>
+            </section>
+
+             {/* Hall Majority Leaders Section */}
+             <section>
+                <div className="flex items-center gap-4 mb-10">
+                    <h2 className="text-3xl font-serif text-ui-blue">Hall Majority Leaders</h2>
+                    <div className="h-px flex-1 bg-slate-200"></div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    {hallLeaders.map((leader, index) => (
                          <LeaderCard key={index} leader={leader} />
                     ))}
                 </div>
