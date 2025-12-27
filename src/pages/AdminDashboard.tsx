@@ -47,6 +47,8 @@ const clubSchema = z.object({
   president: z.string().max(100).optional(),
   color: z.string().max(20).optional(),
   icon_name: z.string().max(50).optional(),
+  image_url: z.string().optional().nullable(),
+  header_image_url: z.string().optional().nullable(),
 });
 
 const administrationSchema = z.object({
@@ -121,6 +123,8 @@ interface Club {
   president: string | null;
   color: string | null;
   icon_name: string | null;
+  image_url: string | null;
+  header_image_url: string | null;
 }
 
 interface Administration {
@@ -182,6 +186,8 @@ const AdminDashboard = () => {
   const [formData, setFormData] = useState<any>({});
   const [uploadingFile, setUploadingFile] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
+  const [selectedHeaderFile, setSelectedHeaderFile] = useState<File | null>(null);
   const [teamMembers, setTeamMembers] = useState<{role: string; name: string; alias?: string}[]>([]);
   const [activitiesInput, setActivitiesInput] = useState("");
 
@@ -328,6 +334,8 @@ const AdminDashboard = () => {
     setEditingItem(null);
     setFormData(getDefaultFormData());
     setSelectedFile(null);
+    setSelectedLogoFile(null);
+    setSelectedHeaderFile(null);
     setTeamMembers([]);
     setActivitiesInput("");
     setShowModal(true);
@@ -337,6 +345,8 @@ const AdminDashboard = () => {
     setEditingItem(item);
     setFormData(item);
     setSelectedFile(null);
+    setSelectedLogoFile(null);
+    setSelectedHeaderFile(null);
     if (activeTab === "administrations" && item.team) {
       setTeamMembers(item.team);
     } else {
@@ -386,6 +396,8 @@ const AdminDashboard = () => {
         president: "",
         color: "#6d28d9",
         icon_name: "Star",
+        image_url: "",
+        header_image_url: "",
       };
     } else {
       return {
@@ -416,6 +428,37 @@ const AdminDashboard = () => {
 
       const { data: { publicUrl } } = supabase.storage
         .from("documents")
+        .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (error: any) {
+      toast({
+        title: "Upload failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  const handleClubImageUpload = async (file: File, type: 'logo' | 'header'): Promise<string | null> => {
+    if (!user) return null;
+    
+    setUploadingFile(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${type}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from("club-images")
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("club-images")
         .getPublicUrl(fileName);
 
       return publicUrl;
@@ -533,9 +576,30 @@ const AdminDashboard = () => {
       } else if (activeTab === "clubs") {
         tableName = "clubs";
         const activities = activitiesInput.split(",").map(a => a.trim()).filter(a => a);
+        
+        // Handle logo image upload
+        let logoUrl = formData.image_url;
+        if (selectedLogoFile) {
+          const uploadedUrl = await handleClubImageUpload(selectedLogoFile, 'logo');
+          if (uploadedUrl) {
+            logoUrl = uploadedUrl;
+          }
+        }
+        
+        // Handle header image upload
+        let headerUrl = formData.header_image_url;
+        if (selectedHeaderFile) {
+          const uploadedUrl = await handleClubImageUpload(selectedHeaderFile, 'header');
+          if (uploadedUrl) {
+            headerUrl = uploadedUrl;
+          }
+        }
+        
         validatedData = clubSchema.parse({
           ...formData,
           activities,
+          image_url: logoUrl || null,
+          header_image_url: headerUrl || null,
         });
         
         if (editingItem) {
@@ -669,7 +733,7 @@ const AdminDashboard = () => {
   ];
 
   // Promote/demote staff member
-  const changeStaffRole = async (roleId: string, userId: string, currentRole: string, userName: string) => {
+  const changeStaffRole = async (roleId: string, userId: string, currentRole: string, userName: string, userEmail?: string) => {
     const newRole = currentRole === 'admin' ? 'moderator' : 'admin';
     
     // Check if demoting last admin
@@ -702,6 +766,23 @@ const AdminDashboard = () => {
 
       // Log the action
       await logAuditAction('role_change', 'user_roles', roleId, { role: currentRole }, { role: newRole });
+
+      // Send email notification about role change
+      if (userEmail) {
+        try {
+          await supabase.functions.invoke('send-staff-notification', {
+            body: {
+              type: 'role_change',
+              email: userEmail,
+              recipientName: userName,
+              role: newRole,
+              previousRole: currentRole,
+            }
+          });
+        } catch (emailError) {
+          console.error("Failed to send role change notification:", emailError);
+        }
+      }
 
       toast({
         title: "Role updated",
@@ -1274,7 +1355,7 @@ const AdminDashboard = () => {
                     </div>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => changeStaffRole(adminUser.id, adminUser.user_id, adminUser.role, adminUser.profile?.full_name || "this user")}
+                        onClick={() => changeStaffRole(adminUser.id, adminUser.user_id, adminUser.role, adminUser.profile?.full_name || "this user", adminUser.profile?.email || undefined)}
                         className="p-2 text-muted-foreground hover:text-nobel-gold transition-colors"
                         title={adminUser.role === 'admin' ? 'Demote to Moderator' : 'Promote to Admin'}
                       >
@@ -1816,7 +1897,79 @@ const AdminDashboard = () => {
                         <option value="Users">Users</option>
                         <option value="Gavel">Gavel</option>
                         <option value="Palette">Palette</option>
+                        <option value="Book">Book</option>
+                        <option value="Music">Music</option>
+                        <option value="Trophy">Trophy</option>
+                        <option value="Flag">Flag</option>
                       </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Current President</label>
+                      <input
+                        type="text"
+                        value={formData.president || ""}
+                        onChange={(e) => setFormData({ ...formData, president: e.target.value })}
+                        placeholder="Name of current president"
+                        className="w-full px-4 py-3 bg-background border border-border focus:border-nobel-gold focus:outline-none"
+                      />
+                    </div>
+                    
+                    {/* Club Logo Upload */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Club Logo</label>
+                      <div className="border-2 border-dashed border-border hover:border-nobel-gold transition-colors p-4 relative cursor-pointer">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setSelectedLogoFile(e.target.files?.[0] || null)}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
+                        {selectedLogoFile ? (
+                          <div className="flex items-center justify-center gap-2 text-nobel-gold">
+                            <Check size={18} />
+                            <span className="text-sm truncate">{selectedLogoFile.name}</span>
+                          </div>
+                        ) : formData.image_url ? (
+                          <div className="flex items-center gap-4">
+                            <img src={formData.image_url} alt="Current logo" className="w-16 h-16 object-cover rounded" />
+                            <p className="text-sm text-muted-foreground">Logo uploaded. Select new to replace.</p>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center gap-2 text-muted-foreground py-2">
+                            <Upload size={24} />
+                            <p className="text-sm">Click to upload logo image</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Club Header Image Upload */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Header/Banner Image</label>
+                      <div className="border-2 border-dashed border-border hover:border-nobel-gold transition-colors p-4 relative cursor-pointer">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setSelectedHeaderFile(e.target.files?.[0] || null)}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
+                        {selectedHeaderFile ? (
+                          <div className="flex items-center justify-center gap-2 text-nobel-gold">
+                            <Check size={18} />
+                            <span className="text-sm truncate">{selectedHeaderFile.name}</span>
+                          </div>
+                        ) : formData.header_image_url ? (
+                          <div className="flex items-center gap-4">
+                            <img src={formData.header_image_url} alt="Current header" className="w-24 h-12 object-cover rounded" />
+                            <p className="text-sm text-muted-foreground">Header uploaded. Select new to replace.</p>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center gap-2 text-muted-foreground py-2">
+                            <Upload size={24} />
+                            <p className="text-sm">Click to upload header/banner image</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </>
                 )}
