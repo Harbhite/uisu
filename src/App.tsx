@@ -19,6 +19,7 @@ const AuthPage = lazy(() => import("./pages/AuthPage"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AnnouncementsPage = lazy(() => import("./pages/AnnouncementsPage"));
 const InksVaultPage = lazy(() => import("./pages/InksVaultPage"));
+const InksPiecePage = lazy(() => import("./pages/InksPiecePage"));
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,7 @@ const App = () => (
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/announcements" element={<AnnouncementsPage />} />
             <Route path="/inks-vault" element={<InksVaultPage />} />
+            <Route path="/inks-vault/piece/:id" element={<InksPiecePage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

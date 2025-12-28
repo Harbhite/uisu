@@ -173,3 +173,155 @@ export const legislators = [
     { constituency: "Faculty of Technology", name: "Hon. Philip Emeagwali", level: "500" },
     { constituency: "Faculty of Law", name: "Hon. Gani Fawehinmi", level: "500" },
 ];
+
+export interface InksPiece {
+  id: string;
+  type: 'Article' | 'Blog' | 'Report' | 'Essay' | 'Poetry' | 'Opinion' | 'Interview' | 'Fiction';
+  title: string;
+  author: string;
+  role: string;
+  date: string;
+  summary: string;
+  content: string; // HTML or Markdown string
+  coverImage?: string;
+  tags?: string[];
+}
+
+export const inksPieces: InksPiece[] = [
+    // Articles
+    {
+        id: "art-001",
+        type: "Article",
+        title: "The Future of Student Unionism",
+        author: "Comrade Adeolu",
+        role: "Student Thinker",
+        date: "2024-05-15",
+        summary: "Exploring the evolving dynamics of student activism in the digital age.",
+        content: "<p>Student unionism in Nigeria has evolved significantly over the decades...</p><p>With the advent of social media, the mobilization of students has taken a new dimension...</p>",
+        tags: ["Activism", "Digital", "Union"]
+    },
+    {
+        id: "art-002",
+        type: "Article",
+        title: "Campus Security: A Collective Responsibility",
+        author: "Security Committee",
+        role: "Committee Report",
+        date: "2024-04-10",
+        summary: "An in-depth look at the security measures in place and how students can contribute.",
+        content: "<p>Security is not just the job of the Abefele...</p>",
+        tags: ["Security", "Welfare"]
+    },
+
+    // Blogs
+    {
+        id: "blog-001",
+        type: "Blog",
+        title: "My First Week on Campus",
+        author: "Chinedu Okeke",
+        role: "Fresher",
+        date: "2024-02-01",
+        summary: "Navigating the maze of registration and finding the best cafeteria.",
+        content: "<p>I arrived at the gate with two heavy bags and a heart full of hope...</p>",
+        tags: ["Fresher", "Lifestyle"]
+    },
+    {
+        id: "blog-002",
+        type: "Blog",
+        title: "Exam Season Survival Guide",
+        author: "Funke Akindele",
+        role: "Medical Student",
+        date: "2024-06-01",
+        summary: "Tips and tricks to stay healthy and focused during the marathon.",
+        content: "<p>Coffee is your friend, but sleep is your lover...</p>",
+        tags: ["Academics", "Health"]
+    },
+
+    // Reports
+    {
+        id: "rep-001",
+        type: "Report",
+        title: "Semester Financial Report",
+        author: "Office of the Treasurer",
+        role: "Official",
+        date: "2024-07-20",
+        summary: "Detailed breakdown of income and expenditure for the first semester.",
+        content: "<h3>Income</h3><ul><li>Dues: N10m</li><li>Donations: N5m</li></ul><h3>Expenditure</h3>...",
+        tags: ["Finance", "Transparency"]
+    },
+    {
+        id: "rep-002",
+        type: "Report",
+        title: "Welfare Committee Findings",
+        author: "Welfare Secretary",
+        role: "Official",
+        date: "2024-03-15",
+        summary: "Report on the state of hostel facilities and recommendations.",
+        content: "<p>The state of the tanks in Idia Hall requires urgent attention...</p>",
+        tags: ["Welfare", "Infrastructure"]
+    },
+
+    // Essays
+    {
+        id: "ess-001",
+        type: "Essay",
+        title: "The Role of the Intellectual in Politics",
+        author: "Prof. Wole Soyinka (Guest)",
+        role: "Guest Writer",
+        date: "2023-11-05",
+        summary: "A philosophical treatise on why students must engage with governance.",
+        content: "<p>The man dies in all who keep silent in the face of tyranny...</p>",
+        tags: ["Politics", "Philosophy"]
+    },
+
+    // Poetry
+    {
+        id: "poet-001",
+        type: "Poetry",
+        title: "Ode to the Greatest Uite",
+        author: "Simi The Poet",
+        role: "Student",
+        date: "2024-01-01",
+        summary: "Verses celebrating the resilience and spirit of the UI student.",
+        content: "<p class='text-center italic'>In the heat of the sun,<br/>We march as one.<br/>Greatest Uites!<br/>We fear no fight.</p>",
+        tags: ["Culture", "Art"]
+    },
+
+    // Opinion
+    {
+        id: "op-001",
+        type: "Opinion",
+        title: "Why We Need E-Voting",
+        author: "Tech Enthusiast",
+        role: "Student",
+        date: "2024-05-20",
+        summary: "Arguing for a full transition to digital ballots for transparency.",
+        content: "<p>The era of paper ballots is over. It is prone to snatching and delay...</p>",
+        tags: ["Technology", "Elections"]
+    },
+
+    // Interview
+    {
+        id: "int-001",
+        type: "Interview",
+        title: "Sitting Down with the VC",
+        author: "Press Club",
+        role: "Journalist",
+        date: "2024-08-10",
+        summary: "An exclusive conversation with the Vice Chancellor on tuition fees.",
+        content: "<p><strong>Press:</strong> Sir, why the hike?</p><p><strong>VC:</strong> Inflation affects us all...</p>",
+        tags: ["Administration", "Exclusive"]
+    },
+
+    // Fiction
+    {
+        id: "fic-001",
+        type: "Fiction",
+        title: "The Ghost of Tedder Hall",
+        author: "Storyteller X",
+        role: "Student Writer",
+        date: "2023-10-31",
+        summary: "A spooky short story set in the corridors of Lord Tedder Hall.",
+        content: "<p>It was a dark and stormy night. The lights flickered in Block C...</p>",
+        tags: ["Fiction", "Horror"]
+    }
+];
