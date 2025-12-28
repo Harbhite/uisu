@@ -57,6 +57,7 @@ const Index = () => {
     { name: "Leaders", href: "/current-leaders" },
     { name: "Past Leaders", href: "/past-leaders" },
     { name: "Documents", href: "/documents" },
+    { name: "Inks Vault", href: "/inks-vault" },
     { name: "Campus Map", href: "/campus-map" },
     { name: "Communities", href: "/communities" },
     { name: "Events", href: "/events" },
@@ -204,16 +205,15 @@ const Index = () => {
             animate={{ opacity: 1, y: 0 }}
             className="bg-primary/95 backdrop-blur-xl border-t border-primary-foreground/10 absolute left-0 right-0 top-20 shadow-2xl min-h-[50vh] flex flex-col"
           >
-            <div className="container mx-auto px-6 py-8">
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                     <div className="text-xs font-bold text-primary-foreground/40 uppercase tracking-widest mb-4">Menu</div>
+            <div className="container mx-auto px-6 py-4">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
                      {navLinks.map((link) => (
                      <Link
                         key={link.name}
                         to={link.href}
                         onClick={() => setIsMenuOpen(false)}
-                        className="block px-4 py-3 text-lg font-serif text-primary-foreground hover:text-nobel-gold hover:bg-primary-foreground/10 rounded-lg transition-colors"
+                        className="block px-4 py-2 text-base font-serif text-primary-foreground hover:text-nobel-gold hover:bg-primary-foreground/10 rounded-lg transition-colors"
                      >
                         {link.name}
                      </Link>
