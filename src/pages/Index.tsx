@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Menu, X, Users, Building2, BookOpen, Award, Star, ArrowRight, MapPin, Calendar, FileText, ChevronDown, LogIn, LogOut, Bell } from "lucide-react";
+import { Menu, X, Users, Building2, BookOpen, Award, Star, ArrowRight, MapPin, Calendar, FileText, ChevronDown, LogIn, LogOut, Bell, ExternalLink } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { TimelineDiagram } from "@/components/Diagrams";
 import { TriviaSection } from "@/components/Trivia";
@@ -10,6 +10,16 @@ import { AnnouncementsBanner } from "@/components/AnnouncementsBanner";
 import { NotificationPrompt } from "@/components/NotificationPrompt";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { executives } from "@/lib/data";
+import { LeaderCard } from "@/components/LeaderCard";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -118,94 +128,133 @@ const Index = () => {
               <span className="font-serif text-xl text-primary-foreground">UISU Archive</span>
             </Link>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-6">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  to={link.href}
-                  className="text-xs font-bold uppercase tracking-[0.15em] text-primary-foreground/80 hover:text-nobel-gold transition-colors"
-                >
-                  {link.name}
-                </Link>
-              ))}
-              
-              {user ? (
-                <div className="flex items-center gap-3">
-                  <Link
-                    to="/admin"
-                    className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-primary-foreground/80 hover:text-nobel-gold transition-colors border border-primary-foreground/30 rounded-full hover:border-nobel-gold"
-                  >
-                    Admin
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-widest text-primary-foreground/80 hover:text-nobel-gold transition-colors border border-primary-foreground/30 rounded-full hover:border-nobel-gold"
-                  >
-                    <LogOut size={14} />
-                    Logout
-                  </button>
-                </div>
-              ) : (
-                <Link
-                  to="/auth"
-                  className="flex items-center gap-2 px-4 py-2 bg-nobel-gold text-foreground text-xs font-bold uppercase tracking-widest rounded-full hover:bg-primary-foreground hover:text-primary transition-all"
-                >
-                  <LogIn size={14} />
-                  Sign In
-                </Link>
-              )}
-            </div>
+            {/* Navbar Content */}
+            <div className="flex items-center gap-4">
+               {/* Quick Links Dropdown */}
+               <DropdownMenu>
+                  <DropdownMenuTrigger className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary-foreground/80 hover:text-nobel-gold transition-colors outline-none">
+                     Quick Links <ChevronDown size={14} />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-white border border-slate-200 shadow-xl rounded-md w-56 p-2">
+                    <DropdownMenuLabel className="text-xs text-slate-400 uppercase tracking-widest px-2 py-1.5">Shortcuts</DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-slate-100" />
+                    <DropdownMenuItem>
+                       <Link to="/campus-map" className="w-full flex items-center gap-2 text-slate-700 hover:text-ui-blue cursor-pointer">
+                          <MapPin size={14} /> Campus Map
+                       </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                       <Link to="/documents" className="w-full flex items-center gap-2 text-slate-700 hover:text-ui-blue cursor-pointer">
+                          <FileText size={14} /> Documents Library
+                       </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                       <Link to="/events" className="w-full flex items-center gap-2 text-slate-700 hover:text-ui-blue cursor-pointer">
+                          <Calendar size={14} /> Events
+                       </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+               </DropdownMenu>
 
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 text-primary-foreground hover:text-nobel-gold"
-            >
-              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
+               {/* Auth & Admin (visible on desktop) */}
+               {user && (
+                  <div className="hidden md:flex items-center gap-3">
+                     <Link
+                        to="/admin"
+                        className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-primary-foreground/80 hover:text-nobel-gold transition-colors border border-primary-foreground/30 rounded-full hover:border-nobel-gold"
+                     >
+                        Admin
+                     </Link>
+                     <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-widest text-primary-foreground/80 hover:text-nobel-gold transition-colors border border-primary-foreground/30 rounded-full hover:border-nobel-gold"
+                     >
+                        <LogOut size={14} />
+                     </button>
+                  </div>
+               )}
+
+               {!user && (
+                  <Link
+                     to="/auth"
+                     className="hidden md:flex items-center gap-2 px-4 py-2 bg-nobel-gold text-foreground text-xs font-bold uppercase tracking-widest rounded-full hover:bg-primary-foreground hover:text-primary transition-all"
+                  >
+                     <LogIn size={14} />
+                     Sign In
+                  </Link>
+               )}
+
+               {/* Hamburger Menu Button (Always Visible now, primarily for nav links) */}
+               <button
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="p-2 text-primary-foreground hover:text-nobel-gold"
+               >
+                  {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+               </button>
+            </div>
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Full Screen Navigation Menu (replaces mobile menu) */}
         {isMenuOpen && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="md:hidden bg-primary/95 backdrop-blur-xl border-t border-primary-foreground/10"
+            className="bg-primary/95 backdrop-blur-xl border-t border-primary-foreground/10 absolute left-0 right-0 top-20 shadow-2xl min-h-[50vh] flex flex-col"
           >
-            <div className="px-6 py-6 space-y-2">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  to={link.href}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block px-4 py-3 text-xs font-bold uppercase tracking-[0.15em] text-primary-foreground/80 hover:text-nobel-gold hover:bg-primary-foreground/10 rounded-lg transition-colors"
-                >
-                  {link.name}
-                </Link>
-              ))}
-              
-              {user ? (
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setIsMenuOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest text-primary-foreground/80 hover:text-nobel-gold hover:bg-primary-foreground/10 rounded-lg transition-colors"
-                >
-                  <LogOut size={14} />
-                  Logout
-                </button>
-              ) : (
-                <Link
-                  to="/auth"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block px-4 py-3 bg-nobel-gold text-foreground text-xs font-bold uppercase tracking-widest rounded-lg hover:bg-primary-foreground transition-all text-center"
-                >
-                  Sign In
-                </Link>
-              )}
+            <div className="container mx-auto px-6 py-8">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-2">
+                     <div className="text-xs font-bold text-primary-foreground/40 uppercase tracking-widest mb-4">Menu</div>
+                     {navLinks.map((link) => (
+                     <Link
+                        key={link.name}
+                        to={link.href}
+                        onClick={() => setIsMenuOpen(false)}
+                        className="block px-4 py-3 text-lg font-serif text-primary-foreground hover:text-nobel-gold hover:bg-primary-foreground/10 rounded-lg transition-colors"
+                     >
+                        {link.name}
+                     </Link>
+                     ))}
+                  </div>
+
+                  <div className="space-y-6 pt-6 md:pt-0 border-t md:border-t-0 border-primary-foreground/10">
+                      {user ? (
+                        <div>
+                           <div className="text-xs font-bold text-primary-foreground/40 uppercase tracking-widest mb-4">Account</div>
+                           <Link
+                              to="/admin"
+                              onClick={() => setIsMenuOpen(false)}
+                              className="flex items-center gap-3 px-4 py-3 text-sm font-bold uppercase tracking-widest text-primary-foreground hover:text-nobel-gold hover:bg-primary-foreground/10 rounded-lg transition-colors"
+                           >
+                              Admin Dashboard
+                           </Link>
+                           <button
+                              onClick={() => {
+                                 handleLogout();
+                                 setIsMenuOpen(false);
+                              }}
+                              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold uppercase tracking-widest text-primary-foreground hover:text-nobel-gold hover:bg-primary-foreground/10 rounded-lg transition-colors"
+                           >
+                              Logout
+                           </button>
+                        </div>
+                      ) : (
+                         <div className="bg-primary-foreground/5 p-6 rounded-xl border border-primary-foreground/10">
+                            <h3 className="font-serif text-2xl text-primary-foreground mb-2">Student Login</h3>
+                            <p className="text-primary-foreground/60 text-sm mb-6">Access exclusive union services and voting portal.</p>
+                            <Link
+                              to="/auth"
+                              onClick={() => setIsMenuOpen(false)}
+                              className="inline-flex items-center gap-2 px-6 py-3 bg-nobel-gold text-foreground text-xs font-bold uppercase tracking-widest rounded-full hover:bg-primary-foreground hover:text-primary transition-all"
+                            >
+                              <LogIn size={14} />
+                              Sign In
+                            </Link>
+                         </div>
+                      )}
+                  </div>
+               </div>
             </div>
           </motion.div>
         )}
@@ -286,6 +335,38 @@ const Index = () => {
                 <div className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">{stat.label}</div>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Executives Preview Section */}
+      <section className="py-32">
+        <div className="container mx-auto px-6">
+           <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-16 flex flex-col md:flex-row items-end justify-between gap-6"
+          >
+            <div>
+               <div className="flex items-center gap-4 mb-4">
+                  <Star className="text-nobel-gold w-6 h-6" fill="currentColor" />
+                  <span className="text-xs font-bold tracking-[0.2em] uppercase text-muted-foreground">Leadership</span>
+               </div>
+               <h2 className="text-5xl md:text-7xl font-serif text-ui-blue leading-[0.9]">
+                  Meet The <br/> <span className="italic text-muted-foreground">Executives</span>
+               </h2>
+            </div>
+
+            <Link to="/current-leaders" className="group flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-ui-blue hover:text-nobel-gold transition-colors">
+               View All Leaders <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+               {executives.slice(0, 4).map((leader, index) => (
+                  <LeaderCard key={index} leader={leader} />
+               ))}
           </div>
         </div>
       </section>

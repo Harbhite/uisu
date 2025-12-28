@@ -108,7 +108,7 @@ export const StructureDiagram: React.FC = () => {
         The three arms of government ensuring checks and balances.
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-3xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
           <motion.div 
             className="bg-white p-6 rounded-lg border border-stone-200 shadow-sm cursor-default relative overflow-hidden group"
             onMouseEnter={() => setHoveredSection('cec')}
@@ -147,26 +147,6 @@ export const StructureDiagram: React.FC = () => {
              <h4 className="font-bold text-stone-900 mb-2">The SRC</h4>
              <p className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3">Representative Council</p>
              <p className="text-sm text-stone-600">Composed of representatives from all faculties and halls. They make laws and check the executive.</p>
-          </motion.div>
-
-          <motion.div 
-            className="bg-white p-6 rounded-lg border border-stone-200 shadow-sm cursor-default relative overflow-hidden group"
-            onMouseEnter={() => setHoveredSection('judiciary')}
-            onMouseLeave={() => setHoveredSection(null)}
-            whileHover={{ y: -5, boxShadow: "0 10px 20px rgba(0,0,0,0.05)" }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-             <div className="absolute top-0 left-0 w-1 h-full bg-blue-900"></div>
-             <motion.div 
-                className="mb-4 text-blue-900"
-                animate={{ rotate: hoveredSection === 'judiciary' ? [0, -10, 10, 0] : 0 }}
-                transition={{ duration: 0.5 }}
-             >
-                <Scale size={32}/>
-             </motion.div>
-             <h4 className="font-bold text-stone-900 mb-2">The Judiciary</h4>
-             <p className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3">Student Court</p>
-             <p className="text-sm text-stone-600">Interprets the constitution and settles disputes. Ensures justice prevails in union affairs.</p>
           </motion.div>
       </div>
     </div>
