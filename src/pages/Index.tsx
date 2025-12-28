@@ -131,30 +131,32 @@ const Index = () => {
             {/* Navbar Content */}
             <div className="flex items-center gap-4">
                {/* Quick Links Dropdown */}
-               <DropdownMenu>
-                  <DropdownMenuTrigger className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary-foreground/80 hover:text-nobel-gold transition-colors outline-none">
-                     Quick Links <ChevronDown size={14} />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-white border border-slate-200 shadow-xl rounded-md w-56 p-2">
-                    <DropdownMenuLabel className="text-xs text-slate-400 uppercase tracking-widest px-2 py-1.5">Shortcuts</DropdownMenuLabel>
-                    <DropdownMenuSeparator className="bg-slate-100" />
-                    <DropdownMenuItem>
-                       <Link to="/campus-map" className="w-full flex items-center gap-2 text-slate-700 hover:text-ui-blue cursor-pointer">
-                          <MapPin size={14} /> Campus Map
-                       </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                       <Link to="/documents" className="w-full flex items-center gap-2 text-slate-700 hover:text-ui-blue cursor-pointer">
-                          <FileText size={14} /> Documents Library
-                       </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                       <Link to="/events" className="w-full flex items-center gap-2 text-slate-700 hover:text-ui-blue cursor-pointer">
-                          <Calendar size={14} /> Events
-                       </Link>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-               </DropdownMenu>
+               <div className="hidden md:block">
+                 <DropdownMenu>
+                    <DropdownMenuTrigger className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary-foreground/80 hover:text-nobel-gold transition-colors outline-none">
+                       Quick Links <ChevronDown size={14} />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="bg-white border border-slate-200 shadow-xl rounded-md w-56 p-2">
+                      <DropdownMenuLabel className="text-xs text-slate-400 uppercase tracking-widest px-2 py-1.5">Shortcuts</DropdownMenuLabel>
+                      <DropdownMenuSeparator className="bg-slate-100" />
+                      <DropdownMenuItem>
+                         <Link to="/campus-map" className="w-full flex items-center gap-2 text-slate-700 hover:text-ui-blue cursor-pointer">
+                            <MapPin size={14} /> Campus Map
+                         </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                         <Link to="/documents" className="w-full flex items-center gap-2 text-slate-700 hover:text-ui-blue cursor-pointer">
+                            <FileText size={14} /> Documents Library
+                         </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                         <Link to="/events" className="w-full flex items-center gap-2 text-slate-700 hover:text-ui-blue cursor-pointer">
+                            <Calendar size={14} /> Events
+                         </Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                 </DropdownMenu>
+               </div>
 
                {/* Auth & Admin (visible on desktop) */}
                {user && (
@@ -339,38 +341,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Executives Preview Section */}
-      <section className="py-32">
-        <div className="container mx-auto px-6">
-           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-16 flex flex-col md:flex-row items-end justify-between gap-6"
-          >
-            <div>
-               <div className="flex items-center gap-4 mb-4">
-                  <Star className="text-nobel-gold w-6 h-6" fill="currentColor" />
-                  <span className="text-xs font-bold tracking-[0.2em] uppercase text-muted-foreground">Leadership</span>
-               </div>
-               <h2 className="text-5xl md:text-7xl font-serif text-ui-blue leading-[0.9]">
-                  Meet The <br/> <span className="italic text-muted-foreground">Executives</span>
-               </h2>
-            </div>
-
-            <Link to="/current-leaders" className="group flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-ui-blue hover:text-nobel-gold transition-colors">
-               View All Leaders <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-               {executives.slice(0, 4).map((leader, index) => (
-                  <LeaderCard key={index} leader={leader} />
-               ))}
-          </div>
-        </div>
-      </section>
-
       {/* Timeline Section */}
       <section className="py-32">
         <div className="container mx-auto px-6">
@@ -494,6 +464,38 @@ const Index = () => {
             </p>
           </motion.div>
           <TriviaSection />
+        </div>
+      </section>
+
+      {/* Executives Preview Section */}
+      <section className="py-32">
+        <div className="container mx-auto px-6">
+           <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-16 flex flex-col md:flex-row items-end justify-between gap-6"
+          >
+            <div>
+               <div className="flex items-center gap-4 mb-4">
+                  <Star className="text-nobel-gold w-6 h-6" fill="currentColor" />
+                  <span className="text-xs font-bold tracking-[0.2em] uppercase text-muted-foreground">Leadership</span>
+               </div>
+               <h2 className="text-5xl md:text-7xl font-serif text-ui-blue leading-[0.9]">
+                  Meet The <br/> <span className="italic text-muted-foreground">Executives</span>
+               </h2>
+            </div>
+
+            <Link to="/current-leaders" className="group flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-ui-blue hover:text-nobel-gold transition-colors">
+               View All Leaders <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+               {executives.map((leader, index) => (
+                  <LeaderCard key={index} leader={leader} />
+               ))}
+          </div>
         </div>
       </section>
 
