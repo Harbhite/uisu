@@ -257,6 +257,57 @@ export type Database = {
         }
         Relationships: []
       }
+      leaders: {
+        Row: {
+          bio: string | null
+          category: string
+          constituency: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          image: string | null
+          is_active: boolean | null
+          level: string | null
+          name: string
+          role: string
+          socials: Json | null
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          bio?: string | null
+          category: string
+          constituency?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          image?: string | null
+          is_active?: boolean | null
+          level?: string | null
+          name: string
+          role: string
+          socials?: Json | null
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          bio?: string | null
+          category?: string
+          constituency?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          image?: string | null
+          is_active?: boolean | null
+          level?: string | null
+          name?: string
+          role?: string
+          socials?: Json | null
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
