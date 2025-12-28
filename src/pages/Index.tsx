@@ -180,7 +180,7 @@ const Index = () => {
                {!user && (
                   <Link
                      to="/auth"
-                     className="hidden md:flex items-center gap-2 px-4 py-2 bg-nobel-gold text-foreground text-xs font-bold uppercase tracking-widest rounded-full hover:bg-primary-foreground hover:text-primary transition-all"
+                     className="flex items-center gap-2 px-4 py-2 bg-nobel-gold text-foreground text-xs font-bold uppercase tracking-widest rounded-full hover:bg-primary-foreground hover:text-primary transition-all whitespace-nowrap"
                   >
                      <LogIn size={14} />
                      Sign In
@@ -241,20 +241,7 @@ const Index = () => {
                               Logout
                            </button>
                         </div>
-                      ) : (
-                         <div className="bg-primary-foreground/5 p-6 rounded-xl border border-primary-foreground/10">
-                            <h3 className="font-serif text-2xl text-primary-foreground mb-2">Student Login</h3>
-                            <p className="text-primary-foreground/60 text-sm mb-6">Access exclusive union services and voting portal.</p>
-                            <Link
-                              to="/auth"
-                              onClick={() => setIsMenuOpen(false)}
-                              className="inline-flex items-center gap-2 px-6 py-3 bg-nobel-gold text-foreground text-xs font-bold uppercase tracking-widest rounded-full hover:bg-primary-foreground hover:text-primary transition-all"
-                            >
-                              <LogIn size={14} />
-                              Sign In
-                            </Link>
-                         </div>
-                      )}
+                      ) : null}
                   </div>
                </div>
             </div>
