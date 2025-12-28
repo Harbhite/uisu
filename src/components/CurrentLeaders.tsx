@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Star, Pencil, Plus, Trash2, Save, X, Loader2 } from 'lucide-react';
+import { ArrowLeft, Star, Pencil, Plus, Trash2, Save, X, Loader2, Upload, Search, Filter } from 'lucide-react';
 import { LeaderCard } from '@/components/LeaderCard';
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
@@ -64,6 +64,12 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
     const [editingLeader, setEditingLeader] = useState<Leader | null>(null);
     const [formData, setFormData] = useState<Omit<Leader, 'id'>>(emptyLeader);
     const [saving, setSaving] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Search and filter states for legislators
+    const [legislatorSearch, setLegislatorSearch] = useState('');
+    const [constituencyFilter, setConstituencyFilter] = useState('all');
 
     const fetchLeaders = async () => {
         const { data, error } = await supabase
@@ -101,7 +107,22 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
     const executives = leaders.filter(l => l.category === 'executive');
     const principalOfficers = leaders.filter(l => l.category === 'principal_officer');
     const hallLeaders = leaders.filter(l => l.category === 'hall_leader');
-    const legislators = leaders.filter(l => l.category === 'legislator');
+    const allLegislators = leaders.filter(l => l.category === 'legislator');
+
+    // Get unique constituencies for filter dropdown
+    const constituencies = [...new Set(allLegislators.map(l => l.constituency).filter(Boolean))].sort();
+
+    // Filter legislators based on search and constituency
+    const filteredLegislators = allLegislators.filter(leg => {
+        const matchesSearch = legislatorSearch === '' || 
+            leg.name.toLowerCase().includes(legislatorSearch.toLowerCase()) ||
+            (leg.constituency && leg.constituency.toLowerCase().includes(legislatorSearch.toLowerCase())) ||
+            (leg.level && leg.level.includes(legislatorSearch));
+        
+        const matchesConstituency = constituencyFilter === 'all' || leg.constituency === constituencyFilter;
+        
+        return matchesSearch && matchesConstituency;
+    });
 
     const openCreateModal = (category: string) => {
         setEditingLeader(null);
@@ -124,6 +145,46 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
             sort_order: leader.sort_order
         });
         setEditModalOpen(true);
+    };
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            toast.error('Please select an image file');
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('Image must be less than 5MB');
+            return;
+        }
+
+        setUploading(true);
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+            const filePath = `leaders/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('leader-images')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('leader-images')
+                .getPublicUrl(filePath);
+
+            setFormData({ ...formData, image: publicUrl });
+            toast.success('Image uploaded successfully');
+        } catch (error: any) {
+            console.error('Error uploading image:', error);
+            toast.error('Failed to upload image');
+        } finally {
+            setUploading(false);
+        }
     };
 
     const handleSave = async () => {
@@ -340,6 +401,45 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
                             )}
                         </div>
 
+                        {/* Search and Filter Controls */}
+                        <div className="mb-6 flex flex-col sm:flex-row gap-4">
+                            <div className="relative flex-1 max-w-md">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                <Input
+                                    placeholder="Search by name, constituency, or level..."
+                                    value={legislatorSearch}
+                                    onChange={(e) => setLegislatorSearch(e.target.value)}
+                                    className="pl-10"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Filter size={18} className="text-slate-400" />
+                                <Select value={constituencyFilter} onValueChange={setConstituencyFilter}>
+                                    <SelectTrigger className="w-[200px]">
+                                        <SelectValue placeholder="Filter by constituency" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Constituencies</SelectItem>
+                                        {constituencies.map(c => (
+                                            <SelectItem key={c} value={c!}>{c}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            {(legislatorSearch || constituencyFilter !== 'all') && (
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => {
+                                        setLegislatorSearch('');
+                                        setConstituencyFilter('all');
+                                    }}
+                                >
+                                    <X size={14} className="mr-1" /> Clear
+                                </Button>
+                            )}
+                        </div>
+
                         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left">
@@ -352,28 +452,41 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
-                                        {legislators.map((leg) => (
-                                            <tr key={leg.id} className="hover:bg-slate-50/50 transition-colors">
-                                                <td className="px-6 py-4 font-medium text-slate-900">{leg.name}</td>
-                                                <td className="px-6 py-4 text-slate-600">{leg.constituency}</td>
-                                                <td className="px-6 py-4 text-slate-500">{leg.level}</td>
-                                                {isStaff && (
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex gap-2">
-                                                            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEditModal(leg)}>
-                                                                <Pencil size={14} />
-                                                            </Button>
-                                                            <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => handleDelete(leg.id)}>
-                                                                <Trash2 size={14} />
-                                                            </Button>
-                                                        </div>
-                                                    </td>
-                                                )}
+                                        {filteredLegislators.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={isStaff ? 4 : 3} className="px-6 py-8 text-center text-slate-500">
+                                                    No legislators found matching your search
+                                                </td>
                                             </tr>
-                                        ))}
+                                        ) : (
+                                            filteredLegislators.map((leg) => (
+                                                <tr key={leg.id} className="hover:bg-slate-50/50 transition-colors">
+                                                    <td className="px-6 py-4 font-medium text-slate-900">{leg.name}</td>
+                                                    <td className="px-6 py-4 text-slate-600">{leg.constituency}</td>
+                                                    <td className="px-6 py-4 text-slate-500">{leg.level}</td>
+                                                    {isStaff && (
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex gap-2">
+                                                                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEditModal(leg)}>
+                                                                    <Pencil size={14} />
+                                                                </Button>
+                                                                <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => handleDelete(leg.id)}>
+                                                                    <Trash2 size={14} />
+                                                                </Button>
+                                                            </div>
+                                                        </td>
+                                                    )}
+                                                </tr>
+                                            ))
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
+                            {filteredLegislators.length > 0 && (
+                                <div className="px-6 py-3 bg-slate-50 border-t border-slate-200 text-sm text-slate-500">
+                                    Showing {filteredLegislators.length} of {allLegislators.length} legislators
+                                </div>
+                            )}
                         </div>
                     </section>
                 </motion.div>
@@ -444,12 +557,46 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
                         {formData.category !== 'legislator' && (
                             <>
                                 <div>
-                                    <label className="text-sm font-medium mb-1 block">Image URL</label>
-                                    <Input
-                                        value={formData.image}
-                                        onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                                        placeholder="/placeholder.svg"
-                                    />
+                                    <label className="text-sm font-medium mb-1 block">Photo</label>
+                                    <div className="flex items-center gap-4">
+                                        {formData.image && formData.image !== '/placeholder.svg' && (
+                                            <img 
+                                                src={formData.image} 
+                                                alt="Preview" 
+                                                className="w-16 h-16 rounded-lg object-cover border"
+                                            />
+                                        )}
+                                        <div className="flex-1 space-y-2">
+                                            <input
+                                                ref={fileInputRef}
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleImageUpload}
+                                                className="hidden"
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => fileInputRef.current?.click()}
+                                                disabled={uploading}
+                                                className="w-full"
+                                            >
+                                                {uploading ? (
+                                                    <Loader2 size={14} className="mr-2 animate-spin" />
+                                                ) : (
+                                                    <Upload size={14} className="mr-2" />
+                                                )}
+                                                {uploading ? 'Uploading...' : 'Upload Photo'}
+                                            </Button>
+                                            <p className="text-xs text-muted-foreground">Or enter URL:</p>
+                                            <Input
+                                                value={formData.image}
+                                                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                                                placeholder="/placeholder.svg"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div>
@@ -514,7 +661,7 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
                             <Button variant="outline" onClick={() => setEditModalOpen(false)} disabled={saving}>
                                 <X size={14} className="mr-2" /> Cancel
                             </Button>
-                            <Button onClick={handleSave} disabled={saving}>
+                            <Button onClick={handleSave} disabled={saving || uploading}>
                                 {saving ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Save size={14} className="mr-2" />}
                                 {editingLeader ? 'Update' : 'Add'} Leader
                             </Button>
