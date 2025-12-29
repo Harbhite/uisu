@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Calendar, User, Tag, Share2, Printer, Bookmark, Clock, Feather, Mic, FileText, Quote } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Tag, Share2, Printer, Bookmark, Clock, Feather, Mic, FileText, Quote, MessageCircle } from 'lucide-react';
 import { inksPieces, InksPiece } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 
