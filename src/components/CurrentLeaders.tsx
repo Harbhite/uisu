@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Star, Pencil, Plus, Trash2, Save, X, Loader2, Upload, Search, Filter } from 'lucide-react';
+import { ArrowLeft, Star, Pencil, Plus, Trash2, Save, X, Loader2, Upload, Search, Filter, Download, FileUp } from 'lucide-react';
 import { LeaderCard } from '@/components/LeaderCard';
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { useLeadersBulkOperations } from '@/hooks/useLeadersBulkOperations';
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -70,6 +71,9 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
     // Search and filter states for legislators
     const [legislatorSearch, setLegislatorSearch] = useState('');
     const [constituencyFilter, setConstituencyFilter] = useState('all');
+    const importFileRef = useRef<HTMLInputElement>(null);
+    
+    const { importing, exporting, exportToCSV, importFromCSV } = useLeadersBulkOperations(fetchLeaders);
 
     const fetchLeaders = async () => {
         const { data, error } = await supabase
@@ -305,6 +309,25 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
                     >
                         <Star className="text-nobel-gold w-6 h-6" fill="currentColor" />
                         <span className="text-xs font-bold tracking-[0.2em] uppercase text-slate-500">Leadership</span>
+                        {isStaff && (
+                            <div className="ml-auto flex gap-2">
+                                <input
+                                    ref={importFileRef}
+                                    type="file"
+                                    accept=".csv"
+                                    onChange={(e) => e.target.files?.[0] && importFromCSV(e.target.files[0])}
+                                    className="hidden"
+                                />
+                                <Button size="sm" variant="outline" onClick={() => importFileRef.current?.click()} disabled={importing}>
+                                    {importing ? <Loader2 size={14} className="mr-2 animate-spin" /> : <FileUp size={14} className="mr-2" />}
+                                    Import CSV
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={exportToCSV} disabled={exporting}>
+                                    {exporting ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Download size={14} className="mr-2" />}
+                                    Export CSV
+                                </Button>
+                            </div>
+                        )}
                     </motion.div>
 
                     <motion.h1
