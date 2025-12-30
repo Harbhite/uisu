@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -98,7 +99,7 @@ const InksEditorPage = () => {
     if (!authLoading) {
         loadData();
     }
-  }, [id, authLoading, user, isStaff, navigate]);
+  }, [id, authLoading, user, isStaff, navigate, toast]);
 
   const handleSave = async () => {
       if (!formData.title || !formData.content || !formData.author) {
