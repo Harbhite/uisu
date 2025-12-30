@@ -93,7 +93,7 @@ const InksVaultPage = () => {
     <button
       onClick={(e) => {
         e.stopPropagation();
-        navigate(`/inks-vault/edit/${piece.id}`);
+        navigate(`/admin/inks-vault/edit/${piece.id}`);
       }}
       className="absolute top-2 right-2 p-2 bg-white/90 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
     >
@@ -102,7 +102,7 @@ const InksVaultPage = () => {
   );
 
   const renderCard = (piece: InksPiece, isDraft = false) => {
-    const cardClick = () => isDraft ? navigate(`/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`);
+    const cardClick = () => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`);
     
     switch (piece.type) {
       case 'Poetry':
@@ -244,7 +244,7 @@ const InksVaultPage = () => {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate(`/inks-vault/edit/${piece.id}`);
+                  navigate(`/admin/inks-vault/edit/${piece.id}`);
                 }}
                 className="absolute top-2 right-2 p-2 bg-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/30"
               >
@@ -276,7 +276,7 @@ const InksVaultPage = () => {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate(`/inks-vault/edit/${piece.id}`);
+                  navigate(`/admin/inks-vault/edit/${piece.id}`);
                 }}
                 className="absolute top-2 right-2 p-2 bg-[#8B4513]/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#8B4513]"
               >
@@ -330,7 +330,7 @@ const InksVaultPage = () => {
               <span className="text-xs font-bold tracking-[0.2em] uppercase text-slate-500">Publications</span>
             </div>
             {user && (
-              <Button onClick={() => navigate('/inks-vault/write')} className="gap-2">
+              <Button onClick={() => navigate('/admin/inks-vault/new')} className="gap-2">
                 <Plus size={16} />
                 Write Something
               </Button>
@@ -418,7 +418,7 @@ const InksVaultPage = () => {
                 <div className="col-span-full py-20 text-center text-slate-400">
                   <p>No pieces found in this category.</p>
                   {user && (
-                    <Button variant="outline" onClick={() => navigate('/inks-vault/write')} className="mt-4">
+                    <Button variant="outline" onClick={() => navigate('/admin/inks-vault/new')} className="mt-4">
                       Be the first to write one
                     </Button>
                   )}
@@ -444,7 +444,7 @@ const InksVaultPage = () => {
                 <div className="col-span-full py-20 text-center text-slate-400">
                   <FileStack size={48} className="mx-auto mb-4 text-slate-300" />
                   <p className="mb-2">No drafts yet.</p>
-                  <Button variant="outline" onClick={() => navigate('/inks-vault/write')} className="mt-2">
+                  <Button variant="outline" onClick={() => navigate('/admin/inks-vault/new')} className="mt-2">
                     Start Writing
                   </Button>
                 </div>
