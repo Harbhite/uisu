@@ -1,6 +1,6 @@
-import React, { useState, useEffect, lazy, Suspense, useCallback } from 'react';
+import React, { useState, useEffect, lazy, Suspense, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, Eye, EyeOff, Trash2, Sparkles } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Eye, EyeOff, Trash2, Sparkles, ImagePlus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -25,6 +25,7 @@ interface FormData {
   summary: string;
   tags: string;
   is_published: boolean;
+  cover_image: string | null;
 }
 
 // Helper to safely convert Json to OutputData
@@ -51,9 +52,11 @@ const InkEditorPage: React.FC = () => {
   const { isStaff, loading: authLoading } = useAdminCheck();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [editorContent, setEditorContent] = useState<OutputData>(emptyContent);
   const [editorKey, setEditorKey] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<FormData>({
     type: 'Blog',
     title: '',
@@ -61,7 +64,8 @@ const InkEditorPage: React.FC = () => {
     author_role: '',
     summary: '',
     tags: '',
-    is_published: false
+    is_published: false,
+    cover_image: null
   });
 
   // Non-mod piece types
@@ -128,7 +132,8 @@ const InkEditorPage: React.FC = () => {
           author_role: piece.author_role || '',
           summary: piece.summary || '',
           tags: (piece.tags || []).join(', '),
-          is_published: piece.is_published || false
+          is_published: piece.is_published || false,
+          cover_image: piece.cover_image || null
         });
       }
 
@@ -139,6 +144,51 @@ const InkEditorPage: React.FC = () => {
       checkAuth();
     }
   }, [id, navigate, authLoading, isStaff]);
+
+  const handleCoverImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(`ink-covers/${fileName}`, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('documents')
+        .getPublicUrl(`ink-covers/${fileName}`);
+
+      setFormData({ ...formData, cover_image: publicUrl });
+      toast.success('Cover image uploaded');
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const removeCoverImage = () => {
+    setFormData({ ...formData, cover_image: null });
+  };
 
   const handleSave = async (publish = false) => {
     if (!formData.title.trim()) {
@@ -166,7 +216,8 @@ const InkEditorPage: React.FC = () => {
         content: editorContent as unknown as Json,
         tags: tagsArray,
         is_published: publish ? true : formData.is_published,
-        user_id: user.id
+        user_id: user.id,
+        cover_image: formData.cover_image
       };
 
       if (id) {
@@ -315,6 +366,65 @@ const InkEditorPage: React.FC = () => {
                   className="bg-slate-50 border-slate-200"
                 />
               </div>
+            </div>
+
+            {/* Cover Image Upload */}
+            <div className="mb-8">
+              <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">Cover Image</Label>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleCoverImageUpload}
+                accept="image/*"
+                className="hidden"
+              />
+              {formData.cover_image ? (
+                <div className="relative group rounded-xl overflow-hidden bg-slate-100 h-48 w-full max-w-md">
+                  <img 
+                    src={formData.cover_image} 
+                    alt="Cover" 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingImage}
+                    >
+                      {uploadingImage ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />}
+                      <span className="ml-2">Change</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={removeCoverImage}
+                    >
+                      <X size={14} />
+                      <span className="ml-2">Remove</span>
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingImage}
+                  className="w-full max-w-md h-32 border-2 border-dashed border-slate-300 rounded-xl hover:border-nobel-gold hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-nobel-gold"
+                >
+                  {uploadingImage ? (
+                    <Loader2 size={24} className="animate-spin" />
+                  ) : (
+                    <>
+                      <ImagePlus size={24} />
+                      <span className="text-sm font-medium">Add Cover Image</span>
+                      <span className="text-xs">Recommended: 1200x630px</span>
+                    </>
+                  )}
+                </button>
+              )}
             </div>
 
             {/* Title Input */}
