@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Mail, Loader2, Twitter, Linkedin, Instagram } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { SEO } from '@/components/SEO';
 
 interface Leader {
   id: string;
@@ -97,6 +98,11 @@ const LeaderDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 pt-32 pb-16">
+      <SEO
+        title={leader.name}
+        description={`${leader.role} - ${leader.bio ? leader.bio.substring(0, 150) + "..." : "UISU Leader"}`}
+        image={leader.image !== '/placeholder.svg' ? leader.image : undefined}
+      />
       <div className="container mx-auto px-6 max-w-4xl">
         <button
           onClick={() => navigate('/current-leaders')}

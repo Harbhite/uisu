@@ -2,10 +2,15 @@ import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { CampusMap } from "@/components/CampusMap";
+import { SEO } from "@/components/SEO";
 
 const CampusMapPage = () => {
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Campus Map"
+        description="Interactive map of the University of Ibadan. Explore halls of residence and key locations."
+      />
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

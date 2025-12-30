@@ -5,6 +5,7 @@ import { ArrowLeft, Calendar, User, Share2, Bookmark, Feather, Mic, FileText, Qu
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
+import { SEO } from '@/components/SEO';
 
 interface InksPiece {
   id: string;
@@ -150,6 +151,11 @@ const InksPiecePage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 pt-32 pb-20">
+      <SEO
+        title={piece.title}
+        description={piece.summary || `Read ${piece.title} by ${piece.author_name} in the Inks Vault.`}
+        type="article"
+      />
       <div className="container mx-auto px-6">
         <button
           onClick={() => navigate('/inks-vault')}
