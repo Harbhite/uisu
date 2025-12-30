@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { TimelineDiagram } from "@/components/Diagrams";
 import { TriviaSection } from "@/components/Trivia";
 import { CampusMap } from "@/components/CampusMap";
+import { AboutUs } from "@/components/AboutUs";
 import { HeroScene } from "@/components/QuantumScene";
 import { AnnouncementsBanner } from "@/components/AnnouncementsBanner";
 import { NotificationPrompt } from "@/components/NotificationPrompt";
@@ -327,6 +328,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* About Us Section */}
+      <AboutUs />
 
       {/* Timeline Section */}
       <section className="py-32">
