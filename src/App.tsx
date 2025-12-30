@@ -11,6 +11,7 @@ import { lazy, Suspense } from "react";
 const GovernancePage = lazy(() => import("./pages/GovernancePage"));
 const PastLeadersPage = lazy(() => import("./pages/PastLeadersPage"));
 const CurrentLeadersPage = lazy(() => import("./pages/CurrentLeadersPage"));
+const LeaderDetailPage = lazy(() => import("./pages/LeaderDetailPage"));
 const DocumentsPage = lazy(() => import("./pages/DocumentsPage"));
 const CampusMapPage = lazy(() => import("./pages/CampusMapPage"));
 const CommunitiesPage = lazy(() => import("./pages/CommunitiesPage"));
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/governance" element={<GovernancePage />} />
             <Route path="/past-leaders" element={<PastLeadersPage />} />
             <Route path="/current-leaders" element={<CurrentLeadersPage />} />
+            <Route path="/current-leaders/:id" element={<LeaderDetailPage />} />
             <Route path="/documents" element={<DocumentsPage />} />
             <Route path="/campus-map" element={<CampusMapPage />} />
             <Route path="/communities" element={<CommunitiesPage />} />
