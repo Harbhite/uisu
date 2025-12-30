@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef } from 'react';
 import EditorJS, { OutputData } from '@editorjs/editorjs';
 import Header from '@editorjs/header';
 import Paragraph from '@editorjs/paragraph';
@@ -20,16 +20,25 @@ const EditorJSComponent: React.FC<EditorJSComponentProps> = ({
 }) => {
   const editorRef = useRef<EditorJS | null>(null);
   const holderRef = useRef<HTMLDivElement>(null);
-  const isReady = useRef(false);
+  const isInitialized = useRef(false);
+  const onChangeRef = useRef(onChange);
 
-  const initEditor = useCallback(async () => {
-    if (!holderRef.current || isReady.current) return;
+  // Keep onChange ref updated without triggering re-init
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  useEffect(() => {
+    if (!holderRef.current || isInitialized.current) return;
+
+    isInitialized.current = true;
 
     const editor = new EditorJS({
       holder: holderRef.current,
       readOnly,
       placeholder,
       data: data || undefined,
+      minHeight: 200,
       tools: {
         header: {
           class: Header,
@@ -56,35 +65,34 @@ const EditorJSComponent: React.FC<EditorJSComponentProps> = ({
         }
       },
       onChange: async () => {
-        if (onChange && editorRef.current) {
-          const outputData = await editorRef.current.save();
-          onChange(outputData);
+        if (onChangeRef.current && editorRef.current) {
+          try {
+            const outputData = await editorRef.current.save();
+            onChangeRef.current(outputData);
+          } catch (e) {
+            console.error('Editor save error:', e);
+          }
         }
-      },
-      onReady: () => {
-        isReady.current = true;
       }
     });
 
     editorRef.current = editor;
-  }, [data, onChange, readOnly, placeholder]);
-
-  useEffect(() => {
-    initEditor();
 
     return () => {
-      if (editorRef.current && isReady.current) {
+      if (editorRef.current && editorRef.current.destroy) {
         editorRef.current.destroy();
         editorRef.current = null;
-        isReady.current = false;
+        isInitialized.current = false;
       }
     };
-  }, [initEditor]);
+  // Only initialize once - do not include data or onChange in deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readOnly, placeholder]);
 
   return (
     <div 
       ref={holderRef} 
-      className="prose prose-slate max-w-none min-h-[300px] bg-white border border-slate-200 rounded-lg p-4 focus-within:border-ui-blue focus-within:ring-1 focus-within:ring-ui-blue transition-colors"
+      className="prose prose-slate max-w-none min-h-[400px] bg-white border border-slate-200 rounded-xl p-6 focus-within:border-ui-blue focus-within:ring-2 focus-within:ring-ui-blue/20 transition-all"
     />
   );
 };

@@ -1,6 +1,6 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, lazy, Suspense, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, Eye, EyeOff, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Eye, EyeOff, Trash2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,7 +23,6 @@ interface FormData {
   author_name: string;
   author_role: string;
   summary: string;
-  content: OutputData;
   tags: string;
   is_published: boolean;
 }
@@ -53,13 +52,14 @@ const InkEditorPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [editorContent, setEditorContent] = useState<OutputData>(emptyContent);
+  const [editorKey, setEditorKey] = useState(0);
   const [formData, setFormData] = useState<FormData>({
     type: 'Blog',
     title: '',
     author_name: '',
     author_role: '',
     summary: '',
-    content: emptyContent,
     tags: '',
     is_published: false
   });
@@ -70,6 +70,10 @@ const InkEditorPage: React.FC = () => {
   const allPieceTypes: PieceType[] = ['Report', ...userPieceTypes];
 
   const availableTypes = isStaff ? allPieceTypes : userPieceTypes;
+
+  const handleEditorChange = useCallback((data: OutputData) => {
+    setEditorContent(data);
+  }, []);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -113,13 +117,16 @@ const InkEditorPage: React.FC = () => {
           return;
         }
 
+        const loadedContent = jsonToOutputData(piece.content);
+        setEditorContent(loadedContent);
+        setEditorKey(prev => prev + 1); // Force editor re-init with new data
+
         setFormData({
           type: piece.type as PieceType,
           title: piece.title,
           author_name: piece.author_name,
           author_role: piece.author_role || '',
           summary: piece.summary || '',
-          content: jsonToOutputData(piece.content),
           tags: (piece.tags || []).join(', '),
           is_published: piece.is_published || false
         });
@@ -156,7 +163,7 @@ const InkEditorPage: React.FC = () => {
         author_name: formData.author_name,
         author_role: formData.author_role || null,
         summary: formData.summary || null,
-        content: formData.content as unknown as Json,
+        content: editorContent as unknown as Json,
         tags: tagsArray,
         is_published: publish ? true : formData.is_published,
         user_id: user.id
@@ -171,13 +178,18 @@ const InkEditorPage: React.FC = () => {
         if (error) throw error;
         toast.success(publish ? 'Published!' : 'Saved!');
       } else {
-        const { error } = await supabase
+        const { data: newPiece, error } = await supabase
           .from('ink_pieces')
-          .insert(payload);
+          .insert(payload)
+          .select('id')
+          .single();
 
         if (error) throw error;
         toast.success(publish ? 'Published!' : 'Draft saved!');
-        navigate('/inks-vault');
+        // Navigate to edit the new piece
+        if (newPiece) {
+          navigate(`/inks-vault/edit/${newPiece.id}`, { replace: true });
+        }
       }
     } catch (error: any) {
       console.error('Error saving:', error);
@@ -214,145 +226,157 @@ const InkEditorPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-32 pb-16">
-      <div className="container mx-auto px-6 max-w-4xl">
-        <button
-          onClick={() => navigate('/inks-vault')}
-          className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors mb-8"
-        >
-          <div className="p-2 rounded-full border border-slate-300 group-hover:border-nobel-gold transition-colors">
-            <ArrowLeft size={14} />
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 pt-24 pb-16">
+      <div className="container mx-auto px-4 max-w-5xl">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <button
+            onClick={() => navigate('/inks-vault')}
+            className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors"
+          >
+            <div className="p-2 rounded-full border border-slate-300 group-hover:border-nobel-gold transition-colors">
+              <ArrowLeft size={14} />
+            </div>
+            <span>Back to Vault</span>
+          </button>
+
+          <div className="flex items-center gap-3">
+            <Button onClick={() => handleSave(false)} disabled={saving} variant="outline" size="sm">
+              {saving ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Save size={14} className="mr-2" />}
+              Save Draft
+            </Button>
+            <Button onClick={() => handleSave(true)} disabled={saving} size="sm" className="bg-nobel-gold hover:bg-nobel-gold/90 text-ui-blue">
+              {saving ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Eye size={14} className="mr-2" />}
+              Publish
+            </Button>
           </div>
-          <span>Back to Inks Vault</span>
-        </button>
+        </div>
 
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
-          <h1 className="text-3xl font-serif text-ui-blue mb-8">
-            {id ? 'Edit Piece' : 'Create New Piece'}
-          </h1>
-
-          <div className="space-y-6">
-            {/* Type Selection */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">Type *</Label>
-              <Select 
-                value={formData.type} 
-                onValueChange={(v) => setFormData({ ...formData, type: v as PieceType })}
-              >
-                <SelectTrigger className="w-full max-w-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableTypes.map(type => (
-                    <SelectItem key={type} value={type}>
-                      {type} {type === 'Report' && '(Staff Only)'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        {/* Main Editor Container */}
+        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+          {/* Title Bar */}
+          <div className="border-b border-slate-100 bg-slate-50/50 px-8 py-4">
+            <div className="flex items-center gap-4">
+              <Sparkles className="text-nobel-gold" size={20} />
+              <h1 className="text-lg font-semibold text-slate-800">
+                {id ? 'Edit Your Piece' : 'Create Something New'}
+              </h1>
             </div>
+          </div>
 
-            {/* Title */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">Title *</Label>
-              <Input
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Enter a compelling title"
-                className="text-lg"
-              />
-            </div>
-
-            {/* Author Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-8">
+            {/* Meta Row */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
               <div>
-                <Label className="text-sm font-medium mb-2 block">Author Name *</Label>
+                <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Type</Label>
+                <Select 
+                  value={formData.type} 
+                  onValueChange={(v) => setFormData({ ...formData, type: v as PieceType })}
+                >
+                  <SelectTrigger className="bg-slate-50 border-slate-200">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableTypes.map(type => (
+                      <SelectItem key={type} value={type}>
+                        {type} {type === 'Report' && '(Staff)'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Author</Label>
                 <Input
                   value={formData.author_name}
                   onChange={(e) => setFormData({ ...formData, author_name: e.target.value })}
                   placeholder="Your name"
+                  className="bg-slate-50 border-slate-200"
                 />
               </div>
+
               <div>
-                <Label className="text-sm font-medium mb-2 block">Role/Title</Label>
+                <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Role/Title</Label>
                 <Input
                   value={formData.author_role}
                   onChange={(e) => setFormData({ ...formData, author_role: e.target.value })}
-                  placeholder="e.g., Student, Journalist, Official"
+                  placeholder="e.g., Student, Writer"
+                  className="bg-slate-50 border-slate-200"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Tags</Label>
+                <Input
+                  value={formData.tags}
+                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                  placeholder="Culture, Sports..."
+                  className="bg-slate-50 border-slate-200"
                 />
               </div>
             </div>
 
-            {/* Summary */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">Summary</Label>
-              <Textarea
-                value={formData.summary}
-                onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
-                placeholder="Brief description of your piece (shown in cards)"
-                rows={2}
+            {/* Title Input */}
+            <div className="mb-6">
+              <Input
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="Untitled"
+                className="text-3xl md:text-4xl font-serif border-0 border-b border-slate-200 rounded-none px-0 py-4 focus-visible:ring-0 focus-visible:border-nobel-gold placeholder:text-slate-300"
               />
             </div>
 
-            {/* Tags */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">Tags (comma separated)</Label>
-              <Input
-                value={formData.tags}
-                onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                placeholder="e.g., Politics, Culture, Sports"
+            {/* Summary */}
+            <div className="mb-8">
+              <Textarea
+                value={formData.summary}
+                onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
+                placeholder="Write a brief summary that will appear in cards..."
+                rows={2}
+                className="bg-slate-50 border-slate-200 resize-none text-slate-600"
               />
             </div>
 
             {/* Editor */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">Content</Label>
-              <Suspense fallback={<div className="min-h-[300px] bg-slate-100 rounded-lg animate-pulse" />}>
+            <div className="mb-8">
+              <Suspense fallback={
+                <div className="min-h-[400px] bg-slate-50 rounded-xl flex items-center justify-center">
+                  <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+                </div>
+              }>
                 <EditorJSComponent
-                  data={formData.content}
-                  onChange={(data) => setFormData({ ...formData, content: data })}
+                  key={editorKey}
+                  data={editorContent}
+                  onChange={handleEditorChange}
                   placeholder="Start writing your masterpiece..."
                 />
               </Suspense>
             </div>
 
-            {/* Publish Toggle */}
-            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-              <div className="flex items-center gap-3">
-                {formData.is_published ? (
-                  <Eye className="text-green-600" size={20} />
-                ) : (
-                  <EyeOff className="text-slate-400" size={20} />
-                )}
-                <div>
-                  <p className="font-medium text-sm">
-                    {formData.is_published ? 'Published' : 'Draft'}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {formData.is_published 
-                      ? 'Visible to everyone' 
-                      : 'Only you can see this'}
-                  </p>
+            {/* Footer Controls */}
+            <div className="flex items-center justify-between pt-6 border-t border-slate-100">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-lg">
+                  {formData.is_published ? (
+                    <Eye className="text-green-600" size={18} />
+                  ) : (
+                    <EyeOff className="text-slate-400" size={18} />
+                  )}
+                  <div>
+                    <p className="text-sm font-medium">
+                      {formData.is_published ? 'Published' : 'Draft'}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={formData.is_published}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_published: checked })}
+                  />
                 </div>
               </div>
-              <Switch
-                checked={formData.is_published}
-                onCheckedChange={(checked) => setFormData({ ...formData, is_published: checked })}
-              />
-            </div>
 
-            {/* Actions */}
-            <div className="flex flex-wrap gap-3 pt-4 border-t">
-              <Button onClick={() => handleSave(false)} disabled={saving} variant="outline">
-                {saving ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Save size={14} className="mr-2" />}
-                Save Draft
-              </Button>
-              <Button onClick={() => handleSave(true)} disabled={saving}>
-                {saving ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Eye size={14} className="mr-2" />}
-                Publish
-              </Button>
               {id && (
-                <Button onClick={handleDelete} variant="destructive" className="ml-auto">
+                <Button onClick={handleDelete} variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-50">
                   <Trash2 size={14} className="mr-2" />
                   Delete
                 </Button>

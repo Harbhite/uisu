@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Star, Pencil, Plus, Trash2, Save, X, Loader2, Upload, Search, Filter, Download, FileUp } from 'lucide-react';
-import { LeaderCard } from '@/components/LeaderCard';
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { Button } from '@/components/ui/button';
@@ -58,6 +58,7 @@ const emptyLeader: Omit<Leader, 'id'> = {
 };
 
 export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
+    const navigate = useNavigate();
     const { isStaff, loading: authLoading } = useAdminCheck();
     const [leaders, setLeaders] = useState<Leader[]>([]);
     const [loading, setLoading] = useState(true);
@@ -258,21 +259,22 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
     };
 
     const LeaderCardWithEdit: React.FC<{ leader: Leader }> = ({ leader }) => (
-        <div className="relative group">
-            <LeaderCard leader={{
-                name: leader.name,
-                role: leader.role,
-                image: leader.image,
-                bio: leader.bio,
-                email: leader.email,
-                socials: leader.socials
-            }} />
+        <div className="relative group cursor-pointer" onClick={() => navigate(`/current-leaders/${leader.id}`)}>
+            <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-lg transition-all">
+                <div className="aspect-square bg-slate-100">
+                    <img src={leader.image} alt={leader.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }} />
+                </div>
+                <div className="p-4">
+                    <h3 className="font-serif text-lg text-ui-blue font-semibold">{leader.name}</h3>
+                    <p className="text-sm text-nobel-gold">{leader.role}</p>
+                </div>
+            </div>
             {isStaff && (
                 <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => openEditModal(leader)}>
+                    <Button size="icon" variant="secondary" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); openEditModal(leader); }}>
                         <Pencil size={14} />
                     </Button>
-                    <Button size="icon" variant="destructive" className="h-8 w-8" onClick={() => handleDelete(leader.id)}>
+                    <Button size="icon" variant="destructive" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleDelete(leader.id); }}>
                         <Trash2 size={14} />
                     </Button>
                 </div>
