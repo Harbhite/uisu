@@ -257,6 +257,105 @@ export type Database = {
         }
         Relationships: []
       }
+      ink_pieces: {
+        Row: {
+          author_name: string
+          author_role: string | null
+          content: Json
+          cover_image: string | null
+          created_at: string | null
+          id: string
+          is_published: boolean | null
+          summary: string | null
+          tags: string[] | null
+          title: string
+          type: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          author_name: string
+          author_role?: string | null
+          content?: Json
+          cover_image?: string | null
+          created_at?: string | null
+          id?: string
+          is_published?: boolean | null
+          summary?: string | null
+          tags?: string[] | null
+          title: string
+          type: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          author_name?: string
+          author_role?: string | null
+          content?: Json
+          cover_image?: string | null
+          created_at?: string | null
+          id?: string
+          is_published?: boolean | null
+          summary?: string | null
+          tags?: string[] | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      leaders: {
+        Row: {
+          bio: string | null
+          category: string
+          constituency: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          image: string | null
+          is_active: boolean | null
+          level: string | null
+          name: string
+          role: string
+          socials: Json | null
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          bio?: string | null
+          category: string
+          constituency?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          image?: string | null
+          is_active?: boolean | null
+          level?: string | null
+          name: string
+          role: string
+          socials?: Json | null
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          bio?: string | null
+          category?: string
+          constituency?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          image?: string | null
+          is_active?: boolean | null
+          level?: string | null
+          name?: string
+          role?: string
+          socials?: Json | null
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

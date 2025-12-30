@@ -1,73 +1,95 @@
-# Welcome to your Lovable project
+# UISU Archive
 
-## Project info
+A digital archive and management platform for the University of Ibadan Students' Union (UISU). This application preserves the legacy of the union, provides information about current and past leadership, governance, and campus life, and features a publication platform called "Inks Vault".
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Features
 
-## How can I edit this code?
+- **Digital Archive**: Access constitutions, manifestos, speeches, and historical records.
+- **Leadership Directory**:
+  - **Current Leaders**: Profiles of Executives, Principal Officers, Hall Leaders, and Legislators.
+  - **Past Leaders**: A "Hall of Fame" celebrating historical figures.
+- **Governance**: Detailed information about the union's structure and leadership hierarchy.
+- **Inks Vault**: A creative publication platform featuring:
+  - Various content types: Articles, Blogs, Reports, Essays, Poetry, Opinions, Interviews, Fiction.
+  - **Writer's Desk**: A rich text editor for submitting content.
+- **Campus Map**: An interactive map highlighting halls of residence and key locations.
+- **Communities**: Information on clubs and societies.
+- **Events & Announcements**: Stay updated with the latest union activities.
+- **Admin Dashboard**: A protected area for authorized users to manage content.
+- **Interactive Elements**: Trivia, 3D visualizations, and timeline diagrams.
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+- **Frontend**: React, Vite, TypeScript
+- **Styling**: Tailwind CSS, Shadcn UI
+- **Backend & Authentication**: Supabase
+- **State Management**: TanStack Query
+- **Animations**: Framer Motion
+- **3D Graphics**: Three.js (@react-three/fiber, @react-three/drei)
+- **Rich Text Editor**: Editor.js
+- **Routing**: React Router
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## Getting Started
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
 
-**Use your preferred IDE**
+- Node.js & npm (or bun/yarn)
+- A Supabase project (for authentication and database)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Installation
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1.  **Clone the repository:**
 
-Follow these steps:
+    ```sh
+    git clone <repository-url>
+    cd <project-directory>
+    ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+2.  **Install dependencies:**
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+    ```sh
+    npm install
+    # or
+    bun install
+    ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+3.  **Environment Setup:**
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+    Create a `.env` file in the root directory and add your Supabase credentials:
+
+    ```env
+    VITE_SUPABASE_URL=your_supabase_project_url
+    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+    ```
+
+4.  **Run the development server:**
+
+    ```sh
+    npm run dev
+    ```
+
+    The application will be available at `http://localhost:8080` (or whatever port Vite selects).
+
+## Scripts
+
+- `npm run dev`: Starts the development server.
+- `npm run build`: Builds the application for production.
+- `npm run preview`: Previews the production build locally.
+- `npm run lint`: Runs ESLint to check for code quality issues.
+
+## Project Structure
+
+```
+src/
+├── components/         # Reusable UI components (Shadcn UI, etc.)
+├── hooks/              # Custom React hooks
+├── integrations/       # External integrations (Supabase)
+├── lib/                # Utility functions and static data
+├── pages/              # Application pages (Routes)
+├── App.tsx             # Main application component & Routing
+└── main.tsx            # Entry point
 ```
 
-**Edit a file directly in GitHub**
+## License
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+[MIT](LICENSE)

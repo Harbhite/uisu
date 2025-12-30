@@ -11,6 +11,7 @@ import { lazy, Suspense } from "react";
 const GovernancePage = lazy(() => import("./pages/GovernancePage"));
 const PastLeadersPage = lazy(() => import("./pages/PastLeadersPage"));
 const CurrentLeadersPage = lazy(() => import("./pages/CurrentLeadersPage"));
+const LeaderDetailPage = lazy(() => import("./pages/LeaderDetailPage"));
 const DocumentsPage = lazy(() => import("./pages/DocumentsPage"));
 const CampusMapPage = lazy(() => import("./pages/CampusMapPage"));
 const CommunitiesPage = lazy(() => import("./pages/CommunitiesPage"));
@@ -20,7 +21,10 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AnnouncementsPage = lazy(() => import("./pages/AnnouncementsPage"));
 const InksVaultPage = lazy(() => import("./pages/InksVaultPage"));
 const InksPiecePage = lazy(() => import("./pages/InksPiecePage"));
+ feature/map-leaders-update-2419318656260273555
 const InksEditorPage = lazy(() => import("./pages/InksEditorPage"));
+=======
+const InkEditorPage = lazy(() => import("./pages/InkEditorPage")); main
 
 const queryClient = new QueryClient();
 
@@ -45,6 +49,7 @@ const App = () => (
             <Route path="/governance" element={<GovernancePage />} />
             <Route path="/past-leaders" element={<PastLeadersPage />} />
             <Route path="/current-leaders" element={<CurrentLeadersPage />} />
+            <Route path="/current-leaders/:id" element={<LeaderDetailPage />} />
             <Route path="/documents" element={<DocumentsPage />} />
             <Route path="/campus-map" element={<CampusMapPage />} />
             <Route path="/communities" element={<CommunitiesPage />} />
@@ -54,8 +59,12 @@ const App = () => (
             <Route path="/announcements" element={<AnnouncementsPage />} />
             <Route path="/inks-vault" element={<InksVaultPage />} />
             <Route path="/inks-vault/piece/:id" element={<InksPiecePage />} />
+ feature/map-leaders-update-2419318656260273555
             <Route path="/admin/inks-vault/new" element={<InksEditorPage />} />
             <Route path="/admin/inks-vault/edit/:id" element={<InksEditorPage />} />
+            <Route path="/inks-vault/write" element={<InkEditorPage />} />
+            <Route path="/inks-vault/edit/:id" element={<InkEditorPage />} />
+ main
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
