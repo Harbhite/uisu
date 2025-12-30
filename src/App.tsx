@@ -56,8 +56,8 @@ const App = () => (
             <Route path="/announcements" element={<AnnouncementsPage />} />
             <Route path="/inks-vault" element={<InksVaultPage />} />
             <Route path="/inks-vault/piece/:id" element={<InksPiecePage />} />
-            <Route path="/inks-vault/write" element={<InkEditorPage />} />
-            <Route path="/inks-vault/edit/:id" element={<InkEditorPage />} />
+            <Route path="/admin/inks-vault/new" element={<InkEditorPage />} />
+            <Route path="/admin/inks-vault/edit/:id" element={<InkEditorPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

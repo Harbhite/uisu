@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Menu, X, Users, Building2, BookOpen, Award, Star, ArrowRight, MapPin, Calendar, FileText, ChevronDown, LogIn, LogOut, Bell, ExternalLink } from "lucide-react";
+import { Menu, X, Users, Building2, BookOpen, Award, Star, ArrowRight, MapPin, Calendar, FileText, ChevronDown, LogIn, LogOut, Bell } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { TimelineDiagram } from "@/components/Diagrams";
 import { TriviaSection } from "@/components/Trivia";
