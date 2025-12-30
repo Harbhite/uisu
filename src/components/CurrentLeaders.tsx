@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Star, Pencil, Plus, Trash2, Save, X, Loader2, Upload, Search, Filter, Download, FileUp } from 'lucide-react';
 import { LeaderCard } from '@/components/LeaderCard';
@@ -72,10 +72,8 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
     const [legislatorSearch, setLegislatorSearch] = useState('');
     const [constituencyFilter, setConstituencyFilter] = useState('all');
     const importFileRef = useRef<HTMLInputElement>(null);
-    
-    const { importing, exporting, exportToCSV, importFromCSV } = useLeadersBulkOperations(fetchLeaders);
 
-    const fetchLeaders = async () => {
+    const fetchLeaders = useCallback(async () => {
         const { data, error } = await supabase
             .from('leaders')
             .select('*')
@@ -102,11 +100,13 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
             setLeaders(mapped);
         }
         setLoading(false);
-    };
+    }, []);
+    
+    const { importing, exporting, exportToCSV, importFromCSV } = useLeadersBulkOperations(fetchLeaders);
 
     useEffect(() => {
         fetchLeaders();
-    }, []);
+    }, [fetchLeaders]);
 
     const executives = leaders.filter(l => l.category === 'executive');
     const principalOfficers = leaders.filter(l => l.category === 'principal_officer');
