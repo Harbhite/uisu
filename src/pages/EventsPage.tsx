@@ -1,10 +1,19 @@
 import { useNavigate } from "react-router-dom";
 import { EventsCalendar } from "@/components/EventsCalendar";
+import { SEO } from "@/components/SEO";
 
 const EventsPage = () => {
   const navigate = useNavigate();
   
-  return <EventsCalendar onBack={() => navigate("/")} />;
+  return (
+    <>
+      <SEO
+        title="Events"
+        description="Stay updated with the latest union activities, academic calendar, and campus events."
+      />
+      <EventsCalendar onBack={() => navigate("/")} />
+    </>
+  );
 };
 
 export default EventsPage;

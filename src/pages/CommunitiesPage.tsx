@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CommunitiesPage as CommunitiesContent, ClubDetailPage } from "@/components/Communities";
+import { SEO } from "@/components/SEO";
 
 const CommunitiesPage = () => {
   const navigate = useNavigate();
@@ -8,18 +9,32 @@ const CommunitiesPage = () => {
   
   if (selectedClubId) {
     return (
-      <ClubDetailPage 
-        clubId={selectedClubId} 
-        onBack={() => setSelectedClubId(null)} 
-      />
+      <>
+        {/* Note: ClubDetailPage handles its own dynamic SEO inside the component if needed,
+            but for now we can wrap it or let it be.
+            Ideally, ClubDetailPage should have SEO.
+            For this plan, I'll add a generic one here or assume ClubDetailPage needs update.
+            Let's stick to the page wrapper for now.
+        */}
+        <ClubDetailPage
+          clubId={selectedClubId}
+          onBack={() => setSelectedClubId(null)}
+        />
+      </>
     );
   }
   
   return (
-    <CommunitiesContent 
-      onBack={() => navigate("/")} 
-      onClubSelect={(id) => setSelectedClubId(id)} 
-    />
+    <>
+      <SEO
+        title="Communities"
+        description="Discover the vibrant student organizations, clubs, and societies on campus."
+      />
+      <CommunitiesContent
+        onBack={() => navigate("/")}
+        onClubSelect={(id) => setSelectedClubId(id)}
+      />
+    </>
   );
 };
 

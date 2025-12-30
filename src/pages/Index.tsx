@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { executives } from "@/lib/data";
 import { LeaderCard } from "@/components/LeaderCard";
+import { SEO } from "@/components/SEO";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -109,6 +110,10 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEO
+        title="Home"
+        description="The official digital archive and management platform for the University of Ibadan Students' Union (UISU). Preserving legacy, celebrating leadership."
+      />
       {/* Announcements Banner */}
       <AnnouncementsBanner />
       
