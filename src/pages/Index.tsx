@@ -120,7 +120,7 @@ const Index = () => {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled ? "bg-primary/95 backdrop-blur-xl shadow-lg border-b border-primary-foreground/10" : "bg-primary"
+          scrolled ? "bg-primary/80 backdrop-blur-md shadow-lg border-b border-primary-foreground/10" : "bg-primary/80 backdrop-blur-md"
         }`}
       >
         <div className="container mx-auto px-6">
@@ -491,53 +491,55 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-20 bg-card border-t border-border">
+      <footer className="py-20 bg-ui-blue border-t border-primary-foreground/10 text-primary-foreground">
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
             <div className="md:col-span-2">
               <div className="flex items-center gap-3 mb-6">
-                <img src="/uisu-logo.png" alt="UISU Logo" className="h-12 w-12 object-contain" />
-                <span className="font-serif text-2xl text-ui-blue">UISU Archive</span>
+                <img src="/uisu-logo.png" alt="UISU Logo" className="h-12 w-12 object-contain brightness-0 invert" />
+                <span className="font-serif text-2xl text-white">UISU Archive</span>
               </div>
-              <p className="text-muted-foreground font-light leading-relaxed max-w-md mb-6">
+              <p className="text-primary-foreground/80 font-light leading-relaxed max-w-md mb-6">
                 Preserving the rich history and legacy of the Students Union for future generations. A digital repository of our collective memory.
               </p>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-4 text-sm text-primary-foreground/80">
                 <MapPin className="w-4 h-4 text-nobel-gold" />
                 <span>Campus, University</span>
-                <span className="text-border">•</span>
+                <span className="text-primary-foreground/20">•</span>
                 <Calendar className="w-4 h-4 text-nobel-gold" />
                 <span>Est. 1948</span>
               </div>
             </div>
             
-            <div>
-              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-6">Quick Links</h3>
-              <ul className="space-y-3">
-                {navLinks.map((link) => (
-                  <li key={link.name}>
-                    <Link to={link.href} className="text-foreground hover:text-nobel-gold transition-colors font-light">
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-6">Archive</h3>
-              <ul className="space-y-3 text-foreground font-light">
-                <li>Constitutions</li>
-                <li>Manifestos</li>
-                <li>Speeches</li>
-                <li>Reports</li>
-              </ul>
+            <div className="grid grid-cols-2 gap-8 md:col-span-2 md:grid-cols-2">
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-primary-foreground/60 mb-6">Quick Links</h3>
+                <ul className="space-y-3">
+                  {navLinks.map((link) => (
+                    <li key={link.name}>
+                      <Link to={link.href} className="text-primary-foreground hover:text-nobel-gold transition-colors font-light">
+                        {link.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-primary-foreground/60 mb-6">Archive</h3>
+                <ul className="space-y-3 text-primary-foreground font-light">
+                  <li>Constitutions</li>
+                  <li>Manifestos</li>
+                  <li>Speeches</li>
+                  <li>Reports</li>
+                </ul>
+              </div>
             </div>
           </div>
           
-          <div className="pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} UISU Archive. All rights reserved.</p>
-            <p className="text-xs text-muted-foreground uppercase tracking-widest">Crafted with purpose</p>
+          <div className="pt-8 border-t border-primary-foreground/10 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-primary-foreground/60">© {new Date().getFullYear()} UISU Archive. All rights reserved.</p>
+            <p className="text-xs text-primary-foreground/60 uppercase tracking-widest">Crafted with purpose</p>
           </div>
         </div>
       </footer>
