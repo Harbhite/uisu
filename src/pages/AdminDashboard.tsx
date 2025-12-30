@@ -5,13 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { 
   ArrowLeft, Star, Plus, Trash2, Edit2, Calendar, FileText, 
   Megaphone, X, Upload, Loader2, Check, Users, Award, ShieldAlert,
-  ArrowUpDown, History, Search, Download, Filter, Eye, Mail
+  ArrowUpDown, History, Search, Download, Filter, Eye, Mail, BookOpen
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { z } from "zod";
 import AuditLogDetailsModal from "@/components/AuditLogDetailsModal";
 import InviteStaffModal from "@/components/InviteStaffModal";
+import { inksPieces } from "@/lib/data";
 
 // Validation schemas
 const eventSchema = z.object({
@@ -65,7 +66,7 @@ const administrationSchema = z.object({
   })).optional(),
 });
 
-type TabType = "events" | "announcements" | "documents" | "clubs" | "administrations" | "admins" | "audit";
+type TabType = "events" | "announcements" | "documents" | "clubs" | "administrations" | "admins" | "audit" | "publications";
 
 interface AuditLog {
   id: string;
@@ -163,6 +164,7 @@ const AdminDashboard = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [clubs, setClubs] = useState<Club[]>([]);
   const [administrations, setAdministrations] = useState<Administration[]>([]);
+  const [publications, setPublications] = useState<any[]>([]);
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [newAdminEmail, setNewAdminEmail] = useState("");
@@ -267,6 +269,24 @@ const AdminDashboard = () => {
           .order("session", { ascending: false });
         if (error) throw error;
         setAdministrations(data || []);
+      } else if (activeTab === "publications") {
+         try {
+           const { data, error } = await supabase
+             .from("inks_pieces" as any)
+             .select("*")
+             .order("date", { ascending: false });
+
+           if (error) {
+             console.warn("Could not fetch publications from DB (table might be missing), using fallback data.");
+             // Sort fallback data by date desc
+             const sorted = [...inksPieces].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+             setPublications(sorted);
+           } else {
+             setPublications(data || []);
+           }
+         } catch (err) {
+            setPublications(inksPieces);
+         }
       } else if (activeTab === "admins") {
         const { data, error } = await supabase
           .from("user_roles")
@@ -331,6 +351,10 @@ const AdminDashboard = () => {
   };
 
   const openAddModal = () => {
+    if (activeTab === "publications") {
+      navigate("/admin/inks-vault/new");
+      return;
+    }
     setEditingItem(null);
     setFormData(getDefaultFormData());
     setSelectedFile(null);
@@ -342,6 +366,10 @@ const AdminDashboard = () => {
   };
 
   const openEditModal = (item: any) => {
+    if (activeTab === "publications") {
+      navigate(`/admin/inks-vault/edit/${item.id}`);
+      return;
+    }
     setEditingItem(item);
     setFormData(item);
     setSelectedFile(null);
@@ -682,6 +710,7 @@ const AdminDashboard = () => {
         documents: "documents",
         clubs: "clubs",
         administrations: "administrations",
+        publications: "inks_pieces",
         admins: "user_roles",
         audit: "audit_logs"
       };
@@ -723,6 +752,7 @@ const AdminDashboard = () => {
   const tabs = [
     { id: "events" as TabType, label: "Events", icon: Calendar },
     { id: "announcements" as TabType, label: "Announcements", icon: Megaphone },
+    { id: "publications" as TabType, label: "Publications", icon: BookOpen },
     { id: "documents" as TabType, label: "Documents", icon: FileText },
     { id: "clubs" as TabType, label: "Clubs", icon: Users },
     { id: "administrations" as TabType, label: "Leaders", icon: Award },
@@ -1070,6 +1100,40 @@ const AdminDashboard = () => {
           </div>
         ) : (
           <div className="space-y-4">
+            {activeTab === "publications" && publications.map((pub) => (
+              <motion.div
+                key={pub.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-card border border-border p-6 flex justify-between items-center hover:border-nobel-gold transition-colors"
+              >
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 bg-ui-blue/10 text-ui-blue rounded-full">
+                      {pub.type}
+                    </span>
+                    <span className="text-xs text-muted-foreground">{new Date(pub.date).toLocaleDateString()}</span>
+                  </div>
+                  <h3 className="font-serif text-xl text-foreground">{pub.title}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">by {pub.author}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => openEditModal(pub)}
+                    className="p-2 text-muted-foreground hover:text-nobel-gold transition-colors"
+                  >
+                    <Edit2 size={18} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(pub.id)}
+                    className="p-2 text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+
             {activeTab === "events" && events.map((event) => (
               <motion.div
                 key={event.id}
@@ -1561,7 +1625,8 @@ const AdminDashboard = () => {
               (activeTab === "announcements" && announcements.length === 0) ||
               (activeTab === "documents" && documents.length === 0) ||
               (activeTab === "clubs" && clubs.length === 0) ||
-              (activeTab === "administrations" && administrations.length === 0)) && (
+              (activeTab === "administrations" && administrations.length === 0) ||
+              (activeTab === "publications" && publications.length === 0)) && (
               <div className="text-center py-20 text-muted-foreground">
                 <p className="font-serif text-xl italic">No {activeTab} found.</p>
                 <button
