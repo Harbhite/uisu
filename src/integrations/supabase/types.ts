@@ -272,6 +272,7 @@ export type Database = {
           type: string
           updated_at: string | null
           user_id: string | null
+          view_count: number | null
         }
         Insert: {
           author_name: string
@@ -287,6 +288,7 @@ export type Database = {
           type: string
           updated_at?: string | null
           user_id?: string | null
+          view_count?: number | null
         }
         Update: {
           author_name?: string
@@ -302,6 +304,7 @@ export type Database = {
           type?: string
           updated_at?: string | null
           user_id?: string | null
+          view_count?: number | null
         }
         Relationships: []
       }

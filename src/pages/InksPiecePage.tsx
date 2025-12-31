@@ -55,6 +55,12 @@ const InksPiecePage = () => {
         setPiece(null);
       } else {
         setPiece(data as InksPiece);
+        // Increment view count
+        supabase
+          .from('ink_pieces')
+          .update({ view_count: (data.view_count || 0) + 1 })
+          .eq('id', id)
+          .then();
       }
       setLoading(false);
     };
