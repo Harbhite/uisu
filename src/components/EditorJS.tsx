@@ -1,22 +1,202 @@
 import React, { useEffect, useRef } from 'react';
-import EditorJS, { OutputData } from '@editorjs/editorjs';
+import EditorJS, { OutputData, ToolConstructable, ToolSettings } from '@editorjs/editorjs';
 import Header from '@editorjs/header';
 import Paragraph from '@editorjs/paragraph';
 import List from '@editorjs/list';
 import Quote from '@editorjs/quote';
+// @ts-ignore
+import Code from '@editorjs/code';
+// @ts-ignore
+import InlineCode from '@editorjs/inline-code';
+// @ts-ignore
+import Marker from '@editorjs/marker';
+// @ts-ignore
+import Underline from '@editorjs/underline';
+// @ts-ignore
+import Delimiter from '@editorjs/delimiter';
+// @ts-ignore
+import Table from '@editorjs/table';
+// @ts-ignore
+import Checklist from '@editorjs/checklist';
+// @ts-ignore
+import Warning from '@editorjs/warning';
+// @ts-ignore
+import LinkTool from '@editorjs/link';
+// @ts-ignore
+import Embed from '@editorjs/embed';
+// @ts-ignore
+import Raw from '@editorjs/raw';
+
+type PieceType = 'Article' | 'Blog' | 'Report' | 'Essay' | 'Poetry' | 'Opinion' | 'Interview' | 'Fiction';
+
+type EditorTools = { [toolName: string]: ToolConstructable | ToolSettings };
 
 interface EditorJSComponentProps {
   data?: OutputData;
   onChange?: (data: OutputData) => void;
   readOnly?: boolean;
   placeholder?: string;
+  pieceType?: PieceType;
 }
+
+// Base tools available for all types
+const getBaseTools = (): EditorTools => ({
+  header: {
+    class: Header as unknown as ToolConstructable,
+    config: {
+      levels: [2, 3, 4],
+      defaultLevel: 2
+    },
+    inlineToolbar: true
+  },
+  paragraph: {
+    class: Paragraph as unknown as ToolConstructable,
+    inlineToolbar: true
+  },
+  list: {
+    class: List as unknown as ToolConstructable,
+    inlineToolbar: true,
+    config: {
+      defaultStyle: 'unordered'
+    }
+  },
+  quote: {
+    class: Quote as unknown as ToolConstructable,
+    inlineToolbar: true,
+    config: {
+      quotePlaceholder: 'Enter a quote',
+      captionPlaceholder: 'Quote author'
+    }
+  },
+  delimiter: {
+    class: Delimiter as unknown as ToolConstructable
+  },
+  marker: {
+    class: Marker as unknown as ToolConstructable,
+    shortcut: 'CMD+SHIFT+M'
+  },
+  inlineCode: {
+    class: InlineCode as unknown as ToolConstructable,
+    shortcut: 'CMD+SHIFT+C'
+  },
+  underline: {
+    class: Underline as unknown as ToolConstructable
+  }
+});
+
+// Additional tools for technical/report writing
+const getTechnicalTools = (): EditorTools => ({
+  code: {
+    class: Code as unknown as ToolConstructable,
+    config: {
+      placeholder: 'Enter code here...'
+    }
+  },
+  table: {
+    class: Table as unknown as ToolConstructable,
+    inlineToolbar: true,
+    config: {
+      rows: 3,
+      cols: 3
+    }
+  },
+  checklist: {
+    class: Checklist as unknown as ToolConstructable,
+    inlineToolbar: true
+  },
+  warning: {
+    class: Warning as unknown as ToolConstructable,
+    inlineToolbar: true,
+    config: {
+      titlePlaceholder: 'Title',
+      messagePlaceholder: 'Message'
+    }
+  },
+  raw: {
+    class: Raw as unknown as ToolConstructable,
+    config: {
+      placeholder: 'Enter raw HTML...'
+    }
+  }
+});
+
+// Media/embed tools
+const getMediaTools = (): EditorTools => ({
+  embed: {
+    class: Embed as unknown as ToolConstructable,
+    config: {
+      services: {
+        youtube: true,
+        vimeo: true,
+        twitter: true,
+        instagram: true,
+        codepen: true,
+        github: true
+      }
+    }
+  },
+  linkTool: {
+    class: LinkTool as unknown as ToolConstructable,
+    config: {
+      endpoint: '' // No server-side link preview
+    }
+  }
+});
+
+// Get tools based on piece type
+const getToolsForType = (pieceType?: PieceType): EditorTools => {
+  const base = getBaseTools();
+  const technical = getTechnicalTools();
+  const media = getMediaTools();
+
+  switch (pieceType) {
+    case 'Report':
+      // Reports get all tools for comprehensive documentation
+      return { ...base, ...technical, ...media };
+    
+    case 'Blog':
+    case 'Article':
+      // Blogs and articles get most tools for rich content
+      return { 
+        ...base, 
+        ...media,
+        table: technical.table,
+        checklist: technical.checklist,
+        code: technical.code
+      };
+    
+    case 'Essay':
+    case 'Opinion':
+      // Essays and opinions focus on prose - minimal technical tools
+      return { 
+        ...base,
+        embed: media.embed
+      };
+    
+    case 'Poetry':
+    case 'Fiction':
+      // Creative writing needs clean, distraction-free tools
+      return base;
+    
+    case 'Interview':
+      // Interviews need quotes, basic formatting, and embeds
+      return { 
+        ...base,
+        embed: media.embed
+      };
+    
+    default:
+      // Default - all tools
+      return { ...base, ...technical, ...media };
+  }
+};
 
 const EditorJSComponent: React.FC<EditorJSComponentProps> = ({
   data,
   onChange,
   readOnly = false,
-  placeholder = 'Start writing your piece...'
+  placeholder = 'Start writing your piece...',
+  pieceType
 }) => {
   const editorRef = useRef<EditorJS | null>(null);
   const holderRef = useRef<HTMLDivElement>(null);
@@ -33,37 +213,15 @@ const EditorJSComponent: React.FC<EditorJSComponentProps> = ({
 
     isInitialized.current = true;
 
+    const tools = getToolsForType(pieceType);
+
     const editor = new EditorJS({
       holder: holderRef.current,
       readOnly,
       placeholder,
       data: data || undefined,
       minHeight: 200,
-      tools: {
-        header: {
-          class: Header,
-          config: {
-            levels: [2, 3, 4],
-            defaultLevel: 2
-          }
-        },
-        paragraph: {
-          class: Paragraph,
-          inlineToolbar: true
-        },
-        list: {
-          class: List,
-          inlineToolbar: true
-        },
-        quote: {
-          class: Quote,
-          inlineToolbar: true,
-          config: {
-            quotePlaceholder: 'Enter a quote',
-            captionPlaceholder: 'Quote author'
-          }
-        }
-      },
+      tools,
       onChange: async () => {
         if (onChangeRef.current && editorRef.current) {
           try {
@@ -87,12 +245,12 @@ const EditorJSComponent: React.FC<EditorJSComponentProps> = ({
     };
   // Only initialize once - do not include data or onChange in deps
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readOnly, placeholder]);
+  }, [readOnly, placeholder, pieceType]);
 
   return (
     <div 
       ref={holderRef} 
-      className="prose prose-slate max-w-none min-h-[400px] bg-white border border-slate-200 rounded-xl p-6 focus-within:border-ui-blue focus-within:ring-2 focus-within:ring-ui-blue/20 transition-all"
+      className="prose prose-slate max-w-none min-h-[400px] bg-card border border-border p-6 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 transition-all [&_.ce-block__content]:max-w-none [&_.ce-toolbar__content]:max-w-none [&_.codex-editor__redactor]:pb-6"
     />
   );
 };

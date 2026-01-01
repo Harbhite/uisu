@@ -457,6 +457,7 @@ const InkEditorPage: React.FC = () => {
                   data={editorContent}
                   onChange={handleEditorChange}
                   placeholder="Start writing your masterpiece..."
+                  pieceType={formData.type}
                 />
               </Suspense>
             </div>

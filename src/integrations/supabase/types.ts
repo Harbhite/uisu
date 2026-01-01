@@ -257,6 +257,41 @@ export type Database = {
         }
         Relationships: []
       }
+      ink_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          piece_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          piece_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          piece_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ink_comments_piece_id_fkey"
+            columns: ["piece_id"]
+            isOneToOne: false
+            referencedRelation: "ink_pieces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ink_pieces: {
         Row: {
           author_name: string
