@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, BookOpen, PenTool, FileText, User, Mic, Book, Coffee, Feather, Newspaper, Quote, Plus, Loader2, Pencil, FileStack, Eye, Search, Clock, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -156,6 +156,19 @@ const InksVaultPage = () => {
     );
   };
 
+  const AuthorLink = ({ piece, className = '' }: { piece: InksPiece; className?: string }) => {
+    if (!piece.user_id) return <span className={className}>{piece.author_name}</span>;
+    return (
+      <Link 
+        to={`/profile/${piece.user_id}`} 
+        className={`hover:text-accent transition-colors ${className}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {piece.author_name}
+      </Link>
+    );
+  };
+
   const renderCard = (piece: InksPiece, isDraft = false) => {
     const cardClick = () => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`);
     
@@ -168,7 +181,7 @@ const InksVaultPage = () => {
             <Feather className="text-muted-foreground mb-4 group-hover:text-accent transition-colors" size={24} />
             <h3 className="text-2xl font-serif italic text-foreground mb-2 group-hover:text-accent transition-colors">{piece.title}</h3>
             <div className="w-12 h-px bg-accent my-3"></div>
-            <p className="text-muted-foreground text-sm font-serif mb-3">by {piece.author_name}</p>
+            <p className="text-muted-foreground text-sm font-serif mb-3">by <AuthorLink piece={piece} /></p>
             {renderMeta(piece)}
             {canEdit(piece) && renderEditButton(piece)}
           </div>
@@ -210,7 +223,7 @@ const InksVaultPage = () => {
                 <span className="text-xs font-bold uppercase text-destructive tracking-[0.15em]">Q&A Session</span>
               </div>
               <h3 className="text-2xl font-serif text-foreground mb-2 leading-tight group-hover:text-accent transition-colors">"{piece.title}"</h3>
-              <p className="text-xs font-bold uppercase text-muted-foreground mb-3">Featuring {piece.author_name}</p>
+              <p className="text-xs font-bold uppercase text-muted-foreground mb-3">Featuring <AuthorLink piece={piece} /></p>
               {renderMeta(piece)}
               <p className="text-muted-foreground text-sm mt-4">{piece.summary}</p>
             </div>
@@ -230,7 +243,7 @@ const InksVaultPage = () => {
             <p className="text-muted-foreground text-sm mb-3 line-clamp-3 font-serif">{piece.summary}</p>
             {renderMeta(piece)}
             <div className="mt-auto pt-4 border-t border-border text-xs font-bold text-muted-foreground uppercase">
-              By {piece.author_name}
+              By <AuthorLink piece={piece} />
             </div>
             {canEdit(piece) && renderEditButton(piece)}
           </div>
@@ -249,9 +262,15 @@ const InksVaultPage = () => {
             </div>
             <div className="p-6">
               <div className="flex items-center gap-2 mb-2">
-                <span className="w-8 h-8 bg-accent/20 flex items-center justify-center text-accent font-bold text-xs">{piece.author_name.charAt(0)}</span>
+                <Link 
+                  to={piece.user_id ? `/profile/${piece.user_id}` : '#'} 
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-8 h-8 bg-accent/20 flex items-center justify-center text-accent font-bold text-xs hover:bg-accent/30 transition-colors"
+                >
+                  {piece.author_name.charAt(0)}
+                </Link>
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold text-foreground">{piece.author_name}</span>
+                  <AuthorLink piece={piece} className="text-xs font-bold text-foreground" />
                   <span className="text-[10px] text-muted-foreground uppercase">{piece.author_role}</span>
                 </div>
               </div>
@@ -293,11 +312,15 @@ const InksVaultPage = () => {
               <p className="text-primary-foreground/70 text-sm mb-4 font-light">{piece.summary}</p>
               <div className="text-primary-foreground/50 mb-4">{renderMeta(piece)}</div>
               <div className="flex items-center gap-3 border-t border-primary-foreground/10 pt-4">
-                <div className="w-8 h-8 bg-primary-foreground/10 flex items-center justify-center">
+                <Link 
+                  to={piece.user_id ? `/profile/${piece.user_id}` : '#'}
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-8 h-8 bg-primary-foreground/10 flex items-center justify-center hover:bg-primary-foreground/20 transition-colors"
+                >
                   <Coffee size={14} />
-                </div>
+                </Link>
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold">{piece.author_name}</span>
+                  <AuthorLink piece={piece} className="text-xs font-bold" />
                   <span className="text-[10px] text-primary-foreground/50 uppercase">{piece.author_role}</span>
                 </div>
               </div>
