@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Calendar, User, Share2, Bookmark, Feather, Mic, FileText, Quote, MessageCircle, Book, Loader2, Printer, Tag, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ interface InksPiece {
   content: Json;
   tags: string[] | null;
   view_count: number | null;
+  user_id: string | null;
 }
 
 interface EditorBlock {
@@ -265,6 +266,16 @@ const InksPiecePage = () => {
   );
 };
 
+// Author Link component
+const AuthorLink = ({ userId, authorName, className = '' }: { userId: string | null; authorName: string; className?: string }) => {
+  if (!userId) return <span className={className}>{authorName}</span>;
+  return (
+    <Link to={`/profile/${userId}`} className={`hover:text-accent transition-colors ${className}`}>
+      {authorName}
+    </Link>
+  );
+};
+
 // --- Sub-components for distinct views ---
 
 interface ViewProps {
@@ -284,9 +295,9 @@ const ArticleView = ({ piece, renderContent, readingTime }: ViewProps) => (
       <h1 className="text-3xl md:text-5xl font-serif font-bold text-foreground mb-6 leading-tight">{piece.title}</h1>
       <div className="flex items-center justify-between border-y border-border py-4 mb-8">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-muted flex items-center justify-center text-muted-foreground font-bold">{piece.author_name.charAt(0)}</div>
+          <Link to={piece.user_id ? `/profile/${piece.user_id}` : '#'} className="w-10 h-10 bg-muted flex items-center justify-center text-muted-foreground font-bold hover:bg-accent/20 transition-colors">{piece.author_name.charAt(0)}</Link>
           <div>
-            <div className="text-sm font-bold text-foreground">{piece.author_name}</div>
+            <AuthorLink userId={piece.user_id} authorName={piece.author_name} className="text-sm font-bold text-foreground" />
             <div className="text-xs text-muted-foreground flex items-center gap-2">
               {new Date(piece.created_at).toLocaleDateString()}
               <span>•</span>
@@ -324,7 +335,7 @@ const PoetryView = ({ piece, renderContent, readingTime }: ViewProps) => (
       <Feather className="mx-auto text-accent mb-8" size={32} />
       <h1 className="text-4xl md:text-6xl font-serif italic text-primary mb-4">{piece.title}</h1>
       <div className="w-16 h-px bg-border mx-auto mb-6"></div>
-      <p className="text-sm font-serif text-muted-foreground mb-4">By {piece.author_name}</p>
+      <p className="text-sm font-serif text-muted-foreground mb-4">By <AuthorLink userId={piece.user_id} authorName={piece.author_name} /></p>
       <div className="flex justify-center items-center gap-4 text-xs text-muted-foreground mb-12">
         <span><Clock size={12} className="inline mr-1" />{readingTime} min</span>
         {piece.view_count !== null && <span>{piece.view_count} views</span>}
@@ -356,7 +367,7 @@ const ReportView = ({ piece, renderContent, readingTime }: ViewProps) => (
         <h1 className="text-3xl md:text-4xl font-bold mb-4 font-sans">{piece.title}</h1>
         <div className="flex flex-wrap gap-6 text-sm text-primary-foreground/60 font-mono">
           <span>DATE: {new Date(piece.created_at).toLocaleDateString().toUpperCase()}</span>
-          <span>AUTHOR: {piece.author_name.toUpperCase()}</span>
+          <span>AUTHOR: <AuthorLink userId={piece.user_id} authorName={piece.author_name.toUpperCase()} className="hover:underline" /></span>
           <span>READ: {readingTime} MIN</span>
           {piece.view_count !== null && <span>VIEWS: {piece.view_count}</span>}
         </div>
@@ -393,7 +404,7 @@ const OpinionView = ({ piece, renderContent, readingTime }: ViewProps) => (
       <div className="relative z-10 flex items-center gap-4">
         <div className="w-12 h-12 bg-primary-foreground/20 flex items-center justify-center text-xl">💬</div>
         <div>
-          <div className="font-bold">{piece.author_name}</div>
+          <AuthorLink userId={piece.user_id} authorName={piece.author_name} className="font-bold" />
           <div className="text-primary-foreground/60 text-sm flex items-center gap-2">
             {piece.author_role}
             <span>•</span>
@@ -423,7 +434,7 @@ const InterviewView = ({ piece, renderContent, readingTime }: ViewProps) => (
         <p className="text-primary-foreground/70 text-sm mb-4">An exclusive sit-down exploring key issues.</p>
         <div className="border-t border-primary-foreground/10 pt-4 mt-4">
           <p className="text-xs uppercase tracking-widest text-primary-foreground/50 mb-1">Guest</p>
-          <p className="font-bold">{piece.author_name}</p>
+          <AuthorLink userId={piece.user_id} authorName={piece.author_name} className="font-bold" />
           <p className="text-sm text-primary-foreground/60 mt-2">
             <Clock size={12} className="inline mr-1" /> {readingTime} min read
           </p>
@@ -452,7 +463,7 @@ const FictionView = ({ piece, renderContent, readingTime }: ViewProps) => (
       <div className="absolute top-8 right-8 text-[#8B4513]/20 font-serif text-6xl font-bold opacity-50 select-none">1</div>
       <h1 className="text-4xl md:text-5xl font-serif text-[#5D4037] dark:text-foreground mb-8 mt-4">{piece.title}</h1>
       <div className="flex items-center gap-2 text-[#8B4513] dark:text-accent text-sm font-bold uppercase tracking-widest mb-4">
-        <span>By {piece.author_name}</span>
+        <span>By <AuthorLink userId={piece.user_id} authorName={piece.author_name} /></span>
         <span className="w-4 h-px bg-[#8B4513] dark:bg-accent"></span>
         <span>Short Story</span>
       </div>
@@ -480,7 +491,7 @@ const EssayView = ({ piece, renderContent, readingTime }: ViewProps) => (
       <span className="text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground mb-4 inline-block">Academic Essay</span>
       <h1 className="text-4xl md:text-5xl font-serif text-foreground mb-6">{piece.title}</h1>
       <div className="w-24 h-1 bg-primary mx-auto mb-6"></div>
-      <p className="text-muted-foreground italic mb-4">By {piece.author_name}</p>
+      <p className="text-muted-foreground italic mb-4">By <AuthorLink userId={piece.user_id} authorName={piece.author_name} /></p>
       <div className="flex justify-center items-center gap-4 text-xs text-muted-foreground">
         <span><Clock size={12} className="inline mr-1" />{readingTime} min read</span>
         {piece.view_count !== null && <span>{piece.view_count} views</span>}
@@ -507,12 +518,12 @@ const BlogView = ({ piece, renderContent, readingTime }: ViewProps) => (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
       <div className="md:col-span-1">
         <div className="sticky top-32">
-          <div className="w-20 h-20 mb-4 overflow-hidden">
+          <Link to={piece.user_id ? `/profile/${piece.user_id}` : '#'} className="block w-20 h-20 mb-4 overflow-hidden hover:opacity-80 transition-opacity">
             <div className="w-full h-full bg-gradient-to-br from-accent to-yellow-500 flex items-center justify-center text-primary-foreground text-2xl font-bold">
               {piece.author_name.charAt(0)}
             </div>
-          </div>
-          <p className="font-bold text-foreground">{piece.author_name}</p>
+          </Link>
+          <AuthorLink userId={piece.user_id} authorName={piece.author_name} className="font-bold text-foreground block" />
           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-6">{piece.author_role}</p>
           <div className="text-sm text-muted-foreground mb-6">
             <p>Sharing thoughts and stories from the university community.</p>
