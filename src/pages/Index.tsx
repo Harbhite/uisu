@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Navbar } from "@/components/Navbar";
 import { Menu } from "@/components/Menu";
+import { Footer } from "@/components/Footer";
 
 // --- SUB-COMPONENTS ---
 
@@ -531,35 +532,7 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="bg-ui-blue text-white pt-20 pb-10 border-t border-white/10 relative overflow-hidden">
-          <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#C5A059 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
-          <div className="container mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16">
-            <div><ContactForm /></div>
-            <div className="flex flex-col justify-between h-full py-4">
-              <div>
-                <div className="flex items-center gap-3 mb-6">
-                  <img src="/uisu-logo.png" alt="UISU Logo" className="h-12 w-auto brightness-0 invert" />
-                  <span className="font-serif text-3xl font-bold">UISU Archive</span>
-                </div>
-                <p className="text-slate-400 text-lg leading-relaxed mb-8 max-w-md font-light">Preserving the history, culture, and intellectual heritage of the University of Ibadan Students' Union. First and Best.</p>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4 text-slate-300"><MapPin size={20} className="text-nobel-gold" /><span>Kunle Adepeju Building, University of Ibadan</span></div>
-                  <div className="flex items-center gap-4 text-slate-300"><Mail size={20} className="text-nobel-gold" /><span>archive@uisu.org</span></div>
-                </div>
-              </div>
-              <div className="mt-12 flex gap-8 text-xs font-bold uppercase tracking-[0.3em] text-slate-500">
-                <a href="#" className="hover:text-nobel-gold transition-colors">Credits</a>
-                <a href="#" className="hover:text-nobel-gold transition-colors">Legal</a>
-                <a href="#" className="hover:text-nobel-gold transition-colors">Sitemap</a>
-              </div>
-            </div>
-          </div>
-          <div className="container mx-auto px-6 mt-16 pt-8 border-t border-white/10 text-center text-[10px] uppercase tracking-widest text-slate-600 flex flex-col md:flex-row justify-between items-center">
-            <span>&copy; {new Date().getFullYear()} University of Ibadan Students' Union.</span>
-            <span className="hidden md:inline">Aluta Continua, Victoria Ascerta.</span>
-          </div>
-        </footer>
+        <Footer />
       </main>
     </div>
   );
