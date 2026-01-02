@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
+import { X } from "lucide-react";
 
 interface MenuProps {
   isMenuOpen: boolean;
@@ -16,11 +17,20 @@ export const Menu = ({ isMenuOpen, setIsMenuOpen, navLinks }: MenuProps) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
-          className="fixed inset-0 top-0 z-40 bg-ui-blue text-white flex pt-20 overflow-hidden"
+          className="fixed inset-0 top-0 z-[60] bg-ui-blue text-white flex overflow-hidden"
         >
           {/* Left Side: Navigation Links */}
           <div className="flex-1 flex flex-col justify-center items-center h-full relative z-10">
-             <div className="flex flex-col gap-6 text-center overflow-y-auto max-h-[70vh] w-full px-6 no-scrollbar">
+
+             {/* Close Button */}
+             <button
+                onClick={() => setIsMenuOpen(false)}
+                className="absolute top-6 left-6 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
+             >
+                <X size={24} />
+             </button>
+
+             <div className="flex flex-col gap-2 text-center overflow-y-auto max-h-[70vh] w-full px-6 no-scrollbar">
                 {navLinks.map((link, index) => (
                     <motion.div
                         key={link.name}
@@ -31,7 +41,7 @@ export const Menu = ({ isMenuOpen, setIsMenuOpen, navLinks }: MenuProps) => {
                         <Link
                         to={link.href}
                         onClick={() => setIsMenuOpen(false)}
-                        className="font-serif text-xl md:text-2xl uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors block py-2"
+                        className="font-serif text-base md:text-lg uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors block"
                         >
                         {link.name}
                         </Link>
