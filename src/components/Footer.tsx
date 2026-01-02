@@ -7,49 +7,49 @@ import { Button } from "@/components/ui/button";
 export const Footer = () => {
   return (
     <footer className="px-4 pb-4 bg-slate-50 pt-10">
-      <div className="bg-[#F9F8F4] text-ui-blue rounded-[2.5rem] p-8 md:p-16 shadow-sm border border-slate-100">
+      <div className="bg-ui-blue text-white rounded-[2.5rem] p-8 md:p-16 shadow-lg border border-ui-blue/10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
 
           {/* Brand Column */}
           <div className="lg:col-span-3 space-y-6">
             <Link to="/" className="flex items-center gap-3">
-              <img src="/uisu-logo.png" alt="UISU Logo" className="h-10 w-auto object-contain" />
+              <img src="/uisu-logo.png" alt="UISU Logo" className="h-10 w-auto object-contain brightness-0 invert" />
               <div className="flex flex-col">
-                <span className="font-serif font-bold text-xl tracking-tight">UISU</span>
+                <span className="font-serif font-bold text-xl tracking-tight text-white">UISU</span>
                 <span className="text-[0.6rem] font-bold uppercase tracking-widest text-slate-400 leading-none">Archive</span>
               </div>
             </Link>
-            <p className="text-sm text-slate-500 leading-relaxed max-w-xs">
+            <p className="text-sm text-slate-300 leading-relaxed max-w-xs">
               Preserving the history, culture, and intellectual heritage of the University of Ibadan Students' Union. First and Best.
             </p>
           </div>
 
           {/* Links Columns */}
-          <div className="lg:col-span-5 grid grid-cols-2 md:grid-cols-3 gap-8">
+          <div className="lg:col-span-5 grid grid-cols-2 gap-8 md:grid-cols-3">
             <div className="space-y-4">
-              <h4 className="font-bold text-xs uppercase tracking-widest text-slate-400">The Union</h4>
-              <ul className="space-y-3 text-sm font-medium text-slate-700">
-                <li><Link to="/governance" className="hover:text-nobel-gold transition-colors">Governance</Link></li>
-                <li><Link to="/current-leaders" className="hover:text-nobel-gold transition-colors">Leadership</Link></li>
-                <li><Link to="/past-leaders" className="hover:text-nobel-gold transition-colors">Past Leaders</Link></li>
+              <h4 className="font-bold text-xs uppercase tracking-widest text-nobel-gold">The Union</h4>
+              <ul className="space-y-3 text-sm font-medium text-slate-200">
+                <li><Link to="/governance" className="hover:text-white transition-colors">Governance</Link></li>
+                <li><Link to="/current-leaders" className="hover:text-white transition-colors">Leadership</Link></li>
+                <li><Link to="/past-leaders" className="hover:text-white transition-colors">Past Leaders</Link></li>
               </ul>
             </div>
 
             <div className="space-y-4">
-              <h4 className="font-bold text-xs uppercase tracking-widest text-slate-400">Community</h4>
-              <ul className="space-y-3 text-sm font-medium text-slate-700">
-                <li><Link to="/communities" className="hover:text-nobel-gold transition-colors">Communities</Link></li>
-                <li><Link to="/events" className="hover:text-nobel-gold transition-colors">Events</Link></li>
-                <li><Link to="/campus-map" className="hover:text-nobel-gold transition-colors">Campus Map</Link></li>
+              <h4 className="font-bold text-xs uppercase tracking-widest text-nobel-gold">Community</h4>
+              <ul className="space-y-3 text-sm font-medium text-slate-200">
+                <li><Link to="/communities" className="hover:text-white transition-colors">Communities</Link></li>
+                <li><Link to="/events" className="hover:text-white transition-colors">Events</Link></li>
+                <li><Link to="/campus-map" className="hover:text-white transition-colors">Campus Map</Link></li>
               </ul>
             </div>
 
             <div className="space-y-4">
-              <h4 className="font-bold text-xs uppercase tracking-widest text-slate-400">Editorial</h4>
-              <ul className="space-y-3 text-sm font-medium text-slate-700">
-                <li><Link to="/inks-vault" className="hover:text-nobel-gold transition-colors">Inks Vault</Link></li>
-                <li><Link to="/documents" className="hover:text-nobel-gold transition-colors">Documents</Link></li>
-                <li><Link to="/announcements" className="hover:text-nobel-gold transition-colors">Announcements</Link></li>
+              <h4 className="font-bold text-xs uppercase tracking-widest text-nobel-gold">Editorial</h4>
+              <ul className="space-y-3 text-sm font-medium text-slate-200">
+                <li><Link to="/inks-vault" className="hover:text-white transition-colors">Inks Vault</Link></li>
+                <li><Link to="/documents" className="hover:text-white transition-colors">Documents</Link></li>
+                <li><Link to="/announcements" className="hover:text-white transition-colors">Announcements</Link></li>
               </ul>
             </div>
           </div>
@@ -57,10 +57,10 @@ export const Footer = () => {
           {/* Newsletter Column */}
           <div className="lg:col-span-4 space-y-6 lg:pl-8">
             <div>
-                <h3 className="font-serif text-3xl md:text-4xl leading-tight mb-4 text-ui-blue">
+                <h3 className="font-serif text-3xl md:text-4xl leading-tight mb-4 text-white">
                     Subscribe and get the <span className="italic text-nobel-gold">latest history</span> delivered.
                 </h3>
-                <p className="text-slate-500 text-sm">
+                <p className="text-slate-300 text-sm">
                     Get foundational documents, historical updates, and union news directly to your inbox.
                 </p>
             </div>
@@ -69,9 +69,9 @@ export const Footer = () => {
                 <Input
                     type="email"
                     placeholder="Email Address"
-                    className="rounded-full bg-white border-slate-200 h-12 px-6 focus-visible:ring-nobel-gold"
+                    className="rounded-full bg-white/10 border-white/10 text-white placeholder:text-slate-400 h-12 px-6 focus-visible:ring-nobel-gold"
                 />
-                <Button className="rounded-full h-12 px-8 bg-ui-blue hover:bg-ui-dark text-white font-bold tracking-wide">
+                <Button className="rounded-full h-12 px-8 bg-nobel-gold hover:bg-white hover:text-ui-blue text-ui-blue font-bold tracking-wide transition-colors">
                     Submit
                 </Button>
             </div>
@@ -80,12 +80,12 @@ export const Footer = () => {
         </div>
 
         {/* Bottom Section */}
-        <div className="pt-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6">
 
             {/* Socials */}
             <div className="flex gap-4">
                 {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
-                    <a key={i} href="#" className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-ui-blue hover:border-ui-blue transition-all">
+                    <a key={i} href="#" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 hover:border-nobel-gold transition-all">
                         <Icon size={18} />
                     </a>
                 ))}
@@ -94,8 +94,8 @@ export const Footer = () => {
             {/* Legal / Copyright */}
             <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8 text-xs text-slate-400 font-medium">
                 <div className="flex gap-6">
-                    <a href="#" className="hover:text-ui-blue transition-colors">Privacy Policy</a>
-                    <a href="#" className="hover:text-ui-blue transition-colors">Terms of Service</a>
+                    <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+                    <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
                 </div>
                 <span>&copy; {new Date().getFullYear()} UISU Archive.</span>
             </div>
