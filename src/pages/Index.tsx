@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Navbar } from "@/components/Navbar";
 import { Menu } from "@/components/Menu";
 import { Footer } from "@/components/Footer";
+import { NewsletterSection } from "@/components/NewsletterSection";
 
 // --- SUB-COMPONENTS ---
 
@@ -532,6 +533,7 @@ const Index = () => {
           </div>
         </section>
 
+        <NewsletterSection />
         <Footer />
       </main>
     </div>
