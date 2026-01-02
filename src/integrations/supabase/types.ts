@@ -398,30 +398,45 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          clubs: string[] | null
           created_at: string | null
+          department: string | null
           email: string | null
+          faculty: string | null
           full_name: string | null
+          hall_of_residence: string | null
           id: string
+          level: string | null
           socials: Json | null
           updated_at: string | null
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          clubs?: string[] | null
           created_at?: string | null
+          department?: string | null
           email?: string | null
+          faculty?: string | null
           full_name?: string | null
+          hall_of_residence?: string | null
           id: string
+          level?: string | null
           socials?: Json | null
           updated_at?: string | null
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          clubs?: string[] | null
           created_at?: string | null
+          department?: string | null
           email?: string | null
+          faculty?: string | null
           full_name?: string | null
+          hall_of_residence?: string | null
           id?: string
+          level?: string | null
           socials?: Json | null
           updated_at?: string | null
         }
