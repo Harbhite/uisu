@@ -2,9 +2,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import PageWrapper from "./components/PageWrapper";
 import { lazy, Suspense } from "react";
 
 // Lazy load pages for better performance
@@ -35,36 +37,44 @@ const LoadingFallback = () => (
   </div>
 );
 
+const AppRoutes = () => {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<PageWrapper><Index /></PageWrapper>} />
+        <Route path="/governance" element={<PageWrapper><GovernancePage /></PageWrapper>} />
+        <Route path="/past-leaders" element={<PageWrapper><PastLeadersPage /></PageWrapper>} />
+        <Route path="/current-leaders" element={<PageWrapper><CurrentLeadersPage /></PageWrapper>} />
+        <Route path="/current-leaders/:id" element={<PageWrapper><LeaderDetailPage /></PageWrapper>} />
+        <Route path="/documents" element={<PageWrapper><DocumentsPage /></PageWrapper>} />
+        <Route path="/campus-map" element={<PageWrapper><CampusMapPage /></PageWrapper>} />
+        <Route path="/communities" element={<PageWrapper><CommunitiesPage /></PageWrapper>} />
+        <Route path="/events" element={<PageWrapper><EventsPage /></PageWrapper>} />
+        <Route path="/auth" element={<PageWrapper><AuthPage /></PageWrapper>} />
+        <Route path="/admin" element={<PageWrapper><AdminDashboard /></PageWrapper>} />
+        <Route path="/announcements" element={<PageWrapper><AnnouncementsPage /></PageWrapper>} />
+        <Route path="/inks-vault" element={<PageWrapper><InksVaultPage /></PageWrapper>} />
+        <Route path="/inks-vault/piece/:id" element={<PageWrapper><InksPiecePage /></PageWrapper>} />
+        <Route path="/admin/inks-vault/new" element={<PageWrapper><InkEditorPage /></PageWrapper>} />
+        <Route path="/admin/inks-vault/edit/:id" element={<PageWrapper><InkEditorPage /></PageWrapper>} />
+        <Route path="/profile/:id" element={<PageWrapper><ProfilePage /></PageWrapper>} />
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
+      </Routes>
+    </AnimatePresence>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Suspense fallback={<LoadingFallback />}>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/governance" element={<GovernancePage />} />
-            <Route path="/past-leaders" element={<PastLeadersPage />} />
-            <Route path="/current-leaders" element={<CurrentLeadersPage />} />
-            <Route path="/current-leaders/:id" element={<LeaderDetailPage />} />
-            <Route path="/documents" element={<DocumentsPage />} />
-            <Route path="/campus-map" element={<CampusMapPage />} />
-            <Route path="/communities" element={<CommunitiesPage />} />
-            <Route path="/events" element={<EventsPage />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/announcements" element={<AnnouncementsPage />} />
-            <Route path="/inks-vault" element={<InksVaultPage />} />
-            <Route path="/inks-vault/piece/:id" element={<InksPiecePage />} />
-            <Route path="/admin/inks-vault/new" element={<InkEditorPage />} />
-            <Route path="/admin/inks-vault/edit/:id" element={<InkEditorPage />} />
-            <Route path="/profile/:id" element={<ProfilePage />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
+      <Suspense fallback={<LoadingFallback />}>
+        <AppRoutes />
+      </Suspense>
     </TooltipProvider>
   </QueryClientProvider>
 );
