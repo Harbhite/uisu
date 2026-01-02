@@ -96,6 +96,14 @@ export default {
           "0%": { transform: "translateX(0%)" },
           "100%": { transform: "translateX(-50%)" },
         },
+        "spin-slow": {
+          "0%": { transform: "rotate(0deg)" },
+          "100%": { transform: "rotate(360deg)" },
+        },
+        "float": {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-10px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -103,6 +111,8 @@ export default {
         "fade-in": "fade-in 0.8s ease-out forwards",
         "fade-in-up": "fade-in-up 0.8s ease-out forwards",
         marquee: "marquee 20s linear infinite",
+        "spin-slow": "spin-slow 10s linear infinite",
+        "float": "float 3s ease-in-out infinite",
       },
     },
   },
