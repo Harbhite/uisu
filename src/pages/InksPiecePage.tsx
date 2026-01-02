@@ -57,6 +57,20 @@ const calculateReadingTime = (content: Json): number => {
   return Math.max(1, Math.ceil(wordCount / 200));
 };
 
+// Extract first image from content for SEO
+const extractImageFromContent = (content: Json): string | undefined => {
+  if (!content || typeof content !== 'object' || Array.isArray(content)) return undefined;
+
+  const editorContent = content as unknown as EditorContent;
+  const blocks = editorContent.blocks || [];
+
+  const imageBlock = blocks.find(block => block.type === 'image');
+  if (imageBlock && imageBlock.data && imageBlock.data.file && imageBlock.data.file.url) {
+    return imageBlock.data.file.url;
+  }
+  return undefined;
+};
+
 const InksPiecePage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -243,11 +257,14 @@ const InksPiecePage = () => {
     }
   };
 
+  const imageUrl = piece ? extractImageFromContent(piece.content) : undefined;
+
   return (
     <div className="min-h-screen bg-background pt-32 pb-20">
       <SEO
         title={piece.title}
         description={piece.summary || `Read ${piece.title} by ${piece.author_name} in the Inks Vault.`}
+        image={imageUrl}
         type="article"
       />
       <div className="container mx-auto px-6">
