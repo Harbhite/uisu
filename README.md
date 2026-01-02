@@ -1,6 +1,6 @@
 # UISU Archive
 
-A digital archive and management platform for the University of Ibadan Students' Union (UISU). This application preserves the legacy of the union, provides information about current and past leadership, governance, and campus life, and features a publication platform called "Inks Vault".
+A Students' Union management platform & digital archivefor the University of Ibadan Students' Union (UISU). This application preserves the legacy of the union, serves as the digital home of UI'SU, provides information about current and past leadership, governance, and campus life, and features a publication platform called "Inks Vault".
 
 ## Features
 
