@@ -55,7 +55,7 @@ export const Footer = () => {
           </div>
 
           {/* Newsletter Column */}
-          <div className="lg:col-span-4 space-y-6 lg:pl-8">
+          <div className="hidden lg:block lg:col-span-4 space-y-6 lg:pl-8">
             <div>
                 <h3 className="font-serif text-3xl md:text-4xl leading-tight mb-4 text-white">
                     Subscribe and get the <span className="italic text-nobel-gold">latest history</span> delivered.
