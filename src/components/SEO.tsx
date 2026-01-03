@@ -40,16 +40,17 @@ export const SEO = ({
 
   return (
     <Helmet>
-      {/* Basic Meta Tags */}
+      {/* Primary Meta Tags */}
       <title>{fullTitle}</title>
+      <meta name="title" content={fullTitle} />
       <meta name="description" content={truncatedDesc} />
 
-      {/* Open Graph */}
+      {/* Open Graph / Facebook */}
+      <meta property="og:type" content={type} />
+      <meta property="og:url" content={pageUrl} />
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={truncatedDesc} />
-      <meta property="og:type" content={type} />
       <meta property="og:image" content={imageUrl} />
-      <meta property="og:url" content={pageUrl} />
       <meta property="og:site_name" content="UISU Archive" />
 
       {/* Article specific */}
@@ -60,12 +61,13 @@ export const SEO = ({
         <meta property="article:published_time" content={publishedTime} />
       )}
 
-      {/* Twitter Card */}
-      <meta name="twitter:card" content="summary_large_image" />
+      {/* X (Twitter) */}
+      <meta property="twitter:card" content="summary_large_image" />
+      <meta property="twitter:url" content={pageUrl} />
+      <meta property="twitter:title" content={fullTitle} />
+      <meta property="twitter:description" content={truncatedDesc} />
+      <meta property="twitter:image" content={imageUrl} />
       <meta name="twitter:site" content="@uisu_archive" />
-      <meta name="twitter:title" content={fullTitle} />
-      <meta name="twitter:description" content={truncatedDesc} />
-      <meta name="twitter:image" content={imageUrl} />
     </Helmet>
   );
 };
