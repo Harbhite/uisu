@@ -202,7 +202,7 @@ const AuthPage = () => {
       <SEO
         title="Sign In"
         description="Sign in or create an account to access UISU Archive features, contribute to the Inks Vault, and stay connected with the student union."
-        image="/og/og-auth.png"
+        image="/screenshots/auth.png"
       />
       <div className="container mx-auto px-6">
         <button 

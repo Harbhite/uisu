@@ -14,6 +14,7 @@ const NotFound = () => {
       <SEO
         title="Page Not Found"
         description="The page you're looking for doesn't exist. Return to the UISU Archive homepage."
+        image="/screenshots/not-found.png"
       />
       <div className="text-center">
         <h1 className="mb-4 text-4xl font-bold">404</h1>

@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { OutputData } from '@editorjs/editorjs';
 import { Json } from '@/integrations/supabase/types';
+import { SEO } from '@/components/SEO';
 
 const EditorJSComponent = lazy(() => import('@/components/EditorJS'));
 
@@ -275,6 +276,11 @@ const InkEditorPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background pt-24 pb-16">
+      <SEO
+        title={id ? 'Edit Piece' : 'New Piece'}
+        description="Write and publish your content to the Inks Vault."
+        image={id ? '/screenshots/ink-editor-edit.png' : '/screenshots/ink-editor-new.png'}
+      />
       <div className="container mx-auto px-4 max-w-5xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">

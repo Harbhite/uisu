@@ -103,7 +103,7 @@ const LeaderDetailPage: React.FC = () => {
       <SEO
         title={leader.name}
         description={`${leader.role} - ${leader.bio ? leader.bio.substring(0, 150) + "..." : "UISU Leader"}`}
-        image={leader.image !== '/placeholder.svg' ? leader.image : undefined}
+        image={leader.image !== '/placeholder.svg' ? leader.image : '/screenshots/current-leader-detail.png'}
       />
       <div className="container mx-auto px-6 max-w-5xl">
         {/* Back Button */}

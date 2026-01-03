@@ -10,7 +10,7 @@ const EventsPage = () => {
       <SEO
         title="Events"
         description="Stay updated with the latest union activities, academic calendar, and campus events."
-        image="/og/og-events.png"
+        image="/screenshots/events.png"
       />
       <EventsCalendar onBack={() => navigate("/")} />
     </>

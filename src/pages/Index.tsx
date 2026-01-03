@@ -231,7 +231,7 @@ const Index = () => {
       <SEO
         title="UISU Archive"
         description="The official digital archive and management platform for the University of Ibadan Students' Union (UISU). Preserving legacy, celebrating leadership."
-        image="/og/og-home.png"
+        image="/screenshots/index.png"
       />
       
       {/* Marquee Banner */}

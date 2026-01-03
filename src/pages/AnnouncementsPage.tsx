@@ -10,7 +10,7 @@ const AnnouncementsPage = () => {
       <SEO
         title="Announcements"
         description="Stay informed with the latest news, updates, and official announcements from the University of Ibadan Students' Union."
-        image="/og/og-announcements.png"
+        image="/screenshots/announcements.png"
       />
       <AnnouncementsComponent onBack={() => navigate("/")} />
     </>
