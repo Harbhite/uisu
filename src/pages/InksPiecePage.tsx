@@ -21,6 +21,7 @@ interface InksPiece {
   tags: string[] | null;
   view_count: number | null;
   user_id: string | null;
+  cover_image: string | null;
 }
 
 interface EditorBlock {
@@ -257,7 +258,8 @@ const InksPiecePage = () => {
     }
   };
 
-  const imageUrl = piece ? extractImageFromContent(piece.content) : undefined;
+  // Use cover_image first, then extract from content
+  const imageUrl = piece?.cover_image || extractImageFromContent(piece?.content);
 
   return (
     <div className="min-h-screen bg-background pt-32 pb-20">
@@ -266,6 +268,8 @@ const InksPiecePage = () => {
         description={piece.summary || `Read ${piece.title} by ${piece.author_name} in the Inks Vault.`}
         image={imageUrl}
         type="article"
+        author={piece.author_name}
+        publishedTime={piece.created_at}
       />
       <div className="container mx-auto px-6">
         <button

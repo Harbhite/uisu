@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SEO } from '@/components/SEO';
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -395,6 +396,10 @@ const InksVaultPage = () => {
 
   return (
     <div className="min-h-screen bg-background pt-32 pb-16">
+      <SEO
+        title="Inks Vault"
+        description="Explore articles, essays, poetry, and reports from the University of Ibadan Students' Union. A collection of student voices and intellectual discourse."
+      />
       <div className="container mx-auto px-6">
         <button
           onClick={() => navigate('/')}
