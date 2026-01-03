@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Star, Mail, Lock, User, ArrowLeft, Eye, EyeOff, CheckCircle, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { SEO } from "@/components/SEO";
 
 const emailSchema = z.string().email("Please enter a valid email address");
 const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
@@ -198,6 +199,11 @@ const AuthPage = () => {
 
   return (
     <div className="min-h-screen bg-background pt-32 pb-16">
+      <SEO
+        title="Sign In"
+        description="Sign in or create an account to access UISU Archive features, contribute to the Inks Vault, and stay connected with the student union."
+        image="/og/og-auth.png"
+      />
       <div className="container mx-auto px-6">
         <button 
           onClick={() => navigate("/")}
@@ -461,9 +467,18 @@ const AuthPage = () => {
               )}
 
               {mode === "reset" && (
-                <p className="text-xs text-muted-foreground text-center">
-                  Enter a new password to complete your reset.
-                </p>
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("login");
+                      setErrors({});
+                    }}
+                    className="text-muted-foreground hover:text-nobel-gold transition-colors font-light"
+                  >
+                    Back to <span className="font-bold text-ui-blue">Sign In</span>
+                  </button>
+                </div>
               )}
             </div>
           </motion.form>

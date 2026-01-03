@@ -29,6 +29,7 @@ const CommunitiesPage = () => {
       <SEO
         title="Communities"
         description="Discover the vibrant student organizations, clubs, and societies on campus."
+        image="/og/og-communities.png"
       />
       <CommunitiesContent
         onBack={() => navigate("/")}
