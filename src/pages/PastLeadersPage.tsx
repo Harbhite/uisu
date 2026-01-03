@@ -10,6 +10,7 @@ const PastLeadersPage = () => {
       <SEO
         title="Past Leaders"
         description="Explore the Hall of Fame. Celebrating the presidents and executives who shaped the history of the University of Ibadan Students' Union."
+        image="/og/og-past-leaders.png"
       />
       <PastLeadersContent onBack={() => navigate("/")} />
     </>

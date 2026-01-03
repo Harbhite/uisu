@@ -10,6 +10,7 @@ const DocumentsPage = () => {
       <SEO
         title="Documents Library"
         description="Access constitutions, manifestos, speeches, and historical records of the University of Ibadan Students' Union."
+        image="/og/og-documents.png"
       />
       <DocumentLibraryContent onBack={() => navigate("/")} />
     </>

@@ -12,6 +12,7 @@ const GovernancePage = () => {
       <SEO
         title="Governance"
         description="Understand the structure of the University of Ibadan Students' Union. Executive, Legislative, and Student Representative Council."
+        image="/og/og-governance.png"
       />
       <GovernanceContent onBack={() => navigate("/")} />
     </>
