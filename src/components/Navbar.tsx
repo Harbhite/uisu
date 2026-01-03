@@ -174,33 +174,44 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
       <nav className="md:hidden fixed top-14 left-1/2 -translate-x-1/2 w-[90%] max-w-sm z-40">
         <div className="bg-ui-blue/95 backdrop-blur-md text-white rounded-full px-5 py-3 flex justify-between items-center shadow-2xl border border-white/10">
 
-          {/* Left: Custom Menu Button */}
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="flex items-center gap-3 border border-white/20 rounded-full px-4 py-2 bg-white/5 hover:bg-white/10 transition-colors"
-          >
-            <AnimatePresence mode="wait">
-              {isMenuOpen ? (
-                <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }}>
-                    <X size={14} className="text-nobel-gold"/>
-                </motion.div>
-              ) : (
-                <motion.div key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }}>
-                    <Menu size={14} className="text-nobel-gold"/>
-                </motion.div>
-              )}
-            </AnimatePresence>
-            <div className="h-3 w-px bg-white/20"></div>
-            <span className="text-[10px] font-bold uppercase tracking-widest">Menu</span>
-          </motion.button>
-
-          {/* Right: Logo */}
+          {/* Left: Logo */}
           <Link to="/" className="flex items-center gap-2">
             <img src="/uisu-logo.png" alt="UISU Logo" className="h-8 w-auto object-contain brightness-0 invert" />
             <span className="font-serif font-bold text-lg tracking-tight text-white">UISU</span>
           </Link>
+
+          {/* Right: Sign In & Menu Button */}
+          <div className="flex items-center gap-2">
+            {!user && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate('/auth')}
+                className="bg-nobel-gold text-ui-blue px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-white hover:text-ui-blue transition-colors shadow-sm"
+              >
+                Sign In
+              </motion.button>
+            )}
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="flex items-center gap-2 border border-white/20 rounded-full px-3 py-2 bg-white/5 hover:bg-white/10 transition-colors"
+            >
+              <AnimatePresence mode="wait">
+                {isMenuOpen ? (
+                  <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }}>
+                      <X size={14} className="text-nobel-gold"/>
+                  </motion.div>
+                ) : (
+                  <motion.div key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }}>
+                      <Menu size={14} className="text-nobel-gold"/>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.button>
+          </div>
 
         </div>
       </nav>
