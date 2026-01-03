@@ -14,6 +14,7 @@ import { z } from "zod";
 import AuditLogDetailsModal from "@/components/AuditLogDetailsModal";
 import InviteStaffModal from "@/components/InviteStaffModal";
 import { inksPieces } from "@/lib/data";
+import { SEO } from "@/components/SEO";
 
 // Validation schemas
 const eventSchema = z.object({
@@ -1034,6 +1035,11 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background pt-32 pb-16">
+      <SEO
+        title="Admin Dashboard"
+        description="Manage events, announcements, documents, clubs, and more."
+        image="/screenshots/admin-dashboard.png"
+      />
       <div className="container mx-auto px-6">
         {/* Back Navigation */}
         <button 

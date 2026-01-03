@@ -10,7 +10,7 @@ const CampusMapPage = () => {
       <SEO
         title="Campus Map"
         description="Interactive map of the University of Ibadan. Explore halls of residence and key locations."
-        image="/og/og-campus-map.png"
+        image="/screenshots/campus-map.png"
       />
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">

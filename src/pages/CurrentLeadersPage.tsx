@@ -10,7 +10,7 @@ const CurrentLeadersPage = () => {
       <SEO
         title="Current Leaders"
         description="Meet the current executive council, legislators, and hall leaders of the University of Ibadan Students' Union."
-        image="/og/og-leaders.png"
+        image="/screenshots/current-leaders.png"
       />
       <CurrentLeadersContent onBack={() => navigate("/")} />
     </>
