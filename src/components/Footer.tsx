@@ -83,7 +83,7 @@ export const Footer = () => {
         <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6">
 
             {/* Socials */}
-            <div className="flex gap-4">
+            <div className="hidden md:flex gap-4">
                 {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
                     <a key={i} href="#" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 hover:border-nobel-gold transition-all">
                         <Icon size={18} />
