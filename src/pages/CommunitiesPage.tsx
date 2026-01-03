@@ -2,6 +2,21 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CommunitiesPage as CommunitiesContent, ClubDetailPage } from "@/components/Communities";
 import { SEO } from "@/components/SEO";
+import { Helmet } from "react-helmet";
+<Helmet>
+  <title>Communities — UISU</title>
+
+  <meta property="og:title" content="UISU Communities" />
+  <meta
+    property="og:description"
+    content="Discover student communities, clubs, and initiatives across University of Ibadan."
+  />
+  <meta property="og:image" content="https://uisu.space/screenshot/communities.png" />
+  <meta property="og:url" content="https://uisu.space/communities" />
+  <meta property="og:type" content="website" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+</Helmet>
 
 const CommunitiesPage = () => {
   const navigate = useNavigate();
