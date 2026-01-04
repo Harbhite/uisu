@@ -473,7 +473,6 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
                                         <tr>
                                             <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Name</th>
                                             <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Constituency</th>
-                                            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Level</th>
                                             {isStaff && <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Actions</th>}
                                         </tr>
                                     </thead>
@@ -489,7 +488,6 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
                                                 <tr key={leg.id} className="hover:bg-slate-50/50 transition-colors">
                                                     <td className="px-6 py-4 font-medium text-slate-900">{leg.name}</td>
                                                     <td className="px-6 py-4 text-slate-600">{leg.constituency}</td>
-                                                    <td className="px-6 py-4 text-slate-500">{leg.level}</td>
                                                     {isStaff && (
                                                         <td className="px-6 py-4">
                                                             <div className="flex gap-2">
