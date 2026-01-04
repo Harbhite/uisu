@@ -13,6 +13,7 @@ import { User } from "@supabase/supabase-js";
 import { executives } from "@/lib/data";
 import { LeaderCard } from "@/components/LeaderCard";
 import { SEO } from "@/components/SEO";
+import { JsonLD } from "@/components/JsonLD";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Navbar } from "@/components/Navbar";
@@ -233,6 +234,13 @@ const Index = () => {
         title="UISU Archive"
         description="The official digital archive and management platform for the University of Ibadan Students' Union (UISU). Preserving legacy, celebrating leadership."
         image="/screenshots/index.png"
+      />
+      <JsonLD type="organization" />
+      <JsonLD 
+        type="webpage" 
+        title="UISU Archive - Home"
+        description="The official digital archive and management platform for the University of Ibadan Students' Union (UISU)."
+        url="/"
       />
       
       {/* Marquee Banner */}
