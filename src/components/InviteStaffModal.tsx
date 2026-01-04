@@ -45,6 +45,7 @@ const InviteStaffModal = ({ isOpen, onClose, currentUserId }: InviteStaffModalPr
       setInviteLink(signupLink);
       
       // Log the invite to audit
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await supabase.from("audit_logs" as any).insert({
         user_id: currentUserId,
         action: "staff_invite",
@@ -87,10 +88,11 @@ const InviteStaffModal = ({ isOpen, onClose, currentUserId }: InviteStaffModalPr
           description: `Share this link with ${email}. Email notification could not be sent.`,
         });
       }
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to generate invite";
       toast({
         title: "Error",
-        description: error.message || "Failed to generate invite",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

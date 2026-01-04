@@ -139,8 +139,8 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                     description: doc.description || '',
                     file_url: doc.file_url || undefined,
                     tags: doc.tags || [],
-                    share_token: (doc as any).share_token || undefined,
-                    is_public: (doc as any).is_public || false,
+                    share_token: (doc as { share_token?: string }).share_token || undefined,
+                    is_public: (doc as { is_public?: boolean }).is_public || false,
                     uploaded_by: doc.uploaded_by || undefined,
                 }));
                 
@@ -479,8 +479,8 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                 description: newDocData.description || '',
                 file_url: newDocData.file_url || undefined,
                 tags: newDocData.tags || [],
-                share_token: (newDocData as any).share_token || undefined,
-                is_public: (newDocData as any).is_public || false,
+                share_token: (newDocData as { share_token?: string }).share_token || undefined,
+                is_public: (newDocData as { is_public?: boolean }).is_public || false,
             };
             
             setDocuments([newDoc, ...documents]);

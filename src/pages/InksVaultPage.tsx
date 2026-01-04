@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SEO } from '@/components/SEO';
+import { Json } from '@/integrations/supabase/types';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -30,22 +32,31 @@ interface InksPiece {
   user_id: string | null;
   cover_image: string | null;
   is_published: boolean;
-  content: any;
+  content: Json;
   tags: string[] | null;
   view_count: number;
 }
 
+interface EditorBlock {
+  data?: {
+    text?: string;
+    items?: (string | { content: string })[];
+  };
+}
+
 // Calculate reading time from EditorJS content
-const calculateReadingTime = (content: any): number => {
-  if (!content || !content.blocks) return 1;
+const calculateReadingTime = (content: Json): number => {
+  if (!content || typeof content !== 'object' || Array.isArray(content)) return 1;
+  const blocks = (content as { blocks?: EditorBlock[] }).blocks;
+  if (!blocks) return 1;
   
   let wordCount = 0;
-  content.blocks.forEach((block: any) => {
+  blocks.forEach((block) => {
     if (block.data?.text) {
       wordCount += block.data.text.split(/\s+/).filter((w: string) => w.length > 0).length;
     }
     if (block.data?.items) {
-      block.data.items.forEach((item: any) => {
+      block.data.items.forEach((item) => {
         const text = typeof item === 'string' ? item : item.content || '';
         wordCount += text.split(/\s+/).filter((w: string) => w.length > 0).length;
       });
@@ -64,7 +75,7 @@ const InksVaultPage = () => {
   const [pieces, setPieces] = useState<InksPiece[]>([]);
   const [drafts, setDrafts] = useState<InksPiece[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const [activeTab, setActiveTab] = useState<string>('published');
 
   const categories = ['All', 'Article', 'Blog', 'Report', 'Essay', 'Poetry', 'Opinion', 'Interview', 'Fiction'];

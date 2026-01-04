@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Calendar, User, Share2, Bookmark, Feather, Mic, FileText, Quote, MessageCircle, Book, Loader2, Printer, Tag, Clock } from 'lucide-react';
+import { ArrowLeft, Clock, Feather, Mic, FileText, Quote, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
@@ -27,7 +27,7 @@ interface InksPiece {
 interface EditorBlock {
   id?: string;
   type: string;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
 }
 
 interface EditorContent {
@@ -45,12 +45,14 @@ const calculateReadingTime = (content: Json): number => {
   
   let wordCount = 0;
   blocks.forEach(block => {
-    if (block.data?.text) {
+    if (typeof block.data.text === 'string') {
       wordCount += block.data.text.split(/\s+/).filter(Boolean).length;
     }
-    if (block.data?.items) {
-      block.data.items.forEach((item: string) => {
-        wordCount += item.split(/\s+/).filter(Boolean).length;
+    if (Array.isArray(block.data.items)) {
+      block.data.items.forEach((item: unknown) => {
+        if (typeof item === 'string') {
+          wordCount += item.split(/\s+/).filter(Boolean).length;
+        }
       });
     }
   });
@@ -66,8 +68,11 @@ const extractImageFromContent = (content: Json): string | undefined => {
   const blocks = editorContent.blocks || [];
 
   const imageBlock = blocks.find(block => block.type === 'image');
-  if (imageBlock && imageBlock.data && imageBlock.data.file && imageBlock.data.file.url) {
-    return imageBlock.data.file.url;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data = imageBlock?.data as any;
+
+  if (data && data.file && typeof data.file.url === 'string') {
+    return data.file.url;
   }
   return undefined;
 };
@@ -121,30 +126,35 @@ const InksPiecePage = () => {
     const blocks = editorContent.blocks || [];
 
     return blocks.map((block, index) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const data = block.data as any;
+
       switch (block.type) {
-        case 'header':
-          const HeaderTag = `h${block.data.level || 2}` as keyof JSX.IntrinsicElements;
-          return <HeaderTag key={index} className="font-serif text-foreground mb-4">{block.data.text}</HeaderTag>;
+        case 'header': {
+          const HeaderTag = `h${data.level || 2}` as keyof JSX.IntrinsicElements;
+          return <HeaderTag key={index} className="font-serif text-foreground mb-4">{data.text}</HeaderTag>;
+        }
         
         case 'paragraph':
-          return <p key={index} className="mb-4 leading-relaxed" dangerouslySetInnerHTML={{ __html: block.data.text || '' }} />;
+          return <p key={index} className="mb-4 leading-relaxed" dangerouslySetInnerHTML={{ __html: data.text || '' }} />;
         
-        case 'list':
-          const ListTag = block.data.style === 'ordered' ? 'ol' : 'ul';
+        case 'list': {
+          const ListTag = data.style === 'ordered' ? 'ol' : 'ul';
           return (
-            <ListTag key={index} className={`mb-4 ml-6 ${block.data.style === 'ordered' ? 'list-decimal' : 'list-disc'}`}>
-              {(block.data.items || []).map((item: string, i: number) => (
+            <ListTag key={index} className={`mb-4 ml-6 ${data.style === 'ordered' ? 'list-decimal' : 'list-disc'}`}>
+              {(data.items || []).map((item: string, i: number) => (
                 <li key={i} className="mb-1" dangerouslySetInnerHTML={{ __html: item }} />
               ))}
             </ListTag>
           );
+        }
         
         case 'quote':
           return (
             <blockquote key={index} className="border-l-4 border-accent pl-6 my-6 italic text-muted-foreground">
-              <p dangerouslySetInnerHTML={{ __html: block.data.text || '' }} />
-              {block.data.caption && (
-                <cite className="text-sm text-muted-foreground mt-2 block">— {block.data.caption}</cite>
+              <p dangerouslySetInnerHTML={{ __html: data.text || '' }} />
+              {data.caption && (
+                <cite className="text-sm text-muted-foreground mt-2 block">— {data.caption}</cite>
               )}
             </blockquote>
           );
@@ -155,7 +165,7 @@ const InksPiecePage = () => {
         case 'code':
           return (
             <pre key={index} className="bg-muted p-4 mb-4 overflow-x-auto border border-border">
-              <code className="text-sm text-foreground">{block.data.code}</code>
+              <code className="text-sm text-foreground">{data.code}</code>
             </pre>
           );
 
@@ -164,7 +174,7 @@ const InksPiecePage = () => {
             <div key={index} className="overflow-x-auto mb-4">
               <table className="w-full border-collapse border border-border">
                 <tbody>
-                  {(block.data.content || []).map((row: string[], rowIndex: number) => (
+                  {(data.content || []).map((row: string[], rowIndex: number) => (
                     <tr key={rowIndex}>
                       {row.map((cell: string, cellIndex: number) => (
                         <td key={cellIndex} className="border border-border p-2" dangerouslySetInnerHTML={{ __html: cell }} />
@@ -179,7 +189,7 @@ const InksPiecePage = () => {
         case 'checklist':
           return (
             <div key={index} className="mb-4">
-              {(block.data.items || []).map((item: { text: string; checked: boolean }, i: number) => (
+              {(data.items || []).map((item: { text: string; checked: boolean }, i: number) => (
                 <div key={i} className="flex items-center gap-2 mb-1">
                   <span className={item.checked ? 'line-through text-muted-foreground' : ''}>
                     {item.checked ? '☑' : '☐'} {item.text}
@@ -192,8 +202,8 @@ const InksPiecePage = () => {
         case 'warning':
           return (
             <div key={index} className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 p-4 mb-4">
-              <div className="font-bold text-yellow-700 dark:text-yellow-400">{block.data.title}</div>
-              <p className="text-yellow-600 dark:text-yellow-300">{block.data.message}</p>
+              <div className="font-bold text-yellow-700 dark:text-yellow-400">{data.title}</div>
+              <p className="text-yellow-600 dark:text-yellow-300">{data.message}</p>
             </div>
           );
 
@@ -201,7 +211,7 @@ const InksPiecePage = () => {
           return (
             <div key={index} className="mb-4 aspect-video">
               <iframe
-                src={block.data.embed}
+                src={data.embed}
                 className="w-full h-full border-0"
                 allowFullScreen
               />

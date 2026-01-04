@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { X, ArrowRight, History } from "lucide-react";
+import { Json } from "@/integrations/supabase/types";
 
 interface AuditLogDetailsModalProps {
   isOpen: boolean;
@@ -10,8 +11,8 @@ interface AuditLogDetailsModalProps {
     action: string;
     table_name: string;
     record_id: string | null;
-    old_data: any;
-    new_data: any;
+    old_data: Json;
+    new_data: Json;
     created_at: string;
     profile?: {
       full_name: string | null;
@@ -23,7 +24,7 @@ interface AuditLogDetailsModalProps {
 const AuditLogDetailsModal = ({ isOpen, onClose, log }: AuditLogDetailsModalProps) => {
   if (!isOpen || !log) return null;
 
-  const formatJson = (data: any) => {
+  const formatJson = (data: Json) => {
     if (!data) return null;
     try {
       return JSON.stringify(data, null, 2);
