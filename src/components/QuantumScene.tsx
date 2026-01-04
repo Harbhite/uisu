@@ -2,13 +2,17 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
 */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Float, Box, Cylinder, Stars } from '@react-three/drei';
 
+// Declare IntrinsicElements using interface merging instead of namespace to avoid eslint errors
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     interface IntrinsicElements {
       ambientLight: any;
       pointLight: any;

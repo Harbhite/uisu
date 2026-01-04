@@ -70,7 +70,7 @@ export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
             {['cec', 'src'].map((tab) => (
                 <button 
                     key={tab}
-                    onClick={() => setActiveTab(tab as any)}
+                    onClick={() => setActiveTab(tab as 'cec' | 'src')}
                     className={`pb-6 text-sm font-bold tracking-[0.2em] uppercase transition-all relative ${activeTab === tab ? 'text-ui-blue' : 'text-slate-400 hover:text-slate-600'}`}
                 >
                     <span className="flex items-center gap-3">

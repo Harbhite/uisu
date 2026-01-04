@@ -4,27 +4,27 @@ import Header from '@editorjs/header';
 import Paragraph from '@editorjs/paragraph';
 import List from '@editorjs/list';
 import Quote from '@editorjs/quote';
-// @ts-ignore
+// @ts-expect-error - No types available
 import Code from '@editorjs/code';
-// @ts-ignore
+// @ts-expect-error - No types available
 import InlineCode from '@editorjs/inline-code';
-// @ts-ignore
+// @ts-expect-error - No types available
 import Marker from '@editorjs/marker';
-// @ts-ignore
+// @ts-expect-error - No types available
 import Underline from '@editorjs/underline';
-// @ts-ignore
+// @ts-expect-error - No types available
 import Delimiter from '@editorjs/delimiter';
-// @ts-ignore
+// @ts-expect-error - No types available
 import Table from '@editorjs/table';
-// @ts-ignore
+// @ts-expect-error - No types available
 import Checklist from '@editorjs/checklist';
-// @ts-ignore
+// @ts-expect-error - No types available
 import Warning from '@editorjs/warning';
-// @ts-ignore
+// @ts-expect-error - No types available
 import LinkTool from '@editorjs/link';
-// @ts-ignore
+// @ts-expect-error - No types available
 import Embed from '@editorjs/embed';
-// @ts-ignore
+// @ts-expect-error - No types available
 import Raw from '@editorjs/raw';
 
 type PieceType = 'Article' | 'Blog' | 'Report' | 'Essay' | 'Poetry' | 'Opinion' | 'Interview' | 'Fiction';

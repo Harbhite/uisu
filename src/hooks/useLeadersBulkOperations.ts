@@ -57,7 +57,7 @@ export const useLeadersBulkOperations = (onComplete: () => void) => {
       URL.revokeObjectURL(url);
 
       toast.success(`Exported ${data?.length || 0} leaders`);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Export error:', error);
       toast.error('Failed to export leaders');
     } finally {
@@ -89,6 +89,7 @@ export const useLeadersBulkOperations = (onComplete: () => void) => {
       }
       values.push(current.trim());
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const row: any = {};
       headers.forEach((header, idx) => {
         row[header] = values[idx] || '';
@@ -148,9 +149,10 @@ export const useLeadersBulkOperations = (onComplete: () => void) => {
 
       toast.success(`Imported ${validRows.length} leaders`);
       onComplete();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Import error:', error);
-      toast.error(error.message || 'Failed to import leaders');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to import leaders';
+      toast.error(errorMessage);
     } finally {
       setImporting(false);
     }

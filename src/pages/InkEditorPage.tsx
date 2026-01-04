@@ -54,6 +54,7 @@ const InkEditorPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [user, setUser] = useState<any>(null);
   const [editorContent, setEditorContent] = useState<OutputData>(emptyContent);
   const [editorKey, setEditorKey] = useState(0);
@@ -177,7 +178,7 @@ const InkEditorPage: React.FC = () => {
 
       setFormData({ ...formData, cover_image: publicUrl });
       toast.success('Cover image uploaded');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Upload error:', error);
       toast.error('Failed to upload image');
     } finally {
@@ -240,9 +241,10 @@ const InkEditorPage: React.FC = () => {
           navigate(`/inks-vault/edit/${newPiece.id}`, { replace: true });
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error saving:', error);
-      toast.error(error.message || 'Failed to save');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save';
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -261,8 +263,9 @@ const InkEditorPage: React.FC = () => {
       if (error) throw error;
       toast.success('Piece deleted');
       navigate('/inks-vault');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to delete');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete';
+      toast.error(errorMessage);
     }
   };
 

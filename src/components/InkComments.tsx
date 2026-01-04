@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { MessageCircle, Send, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import { User } from '@supabase/supabase-js';
 
 interface Comment {
   id: string;
@@ -27,19 +28,9 @@ export const InkComments: React.FC<InkCommentsProps> = ({ pieceId }) => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [newComment, setNewComment] = useState('');
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
-  useEffect(() => {
-    fetchComments();
-    checkAuth();
-  }, [pieceId]);
-
-  const checkAuth = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
-  };
-
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     const { data, error } = await supabase
       .from('ink_comments')
       .select('*')
@@ -63,7 +54,17 @@ export const InkComments: React.FC<InkCommentsProps> = ({ pieceId }) => {
       setComments(commentsWithProfiles);
     }
     setLoading(false);
-  };
+  }, [pieceId]);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+
+    fetchComments();
+    checkAuth();
+  }, [fetchComments]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,8 +94,9 @@ export const InkComments: React.FC<InkCommentsProps> = ({ pieceId }) => {
       setNewComment('');
       fetchComments();
       toast.success('Comment added');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to add comment');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to add comment';
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -113,8 +115,9 @@ export const InkComments: React.FC<InkCommentsProps> = ({ pieceId }) => {
       
       setComments(comments.filter(c => c.id !== commentId));
       toast.success('Comment deleted');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to delete comment');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete comment';
+      toast.error(errorMessage);
     }
   };
 

@@ -2,14 +2,18 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
 */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, { useRef, useState } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, GroupProps, MeshProps } from '@react-three/fiber';
 import { Float, MeshDistortMaterial, useCursor } from '@react-three/drei';
 import * as THREE from 'three';
 
+// Declare IntrinsicElements using interface merging instead of namespace to avoid eslint errors
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     interface IntrinsicElements {
       group: any;
       mesh: any;
@@ -33,7 +37,7 @@ declare global {
  * @param {object} props - Three.js group props.
  * @returns {JSX.Element} The DNAHelix component.
  */
-export const DNAHelix = (props: any) => {
+export const DNAHelix = (props: GroupProps) => {
   const group = useRef<THREE.Group>(null);
   useFrame((state) => {
     if (group.current) {
@@ -75,7 +79,7 @@ export const DNAHelix = (props: any) => {
  * @param {object} props - Three.js group props.
  * @returns {JSX.Element} The GavelModel component.
  */
-export const GavelModel = (props: any) => {
+export const GavelModel = (props: GroupProps) => {
   const mesh = useRef<THREE.Group>(null);
   useFrame((state) => {
     if (mesh.current) {
@@ -115,7 +119,7 @@ export const GavelModel = (props: any) => {
  * @param {object} props - Three.js group props.
  * @returns {JSX.Element} The ScaleModel component.
  */
-export const ScaleModel = (props: any) => {
+export const ScaleModel = (props: GroupProps) => {
   const group = useRef<THREE.Group>(null);
   const leftPan = useRef<THREE.Group>(null);
   const rightPan = useRef<THREE.Group>(null);
@@ -155,14 +159,14 @@ export const ScaleModel = (props: any) => {
             <meshStandardMaterial color="#C5A059" side={THREE.DoubleSide} />
           </mesh>
           {/* Strings */}
-          <mesh position={[0, 0, 0]}><cylinderGeometry args={[0.01, 0.01, 2] as any} /><meshBasicMaterial color="#000" /></mesh>
+          <mesh position={[0, 0, 0]}><cylinderGeometry args={[0.01, 0.01, 2]} /><meshBasicMaterial color="#000" /></mesh>
       </group>
       <group ref={rightPan} position={[1.7, 1.5, 0]}>
           <mesh position={[0, -1, 0]}>
             <sphereGeometry args={[0.6, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
             <meshStandardMaterial color="#C5A059" side={THREE.DoubleSide} />
           </mesh>
-          <mesh position={[0, 0, 0]}><cylinderGeometry args={[0.01, 0.01, 2] as any} /><meshBasicMaterial color="#000" /></mesh>
+          <mesh position={[0, 0, 0]}><cylinderGeometry args={[0.01, 0.01, 2]} /><meshBasicMaterial color="#000" /></mesh>
       </group>
     </group>
   );
@@ -174,7 +178,7 @@ export const ScaleModel = (props: any) => {
  * @param {object} props - Three.js group props.
  * @returns {JSX.Element} The PillarModel component.
  */
-export const PillarModel = (props: any) => {
+export const PillarModel = (props: GroupProps) => {
   return (
     <group {...props}>
       <mesh position={[0, 0, 0]}>
@@ -200,7 +204,7 @@ export const PillarModel = (props: any) => {
  * @param {object} props - Three.js group props.
  * @returns {JSX.Element} The FloatingBook component.
  */
-export const FloatingBook = (props: any) => {
+export const FloatingBook = (props: GroupProps) => {
   const group = useRef<THREE.Group>(null);
   const [hovered, setHover] = useState(false);
   useCursor(hovered);
@@ -244,7 +248,7 @@ export const FloatingBook = (props: any) => {
  * @param {object} props - Three.js mesh props.
  * @returns {JSX.Element} The SpinningCoin component.
  */
-export const SpinningCoin = (props: any) => {
+export const SpinningCoin = (props: MeshProps) => {
     const ref = useRef<THREE.Mesh>(null);
     useFrame((state) => {
         if (ref.current) ref.current.rotation.y += 0.05;
@@ -278,6 +282,12 @@ export const PulsingOrb = () => {
     )
 }
 
+interface AnimatedBarProps extends MeshProps {
+    height: number;
+    color: string;
+    delay?: number;
+}
+
 /**
  * An animated 3D bar for charts, growing from the bottom up.
  *
@@ -288,7 +298,7 @@ export const PulsingOrb = () => {
  * @param {number} props.delay - Delay before animation starts (not currently used in logic but kept for interface).
  * @returns {JSX.Element} The AnimatedBar component.
  */
-export const AnimatedBar = ({ height, color, position, delay }: any) => {
+export const AnimatedBar = ({ height, color, ...props }: AnimatedBarProps) => {
     const ref = useRef<THREE.Mesh>(null);
     useFrame((state) => {
         if (ref.current) {
@@ -297,7 +307,7 @@ export const AnimatedBar = ({ height, color, position, delay }: any) => {
         }
     });
     return (
-        <mesh ref={ref} position={position} scale={[1, 0, 1]}>
+        <mesh ref={ref} {...props} scale={[1, 0, 1]}>
             <boxGeometry args={[0.8, 1, 0.8]} />
             <meshStandardMaterial color={color} />
         </mesh>
@@ -310,7 +320,7 @@ export const AnimatedBar = ({ height, color, position, delay }: any) => {
  * @param {object} props - Three.js mesh props.
  * @returns {JSX.Element} The AlutaShape component.
  */
-export const AlutaShape = (props: any) => {
+export const AlutaShape = (props: MeshProps) => {
     const ref = useRef<THREE.Mesh>(null);
     useFrame((state) => {
         if (ref.current) {
@@ -326,13 +336,17 @@ export const AlutaShape = (props: any) => {
     )
 }
 
+interface MapPin3DProps extends GroupProps {
+    color: string;
+}
+
 /**
  * A 3D map pin that bounces and scales on hover.
  *
  * @param {object} props - Component props including color and Three.js group props.
  * @returns {JSX.Element} The MapPin3D component.
  */
-export const MapPin3D = ({ color, ...props }: any) => {
+export const MapPin3D = ({ color, ...props }: MapPin3DProps) => {
     const ref = useRef<THREE.Group>(null);
     const [hovered, setHover] = useState(false);
     useCursor(hovered);

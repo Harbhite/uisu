@@ -184,7 +184,7 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
 
             setFormData({ ...formData, image: publicUrl });
             toast.success('Image uploaded successfully');
-        } catch (error: any) {
+        } catch (error) {
             console.error('Error uploading image:', error);
             toast.error('Failed to upload image');
         } finally {
@@ -232,9 +232,10 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
 
             setEditModalOpen(false);
             fetchLeaders();
-        } catch (error: any) {
+        } catch (error) {
             console.error('Error saving leader:', error);
-            toast.error(error.message || 'Failed to save leader');
+            const errorMessage = error instanceof Error ? error.message : 'Failed to save leader';
+            toast.error(errorMessage);
         } finally {
             setSaving(false);
         }
@@ -252,7 +253,7 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
             if (error) throw error;
             toast.success('Leader removed');
             fetchLeaders();
-        } catch (error: any) {
+        } catch (error) {
             console.error('Error deleting leader:', error);
             toast.error('Failed to remove leader');
         }
