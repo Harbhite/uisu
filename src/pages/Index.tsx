@@ -13,7 +13,6 @@ import { User } from "@supabase/supabase-js";
 import { executives } from "@/lib/data";
 import { LeaderCard } from "@/components/LeaderCard";
 import { SEO } from "@/components/SEO";
-import { JsonLD } from "@/components/JsonLD";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Navbar } from "@/components/Navbar";
@@ -54,28 +53,28 @@ interface ParallaxCardProps {
 }
 
 const ParallaxCard = ({ title, subtitle, icon: Icon, color, href, progress, index }: ParallaxCardProps) => {
-  const x = useTransform(progress, [0, 1], [index * 30, index * -30]);
+  const x = useTransform(progress, [0, 1], [index * 50, index * -50]);
   
   return (
     <motion.div 
       style={{ x }}
-      whileHover={{ y: -8, scale: 1.02 }}
-      className={`relative w-64 h-80 ${color} flex-shrink-0 cursor-pointer shadow-xl border border-white/10 overflow-hidden group transition-all duration-500 snap-center rounded-none`}
+      whileHover={{ y: -10, scale: 1.02 }}
+      className={`relative w-72 h-96 ${color} flex-shrink-0 cursor-pointer shadow-2xl border border-white/10 overflow-hidden group transition-all duration-500 snap-center rounded-none`}
     >
-      <Link to={href} className="absolute inset-0 p-6 flex flex-col justify-between z-10 text-white">
+      <Link to={href} className="absolute inset-0 p-8 flex flex-col justify-between z-10 text-white">
         <div className="flex justify-between items-start">
-          <div className="p-2.5 bg-white/10 backdrop-blur-md border border-white/10 rounded-none">
-            <Icon size={24} />
+          <div className="p-3 bg-white/10 backdrop-blur-md border border-white/10 rounded-none">
+            <Icon size={28} />
           </div>
-          <div className="w-8 h-8 flex items-center justify-center border border-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300">
-            <ArrowRight size={14} />
+          <div className="w-10 h-10 flex items-center justify-center border border-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300">
+            <ArrowRight size={18} />
           </div>
         </div>
         
         <div>
-          <p className="text-[9px] font-bold uppercase tracking-[0.25em] opacity-60 mb-2">{subtitle}</p>
-          <h3 className="font-serif text-2xl leading-none tracking-tight">{title}</h3>
-          <div className="w-0 group-hover:w-10 h-0.5 bg-nobel-gold mt-3 transition-all duration-500"></div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-60 mb-3">{subtitle}</p>
+          <h3 className="font-serif text-3xl leading-none tracking-tight">{title}</h3>
+          <div className="w-0 group-hover:w-12 h-1 bg-nobel-gold mt-4 transition-all duration-500"></div>
         </div>
       </Link>
       <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-white/5 to-transparent pointer-events-none"></div>
@@ -204,7 +203,6 @@ const Index = () => {
     { name: "Communities", href: "/communities" },
     { name: "Events", href: "/events" },
     { name: "Announcements", href: "/announcements" },
-    { name: "Tools", href: "/tools" },
   ];
 
   const parallaxCards = [
@@ -235,13 +233,6 @@ const Index = () => {
         title="UISU Archive"
         description="The official digital archive and management platform for the University of Ibadan Students' Union (UISU). Preserving legacy, celebrating leadership."
         image="/screenshots/index.png"
-      />
-      <JsonLD type="organization" />
-      <JsonLD 
-        type="webpage" 
-        title="UISU Archive - Home"
-        description="The official digital archive and management platform for the University of Ibadan Students' Union (UISU)."
-        url="/"
       />
       
       {/* Marquee Banner */}
@@ -282,9 +273,9 @@ const Index = () => {
           </motion.p>
           
           {/* Horizontal Card Scroller with Parallax */}
-          <div ref={scrollRef} className="w-full relative mt-8 md:mt-16">
-            <div className="flex overflow-x-auto gap-4 pb-8 px-4 no-scrollbar snap-x snap-mandatory">
-              <div className="flex-shrink-0 w-[5vw] hidden md:block"></div>
+          <div ref={scrollRef} className="w-full relative mt-12 md:mt-24">
+            <div className="flex overflow-x-auto gap-8 pb-12 px-6 no-scrollbar snap-x snap-mandatory">
+              <div className="flex-shrink-0 w-[10vw] hidden md:block"></div>
               {parallaxCards.map((card, index) => (
                 <ParallaxCard 
                   key={card.title}
@@ -297,7 +288,7 @@ const Index = () => {
                   href={card.href} 
                 />
               ))}
-              <div className="flex-shrink-0 w-[5vw] hidden md:block"></div>
+              <div className="flex-shrink-0 w-[10vw] hidden md:block"></div>
             </div>
             {/* Scroll Indicator */}
             <div className="flex justify-center gap-4 mt-8 items-center">
