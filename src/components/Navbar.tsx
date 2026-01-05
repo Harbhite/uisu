@@ -137,6 +137,9 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
                       <ListItem href="/announcements" title="Announcements">
                         Official news and updates.
                       </ListItem>
+                      <ListItem href="/tools" title="Tools">
+                        Student productivity modules.
+                      </ListItem>
                     </ul>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
