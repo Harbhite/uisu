@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Clock, Feather, Mic, FileText, Quote, Printer } from 'lucide-react';
+import { ArrowLeft, Clock, Feather, Mic, FileText, Quote, Printer, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
 import { SEO } from '@/components/SEO';
+import { JsonLD } from '@/components/JsonLD';
 import { SocialShare } from '@/components/SocialShare';
 import { InkComments } from '@/components/InkComments';
 
@@ -280,6 +281,23 @@ const InksPiecePage = () => {
         type="article"
         author={piece.author_name}
         publishedTime={piece.created_at}
+      />
+      <JsonLD
+        type="article"
+        title={piece.title}
+        description={piece.summary || `Read ${piece.title} by ${piece.author_name} in the Inks Vault.`}
+        author={piece.author_name}
+        publishedTime={piece.created_at}
+        image={imageUrl || '/screenshots/inks-piece-detail.png'}
+        url={`/inks-vault/${piece.id}`}
+      />
+      <JsonLD
+        type="breadcrumb"
+        items={[
+          { name: 'Home', url: '/' },
+          { name: 'Inks Vault', url: '/inks-vault' },
+          { name: piece.title, url: `/inks-vault/${piece.id}` }
+        ]}
       />
       <div className="container mx-auto px-6">
         <button
