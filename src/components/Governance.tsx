@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Landmark, Users, Scale, Gavel, Mic, Book, Coins, Shield, Trophy, Star, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ArrowLeft, Landmark, Users, Scale, Gavel, Mic, Book, Coins, Shield, Trophy, Star, ArrowRight, MapPin } from 'lucide-react';
+import { halls } from '@/components/CampusMap';
 
 interface GovernanceProps {
   onBack: () => void;
@@ -22,7 +24,7 @@ const itemVariants = {
 };
 
 export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
-  const [activeTab, setActiveTab] = useState<'cec' | 'src'>('cec');
+  const [activeTab, setActiveTab] = useState<'cec' | 'src' | 'halls'>('cec');
 
   return (
     <div className="min-h-screen bg-slate-50 pt-32 pb-16">
@@ -67,15 +69,16 @@ export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
         </div>
 
         <div className="flex flex-wrap gap-8 mb-16 border-b border-slate-200">
-            {['cec', 'src'].map((tab) => (
+            {['cec', 'src', 'halls'].map((tab) => (
                 <button 
                     key={tab}
-                    onClick={() => setActiveTab(tab as 'cec' | 'src')}
+                    onClick={() => setActiveTab(tab as 'cec' | 'src' | 'halls')}
                     className={`pb-6 text-sm font-bold tracking-[0.2em] uppercase transition-all relative ${activeTab === tab ? 'text-ui-blue' : 'text-slate-400 hover:text-slate-600'}`}
                 >
                     <span className="flex items-center gap-3">
                         {tab === 'cec' && "The Executive"}
                         {tab === 'src' && "The Legislative"}
+                        {tab === 'halls' && "The Republics"}
                     </span>
                     {activeTab === tab && (
                         <motion.div 
@@ -138,6 +141,52 @@ export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
                             desc="Organizes sporting activities, the Dean's Cup, and the Inter-Hall games. Promotes physical fitness among Uites."
                         />
                     </div>
+                </motion.div>
+            )}
+
+            {activeTab === 'halls' && (
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="grid grid-cols-1 md:grid-cols-2 gap-8"
+                >
+                    {halls.map((hall) => (
+                        <Link to={`/governance/hall/${hall.id}`} key={hall.id}>
+                            <motion.div
+                                variants={itemVariants}
+                                whileHover={{ y: -10 }}
+                                className="bg-white border group relative overflow-hidden h-full shadow-sm hover:shadow-xl transition-all duration-500"
+                                style={{ borderColor: `${hall.color}30` }}
+                            >
+                                <div className="absolute top-0 left-0 w-full h-2" style={{ backgroundColor: hall.color }} />
+                                <div className="p-8 relative z-10">
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div className="p-3 rounded-full bg-slate-50 border border-slate-100 group-hover:scale-110 transition-transform duration-300">
+                                            <MapPin size={24} style={{ color: hall.color }} />
+                                        </div>
+                                        <div className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-slate-50 text-slate-500 border border-slate-100">
+                                            {hall.alias}
+                                        </div>
+                                    </div>
+
+                                    <h3 className="text-3xl font-serif text-slate-800 mb-2 group-hover:text-ui-blue transition-colors">
+                                        {hall.name}
+                                    </h3>
+                                    <p className="font-serif italic text-slate-400 text-sm mb-6">"{hall.motto}"</p>
+
+                                    <p className="text-slate-600 leading-relaxed mb-8 line-clamp-3">
+                                        {hall.desc}
+                                    </p>
+
+                                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-ui-blue group-hover:gap-4 transition-all">
+                                        Explore Republic <ArrowRight size={14} />
+                                    </div>
+                                </div>
+                                <div className="absolute -bottom-20 -right-20 w-64 h-64 rounded-full opacity-5 group-hover:opacity-10 transition-opacity duration-500" style={{ backgroundColor: hall.color }} />
+                            </motion.div>
+                        </Link>
+                    ))}
                 </motion.div>
             )}
 

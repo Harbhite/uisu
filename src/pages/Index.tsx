@@ -4,7 +4,7 @@ import { Users, BookOpen, Award, Star, ArrowRight, MapPin, ChevronDown, Quote, M
 import { Link, useNavigate } from "react-router-dom";
 import { TimelineDiagram, StructureDiagram, PopulationChart } from "@/components/Diagrams";
 import { TriviaSection } from "@/components/Trivia";
-import { CampusMap, HallGrid } from "@/components/CampusMap";
+import { CampusMap } from "@/components/CampusMap";
 import { TowerScene } from "@/components/QuantumScene";
 import { AnnouncementsBanner } from "@/components/AnnouncementsBanner";
 import { NotificationPrompt } from "@/components/NotificationPrompt";
@@ -457,7 +457,7 @@ const Index = () => {
               <RevealHeader className="font-serif text-5xl mb-4 text-ui-blue uppercase tracking-tighter">The Nations</RevealHeader>
               <p className="text-xs text-slate-400 uppercase tracking-[0.5em] font-bold">Halls of Residence</p>
             </div>
-            <div className="max-w-6xl mx-auto"><CampusMap /><HallGrid /></div>
+            <div className="max-w-6xl mx-auto"><CampusMap /></div>
           </div>
         </section>
 

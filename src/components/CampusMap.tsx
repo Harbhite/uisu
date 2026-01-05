@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, X, GraduationCap, Info, ChevronDown, ChevronUp } from 'lucide-react';
 
-interface Hall {
+export interface Hall {
   id: string;
   name: string;
   alias: string;
@@ -14,7 +14,7 @@ interface Hall {
   type: 'male' | 'female' | 'mixed';
 }
 
-const halls: Hall[] = [
+export const halls: Hall[] = [
   {
     id: 'mellamby',
     name: 'Kenneth Mellamby Hall',
