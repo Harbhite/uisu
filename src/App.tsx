@@ -26,6 +26,17 @@ const InksPiecePage = lazy(() => import("./pages/InksPiecePage"));
 const InkEditorPage = lazy(() => import("./pages/InkEditorPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const HallDetailPage = lazy(() => import("./pages/halls/HallDetailPage"));
+const ResourcesPage = lazy(() => import("./pages/ResourcesPage"));
+const AcademicBankPage = lazy(() => import("./pages/resources/AcademicBankPage"));
+const CareerHubPage = lazy(() => import("./pages/resources/CareerHubPage"));
+const ScholarshipPage = lazy(() => import("./pages/resources/ScholarshipPage"));
+const MentalWellnessPage = lazy(() => import("./pages/resources/MentalWellnessPage"));
+const StudyToolsPage = lazy(() => import("./pages/resources/StudyToolsPage"));
+const SkillUpPage = lazy(() => import("./pages/resources/SkillUpPage"));
+const StudentMartPage = lazy(() => import("./pages/resources/StudentMartPage"));
+const FreshersGuidePage = lazy(() => import("./pages/resources/FreshersGuidePage"));
+const AlumniNetworkPage = lazy(() => import("./pages/resources/AlumniNetworkPage"));
+const CampusHealthPage = lazy(() => import("./pages/resources/CampusHealthPage"));
 
 const queryClient = new QueryClient();
 
@@ -62,6 +73,20 @@ const AppRoutes = () => {
         <Route path="/admin/inks-vault/edit/:id" element={<PageWrapper><InkEditorPage /></PageWrapper>} />
         <Route path="/profile/:id" element={<PageWrapper><ProfilePage /></PageWrapper>} />
         <Route path="/governance/hall/:id" element={<PageWrapper><HallDetailPage /></PageWrapper>} />
+
+        {/* Resources Routes */}
+        <Route path="/resources" element={<PageWrapper><ResourcesPage /></PageWrapper>} />
+        <Route path="/resources/academic-bank" element={<PageWrapper><AcademicBankPage /></PageWrapper>} />
+        <Route path="/resources/career-hub" element={<PageWrapper><CareerHubPage /></PageWrapper>} />
+        <Route path="/resources/scholarships" element={<PageWrapper><ScholarshipPage /></PageWrapper>} />
+        <Route path="/resources/mental-wellness" element={<PageWrapper><MentalWellnessPage /></PageWrapper>} />
+        <Route path="/resources/study-tools" element={<PageWrapper><StudyToolsPage /></PageWrapper>} />
+        <Route path="/resources/skill-up" element={<PageWrapper><SkillUpPage /></PageWrapper>} />
+        <Route path="/resources/student-mart" element={<PageWrapper><StudentMartPage /></PageWrapper>} />
+        <Route path="/resources/freshers-guide" element={<PageWrapper><FreshersGuidePage /></PageWrapper>} />
+        <Route path="/resources/alumni-network" element={<PageWrapper><AlumniNetworkPage /></PageWrapper>} />
+        <Route path="/resources/campus-health" element={<PageWrapper><CampusHealthPage /></PageWrapper>} />
+
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
       </Routes>
