@@ -203,6 +203,7 @@ const Index = () => {
     { name: "Communities", href: "/communities" },
     { name: "Events", href: "/events" },
     { name: "Announcements", href: "/announcements" },
+    { name: "Resources", href: "/resources" },
   ];
 
   const parallaxCards = [
