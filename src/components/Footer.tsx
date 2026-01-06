@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Facebook, Twitter, Instagram, Linkedin, Send } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { resourceCategories } from "@/lib/data";
 
 export const Footer = () => {
   return (
@@ -25,7 +26,7 @@ export const Footer = () => {
           </div>
 
           {/* Links Columns */}
-          <div className="lg:col-span-5 grid grid-cols-2 gap-8 md:grid-cols-3">
+          <div className="lg:col-span-6 grid grid-cols-2 gap-8 md:grid-cols-4">
             <div className="space-y-4">
               <h4 className="font-bold text-xs uppercase tracking-widest text-nobel-gold">The Union</h4>
               <ul className="space-y-3 text-sm font-medium text-slate-200">
@@ -52,10 +53,20 @@ export const Footer = () => {
                 <li><Link to="/announcements" className="hover:text-white transition-colors">Announcements</Link></li>
               </ul>
             </div>
+
+            <div className="space-y-4">
+              <h4 className="font-bold text-xs uppercase tracking-widest text-nobel-gold">Resources</h4>
+              <ul className="space-y-3 text-sm font-medium text-slate-200">
+                {resourceCategories.slice(0, 5).map((category) => (
+                  <li key={category.id}><Link to={category.path} className="hover:text-white transition-colors">{category.title}</Link></li>
+                ))}
+                <li><Link to="/resources" className="text-nobel-gold hover:text-white transition-colors italic">View All</Link></li>
+              </ul>
+            </div>
           </div>
 
           {/* Newsletter Column */}
-          <div className="hidden lg:block lg:col-span-4 space-y-6 lg:pl-8">
+          <div className="hidden lg:block lg:col-span-3 space-y-6 lg:pl-8">
             <div>
                 <h3 className="font-serif text-3xl md:text-4xl leading-tight mb-4 text-white">
                     Subscribe and get the <span className="italic text-nobel-gold">latest history</span> delivered.

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 import React from "react";
+import { resourceCategories } from "@/lib/data";
 
 interface NavbarProps {
   isMenuOpen: boolean;
@@ -98,9 +99,6 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
                       <ListItem href="/documents" title="Documents">
                         Official records and publications.
                       </ListItem>
-                      <ListItem href="/resources" title="Resources">
-                        Student tools, jobs, and materials.
-                      </ListItem>
                     </ul>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
@@ -111,6 +109,19 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
                           Leadership
                       </NavigationMenuLink>
                   </Link>
+                </NavigationMenuItem>
+
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="bg-transparent text-white/90 hover:text-nobel-gold hover:bg-white/10 focus:bg-white/10 focus:text-white">Resources</NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                      {resourceCategories.map((resource) => (
+                        <ListItem key={resource.id} href={resource.path} title={resource.title}>
+                          {resource.description}
+                        </ListItem>
+                      ))}
+                    </ul>
+                  </NavigationMenuContent>
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>

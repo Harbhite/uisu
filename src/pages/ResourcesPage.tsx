@@ -4,102 +4,23 @@ import { useNavigate } from 'react-router-dom';
 import {
   Library, Briefcase, GraduationCap, Heart, Brain,
   Rocket, ShoppingBag, Compass, Users, Activity,
-  ArrowRight, Star
+  ArrowRight, Star, ArrowLeft
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
-import { Button } from '@/components/ui/button';
+import { resourceCategories } from '@/lib/data';
 
-interface ResourceCategory {
-  id: string;
-  title: string;
-  description: string;
-  icon: React.ElementType;
-  color: string;
-  path: string;
-}
-
-const resources: ResourceCategory[] = [
-  {
-    id: 'academic',
-    title: 'Academic Bank',
-    description: 'E-library with course materials, past questions, and general knowledge resources.',
-    icon: Library,
-    color: 'bg-blue-500',
-    path: '/resources/academic-bank'
-  },
-  {
-    id: 'career',
-    title: 'Career Hub',
-    description: 'Job listings, internship opportunities, CV templates, and career advice.',
-    icon: Briefcase,
-    color: 'bg-green-500',
-    path: '/resources/career-hub'
-  },
-  {
-    id: 'scholarship',
-    title: 'Scholarship Finder',
-    description: 'Database of local and international funding opportunities for students.',
-    icon: GraduationCap,
-    color: 'bg-yellow-500',
-    path: '/resources/scholarships'
-  },
-  {
-    id: 'wellness',
-    title: 'Mental Wellness',
-    description: 'Resources for mental health, counseling services, and self-care tools.',
-    icon: Heart,
-    color: 'bg-rose-500',
-    path: '/resources/mental-wellness'
-  },
-  {
-    id: 'study',
-    title: 'Study Tools',
-    description: 'Productivity apps, study techniques, and time management tools.',
-    icon: Brain,
-    color: 'bg-purple-500',
-    path: '/resources/study-tools'
-  },
-  {
-    id: 'skills',
-    title: 'Skill Up',
-    description: 'Workshops, tutorials, and certification courses to boost your portfolio.',
-    icon: Rocket,
-    color: 'bg-orange-500',
-    path: '/resources/skill-up'
-  },
-  {
-    id: 'market',
-    title: 'Student Mart',
-    description: 'Buy and sell textbooks, gadgets, and hostel essentials within the campus.',
-    icon: ShoppingBag,
-    color: 'bg-teal-500',
-    path: '/resources/student-mart'
-  },
-  {
-    id: 'freshers',
-    title: 'Freshers\' Compass',
-    description: 'Orientation guides, campus maps, and survival tips for new students.',
-    icon: Compass,
-    color: 'bg-indigo-500',
-    path: '/resources/freshers-guide'
-  },
-  {
-    id: 'alumni',
-    title: 'Alumni Network',
-    description: 'Connect with past students, find mentors, and explore alumni stories.',
-    icon: Users,
-    color: 'bg-cyan-500',
-    path: '/resources/alumni-network'
-  },
-  {
-    id: 'health',
-    title: 'Campus Health',
-    description: 'Clinic schedules, emergency contacts, and physical health resources.',
-    icon: Activity,
-    color: 'bg-red-500',
-    path: '/resources/campus-health'
-  }
-];
+const iconMap: { [key: string]: React.ElementType } = {
+  academic: Library,
+  career: Briefcase,
+  scholarship: GraduationCap,
+  wellness: Heart,
+  study: Brain,
+  skills: Rocket,
+  market: ShoppingBag,
+  freshers: Compass,
+  alumni: Users,
+  health: Activity
+};
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -172,32 +93,35 @@ const ResourcesPage = () => {
           animate="visible"
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
         >
-          {resources.map((resource) => (
-            <motion.div
-              key={resource.id}
-              variants={itemVariants}
-              onClick={() => navigate(resource.path)}
-              className="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group relative overflow-hidden"
-            >
-              <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-10 group-hover:scale-150 transition-transform duration-500 ${resource.color}`}></div>
+          {resourceCategories.map((resource) => {
+            const Icon = iconMap[resource.id];
+            return (
+              <motion.div
+                key={resource.id}
+                variants={itemVariants}
+                onClick={() => navigate(resource.path)}
+                className="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group relative overflow-hidden"
+              >
+                <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-10 group-hover:scale-150 transition-transform duration-500 ${resource.color}`}></div>
 
-              <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-6 text-white shadow-lg ${resource.color}`}>
-                <resource.icon size={24} />
-              </div>
+                <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-6 text-white shadow-lg ${resource.color}`}>
+                  {Icon && <Icon size={24} />}
+                </div>
 
-              <h3 className="font-serif text-xl font-bold text-slate-900 mb-3 group-hover:text-ui-blue transition-colors">
-                {resource.title}
-              </h3>
+                <h3 className="font-serif text-xl font-bold text-slate-900 mb-3 group-hover:text-ui-blue transition-colors">
+                  {resource.title}
+                </h3>
 
-              <p className="text-sm text-slate-500 leading-relaxed mb-6">
-                {resource.description}
-              </p>
+                <p className="text-sm text-slate-500 leading-relaxed mb-6">
+                  {resource.description}
+                </p>
 
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 group-hover:text-ui-blue transition-colors mt-auto">
-                Explore <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-              </div>
-            </motion.div>
-          ))}
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 group-hover:text-ui-blue transition-colors mt-auto">
+                  Explore <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                </div>
+              </motion.div>
+            );
+          })}
         </motion.div>
       </div>
     </div>
