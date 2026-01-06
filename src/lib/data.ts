@@ -326,3 +326,84 @@ export const inksPieces: InksPiece[] = [
         tags: ["Fiction", "Horror"]
     }
 ];
+
+export interface ResourceCategory {
+  id: string;
+  title: string;
+  description: string;
+  color: string;
+  path: string;
+}
+
+export const resourceCategories: ResourceCategory[] = [
+  {
+    id: 'academic',
+    title: 'Academic Bank',
+    description: 'E-library with course materials, past questions, and general knowledge resources.',
+    color: 'bg-blue-500',
+    path: '/resources/academic-bank'
+  },
+  {
+    id: 'career',
+    title: 'Career Hub',
+    description: 'Job listings, internship opportunities, CV templates, and career advice.',
+    color: 'bg-green-500',
+    path: '/resources/career-hub'
+  },
+  {
+    id: 'scholarship',
+    title: 'Scholarship Finder',
+    description: 'Database of local and international funding opportunities for students.',
+    color: 'bg-yellow-500',
+    path: '/resources/scholarships'
+  },
+  {
+    id: 'wellness',
+    title: 'Mental Wellness',
+    description: 'Resources for mental health, counseling services, and self-care tools.',
+    color: 'bg-rose-500',
+    path: '/resources/mental-wellness'
+  },
+  {
+    id: 'study',
+    title: 'Study Tools',
+    description: 'Productivity apps, study techniques, and time management tools.',
+    color: 'bg-purple-500',
+    path: '/resources/study-tools'
+  },
+  {
+    id: 'skills',
+    title: 'Skill Up',
+    description: 'Workshops, tutorials, and certification courses to boost your portfolio.',
+    color: 'bg-orange-500',
+    path: '/resources/skill-up'
+  },
+  {
+    id: 'market',
+    title: 'Student Mart',
+    description: 'Buy and sell textbooks, gadgets, and hostel essentials within the campus.',
+    color: 'bg-teal-500',
+    path: '/resources/student-mart'
+  },
+  {
+    id: 'freshers',
+    title: 'Freshers\' Compass',
+    description: 'Orientation guides, campus maps, and survival tips for new students.',
+    color: 'bg-indigo-500',
+    path: '/resources/freshers-guide'
+  },
+  {
+    id: 'alumni',
+    title: 'Alumni Network',
+    description: 'Connect with past students, find mentors, and explore alumni stories.',
+    color: 'bg-cyan-500',
+    path: '/resources/alumni-network'
+  },
+  {
+    id: 'health',
+    title: 'Campus Health',
+    description: 'Clinic schedules, emergency contacts, and physical health resources.',
+    color: 'bg-red-500',
+    path: '/resources/campus-health'
+  }
+];
