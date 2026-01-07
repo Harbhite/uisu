@@ -1,121 +1,114 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, MapPin, Users, History, Shield, Trophy, Music } from 'lucide-react';
+import { ArrowLeft, Users, History, Shield, Edit2, Save, X, Loader2 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { useAdminCheck } from '@/hooks/useAdminCheck';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
-// Mock data for halls - In a real app, this might come from Supabase or the existing halls array in CampusMap
-// duplicating for now to ensure we have all fields needed for a detail page
-const hallsData = {
-  mellamby: {
-    name: 'Kenneth Mellamby Hall',
-    alias: 'Premier Hall',
-    motto: 'Primus Inter Pares',
-    desc: 'The first hall of residence, named after the first Principal, Kenneth Mellamby. Known for its culture of gentility and excellence.',
-    history: "Founded in 1952, Kenneth Mellamby Hall stands as the oldest hall of residence in the University of Ibadan. It was named after the first principal of the University College, Ibadan, Dr. Kenneth Mellamby. The hall has maintained a reputation for excellence and gentility, often referred to as the 'Gentlemen's Hall'.",
-    lore: "Tradition holds that Mellambites are the epitome of gentlemanly conduct. The 'Aro' culture, while present, is often more subtle here compared to other male halls.",
-    leadership: [
-      { role: 'Hall Chairman', name: 'Student Name' },
-      { role: 'Information Minister', name: 'Student Name' }
-    ],
-    images: ['/placeholder.svg'],
-    color: '#C5A059'
-  },
-  tedder: {
-    name: 'Lord Tedder Hall',
-    alias: 'Man O Man',
-    motto: 'God and Fatherland',
-    desc: 'Strategically located near the academic area. Tedderites are known for their political astuteness.',
-    history: "Named after Lord Tedder, a Marshal of the Royal Air Force and Chancellor of the University (1950-1967). It is known for its proximity to the academic areas and has produced numerous student union leaders.",
-    lore: "Tedderites pride themselves on being politically savvy and intellectually sound. The 'Tedder Box' is a famous spot for debates and public speaking.",
-    leadership: [],
-    images: ['/placeholder.svg'],
-    color: '#8B4513'
-  },
-  kuti: {
-    name: 'Kuti Hall',
-    alias: 'The Fortress',
-    motto: 'Dare to Struggle, Dare to Win',
-    desc: 'Named after Rev. I.O. Ransome-Kuti. Famous for its radicalism and intellectual contributions.',
-    history: "Dedicated to the memory of the late Rev. Israel Oludotun Ransome-Kuti, a distinguished Nigerian educationist. The hall is renowned for its activism and strong stance on student welfare.",
-    lore: "Kuti Hall is known as the 'Fortress' due to its unified front in times of struggle. The 'Ancestral Grove' is a sacred ground for hall meetings.",
-    leadership: [],
-    images: ['/placeholder.svg'],
-    color: '#15803d'
-  },
-  bello: {
-    name: 'Sultan Bello Hall',
-    alias: 'The Sultanate',
-    motto: 'Nobility',
-    desc: 'Named after Sir Ahmadu Bello. The hall prides itself on leadership and annual state address.',
-    history: "Opened in 1962 by Sir Ahmadu Bello, the Sardauna of Sokoto. It is known for its 'State of the Nation' address delivered by the Hall Mayor, a tradition that attracts dignitaries from across the country.",
-    lore: "Bellites are referred to as 'Nobles' and the hall is governed by a Mayor rather than a Chairman, emphasizing its unique administrative structure.",
-    leadership: [],
-    images: ['/placeholder.svg'],
-    color: '#1e40af'
-  },
-  queens: {
-    name: 'Queen Elizabeth II Hall',
-    alias: 'Queens',
-    motto: 'Laborare Est Orare',
-    desc: 'Opened by Queen Elizabeth II herself. A female hall known for serenity and elegance.',
-    history: "Inaugurated by Her Majesty Queen Elizabeth II in 1956. It was the first female hall of residence and has hosted numerous prominent Nigerian women during their university days.",
-    lore: "The hall is known for its beautiful architecture and gardens. The 'Queens' are seen as the matriarchs of the student body.",
-    leadership: [],
-    images: ['/placeholder.svg'],
-    color: '#7e22ce'
-  },
-  idia: {
-    name: 'Queen Idia Hall',
-    alias: 'Amazonia',
-    motto: 'Home of Amazons',
-    desc: 'Named after Queen Idia of Benin. Largest female hall, vibrant social atmosphere.',
-    history: "Named after the warrior Queen Idia of the Benin Kingdom. It is the largest female hall and a hub of social activities and sports within the university.",
-    lore: "Idia Hall residents refer to themselves as 'Amazons', reflecting strength and resilience. The hall's gyration and social events are legendary.",
-    leadership: [],
-    images: ['/placeholder.svg'],
-    color: '#be185d'
-  },
-  indy: {
-    name: 'Independence Hall',
-    alias: 'Katanga Republic',
-    motto: 'Liberty and Service',
-    desc: 'The "Headquarters of Aluta". Established in 1961.',
-    history: "Built to commemorate Nigeria's independence in 1960 and officially opened in 1961. It is often referred to as the 'Katanga Republic', asserting a spirit of autonomy and resistance.",
-    lore: "Indy Hall is the heartbeat of student activism ('Aluta'). The 'Katangese' are known for their solidarity and the famous 'Aro' culture which is deeply embedded here.",
-    leadership: [],
-    images: ['/placeholder.svg'],
-    color: '#b91c1c'
-  },
-  zik: {
-    name: 'Nnamdi Azikiwe Hall',
-    alias: 'Baluba Kingdom',
-    motto: 'Zikism',
-    desc: 'Named after Nigeria\'s first President. Largest hall in UI. Famous for "Aroism".',
-    history: "Named after Dr. Nnamdi Azikiwe. It is the largest male hall and is located at a distance from the main academic area, giving it a unique, independent character.",
-    lore: "Zik Hall is the capital of 'Baluba Kingdom'. Residents are 'Zikites'. The hall is famous for its distinct dialect of 'Aroism' and vigorous gyration sessions.",
-    leadership: [],
-    images: ['/placeholder.svg'],
-    color: '#d97706'
-  },
-  awo: {
-    name: 'Obafemi Awolowo Hall',
-    alias: 'Awo',
-    motto: 'Discipline and Integrity',
-    desc: 'Largest student accommodation. A city within a city.',
-    history: "Named after Chief Obafemi Awolowo. It is a mixed hall (with separate blocks) and accommodates both undergraduate and postgraduate students. It is the largest hall in terms of population.",
-    lore: "Awo Hall is often described as a 'City within a City' due to its size and self-sufficiency. It has its own unique political ecosystem.",
-    leadership: [],
-    images: ['/placeholder.svg'],
-    color: '#0f766e'
-  }
-};
+interface Hall {
+  id: string;
+  name: string;
+  alias: string | null;
+  motto: string | null;
+  description: string | null;
+  history: string | null;
+  lore: string | null;
+  hall_type: string | null;
+  capacity: number | null;
+  established_year: number | null;
+  color: string | null;
+  image_url: string | null;
+  slug: string;
+}
 
 const HallDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const hall = id ? hallsData[id as keyof typeof hallsData] : null;
+  const { isStaff } = useAdminCheck();
+  
+  const [hall, setHall] = useState<Hall | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<Hall>>({});
+
+  useEffect(() => {
+    const fetchHall = async () => {
+      if (!id) {
+        navigate('/governance');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('halls')
+        .select('*')
+        .eq('slug', id)
+        .single();
+
+      if (error || !data) {
+        console.error('Hall not found:', error);
+        setHall(null);
+      } else {
+        setHall(data);
+        setEditForm(data);
+      }
+      setLoading(false);
+    };
+
+    fetchHall();
+  }, [id, navigate]);
+
+  const handleSave = async () => {
+    if (!hall) return;
+    
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('halls')
+        .update({
+          name: editForm.name,
+          alias: editForm.alias,
+          motto: editForm.motto,
+          description: editForm.description,
+          history: editForm.history,
+          lore: editForm.lore,
+          hall_type: editForm.hall_type,
+          capacity: editForm.capacity,
+          established_year: editForm.established_year,
+          color: editForm.color,
+        })
+        .eq('id', hall.id);
+
+      if (error) throw error;
+
+      setHall({ ...hall, ...editForm });
+      setIsEditing(false);
+      toast.success('Hall details updated successfully');
+    } catch (error) {
+      console.error('Save error:', error);
+      toast.error('Failed to save changes');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditForm(hall || {});
+    setIsEditing(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+      </div>
+    );
+  }
 
   if (!hall) {
     return (
@@ -128,14 +121,16 @@ const HallDetailPage = () => {
     );
   }
 
+  const hallColor = hall.color || '#1e40af';
+
   return (
     <div className="min-h-screen bg-slate-50">
       <SEO
         title={`${hall.name} - UISU Archive`}
-        description={hall.desc}
+        description={hall.description || ''}
       />
 
-      {/* Hero Section with Parallax-like effect */}
+      {/* Hero Section */}
       <div className="relative h-[60vh] overflow-hidden bg-slate-900">
         <div className="absolute inset-0 bg-black/50 z-10" />
         <motion.div
@@ -143,7 +138,10 @@ const HallDetailPage = () => {
           animate={{ scale: 1 }}
           transition={{ duration: 10, repeat: Infinity, repeatType: "reverse" }}
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${hall.images[0]})`, backgroundColor: hall.color }}
+          style={{ 
+            backgroundImage: hall.image_url ? `url(${hall.image_url})` : undefined, 
+            backgroundColor: hallColor 
+          }}
         />
 
         <div className="absolute inset-0 z-20 flex flex-col justify-end pb-20 px-6 container mx-auto">
@@ -154,18 +152,90 @@ const HallDetailPage = () => {
           >
             <div className="flex items-center gap-3 mb-4">
               <span className="px-3 py-1 bg-white/20 backdrop-blur-md text-white text-xs font-bold uppercase tracking-widest border border-white/30">
-                {hall.alias}
+                {isEditing ? (
+                  <Input
+                    value={editForm.alias || ''}
+                    onChange={(e) => setEditForm({ ...editForm, alias: e.target.value })}
+                    className="bg-transparent border-none text-white text-xs font-bold uppercase h-auto p-0"
+                    placeholder="Alias"
+                  />
+                ) : (
+                  hall.alias
+                )}
               </span>
               <div className="h-px w-10 bg-white/50" />
+              {hall.hall_type && (
+                <span className="text-white/60 text-xs uppercase tracking-widest">
+                  {hall.hall_type} Hall
+                </span>
+              )}
             </div>
-            <h1 className="text-5xl md:text-7xl font-serif text-white mb-6 leading-tight">
-              {hall.name}
-            </h1>
-            <p className="text-xl md:text-2xl text-white/80 font-serif italic max-w-2xl">
-              "{hall.motto}"
-            </p>
+            
+            {isEditing ? (
+              <Input
+                value={editForm.name || ''}
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                className="text-5xl md:text-7xl font-serif text-white mb-6 bg-transparent border-none h-auto"
+              />
+            ) : (
+              <h1 className="text-5xl md:text-7xl font-serif text-white mb-6 leading-tight">
+                {hall.name}
+              </h1>
+            )}
+            
+            {isEditing ? (
+              <Input
+                value={editForm.motto || ''}
+                onChange={(e) => setEditForm({ ...editForm, motto: e.target.value })}
+                className="text-xl md:text-2xl text-white/80 font-serif italic max-w-2xl bg-transparent border-none"
+                placeholder="Hall motto"
+              />
+            ) : (
+              <p className="text-xl md:text-2xl text-white/80 font-serif italic max-w-2xl">
+                "{hall.motto}"
+              </p>
+            )}
           </motion.div>
         </div>
+
+        {/* Admin Edit Button */}
+        {isStaff && (
+          <div className="absolute top-24 right-6 z-30 flex gap-2">
+            {isEditing ? (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+                  onClick={handleCancel}
+                  disabled={saving}
+                >
+                  <X size={16} className="mr-2" />
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  className="gap-2"
+                  onClick={handleSave}
+                  disabled={saving}
+                >
+                  {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                  Save Changes
+                </Button>
+              </>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                className="bg-white/10 border-white/30 text-white hover:bg-white/20 gap-2"
+                onClick={() => setIsEditing(true)}
+              >
+                <Edit2 size={16} />
+                Edit Hall
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="container mx-auto px-6 py-16 -mt-20 relative z-30">
@@ -176,14 +246,23 @@ const HallDetailPage = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="bg-white p-10 shadow-xl border-t-4"
-              style={{ borderTopColor: hall.color }}
+              style={{ borderTopColor: hallColor }}
             >
               <div className="flex items-center gap-3 mb-6 text-slate-400 font-bold uppercase text-xs tracking-widest">
                 <History size={16} /> History & Origins
               </div>
-              <p className="text-lg text-slate-700 leading-relaxed font-light">
-                {hall.history}
-              </p>
+              {isEditing ? (
+                <Textarea
+                  value={editForm.history || ''}
+                  onChange={(e) => setEditForm({ ...editForm, history: e.target.value })}
+                  className="min-h-[200px] text-lg text-slate-700 leading-relaxed font-light"
+                  placeholder="Hall history..."
+                />
+              ) : (
+                <p className="text-lg text-slate-700 leading-relaxed font-light">
+                  {hall.history}
+                </p>
+              )}
             </motion.div>
 
             <motion.div
@@ -199,22 +278,51 @@ const HallDetailPage = () => {
                 <div className="flex items-center gap-3 mb-6 text-slate-400 font-bold uppercase text-xs tracking-widest">
                   <Shield size={16} /> Hall Lore & Traditions
                 </div>
-                <p className="text-lg leading-relaxed font-light">
-                  {hall.lore}
-                </p>
+                {isEditing ? (
+                  <Textarea
+                    value={editForm.lore || ''}
+                    onChange={(e) => setEditForm({ ...editForm, lore: e.target.value })}
+                    className="min-h-[150px] text-lg leading-relaxed font-light bg-slate-800 border-slate-700 text-slate-300"
+                    placeholder="Hall lore and traditions..."
+                  />
+                ) : (
+                  <p className="text-lg leading-relaxed font-light">
+                    {hall.lore}
+                  </p>
+                )}
               </div>
             </motion.div>
 
+            {/* Description */}
+            {isEditing && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="bg-white p-10 shadow-xl border border-slate-200"
+              >
+                <div className="flex items-center gap-3 mb-6 text-slate-400 font-bold uppercase text-xs tracking-widest">
+                  Description
+                </div>
+                <Textarea
+                  value={editForm.description || ''}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                  className="min-h-[100px]"
+                  placeholder="Brief description of the hall..."
+                />
+              </motion.div>
+            )}
+
             {/* Gallery placeholder */}
             <div className="grid grid-cols-2 gap-4">
-               {[1, 2].map((i) => (
-                 <div key={i} className="aspect-video bg-slate-200 rounded-lg overflow-hidden relative group">
-                    <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/20 transition-colors" />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                       <span className="text-white font-bold uppercase tracking-widest text-xs">View</span>
-                    </div>
-                 </div>
-               ))}
+              {[1, 2].map((i) => (
+                <div key={i} className="aspect-video bg-slate-200 rounded-lg overflow-hidden relative group">
+                  <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/20 transition-colors" />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-white font-bold uppercase tracking-widest text-xs">View</span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -229,24 +337,7 @@ const HallDetailPage = () => {
               <h3 className="font-serif text-2xl text-slate-800 mb-6 border-b border-slate-100 pb-4">
                 Hall Leadership
               </h3>
-
-              {hall.leadership.length > 0 ? (
-                <div className="space-y-6">
-                  {hall.leadership.map((leader, idx) => (
-                    <div key={idx} className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-                        <Users size={18} className="text-slate-500" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-slate-800 text-sm">{leader.name}</p>
-                        <p className="text-xs text-slate-500 uppercase tracking-wider mt-1">{leader.role}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-slate-500 italic">Leadership information coming soon.</p>
-              )}
+              <p className="text-sm text-slate-500 italic">Leadership information coming soon.</p>
             </motion.div>
 
             <motion.div
@@ -255,23 +346,67 @@ const HallDetailPage = () => {
               transition={{ delay: 0.5 }}
               className="bg-slate-50 border border-slate-200 p-8"
             >
-               <h3 className="font-bold text-xs uppercase tracking-widest text-slate-400 mb-6">
-                 Quick Facts
-               </h3>
-               <ul className="space-y-4 text-sm text-slate-600">
-                 <li className="flex justify-between items-center border-b border-slate-200 pb-2">
-                   <span>Established</span>
-                   <span className="font-bold">19XX</span>
-                 </li>
-                 <li className="flex justify-between items-center border-b border-slate-200 pb-2">
-                   <span>Capacity</span>
-                   <span className="font-bold">~1000 Students</span>
-                 </li>
-                 <li className="flex justify-between items-center pt-2">
-                   <span>Type</span>
-                   <span className="font-bold capitalize">Mixed / Male / Female</span>
-                 </li>
-               </ul>
+              <h3 className="font-bold text-xs uppercase tracking-widest text-slate-400 mb-6">
+                Quick Facts
+              </h3>
+              <ul className="space-y-4 text-sm text-slate-600">
+                <li className="flex justify-between items-center border-b border-slate-200 pb-2">
+                  <span>Established</span>
+                  {isEditing ? (
+                    <Input
+                      type="number"
+                      value={editForm.established_year || ''}
+                      onChange={(e) => setEditForm({ ...editForm, established_year: parseInt(e.target.value) || null })}
+                      className="w-24 h-8 text-right"
+                      placeholder="Year"
+                    />
+                  ) : (
+                    <span className="font-bold">{hall.established_year || 'N/A'}</span>
+                  )}
+                </li>
+                <li className="flex justify-between items-center border-b border-slate-200 pb-2">
+                  <span>Capacity</span>
+                  {isEditing ? (
+                    <Input
+                      type="number"
+                      value={editForm.capacity || ''}
+                      onChange={(e) => setEditForm({ ...editForm, capacity: parseInt(e.target.value) || null })}
+                      className="w-24 h-8 text-right"
+                      placeholder="Capacity"
+                    />
+                  ) : (
+                    <span className="font-bold">{hall.capacity ? `~${hall.capacity} Students` : 'N/A'}</span>
+                  )}
+                </li>
+                <li className="flex justify-between items-center border-b border-slate-200 pb-2">
+                  <span>Type</span>
+                  {isEditing ? (
+                    <select
+                      value={editForm.hall_type || ''}
+                      onChange={(e) => setEditForm({ ...editForm, hall_type: e.target.value })}
+                      className="border border-slate-200 rounded px-2 py-1 text-sm"
+                    >
+                      <option value="">Select</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Mixed">Mixed</option>
+                    </select>
+                  ) : (
+                    <span className="font-bold capitalize">{hall.hall_type || 'N/A'}</span>
+                  )}
+                </li>
+                {isEditing && (
+                  <li className="flex justify-between items-center pt-2">
+                    <span>Color</span>
+                    <Input
+                      type="color"
+                      value={editForm.color || '#1e40af'}
+                      onChange={(e) => setEditForm({ ...editForm, color: e.target.value })}
+                      className="w-16 h-8 p-0 border-none"
+                    />
+                  </li>
+                )}
+              </ul>
             </motion.div>
 
             <Button onClick={() => navigate('/governance')} variant="outline" className="w-full gap-2">
