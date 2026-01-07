@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   ArrowLeft, Search, Folder, FileText, Download, Plus,
   Grid, List, ChevronRight, Edit2, Trash2, Upload, X, FolderPlus, Loader2
@@ -13,171 +13,59 @@ import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-interface FileItem {
+interface AcademicResource {
   id: string;
   name: string;
-  type: 'folder' | 'pdf' | 'doc' | 'ppt' | 'xls';
-  size?: string;
-  date: string;
-  owner: string;
-  parentId: string | null;
+  resource_type: string;
+  parent_id: string | null;
+  file_url: string | null;
+  file_size: string | null;
+  owner: string | null;
+  created_at: string | null;
 }
-
-// 13 Faculties of University of Ibadan
-const UI_FACULTIES = [
-  'Faculty of Agriculture',
-  'Faculty of Arts',
-  'Faculty of Clinical Sciences',
-  'Faculty of Dentistry',
-  'Faculty of Education',
-  'Faculty of Law',
-  'Faculty of Pharmacy',
-  'Faculty of Public Health',
-  'Faculty of Renewable Natural Resources',
-  'Faculty of Science',
-  'Faculty of Social Sciences',
-  'Faculty of Technology',
-  'Faculty of Veterinary Medicine'
-];
-
-// Generate seeded academic data
-const generateMockData = (): FileItem[] => {
-  const files: FileItem[] = [];
-  
-  // Root level - General Studies
-  files.push({
-    id: 'ges',
-    name: 'General Studies (GES)',
-    type: 'folder',
-    date: '2024-01-10',
-    owner: 'Admin',
-    parentId: null
-  });
-
-  // 13 Faculty folders
-  UI_FACULTIES.forEach((faculty, idx) => {
-    files.push({
-      id: `faculty-${idx + 1}`,
-      name: faculty,
-      type: 'folder',
-      date: '2024-01-15',
-      owner: 'Admin',
-      parentId: null
-    });
-  });
-
-  // Root level files
-  files.push(
-    { id: 'handbook', name: 'Student Handbook 2024.pdf', type: 'pdf', size: '2.4 MB', date: '2024-02-01', owner: 'Dean of Students', parentId: null },
-    { id: 'calendar', name: 'Academic Calendar 2024.pdf', type: 'pdf', size: '1.1 MB', date: '2024-02-05', owner: 'Registrar', parentId: null }
-  );
-
-  // GES courses
-  const gesCourses = ['GES 101 - Use of English', 'GES 102 - Philosophy', 'GES 107 - Reproductive Health', 'GES 103 - Nigerian History'];
-  gesCourses.forEach((course, idx) => {
-    files.push({
-      id: `ges-${idx + 1}`,
-      name: course,
-      type: 'folder',
-      date: '2023-11-10',
-      owner: 'GES Unit',
-      parentId: 'ges'
-    });
-  });
-
-  // Add sample files to GES 101
-  files.push(
-    { id: 'ges101-1', name: 'Use of English Notes.pdf', type: 'pdf', size: '1.2 MB', date: '2024-01-20', owner: 'Prof. Adeyemi', parentId: 'ges-1' },
-    { id: 'ges101-2', name: 'Past Questions 2023.pdf', type: 'pdf', size: '800 KB', date: '2024-01-22', owner: 'Library', parentId: 'ges-1' }
-  );
-
-  // Add departments to Faculty of Science
-  const scienceDepts = ['Computer Science', 'Physics', 'Chemistry', 'Mathematics', 'Zoology', 'Botany'];
-  scienceDepts.forEach((dept, idx) => {
-    files.push({
-      id: `sci-dept-${idx + 1}`,
-      name: dept,
-      type: 'folder',
-      date: '2023-10-01',
-      owner: 'HOD',
-      parentId: 'faculty-10'
-    });
-  });
-
-  // Add sample files to Computer Science
-  files.push(
-    { id: 'csc101-notes', name: 'CSC 101 - Introduction to Computing.pdf', type: 'pdf', size: '3.5 MB', date: '2024-01-15', owner: 'Dr. Okonkwo', parentId: 'sci-dept-1' },
-    { id: 'csc201-notes', name: 'CSC 201 - Data Structures.pdf', type: 'pdf', size: '2.8 MB', date: '2024-01-18', owner: 'Dr. Ibrahim', parentId: 'sci-dept-1' },
-    { id: 'csc-pq', name: 'Computer Science Past Questions.pdf', type: 'pdf', size: '5.2 MB', date: '2024-02-01', owner: 'NACOSS', parentId: 'sci-dept-1' }
-  );
-
-  // Add departments to Faculty of Arts
-  const artsDepts = ['English', 'History', 'Philosophy', 'Linguistics', 'Religious Studies'];
-  artsDepts.forEach((dept, idx) => {
-    files.push({
-      id: `arts-dept-${idx + 1}`,
-      name: dept,
-      type: 'folder',
-      date: '2023-10-05',
-      owner: 'HOD',
-      parentId: 'faculty-2'
-    });
-  });
-
-  // Add departments to Faculty of Social Sciences
-  const socialDepts = ['Economics', 'Political Science', 'Sociology', 'Geography', 'Psychology'];
-  socialDepts.forEach((dept, idx) => {
-    files.push({
-      id: `soc-dept-${idx + 1}`,
-      name: dept,
-      type: 'folder',
-      date: '2023-10-08',
-      owner: 'HOD',
-      parentId: 'faculty-11'
-    });
-  });
-
-  // Add sample files to Economics
-  files.push(
-    { id: 'eco101', name: 'ECO 101 - Principles of Economics.pdf', type: 'pdf', size: '2.1 MB', date: '2024-01-10', owner: 'Prof. Eze', parentId: 'soc-dept-1' },
-    { id: 'eco-pq', name: 'Economics Past Questions 2020-2023.pdf', type: 'pdf', size: '4.5 MB', date: '2024-02-05', owner: 'Library', parentId: 'soc-dept-1' }
-  );
-
-  // Add departments to Faculty of Technology
-  const techDepts = ['Civil Engineering', 'Electrical Engineering', 'Mechanical Engineering', 'Petroleum Engineering'];
-  techDepts.forEach((dept, idx) => {
-    files.push({
-      id: `tech-dept-${idx + 1}`,
-      name: dept,
-      type: 'folder',
-      date: '2023-10-12',
-      owner: 'HOD',
-      parentId: 'faculty-12'
-    });
-  });
-
-  return files;
-};
 
 const AcademicBankPage = () => {
   const navigate = useNavigate();
   const { isStaff } = useAdminCheck();
-  const [allFiles, setAllFiles] = useState<FileItem[]>(generateMockData());
+  const [resources, setResources] = useState<AcademicResource[]>([]);
+  const [loading, setLoading] = useState(true);
   const [currentPath, setCurrentPath] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   
   // Modal states
   const [showFolderModal, setShowFolderModal] = useState(false);
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [editingFolder, setEditingFolder] = useState<FileItem | null>(null);
+  const [editingFolder, setEditingFolder] = useState<AcademicResource | null>(null);
   const [newFolderName, setNewFolderName] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [savingFolder, setSavingFolder] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentFolderId = currentPath.length > 0 ? currentPath[currentPath.length - 1] : null;
-  
-  const items = allFiles.filter(item => item.parentId === currentFolderId);
+
+  // Fetch all resources
+  useEffect(() => {
+    const fetchResources = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('academic_resources')
+        .select('*')
+        .order('resource_type', { ascending: false }) // folders first
+        .order('name');
+      
+      if (error) {
+        console.error('Error fetching resources:', error);
+        toast.error('Failed to load resources');
+      } else {
+        setResources(data || []);
+      }
+      setLoading(false);
+    };
+
+    fetchResources();
+  }, []);
+
+  const items = resources.filter(item => item.parent_id === currentFolderId);
 
   const handleNavigate = (folderId: string) => {
     setCurrentPath([...currentPath, folderId]);
@@ -189,7 +77,7 @@ const AcademicBankPage = () => {
 
   const getFolderName = (id: string | null) => {
     if (id === null) return 'Academic Bank';
-    const found = allFiles.find(f => f.id === id);
+    const found = resources.find(f => f.id === id);
     return found ? found.name : id;
   };
 
@@ -198,47 +86,94 @@ const AcademicBankPage = () => {
   );
 
   // Admin functions
-  const handleCreateFolder = () => {
+  const handleCreateFolder = async () => {
     if (!newFolderName.trim()) return;
     
-    const newFolder: FileItem = {
-      id: `folder-${Date.now()}`,
-      name: newFolderName.trim(),
-      type: 'folder',
-      date: new Date().toISOString().split('T')[0],
-      owner: 'Admin',
-      parentId: currentFolderId
-    };
-    
-    setAllFiles([...allFiles, newFolder]);
-    setNewFolderName('');
-    setShowFolderModal(false);
-    toast.success('Folder created successfully');
+    setSavingFolder(true);
+    try {
+      const { data, error } = await supabase
+        .from('academic_resources')
+        .insert({
+          name: newFolderName.trim(),
+          resource_type: 'folder',
+          parent_id: currentFolderId,
+          owner: 'Admin'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setResources([...resources, data]);
+      setNewFolderName('');
+      setShowFolderModal(false);
+      toast.success('Folder created successfully');
+    } catch (error) {
+      console.error('Create folder error:', error);
+      toast.error('Failed to create folder');
+    } finally {
+      setSavingFolder(false);
+    }
   };
 
-  const handleEditFolder = () => {
+  const handleEditFolder = async () => {
     if (!editingFolder || !newFolderName.trim()) return;
     
-    setAllFiles(allFiles.map(f => 
-      f.id === editingFolder.id ? { ...f, name: newFolderName.trim() } : f
-    ));
-    setEditingFolder(null);
-    setNewFolderName('');
-    toast.success('Folder updated successfully');
+    setSavingFolder(true);
+    try {
+      const { error } = await supabase
+        .from('academic_resources')
+        .update({ name: newFolderName.trim() })
+        .eq('id', editingFolder.id);
+
+      if (error) throw error;
+
+      setResources(resources.map(r => 
+        r.id === editingFolder.id ? { ...r, name: newFolderName.trim() } : r
+      ));
+      setEditingFolder(null);
+      setNewFolderName('');
+      toast.success('Folder updated successfully');
+    } catch (error) {
+      console.error('Update folder error:', error);
+      toast.error('Failed to update folder');
+    } finally {
+      setSavingFolder(false);
+    }
   };
 
-  const handleDeleteFolder = (folder: FileItem) => {
-    if (!confirm(`Are you sure you want to delete "${folder.name}"?`)) return;
+  const handleDeleteResource = async (resource: AcademicResource) => {
+    if (!confirm(`Are you sure you want to delete "${resource.name}"?`)) return;
     
-    // Delete folder and all its children recursively
-    const getChildIds = (parentId: string): string[] => {
-      const children = allFiles.filter(f => f.parentId === parentId);
-      return [parentId, ...children.flatMap(c => c.type === 'folder' ? getChildIds(c.id) : [c.id])];
-    };
-    
-    const idsToDelete = getChildIds(folder.id);
-    setAllFiles(allFiles.filter(f => !idsToDelete.includes(f.id)));
-    toast.success('Deleted successfully');
+    try {
+      // For files, also delete from storage
+      if (resource.resource_type !== 'folder' && resource.file_url) {
+        const path = resource.file_url.split('/').pop();
+        if (path) {
+          await supabase.storage.from('resources').remove([`academic-bank/${path}`]);
+        }
+      }
+
+      const { error } = await supabase
+        .from('academic_resources')
+        .delete()
+        .eq('id', resource.id);
+
+      if (error) throw error;
+
+      // Remove from local state (cascade will handle children in DB)
+      const removeWithChildren = (id: string): string[] => {
+        const children = resources.filter(r => r.parent_id === id);
+        return [id, ...children.flatMap(c => removeWithChildren(c.id))];
+      };
+      const idsToRemove = removeWithChildren(resource.id);
+      setResources(resources.filter(r => !idsToRemove.includes(r.id)));
+      
+      toast.success('Deleted successfully');
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error('Failed to delete');
+    }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -250,39 +185,65 @@ const AcademicBankPage = () => {
     try {
       // Upload to Supabase storage
       const fileName = `${Date.now()}-${file.name}`;
-      const { data, error } = await supabase.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('resources')
         .upload(`academic-bank/${fileName}`, file);
 
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('resources')
+        .getPublicUrl(`academic-bank/${fileName}`);
+
+      // Determine file type
+      const ext = file.name.split('.').pop()?.toLowerCase() || '';
+      let resourceType = 'pdf';
+      if (['doc', 'docx'].includes(ext)) resourceType = 'doc';
+      else if (['ppt', 'pptx'].includes(ext)) resourceType = 'ppt';
+      else if (['xls', 'xlsx'].includes(ext)) resourceType = 'xls';
+
+      // Insert into database
+      const { data, error } = await supabase
+        .from('academic_resources')
+        .insert({
+          name: file.name,
+          resource_type: resourceType,
+          parent_id: currentFolderId,
+          file_url: urlData.publicUrl,
+          file_size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
+          owner: 'Staff'
+        })
+        .select()
+        .single();
+
       if (error) throw error;
 
-      // Add to local state
-      const newFile: FileItem = {
-        id: `file-${Date.now()}`,
-        name: file.name,
-        type: file.name.endsWith('.pdf') ? 'pdf' : 
-              file.name.endsWith('.doc') || file.name.endsWith('.docx') ? 'doc' :
-              file.name.endsWith('.ppt') || file.name.endsWith('.pptx') ? 'ppt' :
-              file.name.endsWith('.xls') || file.name.endsWith('.xlsx') ? 'xls' : 'pdf',
-        size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
-        date: new Date().toISOString().split('T')[0],
-        owner: 'Staff',
-        parentId: currentFolderId
-      };
-
-      setAllFiles([...allFiles, newFile]);
+      setResources([...resources, data]);
       toast.success('File uploaded successfully');
     } catch (error) {
       console.error('Upload error:', error);
       toast.error('Failed to upload file');
     } finally {
       setUploading(false);
-      setShowUploadModal(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
+  const handleDownload = (resource: AcademicResource) => {
+    if (resource.file_url) {
+      window.open(resource.file_url, '_blank');
+    }
+  };
+
   const breadcrumbPath = [{ id: null, name: 'Academic Bank' }, ...currentPath.map(id => ({ id, name: getFolderName(id) }))];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 pt-24 pb-16 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 pt-24 pb-16">
@@ -359,7 +320,11 @@ const AcademicBankPage = () => {
                   size="sm"
                   variant="outline"
                   className="gap-2"
-                  onClick={() => setShowFolderModal(true)}
+                  onClick={() => {
+                    setEditingFolder(null);
+                    setNewFolderName('');
+                    setShowFolderModal(true);
+                  }}
                 >
                   <FolderPlus size={16} />
                   <span className="hidden sm:inline">New Folder</span>
@@ -367,11 +332,19 @@ const AcademicBankPage = () => {
                 <Button
                   size="sm"
                   className="gap-2"
-                  onClick={() => setShowUploadModal(true)}
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
                 >
-                  <Upload size={16} />
+                  {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
                   <span className="hidden sm:inline">Upload</span>
                 </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                  accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
+                />
               </div>
             )}
           </div>
@@ -386,7 +359,11 @@ const AcademicBankPage = () => {
                   <Button
                     variant="outline"
                     className="mt-4 gap-2"
-                    onClick={() => setShowFolderModal(true)}
+                    onClick={() => {
+                      setEditingFolder(null);
+                      setNewFolderName('');
+                      setShowFolderModal(true);
+                    }}
                   >
                     <FolderPlus size={16} />
                     Create a folder
@@ -408,10 +385,10 @@ const AcademicBankPage = () => {
                   >
                     <div 
                       className="flex-1 min-w-0"
-                      onClick={() => item.type === 'folder' ? handleNavigate(item.id) : null}
+                      onClick={() => item.resource_type === 'folder' ? handleNavigate(item.id) : handleDownload(item)}
                     >
                       <div className={`${viewMode === 'grid' ? 'mb-3' : ''} text-slate-500`}>
-                        {item.type === 'folder' ? (
+                        {item.resource_type === 'folder' ? (
                           <Folder className={`${viewMode === 'grid' ? 'w-10 h-10' : 'w-6 h-6'} text-slate-400 fill-blue-50`} />
                         ) : (
                           <FileText className={`${viewMode === 'grid' ? 'w-10 h-10' : 'w-6 h-6'} text-red-400`} />
@@ -424,9 +401,9 @@ const AcademicBankPage = () => {
                         </h4>
                         {viewMode === 'list' && (
                           <div className="flex items-center gap-6 text-xs text-slate-400 mt-1">
-                            <span>{item.date}</span>
+                            <span>{item.created_at ? new Date(item.created_at).toLocaleDateString() : ''}</span>
                             <span>{item.owner}</span>
-                            {item.size && <span>{item.size}</span>}
+                            {item.file_size && <span>{item.file_size}</span>}
                           </div>
                         )}
                       </div>
@@ -434,37 +411,38 @@ const AcademicBankPage = () => {
 
                     {/* Actions */}
                     <div className={`flex items-center gap-1 ${viewMode === 'grid' ? 'absolute top-2 right-2' : ''} opacity-0 group-hover:opacity-100 transition-opacity`}>
-                      {item.type !== 'folder' && (
-                        <Button size="icon" variant="ghost" className="h-7 w-7">
+                      {item.resource_type !== 'folder' && (
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleDownload(item)}>
                           <Download size={14} />
                         </Button>
                       )}
-                      {isStaff && item.type === 'folder' && (
-                        <>
-                          <Button 
-                            size="icon" 
-                            variant="ghost" 
-                            className="h-7 w-7"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingFolder(item);
-                              setNewFolderName(item.name);
-                            }}
-                          >
-                            <Edit2 size={14} />
-                          </Button>
-                          <Button 
-                            size="icon" 
-                            variant="ghost" 
-                            className="h-7 w-7 text-red-500 hover:text-red-600"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteFolder(item);
-                            }}
-                          >
-                            <Trash2 size={14} />
-                          </Button>
-                        </>
+                      {isStaff && item.resource_type === 'folder' && (
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-7 w-7"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingFolder(item);
+                            setNewFolderName(item.name);
+                            setShowFolderModal(true);
+                          }}
+                        >
+                          <Edit2 size={14} />
+                        </Button>
+                      )}
+                      {isStaff && (
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-7 w-7 text-red-500 hover:text-red-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteResource(item);
+                          }}
+                        >
+                          <Trash2 size={14} />
+                        </Button>
                       )}
                     </div>
                   </motion.div>
@@ -475,90 +453,29 @@ const AcademicBankPage = () => {
         </div>
       </div>
 
-      {/* Create Folder Modal */}
+      {/* Folder Modal */}
       <Dialog open={showFolderModal} onOpenChange={setShowFolderModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create New Folder</DialogTitle>
+            <DialogTitle>{editingFolder ? 'Edit Folder' : 'New Folder'}</DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <Input
               placeholder="Folder name"
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
+              onKeyDown={(e) => e.key === 'Enter' && (editingFolder ? handleEditFolder() : handleCreateFolder())}
             />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowFolderModal(false)}>Cancel</Button>
-            <Button onClick={handleCreateFolder}>Create</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Folder Modal */}
-      <Dialog open={!!editingFolder} onOpenChange={() => setEditingFolder(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Folder</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <Input
-              placeholder="Folder name"
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleEditFolder()}
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingFolder(null)}>Cancel</Button>
-            <Button onClick={handleEditFolder}>Save</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Upload Modal */}
-      <Dialog open={showUploadModal} onOpenChange={setShowUploadModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Upload File</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <div className="border-2 border-dashed border-slate-200 rounded-lg p-8 text-center">
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
-                onChange={handleFileUpload}
-              />
-              {uploading ? (
-                <div className="flex flex-col items-center gap-2">
-                  <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-                  <p className="text-sm text-slate-500">Uploading...</p>
-                </div>
-              ) : (
-                <>
-                  <Upload className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-                  <p className="text-sm text-slate-600 mb-2">
-                    Click to select a file or drag and drop
-                  </p>
-                  <p className="text-xs text-slate-400">
-                    PDF, DOC, PPT, XLS supported
-                  </p>
-                  <Button
-                    variant="outline"
-                    className="mt-4"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    Select File
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowUploadModal(false)}>Cancel</Button>
+            <Button 
+              onClick={editingFolder ? handleEditFolder : handleCreateFolder}
+              disabled={savingFolder || !newFolderName.trim()}
+            >
+              {savingFolder && <Loader2 size={14} className="animate-spin mr-2" />}
+              {editingFolder ? 'Update' : 'Create'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
