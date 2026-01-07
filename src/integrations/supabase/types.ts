@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      academic_resources: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          file_size: string | null
+          file_url: string | null
+          id: string
+          name: string
+          owner: string | null
+          parent_id: string | null
+          resource_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          file_size?: string | null
+          file_url?: string | null
+          id?: string
+          name: string
+          owner?: string | null
+          parent_id?: string | null
+          resource_type?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          file_size?: string | null
+          file_url?: string | null
+          id?: string
+          name?: string
+          owner?: string | null
+          parent_id?: string | null
+          resource_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academic_resources_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "academic_resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       administrations: {
         Row: {
           alias: string | null
@@ -306,6 +353,7 @@ export type Database = {
           history: string | null
           id: string
           image_url: string | null
+          leaders: Json | null
           lore: string | null
           motto: string | null
           name: string
@@ -324,6 +372,7 @@ export type Database = {
           history?: string | null
           id?: string
           image_url?: string | null
+          leaders?: Json | null
           lore?: string | null
           motto?: string | null
           name: string
@@ -342,6 +391,7 @@ export type Database = {
           history?: string | null
           id?: string
           image_url?: string | null
+          leaders?: Json | null
           lore?: string | null
           motto?: string | null
           name?: string

@@ -1,14 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Users, History, Shield, Edit2, Save, X, Loader2 } from 'lucide-react';
+import { ArrowLeft, Users, History, Shield, Edit2, Save, X, Loader2, Plus, Trash2, Upload, Image as ImageIcon } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+interface HallLeader {
+  id: string;
+  name: string;
+  position: string;
+  image_url?: string;
+}
 
 interface Hall {
   id: string;
@@ -23,6 +31,8 @@ interface Hall {
   established_year: number | null;
   color: string | null;
   image_url: string | null;
+  gallery_images: string[] | null;
+  leaders: HallLeader[] | null;
   slug: string;
 }
 
@@ -36,6 +46,21 @@ const HallDetailPage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Hall>>({});
+  
+  // Leadership modal state
+  const [showLeaderModal, setShowLeaderModal] = useState(false);
+  const [editingLeader, setEditingLeader] = useState<HallLeader | null>(null);
+  const [leaderForm, setLeaderForm] = useState({ name: '', position: '', image_url: '' });
+  const [uploadingLeaderImage, setUploadingLeaderImage] = useState(false);
+  
+  // Gallery modal state
+  const [showGalleryModal, setShowGalleryModal] = useState(false);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [uploadingHeroImage, setUploadingHeroImage] = useState(false);
+  
+  const leaderImageRef = useRef<HTMLInputElement>(null);
+  const galleryImageRef = useRef<HTMLInputElement>(null);
+  const heroImageRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchHall = async () => {
@@ -54,8 +79,12 @@ const HallDetailPage = () => {
         console.error('Hall not found:', error);
         setHall(null);
       } else {
-        setHall(data);
-        setEditForm(data);
+        const hallData = {
+          ...data,
+          leaders: Array.isArray(data.leaders) ? data.leaders as unknown as HallLeader[] : []
+        };
+        setHall(hallData);
+        setEditForm(hallData);
       }
       setLoading(false);
     };
@@ -68,6 +97,14 @@ const HallDetailPage = () => {
     
     setSaving(true);
     try {
+      // Convert leaders to JSON-safe format
+      const leadersJson = (editForm.leaders || []).map(l => ({
+        id: l.id,
+        name: l.name,
+        position: l.position,
+        image_url: l.image_url || null
+      }));
+
       const { error } = await supabase
         .from('halls')
         .update({
@@ -81,12 +118,15 @@ const HallDetailPage = () => {
           capacity: editForm.capacity,
           established_year: editForm.established_year,
           color: editForm.color,
+          image_url: editForm.image_url,
+          gallery_images: editForm.gallery_images,
+          leaders: leadersJson,
         })
         .eq('id', hall.id);
 
       if (error) throw error;
 
-      setHall({ ...hall, ...editForm });
+      setHall({ ...hall, ...editForm } as Hall);
       setIsEditing(false);
       toast.success('Hall details updated successfully');
     } catch (error) {
@@ -100,6 +140,141 @@ const HallDetailPage = () => {
   const handleCancel = () => {
     setEditForm(hall || {});
     setIsEditing(false);
+  };
+
+  // Leadership management
+  const handleAddLeader = () => {
+    setEditingLeader(null);
+    setLeaderForm({ name: '', position: '', image_url: '' });
+    setShowLeaderModal(true);
+  };
+
+  const handleEditLeader = (leader: HallLeader) => {
+    setEditingLeader(leader);
+    setLeaderForm({ name: leader.name, position: leader.position, image_url: leader.image_url || '' });
+    setShowLeaderModal(true);
+  };
+
+  const handleSaveLeader = async () => {
+    if (!leaderForm.name || !leaderForm.position) {
+      toast.error('Please fill in name and position');
+      return;
+    }
+
+    const currentLeaders = editForm.leaders || [];
+    
+    if (editingLeader) {
+      // Update existing
+      const updatedLeaders = currentLeaders.map(l => 
+        l.id === editingLeader.id ? { ...l, ...leaderForm } : l
+      );
+      setEditForm({ ...editForm, leaders: updatedLeaders });
+    } else {
+      // Add new
+      const newLeader: HallLeader = {
+        id: `leader-${Date.now()}`,
+        ...leaderForm
+      };
+      setEditForm({ ...editForm, leaders: [...currentLeaders, newLeader] });
+    }
+
+    setShowLeaderModal(false);
+    toast.success(editingLeader ? 'Leader updated' : 'Leader added');
+  };
+
+  const handleDeleteLeader = (leaderId: string) => {
+    if (!confirm('Remove this leader?')) return;
+    const updatedLeaders = (editForm.leaders || []).filter(l => l.id !== leaderId);
+    setEditForm({ ...editForm, leaders: updatedLeaders });
+    toast.success('Leader removed');
+  };
+
+  const handleUploadLeaderImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingLeaderImage(true);
+    try {
+      const fileName = `${Date.now()}-${file.name}`;
+      const { data, error } = await supabase.storage
+        .from('leader-images')
+        .upload(`halls/${fileName}`, file);
+
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage
+        .from('leader-images')
+        .getPublicUrl(`halls/${fileName}`);
+
+      setLeaderForm({ ...leaderForm, image_url: urlData.publicUrl });
+      toast.success('Image uploaded');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setUploadingLeaderImage(false);
+    }
+  };
+
+  // Gallery management
+  const handleUploadGalleryImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingGallery(true);
+    try {
+      const fileName = `${Date.now()}-${file.name}`;
+      const { data, error } = await supabase.storage
+        .from('club-images')
+        .upload(`halls/gallery/${fileName}`, file);
+
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage
+        .from('club-images')
+        .getPublicUrl(`halls/gallery/${fileName}`);
+
+      const currentGallery = editForm.gallery_images || [];
+      setEditForm({ ...editForm, gallery_images: [...currentGallery, urlData.publicUrl] });
+      toast.success('Gallery image added');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setUploadingGallery(false);
+    }
+  };
+
+  const handleRemoveGalleryImage = (index: number) => {
+    const currentGallery = editForm.gallery_images || [];
+    setEditForm({ ...editForm, gallery_images: currentGallery.filter((_, i) => i !== index) });
+  };
+
+  const handleUploadHeroImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingHeroImage(true);
+    try {
+      const fileName = `${Date.now()}-${file.name}`;
+      const { data, error } = await supabase.storage
+        .from('club-images')
+        .upload(`halls/hero/${fileName}`, file);
+
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage
+        .from('club-images')
+        .getPublicUrl(`halls/hero/${fileName}`);
+
+      setEditForm({ ...editForm, image_url: urlData.publicUrl });
+      toast.success('Hero image updated');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setUploadingHeroImage(false);
+    }
   };
 
   if (loading) {
@@ -122,6 +297,8 @@ const HallDetailPage = () => {
   }
 
   const hallColor = hall.color || '#1e40af';
+  const leaders = isEditing ? (editForm.leaders || []) : (hall.leaders || []);
+  const galleryImages = isEditing ? (editForm.gallery_images || []) : (hall.gallery_images || []);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -139,7 +316,7 @@ const HallDetailPage = () => {
           transition={{ duration: 10, repeat: Infinity, repeatType: "reverse" }}
           className="absolute inset-0 bg-cover bg-center"
           style={{ 
-            backgroundImage: hall.image_url ? `url(${hall.image_url})` : undefined, 
+            backgroundImage: (isEditing ? editForm.image_url : hall.image_url) ? `url(${isEditing ? editForm.image_url : hall.image_url})` : undefined, 
             backgroundColor: hallColor 
           }}
         />
@@ -203,6 +380,17 @@ const HallDetailPage = () => {
           <div className="absolute top-24 right-6 z-30 flex gap-2">
             {isEditing ? (
               <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+                  onClick={() => heroImageRef.current?.click()}
+                  disabled={uploadingHeroImage}
+                >
+                  {uploadingHeroImage ? <Loader2 size={16} className="animate-spin" /> : <ImageIcon size={16} />}
+                  <span className="ml-2 hidden sm:inline">Change Hero</span>
+                </Button>
+                <input ref={heroImageRef} type="file" accept="image/*" className="hidden" onChange={handleUploadHeroImage} />
                 <Button
                   size="sm"
                   variant="outline"
@@ -313,17 +501,56 @@ const HallDetailPage = () => {
               </motion.div>
             )}
 
-            {/* Gallery placeholder */}
-            <div className="grid grid-cols-2 gap-4">
-              {[1, 2].map((i) => (
-                <div key={i} className="aspect-video bg-slate-200 rounded-lg overflow-hidden relative group">
-                  <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/20 transition-colors" />
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-white font-bold uppercase tracking-widest text-xs">View</span>
-                  </div>
+            {/* Gallery */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white p-6 shadow-xl border border-slate-200"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3 text-slate-400 font-bold uppercase text-xs tracking-widest">
+                  <ImageIcon size={16} /> Gallery
                 </div>
-              ))}
-            </div>
+                {isEditing && (
+                  <Button size="sm" variant="outline" onClick={() => galleryImageRef.current?.click()} disabled={uploadingGallery}>
+                    {uploadingGallery ? <Loader2 size={14} className="animate-spin mr-2" /> : <Plus size={14} className="mr-2" />}
+                    Add Image
+                  </Button>
+                )}
+                <input ref={galleryImageRef} type="file" accept="image/*" className="hidden" onChange={handleUploadGalleryImage} />
+              </div>
+              
+              {galleryImages.length === 0 ? (
+                <div className="grid grid-cols-2 gap-4">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="aspect-video bg-slate-200 rounded-lg overflow-hidden relative group">
+                      <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-sm">
+                        No images yet
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {galleryImages.map((img, idx) => (
+                    <div key={idx} className="aspect-video bg-slate-200 rounded-lg overflow-hidden relative group">
+                      <img src={img} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" />
+                      {isEditing && (
+                        <Button
+                          size="icon"
+                          variant="destructive"
+                          className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => handleRemoveGalleryImage(idx)}
+                        >
+                          <Trash2 size={14} />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
           </div>
 
           {/* Sidebar */}
@@ -334,10 +561,50 @@ const HallDetailPage = () => {
               transition={{ delay: 0.4 }}
               className="bg-white p-8 shadow-lg border border-slate-100"
             >
-              <h3 className="font-serif text-2xl text-slate-800 mb-6 border-b border-slate-100 pb-4">
-                Hall Leadership
-              </h3>
-              <p className="text-sm text-slate-500 italic">Leadership information coming soon.</p>
+              <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
+                <h3 className="font-serif text-2xl text-slate-800">
+                  Hall Leadership
+                </h3>
+                {isEditing && (
+                  <Button size="sm" variant="outline" onClick={handleAddLeader}>
+                    <Plus size={14} className="mr-1" /> Add
+                  </Button>
+                )}
+              </div>
+              
+              {leaders.length === 0 ? (
+                <p className="text-sm text-slate-500 italic">No leadership information added yet.</p>
+              ) : (
+                <div className="space-y-4">
+                  {leaders.map((leader) => (
+                    <div key={leader.id} className="flex items-center gap-3 group">
+                      <div className="w-12 h-12 rounded-full bg-slate-100 overflow-hidden flex-shrink-0">
+                        {leader.image_url ? (
+                          <img src={leader.image_url} alt={leader.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-400">
+                            <Users size={20} />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-slate-800 truncate">{leader.name}</p>
+                        <p className="text-xs text-slate-500">{leader.position}</p>
+                      </div>
+                      {isEditing && (
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleEditLeader(leader)}>
+                            <Edit2 size={12} />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-red-500" onClick={() => handleDeleteLeader(leader.id)}>
+                            <Trash2 size={12} />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </motion.div>
 
             <motion.div
@@ -415,6 +682,47 @@ const HallDetailPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Leader Modal */}
+      <Dialog open={showLeaderModal} onOpenChange={setShowLeaderModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingLeader ? 'Edit Leader' : 'Add Leader'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center gap-4">
+              <div className="w-20 h-20 rounded-full bg-slate-100 overflow-hidden flex-shrink-0">
+                {leaderForm.image_url ? (
+                  <img src={leaderForm.image_url} alt="Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-slate-400">
+                    <Users size={32} />
+                  </div>
+                )}
+              </div>
+              <Button variant="outline" onClick={() => leaderImageRef.current?.click()} disabled={uploadingLeaderImage}>
+                {uploadingLeaderImage ? <Loader2 size={14} className="animate-spin mr-2" /> : <Upload size={14} className="mr-2" />}
+                Upload Photo
+              </Button>
+              <input ref={leaderImageRef} type="file" accept="image/*" className="hidden" onChange={handleUploadLeaderImage} />
+            </div>
+            <Input
+              placeholder="Name"
+              value={leaderForm.name}
+              onChange={(e) => setLeaderForm({ ...leaderForm, name: e.target.value })}
+            />
+            <Input
+              placeholder="Position (e.g., Hall Warden, Porter)"
+              value={leaderForm.position}
+              onChange={(e) => setLeaderForm({ ...leaderForm, position: e.target.value })}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowLeaderModal(false)}>Cancel</Button>
+            <Button onClick={handleSaveLeader}>{editingLeader ? 'Update' : 'Add'} Leader</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
