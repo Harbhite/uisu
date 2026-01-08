@@ -292,7 +292,7 @@ const AcademicBankPage = () => {
     return 'pdf';
   };
 
-  const makeStoragePath = (opts: { fileName: string; relativePath?: string | null }) => {
+  const makeStoragePath = (opts: { fileName: string; relativePath?: string | null; parentId?: string | null }) => {
     // Keep uploads unique and (when applicable) preserve folder structure.
     const uniquePrefix = typeof crypto !== 'undefined' && 'randomUUID' in crypto
       ? crypto.randomUUID()
@@ -303,21 +303,30 @@ const AcademicBankPage = () => {
       .replace(/\.\./g, '')
       .replace(/\\/g, '/');
 
-    const baseDir = currentFolderId ? `academic-bank/${currentFolderId}` : 'academic-bank/root';
+    // Sanitize filename
+    const sanitizedFileName = opts.fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+
+    // Use passed parentId if available (checking for undefined), otherwise fallback to currentFolderId
+    const targetFolderId = opts.parentId !== undefined ? opts.parentId : currentFolderId;
+    const baseDir = targetFolderId ? `academic-bank/${targetFolderId}` : 'academic-bank/root';
 
     // If a relativePath is provided (folder upload), store under a unique session folder.
     if (safeRelative) {
       return `${baseDir}/folder-upload/${uniquePrefix}/${safeRelative}`;
     }
 
-    return `${baseDir}/${uniquePrefix}-${opts.fileName}`;
+    return `${baseDir}/${uniquePrefix}-${sanitizedFileName}`;
   };
 
   const uploadOneFile = async (
     file: File,
     opts: { parentId: string | null; displayName: string; relativePath?: string | null }
   ) => {
-    const storagePath = makeStoragePath({ fileName: opts.displayName, relativePath: opts.relativePath });
+    const storagePath = makeStoragePath({
+      fileName: opts.displayName,
+      relativePath: opts.relativePath,
+      parentId: opts.parentId
+    });
 
     const { error: uploadError } = await supabase.storage
       .from('resources')
