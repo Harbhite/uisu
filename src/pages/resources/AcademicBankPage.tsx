@@ -284,118 +284,50 @@ const AcademicBankPage = () => {
     }
   };
 
-  const getResourceTypeFromName = (name: string) => {
-    const ext = name.split('.').pop()?.toLowerCase() || '';
-    if (['doc', 'docx'].includes(ext)) return 'doc';
-    if (['ppt', 'pptx'].includes(ext)) return 'ppt';
-    if (['xls', 'xlsx'].includes(ext)) return 'xls';
-    return 'pdf';
-  };
-
-  const makeStoragePath = (opts: { fileName: string; relativePath?: string | null }) => {
-    // Keep uploads unique and (when applicable) preserve folder structure.
-    const uniquePrefix = typeof crypto !== 'undefined' && 'randomUUID' in crypto
-      ? crypto.randomUUID()
-      : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-
-    const safeRelative = (opts.relativePath || '')
-      .replace(/^\/+/, '')
-      .replace(/\.\./g, '')
-      .replace(/\\/g, '/');
-
-    const baseDir = currentFolderId ? `academic-bank/${currentFolderId}` : 'academic-bank/root';
-
-    // If a relativePath is provided (folder upload), store under a unique session folder.
-    if (safeRelative) {
-      return `${baseDir}/folder-upload/${uniquePrefix}/${safeRelative}`;
-    }
-
-    return `${baseDir}/${uniquePrefix}-${opts.fileName}`;
-  };
-
-  const uploadOneFile = async (
-    file: File,
-    opts: { parentId: string | null; displayName: string; relativePath?: string | null }
-  ) => {
-    const storagePath = makeStoragePath({ fileName: opts.displayName, relativePath: opts.relativePath });
-
-    const { error: uploadError } = await supabase.storage
-      .from('resources')
-      .upload(storagePath, file, { upsert: true });
-
-    if (uploadError) throw uploadError;
-
-    const { data: urlData } = supabase.storage.from('resources').getPublicUrl(storagePath);
-
-    const { data, error } = await supabase
-      .from('academic_resources')
-      .insert({
-        name: opts.displayName,
-        resource_type: getResourceTypeFromName(opts.displayName),
-        parent_id: opts.parentId,
-        file_url: urlData.publicUrl,
-        file_size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
-        owner: 'Staff'
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data as AcademicResource;
-  };
-
-  const uploadManyFiles = async (files: File[], parentId: string | null, label: string) => {
-    const fileList = files.slice(0, 25);
-    if (files.length > 25) toast.warning(`Only first 25 files will be uploaded (${files.length} selected)`);
-
-    setUploading(true);
-    setUploadProgress('');
-
-    const createdResources: AcademicResource[] = [];
-    let failedCount = 0;
-
-    try {
-      for (let idx = 0; idx < fileList.length; idx++) {
-        const file = fileList[idx];
-        setUploadProgress(`${label} ${idx + 1}/${fileList.length}...`);
-
-        try {
-          const created = await uploadOneFile(file, { parentId, displayName: file.name });
-          createdResources.push(created);
-        } catch (err) {
-          failedCount++;
-          console.error('Upload error for file:', file.name, err);
-        }
-      }
-
-      setResources((prev) => [...prev, ...createdResources]);
-
-      const okCount = createdResources.length;
-      if (okCount === 0 && failedCount > 0) {
-        toast.error('Upload failed. Please ensure you are signed in as staff.');
-      } else if (failedCount > 0) {
-        toast.warning(`Uploaded ${okCount} files, ${failedCount} failed`);
-      } else {
-        toast.success(`Uploaded ${okCount} files successfully`);
-      }
-    } finally {
-      setUploading(false);
-      setUploadProgress('');
-    }
-  };
-
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setUploading(true);
+    
     try {
-      setUploading(true);
-      const created = await uploadOneFile(file, { parentId: currentFolderId, displayName: file.name });
-      setResources((prev) => [...prev, created]);
+      const fileName = `${Date.now()}-${file.name}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('resources')
+        .upload(`academic-bank/${fileName}`, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('resources')
+        .getPublicUrl(`academic-bank/${fileName}`);
+
+      const ext = file.name.split('.').pop()?.toLowerCase() || '';
+      let resourceType = 'pdf';
+      if (['doc', 'docx'].includes(ext)) resourceType = 'doc';
+      else if (['ppt', 'pptx'].includes(ext)) resourceType = 'ppt';
+      else if (['xls', 'xlsx'].includes(ext)) resourceType = 'xls';
+
+      const { data, error } = await supabase
+        .from('academic_resources')
+        .insert({
+          name: file.name,
+          resource_type: resourceType,
+          parent_id: currentFolderId,
+          file_url: urlData.publicUrl,
+          file_size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
+          owner: 'Staff'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setResources([...resources, data]);
       toast.success('File uploaded successfully');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Upload error:', error);
-      toast.error(error?.message || 'Failed to upload file');
+      toast.error('Failed to upload file');
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -407,9 +339,75 @@ const AcademicBankPage = () => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    const fileList = Array.from(files).slice(0, 25); // Max 25 files
+    if (files.length > 25) {
+      toast.warning(`Only first 25 files will be uploaded (${files.length} selected)`);
+    }
+
+    setUploading(true);
+    const newResources: AcademicResource[] = [];
+    let uploadedCount = 0;
+    let failedCount = 0;
+
     try {
-      await uploadManyFiles(Array.from(files), currentFolderId, 'Uploading');
+      for (const file of fileList) {
+        setUploadProgress(`Uploading ${uploadedCount + 1}/${fileList.length}...`);
+        
+        const fileName = `${Date.now()}-${file.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('resources')
+          .upload(`academic-bank/${fileName}`, file);
+
+        if (uploadError) {
+          console.error('Upload error for file:', file.name, uploadError);
+          failedCount++;
+          continue;
+        }
+
+        const { data: urlData } = supabase.storage
+          .from('resources')
+          .getPublicUrl(`academic-bank/${fileName}`);
+
+        const ext = file.name.split('.').pop()?.toLowerCase() || '';
+        let resourceType = 'pdf';
+        if (['doc', 'docx'].includes(ext)) resourceType = 'doc';
+        else if (['ppt', 'pptx'].includes(ext)) resourceType = 'ppt';
+        else if (['xls', 'xlsx'].includes(ext)) resourceType = 'xls';
+
+        const { data, error } = await supabase
+          .from('academic_resources')
+          .insert({
+            name: file.name,
+            resource_type: resourceType,
+            parent_id: currentFolderId,
+            file_url: urlData.publicUrl,
+            file_size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
+            owner: 'Staff'
+          })
+          .select()
+          .single();
+
+        if (!error && data) {
+          newResources.push(data);
+          uploadedCount++;
+        } else {
+          failedCount++;
+        }
+      }
+
+      setResources([...resources, ...newResources]);
+      
+      if (failedCount > 0) {
+        toast.warning(`Uploaded ${uploadedCount} files, ${failedCount} failed`);
+      } else {
+        toast.success(`Uploaded ${uploadedCount} files successfully`);
+      }
+    } catch (error) {
+      console.error('Multi-file upload error:', error);
+      toast.error('Failed to upload files');
     } finally {
+      setUploading(false);
+      setUploadProgress('');
       if (multiFileInputRef.current) multiFileInputRef.current.value = '';
     }
   };
@@ -420,37 +418,35 @@ const AcademicBankPage = () => {
     if (!files || files.length === 0) return;
 
     setUploading(true);
-    setUploadProgress('');
-
-    const createdResources: AcademicResource[] = [];
+    const newResources: AcademicResource[] = [];
     const folderMap = new Map<string, string>(); // path -> id
-    const fileList = Array.from(files);
 
     try {
-      for (let idx = 0; idx < fileList.length; idx++) {
-        const file = fileList[idx];
-        setUploadProgress(`Uploading ${idx + 1}/${fileList.length}...`);
+      // Group files by their folder structure
+      const fileList = Array.from(files);
+      const totalFiles = fileList.length;
+      let uploadedCount = 0;
 
-        const fullRelativePath = (file.webkitRelativePath || file.name).replace(/\\/g, '/');
-        const pathParts = fullRelativePath.split('/');
-        const fileName = pathParts.pop() || file.name;
-
+      for (const file of fileList) {
+        const pathParts = file.webkitRelativePath.split('/');
+        const fileName = pathParts.pop()!;
+        
+        // Create folder hierarchy
         let parentId = currentFolderId;
         let currentPathStr = '';
-
-        // Create folder hierarchy in DB
+        
         for (const folderName of pathParts) {
-          if (!folderName) continue;
           currentPathStr += '/' + folderName;
-
+          
           if (!folderMap.has(currentPathStr)) {
-            const existingFolder =
-              resources.find((r) => r.name === folderName && r.parent_id === parentId && r.resource_type === 'folder') ||
-              createdResources.find((r) => r.name === folderName && r.parent_id === parentId && r.resource_type === 'folder');
+            // Check if folder exists in resources
+            let existingFolder = resources.find(r => 
+              r.name === folderName && r.parent_id === parentId && r.resource_type === 'folder'
+            ) || newResources.find(r => 
+              r.name === folderName && r.parent_id === parentId && r.resource_type === 'folder'
+            );
 
-            if (existingFolder) {
-              folderMap.set(currentPathStr, existingFolder.id);
-            } else {
+            if (!existingFolder) {
               const { data, error } = await supabase
                 .from('academic_resources')
                 .insert({
@@ -463,32 +459,63 @@ const AcademicBankPage = () => {
                 .single();
 
               if (error) throw error;
-              createdResources.push(data as AcademicResource);
-              folderMap.set(currentPathStr, (data as AcademicResource).id);
+              existingFolder = data;
+              newResources.push(data);
             }
+            
+            folderMap.set(currentPathStr, existingFolder.id);
           }
-
+          
           parentId = folderMap.get(currentPathStr)!;
         }
 
-        // Upload file + create DB record (storage key includes fullRelativePath to prevent collisions)
-        try {
-          const created = await uploadOneFile(file, {
-            parentId,
-            displayName: fileName,
-            relativePath: fullRelativePath
-          });
-          createdResources.push(created);
-        } catch (err) {
-          console.error('Upload error for file:', fileName, err);
+        // Upload the file
+        const storageName = `${Date.now()}-${fileName}`;
+        const { error: uploadError } = await supabase.storage
+          .from('resources')
+          .upload(`academic-bank/${storageName}`, file);
+
+        if (uploadError) {
+          console.error('Upload error for file:', fileName, uploadError);
+          continue;
         }
+
+        const { data: urlData } = supabase.storage
+          .from('resources')
+          .getPublicUrl(`academic-bank/${storageName}`);
+
+        const ext = fileName.split('.').pop()?.toLowerCase() || '';
+        let resourceType = 'pdf';
+        if (['doc', 'docx'].includes(ext)) resourceType = 'doc';
+        else if (['ppt', 'pptx'].includes(ext)) resourceType = 'ppt';
+        else if (['xls', 'xlsx'].includes(ext)) resourceType = 'xls';
+
+        const { data, error } = await supabase
+          .from('academic_resources')
+          .insert({
+            name: fileName,
+            resource_type: resourceType,
+            parent_id: parentId,
+            file_url: urlData.publicUrl,
+            file_size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
+            owner: 'Staff'
+          })
+          .select()
+          .single();
+
+        if (!error && data) {
+          newResources.push(data);
+        }
+
+        uploadedCount++;
+        setUploadProgress(`Uploading ${uploadedCount}/${totalFiles} files...`);
       }
 
-      setResources((prev) => [...prev, ...createdResources]);
-      toast.success('Folder upload completed');
-    } catch (error: any) {
+      setResources([...resources, ...newResources]);
+      toast.success(`Uploaded ${uploadedCount} files successfully`);
+    } catch (error) {
       console.error('Folder upload error:', error);
-      toast.error(error?.message || 'Failed to upload folder');
+      toast.error('Failed to upload some files');
     } finally {
       setUploading(false);
       setUploadProgress('');
@@ -533,19 +560,86 @@ const AcademicBankPage = () => {
       const item = items[i];
       if (item.kind === 'file') {
         const file = item.getAsFile();
-        if (file) files.push(file);
+        if (file) {
+          files.push(file);
+        }
       }
     }
 
     if (files.length === 0) return;
 
+    // Use the multi-file upload logic
+    const fileList = files.slice(0, 25);
+    if (files.length > 25) {
+      toast.warning(`Only first 25 files will be uploaded (${files.length} dropped)`);
+    }
+
+    setUploading(true);
+    const newResources: AcademicResource[] = [];
+    let uploadedCount = 0;
+    let failedCount = 0;
+
     try {
-      await uploadManyFiles(files, currentFolderId, 'Uploading');
+      for (const file of fileList) {
+        setUploadProgress(`Uploading ${uploadedCount + 1}/${fileList.length}...`);
+        
+        const fileName = `${Date.now()}-${file.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('resources')
+          .upload(`academic-bank/${fileName}`, file);
+
+        if (uploadError) {
+          console.error('Upload error for file:', file.name, uploadError);
+          failedCount++;
+          continue;
+        }
+
+        const { data: urlData } = supabase.storage
+          .from('resources')
+          .getPublicUrl(`academic-bank/${fileName}`);
+
+        const ext = file.name.split('.').pop()?.toLowerCase() || '';
+        let resourceType = 'pdf';
+        if (['doc', 'docx'].includes(ext)) resourceType = 'doc';
+        else if (['ppt', 'pptx'].includes(ext)) resourceType = 'ppt';
+        else if (['xls', 'xlsx'].includes(ext)) resourceType = 'xls';
+
+        const { data, error } = await supabase
+          .from('academic_resources')
+          .insert({
+            name: file.name,
+            resource_type: resourceType,
+            parent_id: currentFolderId,
+            file_url: urlData.publicUrl,
+            file_size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
+            owner: 'Staff'
+          })
+          .select()
+          .single();
+
+        if (!error && data) {
+          newResources.push(data);
+          uploadedCount++;
+        } else {
+          failedCount++;
+        }
+      }
+
+      setResources([...resources, ...newResources]);
+      
+      if (failedCount > 0) {
+        toast.warning(`Uploaded ${uploadedCount} files, ${failedCount} failed`);
+      } else {
+        toast.success(`Uploaded ${uploadedCount} files successfully`);
+      }
     } catch (error) {
       console.error('Drag drop upload error:', error);
       toast.error('Failed to upload files');
+    } finally {
+      setUploading(false);
+      setUploadProgress('');
     }
-  }, [isStaff, currentFolderId]);
+  }, [isStaff, currentFolderId, resources]);
 
   const handleDownload = async (resource: AcademicResource) => {
     if (resource.file_url) {
