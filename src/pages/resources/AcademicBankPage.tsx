@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Search, Folder, FileText, Download, Plus,
   Grid, List, ChevronRight, Edit2, Trash2, Upload, X, FolderPlus, Loader2,
-  Eye, FileIcon
+  Eye, FileIcon, BarChart3, TrendingUp
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,7 @@ interface AcademicResource {
   file_size: string | null;
   owner: string | null;
   created_at: string | null;
+  download_count?: number;
 }
 
 interface SearchResult extends AcademicResource {
@@ -39,6 +40,7 @@ const AcademicBankPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isGlobalSearch, setIsGlobalSearch] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [showStats, setShowStats] = useState(false);
   
   // Preview state
   const [previewFile, setPreviewFile] = useState<AcademicResource | null>(null);
@@ -48,8 +50,10 @@ const AcademicBankPage = () => {
   const [editingFolder, setEditingFolder] = useState<AcademicResource | null>(null);
   const [newFolderName, setNewFolderName] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string>('');
   const [savingFolder, setSavingFolder] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
 
   const currentFolderId = currentPath.length > 0 ? currentPath[currentPath.length - 1] : null;
 
@@ -112,6 +116,12 @@ const AcademicBankPage = () => {
 
   const items = resources.filter(item => item.parent_id === currentFolderId);
 
+  // Get top downloaded files for stats
+  const topDownloaded = [...resources]
+    .filter(r => r.resource_type !== 'folder' && (r.download_count || 0) > 0)
+    .sort((a, b) => (b.download_count || 0) - (a.download_count || 0))
+    .slice(0, 10);
+
   const handleNavigate = (folderId: string) => {
     setCurrentPath([...currentPath, folderId]);
     setSearchQuery('');
@@ -129,7 +139,6 @@ const AcademicBankPage = () => {
 
   const navigateToResource = (resource: SearchResult) => {
     if (resource.resource_type === 'folder') {
-      // Build path to folder
       const pathIds: string[] = [];
       let current = resources.find(r => r.id === resource.id);
       while (current && current.parent_id) {
@@ -139,7 +148,6 @@ const AcademicBankPage = () => {
       pathIds.push(resource.id);
       setCurrentPath(pathIds);
     } else {
-      // For files, navigate to parent folder and open preview
       const pathIds: string[] = [];
       let current = resources.find(r => r.id === resource.parent_id);
       while (current) {
@@ -296,23 +304,153 @@ const AcademicBankPage = () => {
     }
   };
 
-  const handleDownload = (resource: AcademicResource) => {
+  // Folder upload handler
+  const handleFolderUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    const newResources: AcademicResource[] = [];
+    const folderMap = new Map<string, string>(); // path -> id
+
+    try {
+      // Group files by their folder structure
+      const fileList = Array.from(files);
+      const totalFiles = fileList.length;
+      let uploadedCount = 0;
+
+      for (const file of fileList) {
+        const pathParts = file.webkitRelativePath.split('/');
+        const fileName = pathParts.pop()!;
+        
+        // Create folder hierarchy
+        let parentId = currentFolderId;
+        let currentPathStr = '';
+        
+        for (const folderName of pathParts) {
+          currentPathStr += '/' + folderName;
+          
+          if (!folderMap.has(currentPathStr)) {
+            // Check if folder exists in resources
+            let existingFolder = resources.find(r => 
+              r.name === folderName && r.parent_id === parentId && r.resource_type === 'folder'
+            ) || newResources.find(r => 
+              r.name === folderName && r.parent_id === parentId && r.resource_type === 'folder'
+            );
+
+            if (!existingFolder) {
+              const { data, error } = await supabase
+                .from('academic_resources')
+                .insert({
+                  name: folderName,
+                  resource_type: 'folder',
+                  parent_id: parentId,
+                  owner: 'Staff'
+                })
+                .select()
+                .single();
+
+              if (error) throw error;
+              existingFolder = data;
+              newResources.push(data);
+            }
+            
+            folderMap.set(currentPathStr, existingFolder.id);
+          }
+          
+          parentId = folderMap.get(currentPathStr)!;
+        }
+
+        // Upload the file
+        const storageName = `${Date.now()}-${fileName}`;
+        const { error: uploadError } = await supabase.storage
+          .from('resources')
+          .upload(`academic-bank/${storageName}`, file);
+
+        if (uploadError) {
+          console.error('Upload error for file:', fileName, uploadError);
+          continue;
+        }
+
+        const { data: urlData } = supabase.storage
+          .from('resources')
+          .getPublicUrl(`academic-bank/${storageName}`);
+
+        const ext = fileName.split('.').pop()?.toLowerCase() || '';
+        let resourceType = 'pdf';
+        if (['doc', 'docx'].includes(ext)) resourceType = 'doc';
+        else if (['ppt', 'pptx'].includes(ext)) resourceType = 'ppt';
+        else if (['xls', 'xlsx'].includes(ext)) resourceType = 'xls';
+
+        const { data, error } = await supabase
+          .from('academic_resources')
+          .insert({
+            name: fileName,
+            resource_type: resourceType,
+            parent_id: parentId,
+            file_url: urlData.publicUrl,
+            file_size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
+            owner: 'Staff'
+          })
+          .select()
+          .single();
+
+        if (!error && data) {
+          newResources.push(data);
+        }
+
+        uploadedCount++;
+        setUploadProgress(`Uploading ${uploadedCount}/${totalFiles} files...`);
+      }
+
+      setResources([...resources, ...newResources]);
+      toast.success(`Uploaded ${uploadedCount} files successfully`);
+    } catch (error) {
+      console.error('Folder upload error:', error);
+      toast.error('Failed to upload some files');
+    } finally {
+      setUploading(false);
+      setUploadProgress('');
+      if (folderInputRef.current) folderInputRef.current.value = '';
+    }
+  };
+
+  const handleDownload = async (resource: AcademicResource) => {
     if (resource.file_url) {
+      // Track download
+      await supabase
+        .from('academic_resources')
+        .update({ download_count: (resource.download_count || 0) + 1 })
+        .eq('id', resource.id);
+
+      // Update local state
+      setResources(resources.map(r => 
+        r.id === resource.id ? { ...r, download_count: (r.download_count || 0) + 1 } : r
+      ));
+
       window.open(resource.file_url, '_blank');
     }
   };
 
   const handlePreview = (resource: AcademicResource) => {
-    if (resource.file_url && resource.resource_type === 'pdf') {
+    if (resource.file_url) {
       setPreviewFile(resource);
-    } else if (resource.file_url) {
-      // For non-PDF files, just download
-      handleDownload(resource);
     }
   };
 
   const canPreview = (resource: AcademicResource) => {
-    return resource.resource_type === 'pdf' && resource.file_url;
+    return ['pdf', 'doc', 'ppt', 'xls'].includes(resource.resource_type) && resource.file_url;
+  };
+
+  const getPreviewUrl = (resource: AcademicResource) => {
+    if (!resource.file_url) return '';
+    
+    if (resource.resource_type === 'pdf') {
+      return `${resource.file_url}#toolbar=0`;
+    }
+    
+    // Use Google Docs Viewer for Office documents
+    return `https://docs.google.com/gview?url=${encodeURIComponent(resource.file_url)}&embedded=true`;
   };
 
   const breadcrumbPath = [{ id: null, name: 'Academic Bank' }, ...currentPath.map(id => ({ id, name: getFolderName(id) }))];
@@ -340,6 +478,17 @@ const AcademicBankPage = () => {
               <ArrowLeft size={20} />
             </Button>
             <h1 className="text-2xl font-serif text-slate-800">Academic Bank</h1>
+            {isStaff && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => setShowStats(!showStats)}
+              >
+                <BarChart3 size={16} />
+                Stats
+              </Button>
+            )}
           </div>
 
           <div className="flex items-center gap-3 w-full md:w-auto">
@@ -432,6 +581,40 @@ const AcademicBankPage = () => {
           </div>
         </div>
 
+        {/* Stats Panel */}
+        <AnimatePresence>
+          {showStats && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-6 overflow-hidden"
+            >
+              <div className="bg-white border border-slate-200 rounded-xl p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <TrendingUp size={20} className="text-green-500" />
+                  <h3 className="font-semibold text-slate-800">Most Downloaded Files</h3>
+                </div>
+                {topDownloaded.length === 0 ? (
+                  <p className="text-sm text-slate-400">No download data yet</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    {topDownloaded.map((file, index) => (
+                      <div key={file.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                        <span className="text-lg font-bold text-slate-300">#{index + 1}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-slate-700 truncate">{file.name}</p>
+                          <p className="text-xs text-slate-400">{file.download_count} downloads</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Main Content Area */}
         <div className="flex-1 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
           {/* Toolbar / Breadcrumbs */}
@@ -467,12 +650,22 @@ const AcademicBankPage = () => {
                 </Button>
                 <Button
                   size="sm"
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => folderInputRef.current?.click()}
+                  disabled={uploading}
+                >
+                  <Folder size={16} />
+                  <span className="hidden sm:inline">Upload Folder</span>
+                </Button>
+                <Button
+                  size="sm"
                   className="gap-2"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
                 >
                   {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                  <span className="hidden sm:inline">Upload</span>
+                  <span className="hidden sm:inline">{uploadProgress || 'Upload'}</span>
                 </Button>
                 <input
                   ref={fileInputRef}
@@ -480,6 +673,14 @@ const AcademicBankPage = () => {
                   className="hidden"
                   onChange={handleFileUpload}
                   accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
+                />
+                <input
+                  ref={folderInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={handleFolderUpload}
+                  {...{ webkitdirectory: '', directory: '' } as any}
+                  multiple
                 />
               </div>
             )}
@@ -548,6 +749,11 @@ const AcademicBankPage = () => {
                             <span>{item.created_at ? new Date(item.created_at).toLocaleDateString() : ''}</span>
                             <span>{item.owner}</span>
                             {item.file_size && <span>{item.file_size}</span>}
+                            {item.download_count !== undefined && item.download_count > 0 && (
+                              <span className="flex items-center gap-1">
+                                <Download size={10} /> {item.download_count}
+                              </span>
+                            )}
                           </div>
                         )}
                       </div>
@@ -629,7 +835,7 @@ const AcademicBankPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* PDF Preview Modal */}
+      {/* Document Preview Modal */}
       <Dialog open={!!previewFile} onOpenChange={(open) => !open && setPreviewFile(null)}>
         <DialogContent className="max-w-5xl h-[90vh] p-0 overflow-hidden">
           <DialogHeader className="p-4 border-b border-slate-200">
@@ -660,7 +866,7 @@ const AcademicBankPage = () => {
           <div className="flex-1 bg-slate-100 h-full">
             {previewFile?.file_url && (
               <iframe
-                src={`${previewFile.file_url}#toolbar=0`}
+                src={getPreviewUrl(previewFile)}
                 className="w-full h-[calc(90vh-80px)]"
                 title={previewFile.name}
               />
