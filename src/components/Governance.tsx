@@ -1,11 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Landmark, Users, Scale, Gavel, Mic, Book, Coins, Shield, Trophy, Star, ArrowRight, MapPin } from 'lucide-react';
-import { halls } from '@/components/CampusMap';
+import { ArrowLeft, Landmark, Users, Scale, Gavel, Mic, Book, Coins, Shield, Trophy, Star, ArrowRight, MapPin, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface GovernanceProps {
   onBack: () => void;
+}
+
+interface Hall {
+  id: string;
+  name: string;
+  alias: string | null;
+  motto: string | null;
+  description: string | null;
+  color: string | null;
+  slug: string;
 }
 
 const containerVariants = {
@@ -25,6 +35,30 @@ const itemVariants = {
 
 export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
   const [activeTab, setActiveTab] = useState<'cec' | 'src' | 'halls'>('cec');
+  const [halls, setHalls] = useState<Hall[]>([]);
+  const [loadingHalls, setLoadingHalls] = useState(false);
+
+  // Fetch halls from database when halls tab is active
+  useEffect(() => {
+    if (activeTab === 'halls') {
+      const fetchHalls = async () => {
+        setLoadingHalls(true);
+        const { data, error } = await supabase
+          .from('halls')
+          .select('id, name, alias, motto, description, color, slug')
+          .order('name');
+        
+        if (error) {
+          console.error('Error fetching halls:', error);
+        } else {
+          setHalls(data || []);
+        }
+        setLoadingHalls(false);
+      };
+
+      fetchHalls();
+    }
+  }, [activeTab]);
 
   return (
     <div className="min-h-screen bg-slate-50 pt-32 pb-16">
@@ -151,42 +185,58 @@ export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
                     animate="visible"
                     className="grid grid-cols-1 md:grid-cols-2 gap-8"
                 >
-                    {halls.map((hall) => (
-                        <Link to={`/governance/hall/${hall.id}`} key={hall.id}>
-                            <motion.div
-                                variants={itemVariants}
-                                whileHover={{ y: -10 }}
-                                className="bg-white border group relative overflow-hidden h-full shadow-sm hover:shadow-xl transition-all duration-500"
-                                style={{ borderColor: `${hall.color}30` }}
-                            >
-                                <div className="absolute top-0 left-0 w-full h-2" style={{ backgroundColor: hall.color }} />
-                                <div className="p-8 relative z-10">
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div className="p-3 rounded-full bg-slate-50 border border-slate-100 group-hover:scale-110 transition-transform duration-300">
-                                            <MapPin size={24} style={{ color: hall.color }} />
+                    {loadingHalls ? (
+                        <div className="col-span-2 flex items-center justify-center py-20">
+                            <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+                        </div>
+                    ) : halls.length === 0 ? (
+                        <div className="col-span-2 text-center py-20 text-slate-400">
+                            No halls found
+                        </div>
+                    ) : (
+                        halls.map((hall) => (
+                            <Link to={`/governance/hall/${hall.slug}`} key={hall.id}>
+                                <motion.div
+                                    variants={itemVariants}
+                                    whileHover={{ y: -10 }}
+                                    className="bg-white border group relative overflow-hidden h-full shadow-sm hover:shadow-xl transition-all duration-500"
+                                    style={{ borderColor: `${hall.color || '#6d28d9'}30` }}
+                                >
+                                    <div className="absolute top-0 left-0 w-full h-2" style={{ backgroundColor: hall.color || '#6d28d9' }} />
+                                    <div className="p-8 relative z-10">
+                                        <div className="flex justify-between items-start mb-6">
+                                            <div className="p-3 rounded-full bg-slate-50 border border-slate-100 group-hover:scale-110 transition-transform duration-300">
+                                                <MapPin size={24} style={{ color: hall.color || '#6d28d9' }} />
+                                            </div>
+                                            {hall.alias && (
+                                                <div className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-slate-50 text-slate-500 border border-slate-100">
+                                                    {hall.alias}
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-slate-50 text-slate-500 border border-slate-100">
-                                            {hall.alias}
+
+                                        <h3 className="text-3xl font-serif text-slate-800 mb-2 group-hover:text-ui-blue transition-colors">
+                                            {hall.name}
+                                        </h3>
+                                        {hall.motto && (
+                                            <p className="font-serif italic text-slate-400 text-sm mb-6">"{hall.motto}"</p>
+                                        )}
+
+                                        {hall.description && (
+                                            <p className="text-slate-600 leading-relaxed mb-8 line-clamp-3">
+                                                {hall.description}
+                                            </p>
+                                        )}
+
+                                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-ui-blue group-hover:gap-4 transition-all">
+                                            Explore Republic <ArrowRight size={14} />
                                         </div>
                                     </div>
-
-                                    <h3 className="text-3xl font-serif text-slate-800 mb-2 group-hover:text-ui-blue transition-colors">
-                                        {hall.name}
-                                    </h3>
-                                    <p className="font-serif italic text-slate-400 text-sm mb-6">"{hall.motto}"</p>
-
-                                    <p className="text-slate-600 leading-relaxed mb-8 line-clamp-3">
-                                        {hall.desc}
-                                    </p>
-
-                                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-ui-blue group-hover:gap-4 transition-all">
-                                        Explore Republic <ArrowRight size={14} />
-                                    </div>
-                                </div>
-                                <div className="absolute -bottom-20 -right-20 w-64 h-64 rounded-full opacity-5 group-hover:opacity-10 transition-opacity duration-500" style={{ backgroundColor: hall.color }} />
-                            </motion.div>
-                        </Link>
-                    ))}
+                                    <div className="absolute -bottom-20 -right-20 w-64 h-64 rounded-full opacity-5 group-hover:opacity-10 transition-opacity duration-500" style={{ backgroundColor: hall.color || '#6d28d9' }} />
+                                </motion.div>
+                            </Link>
+                        ))
+                    )}
                 </motion.div>
             )}
 
