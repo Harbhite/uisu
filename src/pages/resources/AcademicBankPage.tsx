@@ -4,8 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Search, Folder, FileText, Download, Plus,
   Grid, List, ChevronRight, Edit2, Trash2, Upload, X, FolderPlus, Loader2,
-  Eye, FileIcon, BarChart3, TrendingUp
+  Eye, FileIcon, BarChart3, TrendingUp, ArrowUpDown, Files
 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +42,8 @@ const AcademicBankPage = () => {
   const [isGlobalSearch, setIsGlobalSearch] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showStats, setShowStats] = useState(false);
+  const [sortBy, setSortBy] = useState<'name' | 'date' | 'downloads'>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   
   // Preview state
   const [previewFile, setPreviewFile] = useState<AcademicResource | null>(null);
@@ -53,6 +56,7 @@ const AcademicBankPage = () => {
   const [uploadProgress, setUploadProgress] = useState<string>('');
   const [savingFolder, setSavingFolder] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const multiFileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
 
   const currentFolderId = currentPath.length > 0 ? currentPath[currentPath.length - 1] : null;
@@ -114,7 +118,30 @@ const AcademicBankPage = () => {
     }
   }, [searchQuery, resources]);
 
-  const items = resources.filter(item => item.parent_id === currentFolderId);
+  // Sort items
+  const sortItems = (items: AcademicResource[]) => {
+    return [...items].sort((a, b) => {
+      // Folders always first
+      if (a.resource_type === 'folder' && b.resource_type !== 'folder') return -1;
+      if (a.resource_type !== 'folder' && b.resource_type === 'folder') return 1;
+
+      let comparison = 0;
+      switch (sortBy) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case 'date':
+          comparison = new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+          break;
+        case 'downloads':
+          comparison = (a.download_count || 0) - (b.download_count || 0);
+          break;
+      }
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+  };
+
+  const items = sortItems(resources.filter(item => item.parent_id === currentFolderId));
 
   // Get top downloaded files for stats
   const topDownloaded = [...resources]
@@ -301,6 +328,84 @@ const AcademicBankPage = () => {
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  // Multi-file upload handler (up to 25 files)
+  const handleMultiFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const fileList = Array.from(files).slice(0, 25); // Max 25 files
+    if (files.length > 25) {
+      toast.warning(`Only first 25 files will be uploaded (${files.length} selected)`);
+    }
+
+    setUploading(true);
+    const newResources: AcademicResource[] = [];
+    let uploadedCount = 0;
+    let failedCount = 0;
+
+    try {
+      for (const file of fileList) {
+        setUploadProgress(`Uploading ${uploadedCount + 1}/${fileList.length}...`);
+        
+        const fileName = `${Date.now()}-${file.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('resources')
+          .upload(`academic-bank/${fileName}`, file);
+
+        if (uploadError) {
+          console.error('Upload error for file:', file.name, uploadError);
+          failedCount++;
+          continue;
+        }
+
+        const { data: urlData } = supabase.storage
+          .from('resources')
+          .getPublicUrl(`academic-bank/${fileName}`);
+
+        const ext = file.name.split('.').pop()?.toLowerCase() || '';
+        let resourceType = 'pdf';
+        if (['doc', 'docx'].includes(ext)) resourceType = 'doc';
+        else if (['ppt', 'pptx'].includes(ext)) resourceType = 'ppt';
+        else if (['xls', 'xlsx'].includes(ext)) resourceType = 'xls';
+
+        const { data, error } = await supabase
+          .from('academic_resources')
+          .insert({
+            name: file.name,
+            resource_type: resourceType,
+            parent_id: currentFolderId,
+            file_url: urlData.publicUrl,
+            file_size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
+            owner: 'Staff'
+          })
+          .select()
+          .single();
+
+        if (!error && data) {
+          newResources.push(data);
+          uploadedCount++;
+        } else {
+          failedCount++;
+        }
+      }
+
+      setResources([...resources, ...newResources]);
+      
+      if (failedCount > 0) {
+        toast.warning(`Uploaded ${uploadedCount} files, ${failedCount} failed`);
+      } else {
+        toast.success(`Uploaded ${uploadedCount} files successfully`);
+      }
+    } catch (error) {
+      console.error('Multi-file upload error:', error);
+      toast.error('Failed to upload files');
+    } finally {
+      setUploading(false);
+      setUploadProgress('');
+      if (multiFileInputRef.current) multiFileInputRef.current.value = '';
     }
   };
 
@@ -560,23 +665,49 @@ const AcademicBankPage = () => {
               </AnimatePresence>
             </div>
 
-            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg p-1">
-              <Button
-                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setViewMode('grid')}
-              >
-                <Grid size={16} />
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'secondary' : 'ghost'}
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setViewMode('list')}
-              >
-                <List size={16} />
-              </Button>
+            <div className="flex items-center gap-2">
+              {/* Sort Controls */}
+              <div className="flex items-center gap-2">
+                <Select value={sortBy} onValueChange={(v: 'name' | 'date' | 'downloads') => setSortBy(v)}>
+                  <SelectTrigger className="w-[130px] h-9 bg-white">
+                    <ArrowUpDown size={14} className="mr-1.5" />
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name">Name</SelectItem>
+                    <SelectItem value="date">Date</SelectItem>
+                    <SelectItem value="downloads">Downloads</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 px-2"
+                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                >
+                  {sortOrder === 'asc' ? '↑' : '↓'}
+                </Button>
+              </div>
+
+              {/* View Mode Toggle */}
+              <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1">
+                <Button
+                  variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setViewMode('grid')}
+                >
+                  <Grid size={16} />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setViewMode('list')}
+                >
+                  <List size={16} />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -660,6 +791,16 @@ const AcademicBankPage = () => {
                 </Button>
                 <Button
                   size="sm"
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => multiFileInputRef.current?.click()}
+                  disabled={uploading}
+                >
+                  <Files size={16} />
+                  <span className="hidden sm:inline">Multiple Files</span>
+                </Button>
+                <Button
+                  size="sm"
                   className="gap-2"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
@@ -673,6 +814,14 @@ const AcademicBankPage = () => {
                   className="hidden"
                   onChange={handleFileUpload}
                   accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
+                />
+                <input
+                  ref={multiFileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={handleMultiFileUpload}
+                  accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
+                  multiple
                 />
                 <input
                   ref={folderInputRef}
