@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { UploadQueue, UploadItem } from './UploadQueue';
 
 interface AcademicResource {
   id: string;
@@ -52,11 +53,16 @@ const AcademicBankPage = () => {
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [editingFolder, setEditingFolder] = useState<AcademicResource | null>(null);
   const [newFolderName, setNewFolderName] = useState('');
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<string>('');
+  // const [uploading, setUploading] = useState(false); // Removed in favor of Queue
+  // const [uploadProgress, setUploadProgress] = useState<string>(''); // Removed in favor of Queue
   const [savingFolder, setSavingFolder] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+
+  // Upload Queue State
+  const [uploadQueue, setUploadQueue] = useState<UploadItem[]>([]);
+  const [isQueueVisible, setIsQueueVisible] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const multiFileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
@@ -318,131 +324,140 @@ const AcademicBankPage = () => {
     return `${baseDir}/${uniquePrefix}-${sanitizedFileName}`;
   };
 
-  const uploadOneFile = async (
-    file: File,
-    opts: { parentId: string | null; displayName: string; relativePath?: string | null }
-  ) => {
-    const storagePath = makeStoragePath({
-      fileName: opts.displayName,
-      relativePath: opts.relativePath,
-      parentId: opts.parentId
-    });
-
-    const { error: uploadError } = await supabase.storage
-      .from('resources')
-      .upload(storagePath, file, { upsert: true });
-
-    if (uploadError) throw uploadError;
-
-    const { data: urlData } = supabase.storage.from('resources').getPublicUrl(storagePath);
-
-    const { data, error } = await supabase
-      .from('academic_resources')
-      .insert({
-        name: opts.displayName,
-        resource_type: getResourceTypeFromName(opts.displayName),
-        parent_id: opts.parentId,
-        file_url: urlData.publicUrl,
-        file_size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
-        owner: 'Staff'
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data as AcademicResource;
-  };
-
-  const uploadManyFiles = async (files: File[], parentId: string | null, label: string) => {
-    const fileList = files.slice(0, 25);
-    if (files.length > 25) toast.warning(`Only first 25 files will be uploaded (${files.length} selected)`);
-
-    setUploading(true);
-    setUploadProgress('');
-
-    const createdResources: AcademicResource[] = [];
-    let failedCount = 0;
+  const uploadOneFile = async (item: UploadItem) => {
+    // Update status to uploading
+    setUploadQueue(prev => prev.map(i => i.id === item.id ? { ...i, status: 'uploading', progress: 0 } : i));
 
     try {
-      for (let idx = 0; idx < fileList.length; idx++) {
-        const file = fileList[idx];
-        setUploadProgress(`${label} ${idx + 1}/${fileList.length}...`);
+      // Simulation of progress since Supabase doesn't support it directly in this client version
+      const progressInterval = setInterval(() => {
+        setUploadQueue(prev => prev.map(i => {
+          if (i.id === item.id && i.status === 'uploading') {
+            return { ...i, progress: Math.min(i.progress + 10, 90) };
+          }
+          return i;
+        }));
+      }, 300);
 
-        try {
-          const created = await uploadOneFile(file, { parentId, displayName: file.name });
-          createdResources.push(created);
-        } catch (err) {
-          failedCount++;
-          console.error('Upload error for file:', file.name, err);
-        }
-      }
+      const storagePath = makeStoragePath({
+        fileName: item.displayName,
+        relativePath: item.relativePath,
+        parentId: item.parentId
+      });
 
-      setResources((prev) => [...prev, ...createdResources]);
+      const { error: uploadError } = await supabase.storage
+        .from('resources')
+        .upload(storagePath, item.file, { upsert: true });
 
-      const okCount = createdResources.length;
-      if (okCount === 0 && failedCount > 0) {
-        toast.error('Upload failed. Please ensure you are signed in as staff.');
-      } else if (failedCount > 0) {
-        toast.warning(`Uploaded ${okCount} files, ${failedCount} failed`);
-      } else {
-        toast.success(`Uploaded ${okCount} files successfully`);
-      }
-    } finally {
-      setUploading(false);
-      setUploadProgress('');
-    }
-  };
+      clearInterval(progressInterval);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+      if (uploadError) throw uploadError;
 
-    try {
-      setUploading(true);
-      const created = await uploadOneFile(file, { parentId: currentFolderId, displayName: file.name });
-      setResources((prev) => [...prev, created]);
-      toast.success('File uploaded successfully');
+      const { data: urlData } = supabase.storage.from('resources').getPublicUrl(storagePath);
+
+      const { data, error } = await supabase
+        .from('academic_resources')
+        .insert({
+          name: item.displayName,
+          resource_type: getResourceTypeFromName(item.displayName),
+          parent_id: item.parentId,
+          file_url: urlData.publicUrl,
+          file_size: `${(item.file.size / 1024 / 1024).toFixed(1)} MB`,
+          owner: 'Staff'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Update success
+      setUploadQueue(prev => prev.map(i => i.id === item.id ? { ...i, status: 'success', progress: 100 } : i));
+      setResources(prev => [...prev, data as AcademicResource]);
+
     } catch (error: any) {
       console.error('Upload error:', error);
-      toast.error(error?.message || 'Failed to upload file');
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      setUploadQueue(prev => prev.map(i => i.id === item.id ? { ...i, status: 'error', progress: 0, error: error.message || 'Failed' } : i));
     }
   };
 
-  // Multi-file upload handler (up to 25 files)
-  const handleMultiFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Queue Processor Effect
+  useEffect(() => {
+    const processQueue = async () => {
+      // Find one pending item
+      const pendingItem = uploadQueue.find(item => item.status === 'pending');
+      const uploadingCount = uploadQueue.filter(item => item.status === 'uploading').length;
+
+      // Limit concurrency to 3
+      if (pendingItem && uploadingCount < 3) {
+        await uploadOneFile(pendingItem);
+      }
+    };
+
+    processQueue();
+  }, [uploadQueue]); // Depend on queue changes to trigger next processing
+
+  const addToQueue = (files: File[], parentId: string | null, relativePaths: Record<string, string> = {}) => {
+    const newItems: UploadItem[] = files.map(file => ({
+      id: crypto.randomUUID(),
+      file,
+      parentId,
+      status: 'pending',
+      progress: 0,
+      displayName: file.name,
+      relativePath: relativePaths[file.name] || null
+    }));
+
+    setUploadQueue(prev => [...prev, ...newItems]);
+    setIsQueueVisible(true);
+  };
+
+  const handleRetry = (id: string) => {
+    setUploadQueue(prev => prev.map(i => i.id === id ? { ...i, status: 'pending', progress: 0, error: undefined } : i));
+  };
+
+  const handleClearCompleted = () => {
+    setUploadQueue(prev => prev.filter(i => i.status === 'uploading' || i.status === 'pending'));
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    addToQueue([file], currentFolderId);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleMultiFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-
-    try {
-      await uploadManyFiles(Array.from(files), currentFolderId, 'Uploading');
-    } finally {
-      if (multiFileInputRef.current) multiFileInputRef.current.value = '';
-    }
+    addToQueue(Array.from(files), currentFolderId);
+    if (multiFileInputRef.current) multiFileInputRef.current.value = '';
   };
 
-  // Folder upload handler
   const handleFolderUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    setUploading(true);
-    setUploadProgress('');
+    // We need to pre-process folders to create structure first,
+    // BUT since queue is async, we should probably create folders first then add files to queue
+    // OR we can make the queue processor smarter.
+    // For simplicity, we'll create folders synchronously (blocking) then queue files.
+    // This maintains the user expectation that "upload started"
 
-    const createdResources: AcademicResource[] = [];
-    const folderMap = new Map<string, string>(); // path -> id
     const fileList = Array.from(files);
+    const folderMap = new Map<string, string>(); // path -> id
+    const createdResources: AcademicResource[] = [];
+    const relativePaths: Record<string, string> = {};
+    const filesToUpload: { file: File, parentId: string | null }[] = [];
+
+    // Show a toast that we are preparing folder structure
+    toast.info('Preparing folder structure...');
 
     try {
-      for (let idx = 0; idx < fileList.length; idx++) {
-        const file = fileList[idx];
-        setUploadProgress(`Uploading ${idx + 1}/${fileList.length}...`);
-
+      for (const file of fileList) {
         const fullRelativePath = (file.webkitRelativePath || file.name).replace(/\\/g, '/');
         const pathParts = fullRelativePath.split('/');
         const fileName = pathParts.pop() || file.name;
+        relativePaths[file.name] = fullRelativePath;
 
         let parentId = currentFolderId;
         let currentPathStr = '';
@@ -453,54 +468,58 @@ const AcademicBankPage = () => {
           currentPathStr += '/' + folderName;
 
           if (!folderMap.has(currentPathStr)) {
-            const existingFolder =
-              resources.find((r) => r.name === folderName && r.parent_id === parentId && r.resource_type === 'folder') ||
-              createdResources.find((r) => r.name === folderName && r.parent_id === parentId && r.resource_type === 'folder');
+             // Check if folder exists in DB or locally created
+             const existingFolder =
+               resources.find(r => r.name === folderName && r.parent_id === parentId && r.resource_type === 'folder') ||
+               createdResources.find(r => r.name === folderName && r.parent_id === parentId && r.resource_type === 'folder');
 
-            if (existingFolder) {
-              folderMap.set(currentPathStr, existingFolder.id);
-            } else {
-              const { data, error } = await supabase
-                .from('academic_resources')
-                .insert({
-                  name: folderName,
-                  resource_type: 'folder',
-                  parent_id: parentId,
-                  owner: 'Staff'
-                })
-                .select()
-                .single();
+             if (existingFolder) {
+               folderMap.set(currentPathStr, existingFolder.id);
+             } else {
+               // Create it
+               const { data, error } = await supabase
+                 .from('academic_resources')
+                 .insert({
+                   name: folderName,
+                   resource_type: 'folder',
+                   parent_id: parentId,
+                   owner: 'Staff'
+                 })
+                 .select()
+                 .single();
 
-              if (error) throw error;
-              createdResources.push(data as AcademicResource);
-              folderMap.set(currentPathStr, (data as AcademicResource).id);
-            }
+               if (error) throw error;
+               createdResources.push(data as AcademicResource);
+               folderMap.set(currentPathStr, (data as AcademicResource).id);
+             }
           }
-
           parentId = folderMap.get(currentPathStr)!;
         }
 
-        // Upload file + create DB record (storage key includes fullRelativePath to prevent collisions)
-        try {
-          const created = await uploadOneFile(file, {
-            parentId,
-            displayName: fileName,
-            relativePath: fullRelativePath
-          });
-          createdResources.push(created);
-        } catch (err) {
-          console.error('Upload error for file:', fileName, err);
-        }
+        filesToUpload.push({ file, parentId });
       }
 
-      setResources((prev) => [...prev, ...createdResources]);
-      toast.success('Folder upload completed');
-    } catch (error: any) {
-      console.error('Folder upload error:', error);
-      toast.error(error?.message || 'Failed to upload folder');
+      setResources(prev => [...prev, ...createdResources]);
+
+      // Add to queue
+      const newItems: UploadItem[] = filesToUpload.map(item => ({
+        id: crypto.randomUUID(),
+        file: item.file,
+        parentId: item.parentId,
+        status: 'pending',
+        progress: 0,
+        displayName: item.file.name,
+        relativePath: relativePaths[item.file.name]
+      }));
+
+      setUploadQueue(prev => [...prev, ...newItems]);
+      setIsQueueVisible(true);
+      toast.success('Folder structure created. Starting uploads...');
+
+    } catch (error) {
+      console.error('Folder prep error', error);
+      toast.error('Failed to prepare folder structure');
     } finally {
-      setUploading(false);
-      setUploadProgress('');
       if (folderInputRef.current) folderInputRef.current.value = '';
     }
   };
@@ -819,10 +838,9 @@ const AcademicBankPage = () => {
                   size="sm"
                   className="gap-2"
                   onClick={() => setShowUploadModal(true)}
-                  disabled={uploading}
                 >
-                  {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                  <span className="hidden sm:inline">{uploadProgress || 'Upload'}</span>
+                  <Upload size={16} />
+                  <span className="hidden sm:inline">Upload</span>
                 </Button>
                 <input
                   ref={fileInputRef}
@@ -1132,6 +1150,16 @@ const AcademicBankPage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Upload Queue */}
+      {isQueueVisible && (
+        <UploadQueue
+          items={uploadQueue}
+          onRetry={handleRetry}
+          onClear={handleClearCompleted}
+          onClose={() => setIsQueueVisible(false)}
+        />
+      )}
     </div>
   );
 };
