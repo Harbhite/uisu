@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Search, Folder, FileText, Download, Plus,
   Grid, List, ChevronRight, Edit2, Trash2, Upload, X, FolderPlus, Loader2,
-  Eye, FileIcon, BarChart3, TrendingUp, ArrowUpDown, Files
+  Eye, FileIcon, BarChart3, TrendingUp, ArrowUpDown, Files, FolderUp, File
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SEO } from '@/components/SEO';
@@ -55,9 +55,12 @@ const AcademicBankPage = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string>('');
   const [savingFolder, setSavingFolder] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const multiFileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
 
   const currentFolderId = currentPath.length > 0 ? currentPath[currentPath.length - 1] : null;
 
@@ -520,6 +523,124 @@ const AcademicBankPage = () => {
     }
   };
 
+  // Drag and drop handlers
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isStaff) {
+      setIsDragging(true);
+    }
+  }, [isStaff]);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.currentTarget === dropZoneRef.current) {
+      setIsDragging(false);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    if (!isStaff) return;
+
+    const items = e.dataTransfer.items;
+    const files: File[] = [];
+
+    // Collect all files from the drop
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.kind === 'file') {
+        const file = item.getAsFile();
+        if (file) {
+          files.push(file);
+        }
+      }
+    }
+
+    if (files.length === 0) return;
+
+    // Use the multi-file upload logic
+    const fileList = files.slice(0, 25);
+    if (files.length > 25) {
+      toast.warning(`Only first 25 files will be uploaded (${files.length} dropped)`);
+    }
+
+    setUploading(true);
+    const newResources: AcademicResource[] = [];
+    let uploadedCount = 0;
+    let failedCount = 0;
+
+    try {
+      for (const file of fileList) {
+        setUploadProgress(`Uploading ${uploadedCount + 1}/${fileList.length}...`);
+        
+        const fileName = `${Date.now()}-${file.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('resources')
+          .upload(`academic-bank/${fileName}`, file);
+
+        if (uploadError) {
+          console.error('Upload error for file:', file.name, uploadError);
+          failedCount++;
+          continue;
+        }
+
+        const { data: urlData } = supabase.storage
+          .from('resources')
+          .getPublicUrl(`academic-bank/${fileName}`);
+
+        const ext = file.name.split('.').pop()?.toLowerCase() || '';
+        let resourceType = 'pdf';
+        if (['doc', 'docx'].includes(ext)) resourceType = 'doc';
+        else if (['ppt', 'pptx'].includes(ext)) resourceType = 'ppt';
+        else if (['xls', 'xlsx'].includes(ext)) resourceType = 'xls';
+
+        const { data, error } = await supabase
+          .from('academic_resources')
+          .insert({
+            name: file.name,
+            resource_type: resourceType,
+            parent_id: currentFolderId,
+            file_url: urlData.publicUrl,
+            file_size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
+            owner: 'Staff'
+          })
+          .select()
+          .single();
+
+        if (!error && data) {
+          newResources.push(data);
+          uploadedCount++;
+        } else {
+          failedCount++;
+        }
+      }
+
+      setResources([...resources, ...newResources]);
+      
+      if (failedCount > 0) {
+        toast.warning(`Uploaded ${uploadedCount} files, ${failedCount} failed`);
+      } else {
+        toast.success(`Uploaded ${uploadedCount} files successfully`);
+      }
+    } catch (error) {
+      console.error('Drag drop upload error:', error);
+      toast.error('Failed to upload files');
+    } finally {
+      setUploading(false);
+      setUploadProgress('');
+    }
+  }, [isStaff, currentFolderId, resources]);
+
   const handleDownload = async (resource: AcademicResource) => {
     if (resource.file_url) {
       // Track download
@@ -781,28 +902,8 @@ const AcademicBankPage = () => {
                 </Button>
                 <Button
                   size="sm"
-                  variant="outline"
                   className="gap-2"
-                  onClick={() => folderInputRef.current?.click()}
-                  disabled={uploading}
-                >
-                  <Folder size={16} />
-                  <span className="hidden sm:inline">Upload Folder</span>
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="gap-2"
-                  onClick={() => multiFileInputRef.current?.click()}
-                  disabled={uploading}
-                >
-                  <Files size={16} />
-                  <span className="hidden sm:inline">Multiple Files</span>
-                </Button>
-                <Button
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => setShowUploadModal(true)}
                   disabled={uploading}
                 >
                   {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
@@ -812,14 +913,20 @@ const AcademicBankPage = () => {
                   ref={fileInputRef}
                   type="file"
                   className="hidden"
-                  onChange={handleFileUpload}
+                  onChange={(e) => {
+                    handleFileUpload(e);
+                    setShowUploadModal(false);
+                  }}
                   accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
                 />
                 <input
                   ref={multiFileInputRef}
                   type="file"
                   className="hidden"
-                  onChange={handleMultiFileUpload}
+                  onChange={(e) => {
+                    handleMultiFileUpload(e);
+                    setShowUploadModal(false);
+                  }}
                   accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
                   multiple
                 />
@@ -827,7 +934,10 @@ const AcademicBankPage = () => {
                   ref={folderInputRef}
                   type="file"
                   className="hidden"
-                  onChange={handleFolderUpload}
+                  onChange={(e) => {
+                    handleFolderUpload(e);
+                    setShowUploadModal(false);
+                  }}
                   {...{ webkitdirectory: '', directory: '' } as any}
                   multiple
                 />
@@ -835,8 +945,25 @@ const AcademicBankPage = () => {
             )}
           </div>
 
-          {/* File Grid/List */}
-          <div className="flex-1 overflow-y-auto p-6">
+          {/* File Grid/List with Drag and Drop */}
+          <div 
+            ref={dropZoneRef}
+            className={`flex-1 overflow-y-auto p-6 relative transition-colors ${isDragging ? 'bg-blue-50' : ''}`}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+          >
+            {/* Drag Overlay */}
+            {isDragging && (
+              <div className="absolute inset-0 bg-blue-100/80 border-2 border-dashed border-blue-400 rounded-xl flex items-center justify-center z-10 pointer-events-none">
+                <div className="text-center">
+                  <Upload size={48} className="mx-auto text-blue-500 mb-3" />
+                  <p className="text-blue-700 font-medium text-lg">Drop files here to upload</p>
+                  <p className="text-blue-500 text-sm">Up to 25 files at once</p>
+                </div>
+              </div>
+            )}
             {items.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-slate-400">
                 <Folder size={64} className="mb-4 opacity-20" />
@@ -1020,6 +1147,73 @@ const AcademicBankPage = () => {
                 title={previewFile.name}
               />
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Upload Options Modal */}
+      <Dialog open={showUploadModal} onOpenChange={setShowUploadModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Upload size={20} />
+              Upload Files
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-3">
+            <p className="text-sm text-slate-500 mb-4">
+              Choose how you'd like to upload your files to the Academic Bank.
+            </p>
+            
+            {/* Single File Upload */}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full flex items-center gap-4 p-4 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-xl transition-all group"
+            >
+              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                <File size={24} className="text-blue-600" />
+              </div>
+              <div className="flex-1 text-left">
+                <h4 className="font-medium text-slate-800">Single File</h4>
+                <p className="text-sm text-slate-500">Upload one file at a time</p>
+              </div>
+              <ChevronRight size={20} className="text-slate-400 group-hover:text-blue-500" />
+            </button>
+
+            {/* Multiple Files Upload */}
+            <button
+              onClick={() => multiFileInputRef.current?.click()}
+              className="w-full flex items-center gap-4 p-4 bg-slate-50 hover:bg-green-50 border border-slate-200 hover:border-green-300 rounded-xl transition-all group"
+            >
+              <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                <Files size={24} className="text-green-600" />
+              </div>
+              <div className="flex-1 text-left">
+                <h4 className="font-medium text-slate-800">Bulk Upload</h4>
+                <p className="text-sm text-slate-500">Upload up to 25 files at once</p>
+              </div>
+              <ChevronRight size={20} className="text-slate-400 group-hover:text-green-500" />
+            </button>
+
+            {/* Folder Upload */}
+            <button
+              onClick={() => folderInputRef.current?.click()}
+              className="w-full flex items-center gap-4 p-4 bg-slate-50 hover:bg-purple-50 border border-slate-200 hover:border-purple-300 rounded-xl transition-all group"
+            >
+              <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                <FolderUp size={24} className="text-purple-600" />
+              </div>
+              <div className="flex-1 text-left">
+                <h4 className="font-medium text-slate-800">Folder Upload</h4>
+                <p className="text-sm text-slate-500">Upload an entire folder with its structure</p>
+              </div>
+              <ChevronRight size={20} className="text-slate-400 group-hover:text-purple-500" />
+            </button>
+          </div>
+          <div className="pt-2 border-t border-slate-100">
+            <p className="text-xs text-slate-400 text-center">
+              You can also drag and drop files directly onto the file area
+            </p>
           </div>
         </DialogContent>
       </Dialog>
