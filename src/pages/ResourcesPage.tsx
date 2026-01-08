@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
   Library, Briefcase, GraduationCap, Heart, Brain,
   Rocket, ShoppingBag, Compass, Users, Activity,
-  ArrowRight, Star, ArrowLeft
+  ArrowRight, ArrowLeft
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { resourceCategories } from '@/lib/data';
@@ -22,102 +22,196 @@ const iconMap: { [key: string]: React.ElementType } = {
   health: Activity
 };
 
+const colorMap: { [key: string]: string } = {
+  academic: 'bg-pink-200',
+  career: 'bg-lime-300',
+  scholarship: 'bg-amber-400',
+  wellness: 'bg-rose-100',
+  study: 'bg-violet-200',
+  skills: 'bg-orange-300',
+  market: 'bg-teal-200',
+  freshers: 'bg-indigo-200',
+  alumni: 'bg-cyan-200',
+  health: 'bg-red-200'
+};
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1
+      staggerChildren: 0.08
     }
   }
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0 }
 };
 
 const ResourcesPage = () => {
   const navigate = useNavigate();
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+
+  // Featured resources for the text grid
+  const featuredResources = [
+    {
+      title: "E-library with course materials",
+      description: "Access past questions, lecture notes, and textbooks from all 13 faculties.",
+      stat: "500+ files",
+      link: "/resources/academic-bank",
+      linkText: "Browse library"
+    },
+    {
+      title: "Career opportunities",
+      description: "Internships, job listings, and CV templates to kickstart your career.",
+      stat: "50+ listings",
+      link: "/resources/career-hub",
+      linkText: "See opportunities"
+    },
+    {
+      title: "Scholarship database",
+      description: "Local and international funding opportunities curated for UI students.",
+      stat: "100+ scholarships",
+      link: "/resources/scholarships",
+      linkText: "Find scholarships"
+    },
+    {
+      title: "Wellness resources",
+      description: "Mental health support, counseling services, and self-care tools.",
+      stat: "24/7 support",
+      link: "/resources/mental-wellness",
+      linkText: "Get help"
+    }
+  ];
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-32 pb-16">
+    <div className="min-h-screen bg-slate-50 pt-28 pb-16">
       <SEO
         title="Student Resources"
         description="Access a wealth of resources including academic materials, career tips, scholarships, and more."
       />
 
-      <div className="container mx-auto px-6">
+      <div className="container mx-auto px-6 lg:px-12">
+        {/* Back button */}
         <button
-            onClick={() => navigate('/')}
-            className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors mb-12"
+          onClick={() => navigate('/')}
+          className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors mb-8"
         >
-            <div className="p-2 rounded-full border border-slate-300 group-hover:border-nobel-gold transition-colors">
-                <ArrowLeft size={14} />
-            </div>
-            <span>Back to Home</span>
+          <div className="p-2 rounded-full border border-slate-300 group-hover:border-nobel-gold transition-colors">
+            <ArrowLeft size={14} />
+          </div>
+          <span>Back to Home</span>
         </button>
 
-        <div className="mb-16">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-4 mb-4"
-          >
-            <Star className="text-nobel-gold w-6 h-6" fill="currentColor" />
-            <span className="text-xs font-bold tracking-[0.2em] uppercase text-slate-500">Student Support</span>
-          </motion.div>
+        {/* Hero Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-16"
+        >
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif text-slate-900 leading-[0.95] mb-8">
+            Resources for<br />
+            <span className="italic text-slate-400">your success</span>
+          </h1>
+        </motion.div>
 
-          <motion.h1
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-5xl md:text-7xl font-serif text-ui-blue leading-tight mb-6"
-          >
-            Resource <span className="italic text-slate-300">Hub</span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-xl text-slate-600 max-w-2xl font-light leading-relaxed"
-          >
-            Everything you need to succeed at the University of Ibadan. From lecture notes to career opportunities, we've got you covered.
-          </motion.p>
-        </div>
-
+        {/* Featured Grid - Text Links */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-12 gap-y-8 mb-20 border-b border-slate-200 pb-16"
         >
-          {resourceCategories.map((resource) => {
+          {featuredResources.map((item, index) => (
+            <motion.div
+              key={index}
+              variants={itemVariants}
+              className="group"
+            >
+              <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                {item.description}
+              </p>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-slate-400">{item.stat}</span>
+                <button
+                  onClick={() => navigate(item.link)}
+                  className="text-sm font-semibold text-slate-900 underline underline-offset-4 hover:text-nobel-gold transition-colors"
+                >
+                  {item.linkText}
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* Category Cards Grid */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+        >
+          {resourceCategories.map((resource, index) => {
             const Icon = iconMap[resource.id];
+            const bgColor = colorMap[resource.id] || 'bg-slate-100';
+            const isHovered = hoveredCard === resource.id;
+            
             return (
               <motion.div
                 key={resource.id}
                 variants={itemVariants}
                 onClick={() => navigate(resource.path)}
-                className="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group relative overflow-hidden"
+                onMouseEnter={() => setHoveredCard(resource.id)}
+                onMouseLeave={() => setHoveredCard(null)}
+                className={`
+                  ${bgColor} rounded-2xl p-6 cursor-pointer transition-all duration-300
+                  ${isHovered ? 'shadow-xl -translate-y-1' : 'shadow-sm'}
+                  min-h-[280px] flex flex-col justify-between relative overflow-hidden
+                `}
               >
-                <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-10 group-hover:scale-150 transition-transform duration-500 ${resource.color}`}></div>
-
-                <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-6 text-white shadow-lg ${resource.color}`}>
-                  {Icon && <Icon size={24} />}
+                {/* Icon */}
+                <div className="w-12 h-12 rounded-xl bg-slate-900/10 flex items-center justify-center mb-auto">
+                  {Icon && <Icon size={24} className="text-slate-900" />}
                 </div>
 
-                <h3 className="font-serif text-xl font-bold text-slate-900 mb-3 group-hover:text-ui-blue transition-colors">
-                  {resource.title}
-                </h3>
+                {/* Content */}
+                <div className="mt-auto">
+                  <span className="text-xs font-medium text-slate-500 mb-2 block">
+                    {String(index + 1).padStart(2, '0')}.
+                  </span>
+                  <h3 className="font-serif text-xl font-bold text-slate-900 mb-3 leading-tight">
+                    {resource.title}
+                  </h3>
+                  
+                  {/* Expanded content on hover */}
+                  <motion.div
+                    initial={false}
+                    animate={{ 
+                      height: isHovered ? 'auto' : 0,
+                      opacity: isHovered ? 1 : 0
+                    }}
+                    className="overflow-hidden"
+                  >
+                    <p className="text-sm text-slate-600 mb-4 leading-relaxed">
+                      {resource.description}
+                    </p>
+                  </motion.div>
 
-                <p className="text-sm text-slate-500 leading-relaxed mb-6">
-                  {resource.description}
-                </p>
-
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 group-hover:text-ui-blue transition-colors mt-auto">
-                  Explore <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                  {/* Arrow button */}
+                  <motion.div
+                    initial={false}
+                    animate={{ 
+                      opacity: isHovered ? 1 : 0,
+                      x: isHovered ? 0 : -10
+                    }}
+                    className="flex items-center gap-2 text-sm font-semibold text-slate-900"
+                  >
+                    <div className="w-8 h-8 rounded-full border border-slate-900 flex items-center justify-center">
+                      <ArrowRight size={14} />
+                    </div>
+                  </motion.div>
                 </div>
               </motion.div>
             );
