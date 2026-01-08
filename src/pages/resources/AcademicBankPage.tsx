@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Search, Folder, FileText, Download, Plus,
-  Grid, List, ChevronRight, Edit2, Trash2, Upload, X, FolderPlus, Loader2
+  Grid, List, ChevronRight, Edit2, Trash2, Upload, X, FolderPlus, Loader2,
+  Eye, FileIcon
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,10 @@ interface AcademicResource {
   created_at: string | null;
 }
 
+interface SearchResult extends AcademicResource {
+  path: string[];
+}
+
 const AcademicBankPage = () => {
   const navigate = useNavigate();
   const { isStaff } = useAdminCheck();
@@ -32,6 +37,11 @@ const AcademicBankPage = () => {
   const [currentPath, setCurrentPath] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isGlobalSearch, setIsGlobalSearch] = useState(false);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  
+  // Preview state
+  const [previewFile, setPreviewFile] = useState<AcademicResource | null>(null);
   
   // Modal states
   const [showFolderModal, setShowFolderModal] = useState(false);
@@ -50,7 +60,7 @@ const AcademicBankPage = () => {
       const { data, error } = await supabase
         .from('academic_resources')
         .select('*')
-        .order('resource_type', { ascending: false }) // folders first
+        .order('resource_type', { ascending: false })
         .order('name');
       
       if (error) {
@@ -65,10 +75,46 @@ const AcademicBankPage = () => {
     fetchResources();
   }, []);
 
+  // Build path for a resource
+  const buildPath = (resourceId: string, allResources: AcademicResource[]): string[] => {
+    const path: string[] = [];
+    let currentResource = allResources.find(r => r.id === resourceId);
+    
+    while (currentResource) {
+      path.unshift(currentResource.name);
+      if (currentResource.parent_id) {
+        currentResource = allResources.find(r => r.id === currentResource!.parent_id);
+      } else {
+        break;
+      }
+    }
+    
+    return path;
+  };
+
+  // Global search across all resources
+  useEffect(() => {
+    if (searchQuery.trim().length >= 2) {
+      setIsGlobalSearch(true);
+      const query = searchQuery.toLowerCase();
+      const results: SearchResult[] = resources
+        .filter(r => r.name.toLowerCase().includes(query))
+        .map(r => ({
+          ...r,
+          path: buildPath(r.id, resources)
+        }));
+      setSearchResults(results);
+    } else {
+      setIsGlobalSearch(false);
+      setSearchResults([]);
+    }
+  }, [searchQuery, resources]);
+
   const items = resources.filter(item => item.parent_id === currentFolderId);
 
   const handleNavigate = (folderId: string) => {
     setCurrentPath([...currentPath, folderId]);
+    setSearchQuery('');
   };
 
   const handleNavigateUp = (index: number) => {
@@ -81,9 +127,34 @@ const AcademicBankPage = () => {
     return found ? found.name : id;
   };
 
-  const filteredItems = items.filter(item =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const navigateToResource = (resource: SearchResult) => {
+    if (resource.resource_type === 'folder') {
+      // Build path to folder
+      const pathIds: string[] = [];
+      let current = resources.find(r => r.id === resource.id);
+      while (current && current.parent_id) {
+        pathIds.unshift(current.parent_id);
+        current = resources.find(r => r.id === current!.parent_id);
+      }
+      pathIds.push(resource.id);
+      setCurrentPath(pathIds);
+    } else {
+      // For files, navigate to parent folder and open preview
+      const pathIds: string[] = [];
+      let current = resources.find(r => r.id === resource.parent_id);
+      while (current) {
+        pathIds.unshift(current.id);
+        if (current.parent_id) {
+          current = resources.find(r => r.id === current!.parent_id);
+        } else {
+          break;
+        }
+      }
+      setCurrentPath(pathIds);
+      setPreviewFile(resource);
+    }
+    setSearchQuery('');
+  };
 
   // Admin functions
   const handleCreateFolder = async () => {
@@ -133,6 +204,7 @@ const AcademicBankPage = () => {
       ));
       setEditingFolder(null);
       setNewFolderName('');
+      setShowFolderModal(false);
       toast.success('Folder updated successfully');
     } catch (error) {
       console.error('Update folder error:', error);
@@ -146,7 +218,6 @@ const AcademicBankPage = () => {
     if (!confirm(`Are you sure you want to delete "${resource.name}"?`)) return;
     
     try {
-      // For files, also delete from storage
       if (resource.resource_type !== 'folder' && resource.file_url) {
         const path = resource.file_url.split('/').pop();
         if (path) {
@@ -161,7 +232,6 @@ const AcademicBankPage = () => {
 
       if (error) throw error;
 
-      // Remove from local state (cascade will handle children in DB)
       const removeWithChildren = (id: string): string[] => {
         const children = resources.filter(r => r.parent_id === id);
         return [id, ...children.flatMap(c => removeWithChildren(c.id))];
@@ -183,7 +253,6 @@ const AcademicBankPage = () => {
     setUploading(true);
     
     try {
-      // Upload to Supabase storage
       const fileName = `${Date.now()}-${file.name}`;
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('resources')
@@ -195,14 +264,12 @@ const AcademicBankPage = () => {
         .from('resources')
         .getPublicUrl(`academic-bank/${fileName}`);
 
-      // Determine file type
       const ext = file.name.split('.').pop()?.toLowerCase() || '';
       let resourceType = 'pdf';
       if (['doc', 'docx'].includes(ext)) resourceType = 'doc';
       else if (['ppt', 'pptx'].includes(ext)) resourceType = 'ppt';
       else if (['xls', 'xlsx'].includes(ext)) resourceType = 'xls';
 
-      // Insert into database
       const { data, error } = await supabase
         .from('academic_resources')
         .insert({
@@ -235,6 +302,19 @@ const AcademicBankPage = () => {
     }
   };
 
+  const handlePreview = (resource: AcademicResource) => {
+    if (resource.file_url && resource.resource_type === 'pdf') {
+      setPreviewFile(resource);
+    } else if (resource.file_url) {
+      // For non-PDF files, just download
+      handleDownload(resource);
+    }
+  };
+
+  const canPreview = (resource: AcademicResource) => {
+    return resource.resource_type === 'pdf' && resource.file_url;
+  };
+
   const breadcrumbPath = [{ id: null, name: 'Academic Bank' }, ...currentPath.map(id => ({ id, name: getFolderName(id) }))];
 
   if (loading) {
@@ -263,15 +343,72 @@ const AcademicBankPage = () => {
           </div>
 
           <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-lg px-3 py-2 flex-1 md:w-80 shadow-sm focus-within:ring-2 focus-within:ring-blue-100 transition-all">
-              <Search size={18} className="text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search files..."
-                className="bg-transparent border-none outline-none text-sm w-full placeholder:text-slate-400"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+            <div className="relative flex-1 md:w-96">
+              <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-lg px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                <Search size={18} className="text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search all files and folders..."
+                  className="bg-transparent border-none outline-none text-sm w-full placeholder:text-slate-400"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <button onClick={() => setSearchQuery('')} className="text-slate-400 hover:text-slate-600">
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+
+              {/* Search Results Dropdown */}
+              <AnimatePresence>
+                {isGlobalSearch && searchResults.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-80 overflow-y-auto"
+                  >
+                    <div className="p-2">
+                      <div className="text-xs text-slate-400 px-3 py-2 border-b border-slate-100">
+                        {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} found
+                      </div>
+                      {searchResults.map((result) => (
+                        <button
+                          key={result.id}
+                          onClick={() => navigateToResource(result)}
+                          className="w-full flex items-start gap-3 p-3 hover:bg-slate-50 rounded-lg transition-colors text-left"
+                        >
+                          {result.resource_type === 'folder' ? (
+                            <Folder className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
+                          ) : (
+                            <FileText className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm font-medium text-slate-700 truncate">
+                              {result.name}
+                            </div>
+                            <div className="text-xs text-slate-400 truncate">
+                              {result.path.join(' / ')}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+                {isGlobalSearch && searchResults.length === 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-6 text-center"
+                  >
+                    <FileIcon className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                    <p className="text-sm text-slate-500">No files or folders found</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg p-1">
@@ -313,7 +450,6 @@ const AcademicBankPage = () => {
               ))}
             </div>
 
-            {/* Admin actions */}
             {isStaff && (
               <div className="flex items-center gap-2 shrink-0">
                 <Button
@@ -351,7 +487,7 @@ const AcademicBankPage = () => {
 
           {/* File Grid/List */}
           <div className="flex-1 overflow-y-auto p-6">
-            {filteredItems.length === 0 ? (
+            {items.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-slate-400">
                 <Folder size={64} className="mb-4 opacity-20" />
                 <p>This folder is empty</p>
@@ -372,7 +508,7 @@ const AcademicBankPage = () => {
               </div>
             ) : (
               <div className={viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4' : 'space-y-2'}>
-                {filteredItems.map((item) => (
+                {items.map((item) => (
                   <motion.div
                     key={item.id}
                     layout
@@ -385,7 +521,15 @@ const AcademicBankPage = () => {
                   >
                     <div 
                       className="flex-1 min-w-0"
-                      onClick={() => item.resource_type === 'folder' ? handleNavigate(item.id) : handleDownload(item)}
+                      onClick={() => {
+                        if (item.resource_type === 'folder') {
+                          handleNavigate(item.id);
+                        } else if (canPreview(item)) {
+                          handlePreview(item);
+                        } else {
+                          handleDownload(item);
+                        }
+                      }}
                     >
                       <div className={`${viewMode === 'grid' ? 'mb-3' : ''} text-slate-500`}>
                         {item.resource_type === 'folder' ? (
@@ -411,6 +555,11 @@ const AcademicBankPage = () => {
 
                     {/* Actions */}
                     <div className={`flex items-center gap-1 ${viewMode === 'grid' ? 'absolute top-2 right-2' : ''} opacity-0 group-hover:opacity-100 transition-opacity`}>
+                      {item.resource_type !== 'folder' && canPreview(item) && (
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handlePreview(item)}>
+                          <Eye size={14} />
+                        </Button>
+                      )}
                       {item.resource_type !== 'folder' && (
                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleDownload(item)}>
                           <Download size={14} />
@@ -477,6 +626,46 @@ const AcademicBankPage = () => {
               {editingFolder ? 'Update' : 'Create'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* PDF Preview Modal */}
+      <Dialog open={!!previewFile} onOpenChange={(open) => !open && setPreviewFile(null)}>
+        <DialogContent className="max-w-5xl h-[90vh] p-0 overflow-hidden">
+          <DialogHeader className="p-4 border-b border-slate-200">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-lg font-medium truncate pr-4">
+                {previewFile?.name}
+              </DialogTitle>
+              <div className="flex items-center gap-2 shrink-0">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-2"
+                  onClick={() => previewFile && handleDownload(previewFile)}
+                >
+                  <Download size={14} />
+                  Download
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setPreviewFile(null)}
+                >
+                  <X size={18} />
+                </Button>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className="flex-1 bg-slate-100 h-full">
+            {previewFile?.file_url && (
+              <iframe
+                src={`${previewFile.file_url}#toolbar=0`}
+                className="w-full h-[calc(90vh-80px)]"
+                title={previewFile.name}
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
