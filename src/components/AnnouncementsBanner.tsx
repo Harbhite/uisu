@@ -55,7 +55,6 @@ export const AnnouncementsBanner = () => {
           filter: 'is_active=eq.true'
         },
         (payload) => {
-          console.log('New announcement received:', payload);
           const newAnnouncement = payload.new as Announcement;
           setAnnouncements(prev => [newAnnouncement, ...prev.slice(0, 4)]);
           setCurrentIndex(0);

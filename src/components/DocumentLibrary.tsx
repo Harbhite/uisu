@@ -602,7 +602,7 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                         <div className="relative">
                             <input 
                                 type="text" 
-                                placeholder="Search..."
+                                placeholder="Search documents..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="w-full pl-4 pr-10 py-3 bg-transparent border-b-2 border-border focus:border-nobel-gold focus:outline-none font-serif text-lg text-foreground placeholder-muted-foreground transition-colors"
