@@ -4,17 +4,34 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Search, Folder, FileText, Download, Plus,
   Grid, List, ChevronRight, Edit2, Trash2, Upload, X, FolderPlus, Loader2,
-  Eye, FileIcon, BarChart3, TrendingUp, ArrowUpDown, Files, FolderUp, File
+  Eye, FileIcon, BarChart3, TrendingUp, ArrowUpDown, Files, FolderUp, File,
+  History, Clock, User
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { UploadQueue, UploadItem } from './UploadQueue';
+import { format } from 'date-fns';
+
+interface AuditLog {
+  id: string;
+  action: string;
+  table_name: string;
+  record_id: string | null;
+  old_data: any;
+  new_data: any;
+  created_at: string;
+  user_id: string | null;
+  user_email?: string;
+}
 
 interface AcademicResource {
   id: string;
@@ -34,7 +51,7 @@ interface SearchResult extends AcademicResource {
 
 const AcademicBankPage = () => {
   const navigate = useNavigate();
-  const { isStaff } = useAdminCheck();
+  const { isStaff, isAdmin } = useAdminCheck();
   const [resources, setResources] = useState<AcademicResource[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPath, setCurrentPath] = useState<string[]>([]);
@@ -46,15 +63,19 @@ const AcademicBankPage = () => {
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'downloads'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   
-  // Preview state
+  // Preview sidebar state
   const [previewFile, setPreviewFile] = useState<AcademicResource | null>(null);
+  const [showPreviewSidebar, setShowPreviewSidebar] = useState(false);
+  
+  // Activity log state
+  const [activityLogs, setActivityLogs] = useState<AuditLog[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+  const [showActivityLog, setShowActivityLog] = useState(false);
   
   // Modal states
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [editingFolder, setEditingFolder] = useState<AcademicResource | null>(null);
   const [newFolderName, setNewFolderName] = useState('');
-  // const [uploading, setUploading] = useState(false); // Removed in favor of Queue
-  // const [uploadProgress, setUploadProgress] = useState<string>(''); // Removed in favor of Queue
   const [savingFolder, setSavingFolder] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -91,6 +112,59 @@ const AcademicBankPage = () => {
 
     fetchResources();
   }, []);
+
+  // Fetch activity logs (admin only)
+  const fetchActivityLogs = useCallback(async () => {
+    if (!isAdmin) return;
+    
+    setLoadingLogs(true);
+    try {
+      const { data, error } = await supabase
+        .from('audit_logs')
+        .select('*')
+        .eq('table_name', 'academic_resources')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+
+      // Fetch user emails for the logs
+      const userIds = [...new Set((data || []).map(log => log.user_id).filter(Boolean))];
+      let userEmailMap: Record<string, string> = {};
+      
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, email, full_name')
+          .in('id', userIds);
+        
+        if (profiles) {
+          profiles.forEach(p => {
+            userEmailMap[p.id] = p.email || p.full_name || 'Unknown';
+          });
+        }
+      }
+
+      const logsWithEmails = (data || []).map(log => ({
+        ...log,
+        user_email: log.user_id ? (userEmailMap[log.user_id] || 'Unknown') : 'System'
+      }));
+
+      setActivityLogs(logsWithEmails);
+    } catch (error) {
+      console.error('Error fetching activity logs:', error);
+      toast.error('Failed to load activity logs');
+    } finally {
+      setLoadingLogs(false);
+    }
+  }, [isAdmin]);
+
+  // Fetch logs when activity log panel opens
+  useEffect(() => {
+    if (showActivityLog && isAdmin) {
+      fetchActivityLogs();
+    }
+  }, [showActivityLog, isAdmin, fetchActivityLogs]);
 
   // Build path for a resource
   const buildPath = (resourceId: string, allResources: AcademicResource[]): string[] => {
@@ -546,19 +620,19 @@ const AcademicBankPage = () => {
     e.stopPropagation();
   }, []);
 
-  const handleDrop = useCallback(async (e: React.DragEvent) => {
+  const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
 
     if (!isStaff) return;
 
-    const items = e.dataTransfer.items;
+    const dataTransferItems = e.dataTransfer.items;
     const files: File[] = [];
 
     // Collect all files from the drop
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
+    for (let i = 0; i < dataTransferItems.length; i++) {
+      const item = dataTransferItems[i];
       if (item.kind === 'file') {
         const file = item.getAsFile();
         if (file) files.push(file);
@@ -567,12 +641,9 @@ const AcademicBankPage = () => {
 
     if (files.length === 0) return;
 
-    try {
-      await uploadManyFiles(files, currentFolderId, 'Uploading');
-    } catch (error) {
-      console.error('Drag drop upload error:', error);
-      toast.error('Failed to upload files');
-    }
+    // Add files to upload queue
+    addToQueue(files, currentFolderId);
+    toast.success(`${files.length} file(s) added to upload queue`);
   }, [isStaff, currentFolderId]);
 
   const handleDownload = async (resource: AcademicResource) => {
@@ -595,6 +666,25 @@ const AcademicBankPage = () => {
   const handlePreview = (resource: AcademicResource) => {
     if (resource.file_url) {
       setPreviewFile(resource);
+      setShowPreviewSidebar(true);
+    }
+  };
+
+  const getActionLabel = (action: string) => {
+    switch (action) {
+      case 'INSERT': return 'Uploaded';
+      case 'UPDATE': return 'Updated';
+      case 'DELETE': return 'Deleted';
+      default: return action;
+    }
+  };
+
+  const getActionColor = (action: string) => {
+    switch (action) {
+      case 'INSERT': return 'text-green-600 bg-green-50';
+      case 'UPDATE': return 'text-blue-600 bg-blue-50';
+      case 'DELETE': return 'text-red-600 bg-red-50';
+      default: return 'text-slate-600 bg-slate-50';
     }
   };
 
@@ -647,6 +737,17 @@ const AcademicBankPage = () => {
               >
                 <BarChart3 size={16} />
                 Stats
+              </Button>
+            )}
+            {isAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => setShowActivityLog(true)}
+              >
+                <History size={16} />
+                Activity
               </Button>
             )}
           </div>
@@ -1044,14 +1145,14 @@ const AcademicBankPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Document Preview Modal */}
-      <Dialog open={!!previewFile} onOpenChange={(open) => !open && setPreviewFile(null)}>
-        <DialogContent className="max-w-5xl h-[90vh] p-0 overflow-hidden">
-          <DialogHeader className="p-4 border-b border-slate-200">
+      {/* Document Preview Sidebar */}
+      <Sheet open={showPreviewSidebar} onOpenChange={setShowPreviewSidebar}>
+        <SheetContent className="w-full sm:max-w-2xl p-0 flex flex-col">
+          <SheetHeader className="p-4 border-b border-slate-200 shrink-0">
             <div className="flex items-center justify-between">
-              <DialogTitle className="text-lg font-medium truncate pr-4">
+              <SheetTitle className="text-lg font-medium truncate pr-4">
                 {previewFile?.name}
-              </DialogTitle>
+              </SheetTitle>
               <div className="flex items-center gap-2 shrink-0">
                 <Button 
                   variant="outline" 
@@ -1062,27 +1163,103 @@ const AcademicBankPage = () => {
                   <Download size={14} />
                   Download
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setPreviewFile(null)}
-                >
-                  <X size={18} />
-                </Button>
               </div>
             </div>
-          </DialogHeader>
-          <div className="flex-1 bg-slate-100 h-full">
+            {previewFile && (
+              <div className="flex items-center gap-4 text-xs text-slate-500 mt-2">
+                <span className="flex items-center gap-1">
+                  <Clock size={12} />
+                  {previewFile.created_at ? format(new Date(previewFile.created_at), 'MMM d, yyyy') : 'Unknown'}
+                </span>
+                {previewFile.file_size && <span>{previewFile.file_size}</span>}
+                {previewFile.download_count !== undefined && previewFile.download_count > 0 && (
+                  <span className="flex items-center gap-1">
+                    <Download size={12} /> {previewFile.download_count} downloads
+                  </span>
+                )}
+              </div>
+            )}
+          </SheetHeader>
+          <div className="flex-1 bg-slate-100 overflow-hidden">
             {previewFile?.file_url && (
               <iframe
                 src={getPreviewUrl(previewFile)}
-                className="w-full h-[calc(90vh-80px)]"
+                className="w-full h-full border-0"
                 title={previewFile.name}
               />
             )}
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
+
+      {/* Activity Log Sidebar */}
+      <Sheet open={showActivityLog} onOpenChange={setShowActivityLog}>
+        <SheetContent className="w-full sm:max-w-lg p-0">
+          <SheetHeader className="p-4 border-b border-slate-200">
+            <SheetTitle className="flex items-center gap-2">
+              <History size={20} />
+              Activity Log
+            </SheetTitle>
+          </SheetHeader>
+          <ScrollArea className="h-[calc(100vh-80px)]">
+            {loadingLogs ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+              </div>
+            ) : activityLogs.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+                <History size={48} className="mb-3 opacity-30" />
+                <p className="text-sm">No activity yet</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {activityLogs.map((log) => {
+                  const resourceName = log.action === 'DELETE' 
+                    ? (log.old_data?.name || 'Unknown file')
+                    : (log.new_data?.name || 'Unknown file');
+                  const resourceType = log.action === 'DELETE'
+                    ? (log.old_data?.resource_type || 'file')
+                    : (log.new_data?.resource_type || 'file');
+                  
+                  return (
+                    <div key={log.id} className="p-4 hover:bg-slate-50 transition-colors">
+                      <div className="flex items-start gap-3">
+                        <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${getActionColor(log.action)}`}>
+                          {resourceType === 'folder' ? (
+                            <Folder size={14} />
+                          ) : (
+                            <FileText size={14} />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`text-xs font-medium px-2 py-0.5 rounded ${getActionColor(log.action)}`}>
+                              {getActionLabel(log.action)}
+                            </span>
+                            <span className="text-sm font-medium text-slate-700 truncate">
+                              {resourceName}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
+                            <span className="flex items-center gap-1">
+                              <User size={10} />
+                              {log.user_email}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock size={10} />
+                              {format(new Date(log.created_at), 'MMM d, yyyy h:mm a')}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
 
       {/* Upload Options Modal */}
       <Dialog open={showUploadModal} onOpenChange={setShowUploadModal}>
