@@ -58,26 +58,44 @@ const ParallaxCard = ({ title, subtitle, icon: Icon, color, href, progress, inde
   return (
     <motion.div 
       style={{ x }}
-      whileHover={{ y: -10, scale: 1.02 }}
-      className={`relative w-72 h-96 ${color} flex-shrink-0 cursor-pointer shadow-2xl border border-white/10 overflow-hidden group transition-all duration-500 snap-center rounded-none`}
+      whileHover={{ y: -8, scale: 1.03 }}
+      animate={{ 
+        y: [0, -3, 0],
+      }}
+      transition={{
+        y: { duration: 2.5 + index * 0.3, repeat: Infinity, ease: "easeInOut" },
+      }}
+      className={`relative w-64 h-80 ${color} flex-shrink-0 cursor-pointer shadow-xl border border-white/10 overflow-hidden group transition-all duration-300 snap-center rounded-none`}
     >
-      <Link to={href} className="absolute inset-0 p-8 flex flex-col justify-between z-10 text-white">
+      <Link to={href} className="absolute inset-0 p-6 flex flex-col justify-between z-10 text-white">
         <div className="flex justify-between items-start">
-          <div className="p-3 bg-white/10 backdrop-blur-md border border-white/10 rounded-none">
-            <Icon size={28} />
-          </div>
-          <div className="w-10 h-10 flex items-center justify-center border border-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300">
-            <ArrowRight size={18} />
+          <motion.div 
+            className="p-2.5 bg-white/10 backdrop-blur-md border border-white/10 rounded-none"
+            animate={{ scale: [1, 1.05, 1] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: index * 0.2 }}
+          >
+            <Icon size={24} />
+          </motion.div>
+          <div className="w-8 h-8 flex items-center justify-center border border-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:rotate-45">
+            <ArrowRight size={14} />
           </div>
         </div>
         
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-60 mb-3">{subtitle}</p>
-          <h3 className="font-serif text-3xl leading-none tracking-tight">{title}</h3>
-          <div className="w-0 group-hover:w-12 h-1 bg-nobel-gold mt-4 transition-all duration-500"></div>
+          <p className="text-[9px] font-bold uppercase tracking-[0.3em] opacity-60 mb-2">{subtitle}</p>
+          <h3 className="font-serif text-2xl leading-none tracking-tight">{title}</h3>
+          <motion.div 
+            className="w-0 group-hover:w-10 h-0.5 bg-nobel-gold mt-3 transition-all duration-500"
+            animate={{ opacity: [0.7, 1, 0.7] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
         </div>
       </Link>
-      <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-white/5 to-transparent pointer-events-none"></div>
+      <motion.div 
+        className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-white/5 to-transparent pointer-events-none"
+        animate={{ opacity: [0.3, 0.6, 0.3] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+      />
       <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-black/20 rounded-full blur-3xl group-hover:bg-nobel-gold/10 transition-colors duration-700"></div>
     </motion.div>
   );
@@ -274,9 +292,8 @@ const Index = () => {
           </motion.p>
           
           {/* Horizontal Card Scroller with Parallax */}
-          <div ref={scrollRef} className="w-full relative mt-12 md:mt-24">
-            <div className="flex overflow-x-auto gap-8 pb-12 px-6 no-scrollbar snap-x snap-mandatory">
-              <div className="flex-shrink-0 w-[10vw] hidden md:block"></div>
+          <div ref={scrollRef} className="w-full relative mt-12 md:mt-20">
+            <div className="flex overflow-x-auto gap-2 pb-8 px-4 no-scrollbar snap-x snap-mandatory justify-center">
               {parallaxCards.map((card, index) => (
                 <ParallaxCard 
                   key={card.title}
@@ -289,30 +306,8 @@ const Index = () => {
                   href={card.href} 
                 />
               ))}
-              <div className="flex-shrink-0 w-[10vw] hidden md:block"></div>
-            </div>
-            {/* Scroll Indicator */}
-            <div className="flex justify-center gap-4 mt-8 items-center">
-              <div className="w-24 h-1 bg-ui-blue/5 rounded-none overflow-hidden relative border border-slate-100">
-                <motion.div 
-                  style={{ scaleX: scrollYProgress }} 
-                  className="absolute inset-0 bg-nobel-gold origin-left"
-                />
-              </div>
-              <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-slate-300">Archive Navigation</span>
             </div>
           </div>
-
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1, y: [0, 10, 0] }} 
-            transition={{ delay: 2, y: { duration: 1.5, repeat: Infinity } }} 
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 text-slate-400 flex flex-col items-center gap-2 cursor-pointer" 
-            onClick={scrollToSection('introduction')}
-          >
-            <span className="text-[10px] uppercase tracking-widest font-bold">Scroll</span>
-            <ChevronDown size={20} />
-          </motion.div>
         </div>
       </header>
 
