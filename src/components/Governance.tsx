@@ -183,14 +183,14 @@ export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
-                    className="grid grid-cols-1 md:grid-cols-2 gap-8"
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
                 >
                     {loadingHalls ? (
-                        <div className="col-span-2 flex items-center justify-center py-20">
+                        <div className="col-span-2 lg:col-span-3 flex items-center justify-center py-20">
                             <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
                         </div>
                     ) : halls.length === 0 ? (
-                        <div className="col-span-2 text-center py-20 text-slate-400">
+                        <div className="col-span-2 lg:col-span-3 text-center py-20 text-slate-400">
                             No halls found
                         </div>
                     ) : (
@@ -198,41 +198,55 @@ export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
                             <Link to={`/governance/hall/${hall.slug}`} key={hall.id}>
                                 <motion.div
                                     variants={itemVariants}
-                                    whileHover={{ y: -10 }}
-                                    className="bg-white border group relative overflow-hidden h-full shadow-sm hover:shadow-xl transition-all duration-500"
-                                    style={{ borderColor: `${hall.color || '#6d28d9'}30` }}
+                                    whileHover={{ y: -8 }}
+                                    className="relative group overflow-hidden bg-white border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 rounded-xl h-full flex flex-col"
                                 >
-                                    <div className="absolute top-0 left-0 w-full h-2" style={{ backgroundColor: hall.color || '#6d28d9' }} />
-                                    <div className="p-8 relative z-10">
+                                    {/* Color block header */}
+                                    <div className="h-3 w-full" style={{ backgroundColor: hall.color || '#6d28d9' }}></div>
+
+                                    <div className="p-8 flex-1 flex flex-col relative z-10">
+                                        {/* Header: Alias badge & Icon */}
                                         <div className="flex justify-between items-start mb-6">
-                                            <div className="p-3 rounded-full bg-slate-50 border border-slate-100 group-hover:scale-110 transition-transform duration-300">
-                                                <MapPin size={24} style={{ color: hall.color || '#6d28d9' }} />
-                                            </div>
-                                            {hall.alias && (
-                                                <div className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-slate-50 text-slate-500 border border-slate-100">
+                                            {hall.alias ? (
+                                                <span className="px-3 py-1 bg-slate-50 text-slate-500 text-[10px] font-bold uppercase tracking-widest rounded-full border border-slate-100 shadow-sm">
                                                     {hall.alias}
-                                                </div>
-                                            )}
+                                                </span>
+                                            ) : <div></div>}
+                                            <Shield size={20} style={{ color: hall.color || '#6d28d9' }} className="opacity-50 group-hover:opacity-100 transition-opacity" />
                                         </div>
 
-                                        <h3 className="text-3xl font-serif text-slate-800 mb-2 group-hover:text-ui-blue transition-colors">
+                                        {/* Title */}
+                                        <h3 className="text-2xl font-serif text-slate-800 mb-2 group-hover:text-ui-blue transition-colors">
                                             {hall.name}
                                         </h3>
+
+                                        {/* Motto */}
                                         {hall.motto && (
-                                            <p className="font-serif italic text-slate-400 text-sm mb-6">"{hall.motto}"</p>
+                                            <div className="flex items-center gap-2 mb-6">
+                                                <div className="h-px w-8 bg-nobel-gold"></div>
+                                                <p className="text-xs font-serif italic text-slate-400">"{hall.motto}"</p>
+                                            </div>
                                         )}
 
+                                        {/* Description */}
                                         {hall.description && (
-                                            <p className="text-slate-600 leading-relaxed mb-8 line-clamp-3">
+                                            <p className="text-sm text-slate-500 leading-relaxed mb-8 line-clamp-3 flex-1">
                                                 {hall.description}
                                             </p>
                                         )}
 
-                                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-ui-blue group-hover:gap-4 transition-all">
-                                            Explore Republic <ArrowRight size={14} />
+                                        {/* Footer / CTA */}
+                                        <div className="flex items-center justify-between border-t border-slate-50 pt-6 mt-auto">
+                                            <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Republic</span>
+                                            <span className="text-xs font-bold text-ui-blue flex items-center gap-2 group-hover:translate-x-1 transition-transform">
+                                                Enter Territory <ArrowRight size={14} />
+                                            </span>
                                         </div>
                                     </div>
-                                    <div className="absolute -bottom-20 -right-20 w-64 h-64 rounded-full opacity-5 group-hover:opacity-10 transition-opacity duration-500" style={{ backgroundColor: hall.color || '#6d28d9' }} />
+
+                                    {/* Background Decor */}
+                                    <div className="absolute inset-0 bg-gradient-to-br from-white via-white to-transparent opacity-90 z-0 pointer-events-none"></div>
+                                    <div className="absolute bottom-0 right-0 w-32 h-32 bg-slate-50 rounded-full blur-3xl -z-10 group-hover:bg-slate-100 transition-colors"></div>
                                 </motion.div>
                             </Link>
                         ))
