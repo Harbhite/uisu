@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
 import { Users, BookOpen, Award, Star, ArrowRight, MapPin, Quote, Megaphone, Check, ShieldCheck, Fingerprint } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { TimelineDiagram, StructureDiagram, PopulationChart } from "@/components/Diagrams";
+import { TimelineDiagram, StructureDiagram } from "@/components/Diagrams";
 import { TriviaSection } from "@/components/Trivia";
 import { CampusMap } from "@/components/CampusMap";
 import { Calendar } from "lucide-react";
@@ -11,7 +11,6 @@ import { AnnouncementsBanner } from "@/components/AnnouncementsBanner";
 import { NotificationPrompt } from "@/components/NotificationPrompt";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
-import { executives } from "@/lib/data";
 import { LeaderCard } from "@/components/LeaderCard";
 import { SEO } from "@/components/SEO";
 import { Input } from "@/components/ui/input";
@@ -21,6 +20,7 @@ import { Menu } from "@/components/Menu";
 import { Footer } from "@/components/Footer";
 import { NewsletterSection } from "@/components/NewsletterSection";
 import { BackToTop } from "@/components/BackToTop";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // --- SUB-COMPONENTS ---
 
@@ -163,17 +163,64 @@ const RevealHeader = ({ children, className }: { children?: React.ReactNode, cla
   </motion.h2>
 );
 
+interface ExecutiveLeader {
+  id: string;
+  name: string;
+  role: string;
+  image: string;
+  bio: string;
+  email: string;
+  socials: {
+    twitter?: string;
+    linkedin?: string;
+    instagram?: string;
+  };
+}
+
 const Index = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [executives, setExecutives] = useState<ExecutiveLeader[]>([]);
+  const [executivesLoading, setExecutivesLoading] = useState(true);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: scrollRef,
     offset: ["start end", "end start"]
   });
+
+  // Fetch executives from database
+  const fetchExecutives = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('leaders')
+      .select('*')
+      .eq('is_active', true)
+      .eq('category', 'executive')
+      .order('sort_order')
+      .limit(3);
+
+    if (error) {
+      console.error('Error fetching executives:', error);
+    } else if (data) {
+      const mapped: ExecutiveLeader[] = data.map(l => ({
+        id: l.id,
+        name: l.name,
+        role: l.role,
+        image: l.image || '/placeholder.svg',
+        bio: l.bio || '',
+        email: l.email || '',
+        socials: (l.socials as ExecutiveLeader['socials']) || {},
+      }));
+      setExecutives(mapped);
+    }
+    setExecutivesLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchExecutives();
+  }, [fetchExecutives]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -482,12 +529,6 @@ const Index = () => {
           <Fingerprint className="absolute bottom-[-10%] right-[-5%] text-slate-50 size-96 rotate-12" />
         </section>
 
-        {/* Population Chart Section */}
-        <section className="py-24 bg-slate-50 border-t border-slate-200">
-          <div className="container mx-auto px-6">
-            <div className="max-w-4xl mx-auto"><PopulationChart /></div>
-          </div>
-        </section>
 
         {/* Trivia Section */}
         <TriviaSection />
@@ -563,15 +604,35 @@ const Index = () => {
                 </div>
                 <RevealHeader className="font-serif text-5xl text-ui-blue">Meet The <span className="italic text-slate-300">Executives</span></RevealHeader>
               </div>
-              <Link to="/current-leaders" className="group flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-ui-blue hover:text-nobel-gold transition-colors">
-                View All Leaders <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-              </Link>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {executives.map((leader, index) => (
-                <LeaderCard key={index} leader={leader} />
-              ))}
+            {executivesLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                    <Skeleton className="aspect-square w-full" />
+                    <div className="p-4 space-y-2">
+                      <Skeleton className="h-6 w-3/4" />
+                      <Skeleton className="h-4 w-1/2" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {executives.map((leader) => (
+                  <LeaderCard key={leader.id} leader={leader} />
+                ))}
+              </div>
+            )}
+
+            <div className="mt-12 text-center">
+              <Link 
+                to="/current-leaders" 
+                className="inline-flex items-center gap-3 px-8 py-4 bg-ui-blue text-white font-bold uppercase tracking-widest text-xs rounded-none hover:bg-nobel-gold transition-colors group"
+              >
+                See All Leaders <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
             </div>
           </div>
         </section>
