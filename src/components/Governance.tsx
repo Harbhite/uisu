@@ -33,67 +33,6 @@ const itemVariants = {
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
 };
 
-const hallConfig: Record<string, { icon: string, gradient: string, textColor: string }> = {
-    'mellanby': {
-        icon: '/assets/halls/icons/mellanby.png',
-        gradient: 'bg-gradient-to-br from-orange-400 to-amber-600',
-        textColor: 'text-white'
-    },
-    'queens': {
-        icon: '/assets/halls/icons/queens.png',
-        gradient: 'bg-gradient-to-br from-pink-400 to-rose-600',
-        textColor: 'text-white'
-    },
-    'tedder': {
-        icon: '/assets/halls/icons/tedder_rocket.png',
-        gradient: 'bg-gradient-to-br from-blue-500 to-cyan-600',
-        textColor: 'text-white'
-    },
-    'kuti': {
-        icon: '/assets/halls/icons/kuti_fire.png',
-        gradient: 'bg-gradient-to-br from-red-500 to-orange-600',
-        textColor: 'text-white'
-    },
-    'bello': {
-        icon: '/assets/halls/icons/bello.png',
-        gradient: 'bg-gradient-to-br from-emerald-500 to-teal-600',
-        textColor: 'text-white'
-    },
-    'zik': {
-        icon: '/assets/halls/icons/zik.png',
-        gradient: 'bg-gradient-to-br from-green-600 to-lime-600',
-        textColor: 'text-white'
-    },
-    'indy': {
-        icon: '/assets/halls/icons/indy.png',
-        gradient: 'bg-gradient-to-br from-green-800 to-emerald-900',
-        textColor: 'text-white'
-    },
-    'awo': {
-        icon: '/assets/halls/icons/awo.png',
-        gradient: 'bg-gradient-to-br from-cyan-500 to-sky-600',
-        textColor: 'text-white'
-    },
-    'idia': {
-        icon: '/assets/halls/icons/idia.png',
-        gradient: 'bg-gradient-to-br from-violet-500 to-purple-600',
-        textColor: 'text-white'
-    },
-    'abh': {
-        icon: '/assets/halls/icons/abh.png',
-        gradient: 'bg-gradient-to-br from-yellow-700 to-amber-700',
-        textColor: 'text-white'
-    }
-};
-
-const getHallConfig = (slug: string) => {
-    return hallConfig[slug] || {
-        icon: '/assets/halls/icons/mellanby.png',
-        gradient: 'bg-gradient-to-br from-slate-400 to-slate-600',
-        textColor: 'text-white'
-    };
-};
-
 export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
   const [activeTab, setActiveTab] = useState<'cec' | 'src' | 'halls'>('cec');
   const [halls, setHalls] = useState<Hall[]>([]);
@@ -244,66 +183,59 @@ export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
-                    className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                    className="grid grid-cols-1 md:grid-cols-2 gap-8"
                 >
                     {loadingHalls ? (
-                        <div className="col-span-1 md:col-span-2 flex items-center justify-center py-20">
+                        <div className="col-span-2 flex items-center justify-center py-20">
                             <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
                         </div>
                     ) : halls.length === 0 ? (
-                        <div className="col-span-1 md:col-span-2 text-center py-20 text-slate-400">
+                        <div className="col-span-2 text-center py-20 text-slate-400">
                             No halls found
                         </div>
                     ) : (
-                        halls.map((hall) => {
-                            const config = getHallConfig(hall.slug);
-                            return (
-                                <Link to={`/governance/hall/${hall.slug}`} key={hall.id} className="block h-full group">
-                                    <motion.div
-                                        variants={itemVariants}
-                                        whileHover={{ y: -8, scale: 1.02 }}
-                                        className={`relative overflow-hidden rounded-sm h-64 shadow-lg hover:shadow-2xl transition-all duration-300 ${config.gradient}`}
-                                    >
-                                        {/* Content Container */}
-                                        <div className="relative z-10 p-8 flex flex-col h-full justify-between">
-                                            <div>
-                                                {/* Title */}
-                                                <h3 className={`text-3xl font-bold mb-2 font-serif ${config.textColor}`}>
-                                                    {hall.name}
-                                                </h3>
-                                                {/* Motto */}
-                                                {hall.motto && (
-                                                     <p className={`text-sm opacity-90 font-medium italic ${config.textColor}`}>
-                                                        "{hall.motto}"
-                                                     </p>
-                                                )}
-                                                {/* Description - limit to 2 lines */}
-                                                 <p className={`mt-4 text-sm opacity-80 max-w-[65%] line-clamp-2 leading-relaxed ${config.textColor}`}>
-                                                    {hall.description || "Discover the heritage and culture of this great republic."}
-                                                </p>
+                        halls.map((hall) => (
+                            <Link to={`/governance/hall/${hall.slug}`} key={hall.id}>
+                                <motion.div
+                                    variants={itemVariants}
+                                    whileHover={{ y: -10 }}
+                                    className="bg-white border group relative overflow-hidden h-full shadow-sm hover:shadow-xl transition-all duration-500"
+                                    style={{ borderColor: `${hall.color || '#6d28d9'}30` }}
+                                >
+                                    <div className="absolute top-0 left-0 w-full h-2" style={{ backgroundColor: hall.color || '#6d28d9' }} />
+                                    <div className="p-8 relative z-10">
+                                        <div className="flex justify-between items-start mb-6">
+                                            <div className="p-3 rounded-full bg-slate-50 border border-slate-100 group-hover:scale-110 transition-transform duration-300">
+                                                <MapPin size={24} style={{ color: hall.color || '#6d28d9' }} />
                                             </div>
-
-                                            {/* CTA Button */}
-                                            <div className={`mt-auto inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider py-2 px-4 rounded-full bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 transition-colors w-fit ${config.textColor}`}>
-                                                Enter Republic <ArrowRight size={14} />
-                                            </div>
+                                            {hall.alias && (
+                                                <div className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-slate-50 text-slate-500 border border-slate-100">
+                                                    {hall.alias}
+                                                </div>
+                                            )}
                                         </div>
 
-                                        {/* 3D Icon - Absolute Positioned */}
-                                        <div className="absolute -right-8 -bottom-8 z-0 opacity-100 transform rotate-[-10deg] group-hover:rotate-0 transition-transform duration-500">
-                                             <img
-                                                src={config.icon}
-                                                alt={`${hall.name} Icon`}
-                                                className="w-48 h-48 object-contain drop-shadow-2xl"
-                                             />
-                                        </div>
+                                        <h3 className="text-3xl font-serif text-slate-800 mb-2 group-hover:text-ui-blue transition-colors">
+                                            {hall.name}
+                                        </h3>
+                                        {hall.motto && (
+                                            <p className="font-serif italic text-slate-400 text-sm mb-6">"{hall.motto}"</p>
+                                        )}
 
-                                        {/* Decorative Elements */}
-                                        <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 blur-[50px] rounded-full"></div>
-                                    </motion.div>
-                                </Link>
-                            );
-                        })
+                                        {hall.description && (
+                                            <p className="text-slate-600 leading-relaxed mb-8 line-clamp-3">
+                                                {hall.description}
+                                            </p>
+                                        )}
+
+                                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-ui-blue group-hover:gap-4 transition-all">
+                                            Explore Republic <ArrowRight size={14} />
+                                        </div>
+                                    </div>
+                                    <div className="absolute -bottom-20 -right-20 w-64 h-64 rounded-full opacity-5 group-hover:opacity-10 transition-opacity duration-500" style={{ backgroundColor: hall.color || '#6d28d9' }} />
+                                </motion.div>
+                            </Link>
+                        ))
                     )}
                 </motion.div>
             )}
