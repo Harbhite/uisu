@@ -40,15 +40,6 @@ const CampusHealthPage = lazy(() => import("./pages/resources/CampusHealthPage")
 
 const queryClient = new QueryClient();
 
-const LoadingFallback = () => (
-  <div className="flex min-h-screen items-center justify-center bg-background">
-    <div className="text-center">
-      <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-      <p className="text-muted-foreground">Loading...</p>
-    </div>
-  </div>
-);
-
 const AppRoutes = () => {
   const location = useLocation();
 
@@ -99,9 +90,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <Suspense fallback={<LoadingFallback />}>
-        <AppRoutes />
-      </Suspense>
+      <AppRoutes />
     </TooltipProvider>
   </QueryClientProvider>
 );
