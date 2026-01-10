@@ -262,7 +262,7 @@ export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
                                     <motion.div
                                         variants={itemVariants}
                                         whileHover={{ y: -8, scale: 1.02 }}
-                                        className={`relative overflow-hidden rounded-2xl h-64 shadow-lg hover:shadow-2xl transition-all duration-300 ${config.gradient}`}
+                                        className={`relative overflow-hidden rounded-sm h-64 shadow-lg hover:shadow-2xl transition-all duration-300 ${config.gradient}`}
                                     >
                                         {/* Content Container */}
                                         <div className="relative z-10 p-8 flex flex-col h-full justify-between">
