@@ -54,7 +54,7 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
   return (
     <>
       {/* --- DESKTOP NAVBAR --- */}
-      <nav className="hidden md:block fixed top-0 left-0 w-full z-50 bg-ui-blue/80 backdrop-blur-md border-b border-white/10 shadow-sm transition-all duration-300 no-print">
+      <nav className="hidden md:block fixed top-0 left-0 w-full z-50 bg-ui-dark/95 backdrop-blur-lg border-b border-white/10 shadow-lg transition-all duration-300 no-print">
         <div className="container mx-auto px-6 h-20 flex items-center justify-between">
 
           {/* Logo Section */}
@@ -186,7 +186,7 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
 
       {/* --- MOBILE NAVBAR (Floating Pill) --- */}
       <nav className="md:hidden fixed top-14 left-1/2 -translate-x-1/2 w-[90%] max-w-sm z-40 no-print">
-        <div className="bg-ui-blue/80 backdrop-blur-md text-white rounded-full px-5 py-3 flex justify-between items-center shadow-2xl border border-white/10">
+        <div className="bg-ui-dark/95 backdrop-blur-lg text-white rounded-full px-5 py-3 flex justify-between items-center shadow-2xl border border-white/10">
 
           {/* Left: Logo */}
           <Link to="/" className="flex items-center gap-2">
