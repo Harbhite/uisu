@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
-import { Users, BookOpen, Award, Star, ArrowRight, MapPin, ChevronDown, Quote, Megaphone, Mail, Check, ShieldCheck, Fingerprint } from "lucide-react";
+import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
+import { Users, BookOpen, Award, Star, ArrowRight, MapPin, Quote, Megaphone, Check, ShieldCheck, Fingerprint } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { TimelineDiagram, StructureDiagram, PopulationChart } from "@/components/Diagrams";
 import { TriviaSection } from "@/components/Trivia";
 import { CampusMap } from "@/components/CampusMap";
+import { Calendar } from "lucide-react";
 import { TowerScene } from "@/components/QuantumScene";
 import { AnnouncementsBanner } from "@/components/AnnouncementsBanner";
 import { NotificationPrompt } from "@/components/NotificationPrompt";
@@ -19,6 +20,7 @@ import { Navbar } from "@/components/Navbar";
 import { Menu } from "@/components/Menu";
 import { Footer } from "@/components/Footer";
 import { NewsletterSection } from "@/components/NewsletterSection";
+import { BackToTop } from "@/components/BackToTop";
 
 // --- SUB-COMPONENTS ---
 
@@ -47,8 +49,7 @@ interface ParallaxCardProps {
   icon: React.ElementType;
   color: string;
   href: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  progress: any;
+  progress: MotionValue<number>;
   index: number;
 }
 
@@ -244,6 +245,12 @@ const Index = () => {
     { label: "Documents", val: "12,000+" },
     { label: "Presidents", val: "76+" },
     { label: "Students", val: "35k" }
+  ];
+
+  const upcomingEvents = [
+    { id: 1, title: "Students' Union Election", date: "Aug 15", category: "Politics" },
+    { id: 2, title: "Fresher's Orientation", date: "Sep 01", category: "Social" },
+    { id: 3, title: "Literary & Debating Championship", date: "Sep 10", category: "Academic" }
   ];
 
   return (
@@ -485,6 +492,44 @@ const Index = () => {
         {/* Trivia Section */}
         <TriviaSection />
 
+        {/* Upcoming Events Section (New Feature) */}
+        <section className="py-24 bg-white border-y border-slate-100">
+          <div className="container mx-auto px-6">
+             <div className="flex justify-between items-end mb-12">
+                <div>
+                   <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-slate-400 mb-2 block">Calendar</span>
+                   <h2 className="font-serif text-4xl text-ui-blue">Upcoming <span className="italic text-nobel-gold">Events</span></h2>
+                </div>
+                <Link to="/events" className="hidden md:flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-ui-blue hover:text-nobel-gold transition-colors">
+                  View Full Calendar <ArrowRight size={14} />
+                </Link>
+             </div>
+
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+               {upcomingEvents.map((event) => (
+                 <div key={event.id} className="group p-8 border border-slate-100 bg-slate-50 hover:border-nobel-gold/50 transition-colors relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                      <Calendar size={64} />
+                    </div>
+                    <div className="relative z-10">
+                      <span className="px-3 py-1 bg-ui-blue/5 text-ui-blue text-[10px] font-bold uppercase tracking-widest rounded-full mb-4 inline-block">{event.category}</span>
+                      <h3 className="font-serif text-2xl text-ui-blue mb-2 group-hover:text-nobel-gold transition-colors">{event.title}</h3>
+                      <p className="text-sm font-bold text-slate-400 flex items-center gap-2">
+                        <Calendar size={14} /> {event.date}
+                      </p>
+                    </div>
+                 </div>
+               ))}
+             </div>
+
+             <div className="mt-8 text-center md:hidden">
+                <Link to="/events" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-ui-blue hover:text-nobel-gold transition-colors">
+                  View Full Calendar <ArrowRight size={14} />
+                </Link>
+             </div>
+          </div>
+        </section>
+
         {/* Campus Culture Section */}
         <section className="py-24 bg-white border-t border-slate-200">
           <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-12">
@@ -534,6 +579,7 @@ const Index = () => {
         <NewsletterSection />
         <Footer />
       </main>
+      <BackToTop />
     </div>
   );
 };

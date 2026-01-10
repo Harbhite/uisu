@@ -7,7 +7,7 @@ import { resourceCategories } from "@/lib/data";
 
 export const Footer = () => {
   return (
-    <footer className="px-0 pb-0 md:px-4 md:pb-4 bg-slate-50 pt-10">
+    <footer className="px-0 pb-0 md:px-4 md:pb-4 bg-slate-50 pt-10 no-print">
       <div className="bg-ui-blue text-white rounded-none md:rounded-[2.5rem] p-8 md:p-16 shadow-lg border border-ui-blue/10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
 

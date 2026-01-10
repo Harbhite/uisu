@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Clock, Feather, Mic, FileText, Quote, Printer, Loader2 } from 'lucide-react';
+import { ArrowLeft, Clock, Feather, Mic, FileText, Quote, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
 import { SEO } from '@/components/SEO';
 import { SocialShare } from '@/components/SocialShare';
 import { InkComments } from '@/components/InkComments';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 interface InksPiece {
   id: string;
@@ -83,6 +85,7 @@ const InksPiecePage = () => {
   const [piece, setPiece] = useState<InksPiece | null>(null);
   const [loading, setLoading] = useState(true);
   const [readingTime, setReadingTime] = useState(1);
+  const [relatedPieces, setRelatedPieces] = useState<InksPiece[]>([]);
 
   useEffect(() => {
     const fetchPiece = async () => {
@@ -115,6 +118,23 @@ const InksPiecePage = () => {
 
     fetchPiece();
   }, [id, navigate]);
+
+  useEffect(() => {
+    if (!piece || !piece.tags || piece.tags.length === 0) return;
+
+    const fetchRelated = async () => {
+      const { data } = await supabase
+        .from('ink_pieces')
+        .select('*')
+        .contains('tags', piece.tags)
+        .neq('id', piece.id)
+        .limit(3);
+
+      if (data) setRelatedPieces(data as InksPiece[]);
+    };
+
+    fetchRelated();
+  }, [piece]);
 
   // Render Editor.js content blocks as HTML
   const renderContent = (content: Json) => {
@@ -227,7 +247,7 @@ const InksPiecePage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background pt-32 pb-16 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-accent" />
+        <LoadingSpinner />
       </div>
     );
   }
@@ -281,7 +301,8 @@ const InksPiecePage = () => {
         author={piece.author_name}
         publishedTime={piece.created_at}
       />
-      <div className="container mx-auto px-6">
+      <div className="container mx-auto px-6 no-print">
+        <Breadcrumbs />
         <button
           onClick={() => navigate('/inks-vault')}
           className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-accent transition-colors mb-12"
@@ -291,8 +312,39 @@ const InksPiecePage = () => {
           </div>
           <span>Back to Vault</span>
         </button>
+        <div className="flex justify-end mb-4">
+             <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.print()}
+                className="gap-2"
+            >
+                <Printer size={14} /> Print
+            </Button>
+        </div>
       </div>
       {renderView()}
+
+      {relatedPieces.length > 0 && (
+        <section className="container mx-auto px-6 max-w-4xl mt-16 pt-16 border-t border-border no-print">
+          <h3 className="font-serif text-2xl mb-8">Related Pieces</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {relatedPieces.map((rp) => (
+              <Link key={rp.id} to={`/inks-vault/${rp.id}`} className="group block">
+                <div className="aspect-[4/3] bg-muted mb-4 overflow-hidden relative">
+                    {rp.cover_image ? (
+                        <img src={rp.cover_image} alt={rp.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-accent/10 text-accent font-serif text-4xl">{rp.title.charAt(0)}</div>
+                    )}
+                </div>
+                <h4 className="font-serif text-lg font-bold leading-tight mb-2 group-hover:text-accent transition-colors">{rp.title}</h4>
+                <p className="text-xs text-muted-foreground uppercase tracking-widest">{rp.type}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 };
