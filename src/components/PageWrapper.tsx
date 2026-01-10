@@ -40,12 +40,12 @@ const PageWrapper = ({ children }: PageWrapperProps) => {
 
   return (
     <motion.div
+      key={pathname}
       initial="initial"
       animate="animate"
       exit="exit"
       variants={pageVariants}
       transition={pageTransition}
-      className="will-change-transform"
     >
       {children}
     </motion.div>
