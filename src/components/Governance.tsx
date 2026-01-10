@@ -194,126 +194,58 @@ export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
                             No halls found
                         </div>
                     ) : (
-                        <>
-                            {/* Hero Hall Card - First Hall */}
-                            {halls[0] && (
-                                <Link to={`/governance/hall/${halls[0].slug}`}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {halls.map((hall, index) => (
+                                <Link to={`/governance/hall/${hall.slug}`} key={hall.id}>
                                     <motion.div
                                         variants={itemVariants}
-                                        whileHover={{ y: -5 }}
-                                        className="relative overflow-hidden group cursor-pointer"
+                                        whileHover={{ y: -8, scale: 1.02 }}
+                                        className="relative overflow-hidden group cursor-pointer h-full"
+                                        style={{ 
+                                            backgroundColor: hall.color || '#003366',
+                                        }}
                                     >
-                                        <div 
-                                            className="bg-ui-blue text-white p-10 md:p-14 relative overflow-hidden"
-                                        >
-                                            <div className="absolute inset-0 bg-gradient-to-br from-ui-blue via-ui-dark to-ui-blue opacity-90"></div>
-                                            <div className="absolute top-0 right-0 w-96 h-96 bg-nobel-gold/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-nobel-gold/20 transition-colors duration-700"></div>
-                                            <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+                                        <div className="absolute inset-0 bg-gradient-to-br from-black/20 to-transparent"></div>
+                                        <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-white/5 rounded-full blur-2xl group-hover:bg-white/10 transition-colors duration-500"></div>
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-white/15 transition-colors duration-700"></div>
+                                        
+                                        <div className="relative z-10 p-6 flex flex-col h-full min-h-[220px] text-white">
+                                            <div className="flex justify-between items-start mb-auto">
+                                                <motion.div 
+                                                    className="p-2.5 bg-white/10 backdrop-blur-sm border border-white/20"
+                                                    animate={{ scale: [1, 1.03, 1] }}
+                                                    transition={{ duration: 2.5 + index * 0.2, repeat: Infinity, ease: "easeInOut" }}
+                                                >
+                                                    <MapPin size={18} />
+                                                </motion.div>
+                                                <div className="w-8 h-8 flex items-center justify-center border border-white/20 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:rotate-45">
+                                                    <ArrowRight size={12} />
+                                                </div>
+                                            </div>
                                             
-                                            <div className="relative z-10">
-                                                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-8">
-                                                    <div>
-                                                        <div className="flex items-center gap-3 mb-4">
-                                                            <motion.div 
-                                                                className="p-3 bg-white/10 backdrop-blur-sm border border-white/20"
-                                                                animate={{ scale: [1, 1.05, 1] }}
-                                                                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                                                            >
-                                                                <MapPin size={24} className="text-nobel-gold" />
-                                                            </motion.div>
-                                                            {halls[0].alias && (
-                                                                <span className="px-3 py-1.5 bg-nobel-gold/20 text-nobel-gold text-[10px] font-bold uppercase tracking-widest border border-nobel-gold/30">
-                                                                    {halls[0].alias}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <h3 className="text-4xl md:text-5xl font-serif mb-3 leading-tight">
-                                                            {halls[0].name}
-                                                        </h3>
-                                                        {halls[0].motto && (
-                                                            <p className="font-serif italic text-white/60 text-lg">"{halls[0].motto}"</p>
-                                                        )}
-                                                    </div>
-                                                    <div className="w-14 h-14 flex items-center justify-center border border-white/20 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:rotate-45 self-start">
-                                                        <ArrowRight size={20} />
-                                                    </div>
-                                                </div>
-                                                
-                                                {halls[0].description && (
-                                                    <p className="text-white/70 leading-relaxed max-w-2xl mb-8 text-lg font-light">
-                                                        {halls[0].description}
-                                                    </p>
-                                                )}
-                                                
-                                                <div className="flex items-center gap-3">
-                                                    <span className="text-xs font-bold uppercase tracking-[0.2em] text-nobel-gold group-hover:tracking-[0.3em] transition-all">
-                                                        Explore Republic
+                                            <div className="mt-6">
+                                                {hall.alias && (
+                                                    <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/60 mb-2 block">
+                                                        {hall.alias}
                                                     </span>
-                                                    <motion.div 
-                                                        className="w-8 group-hover:w-12 h-0.5 bg-nobel-gold transition-all duration-500"
-                                                        animate={{ opacity: [0.7, 1, 0.7] }}
-                                                        transition={{ duration: 2, repeat: Infinity }}
-                                                    />
-                                                </div>
+                                                )}
+                                                <h3 className="font-serif text-xl leading-tight mb-2">
+                                                    {hall.name}
+                                                </h3>
+                                                {hall.motto && (
+                                                    <p className="font-serif italic text-white/50 text-xs line-clamp-1">"{hall.motto}"</p>
+                                                )}
+                                                <motion.div 
+                                                    className="w-0 group-hover:w-8 h-0.5 bg-nobel-gold mt-3 transition-all duration-500"
+                                                    animate={{ opacity: [0.7, 1, 0.7] }}
+                                                    transition={{ duration: 2, repeat: Infinity }}
+                                                />
                                             </div>
                                         </div>
                                     </motion.div>
                                 </Link>
-                            )}
-
-                            {/* Grid of remaining halls */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {halls.slice(1).map((hall, index) => (
-                                    <Link to={`/governance/hall/${hall.slug}`} key={hall.id}>
-                                        <motion.div
-                                            variants={itemVariants}
-                                            whileHover={{ y: -8, scale: 1.02 }}
-                                            className="relative overflow-hidden group cursor-pointer h-full"
-                                            style={{ 
-                                                backgroundColor: hall.color || '#003366',
-                                            }}
-                                        >
-                                            <div className="absolute inset-0 bg-gradient-to-br from-black/20 to-transparent"></div>
-                                            <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-white/5 rounded-full blur-2xl group-hover:bg-white/10 transition-colors duration-500"></div>
-                                            
-                                            <div className="relative z-10 p-6 flex flex-col h-full min-h-[220px] text-white">
-                                                <div className="flex justify-between items-start mb-auto">
-                                                    <motion.div 
-                                                        className="p-2.5 bg-white/10 backdrop-blur-sm border border-white/20"
-                                                        animate={{ scale: [1, 1.03, 1] }}
-                                                        transition={{ duration: 2.5 + index * 0.2, repeat: Infinity, ease: "easeInOut" }}
-                                                    >
-                                                        <MapPin size={18} />
-                                                    </motion.div>
-                                                    <div className="w-8 h-8 flex items-center justify-center border border-white/20 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:rotate-45">
-                                                        <ArrowRight size={12} />
-                                                    </div>
-                                                </div>
-                                                
-                                                <div className="mt-6">
-                                                    {hall.alias && (
-                                                        <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/60 mb-2 block">
-                                                            {hall.alias}
-                                                        </span>
-                                                    )}
-                                                    <h3 className="font-serif text-xl leading-tight mb-2">
-                                                        {hall.name}
-                                                    </h3>
-                                                    {hall.motto && (
-                                                        <p className="font-serif italic text-white/50 text-xs line-clamp-1">"{hall.motto}"</p>
-                                                    )}
-                                                    <motion.div 
-                                                        className="w-0 group-hover:w-8 h-0.5 bg-nobel-gold mt-3 transition-all duration-500"
-                                                        animate={{ opacity: [0.7, 1, 0.7] }}
-                                                        transition={{ duration: 2, repeat: Infinity }}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                    </Link>
-                                ))}
-                            </div>
-                        </>
+                            ))}
+                        </div>
                     )}
                 </motion.div>
             )}
