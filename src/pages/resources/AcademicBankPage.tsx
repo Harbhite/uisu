@@ -5,7 +5,7 @@ import {
   ArrowLeft, Search, Folder, FileText, Download, Plus,
   Grid, List, ChevronRight, Edit2, Trash2, Upload, X, FolderPlus, Loader2,
   Eye, FileIcon, BarChart3, TrendingUp, ArrowUpDown, Files, FolderUp, File,
-  History, Clock, User
+  History, Clock, User, BookOpen, Star, GraduationCap
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SEO } from '@/components/SEO';
@@ -705,56 +705,125 @@ const AcademicBankPage = () => {
 
   const breadcrumbPath = [{ id: null, name: 'Academic Bank' }, ...currentPath.map(id => ({ id, name: getFolderName(id) }))];
 
+  // Stats for the hero section
+  const totalFiles = resources.filter(r => r.resource_type !== 'folder').length;
+  const totalFolders = resources.filter(r => r.resource_type === 'folder').length;
+  const totalDownloads = resources.reduce((acc, r) => acc + (r.download_count || 0), 0);
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 pt-24 pb-16 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+      <div className="min-h-screen bg-white">
+        {/* Loading Hero */}
+        <div className="bg-ui-blue text-white pt-32 pb-20">
+          <div className="container mx-auto px-6">
+            <div className="animate-pulse">
+              <div className="h-4 w-32 bg-white/20 rounded mb-8"></div>
+              <div className="h-12 w-96 bg-white/20 rounded mb-4"></div>
+              <div className="h-6 w-64 bg-white/20 rounded"></div>
+            </div>
+          </div>
+        </div>
+        <div className="container mx-auto px-6 py-12 flex items-center justify-center">
+          <div className="flex items-center gap-3 text-slate-500">
+            <Loader2 className="w-6 h-6 animate-spin" />
+            <span className="text-sm font-medium">Loading academic resources...</span>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-24 pb-16">
+    <div className="min-h-screen bg-nobel-cream">
       <SEO
         title="Academic Bank - Resources"
         description="Access lecture notes, past questions, and academic materials from all 13 faculties of University of Ibadan."
       />
 
-      <div className="container mx-auto px-6 h-[85vh] flex flex-col">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/resources')}>
-              <ArrowLeft size={20} />
-            </Button>
-            <h1 className="text-2xl font-serif text-slate-800">Academic Bank</h1>
-            {isStaff && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => setShowStats(!showStats)}
-              >
-                <BarChart3 size={16} />
-                Stats
-              </Button>
-            )}
-            {isAdmin && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => setShowActivityLog(true)}
-              >
-                <History size={16} />
-                Activity
-              </Button>
-            )}
-          </div>
+      {/* Hero Section */}
+      <div className="bg-ui-blue text-white pt-32 pb-16 relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute inset-0" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }}></div>
+        </div>
+        
+        <div className="container mx-auto px-6 relative z-10">
+          {/* Back Button */}
+          <button
+            onClick={() => navigate('/resources')}
+            className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-white/70 hover:text-nobel-gold transition-colors mb-8"
+          >
+            <div className="p-2 rounded-full border border-white/30 group-hover:border-nobel-gold transition-colors">
+              <ArrowLeft size={14} />
+            </div>
+            <span>Back to Resources</span>
+          </button>
 
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className="relative flex-1 md:w-96">
-              <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-lg px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+            <div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-3 mb-4"
+              >
+                <div className="p-3 bg-nobel-gold/20 rounded-none">
+                  <BookOpen size={24} className="text-nobel-gold" />
+                </div>
+                <span className="text-xs font-bold uppercase tracking-[0.3em] text-nobel-gold">Academic Resources</span>
+              </motion.div>
+              
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-4xl md:text-5xl font-serif mb-4"
+              >
+                Academic Bank
+              </motion.h1>
+              
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-white/70 max-w-xl text-lg"
+              >
+                Access lecture notes, past questions, and academic materials from all 13 faculties of University of Ibadan.
+              </motion.p>
+            </div>
+
+            {/* Stats Cards */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="flex gap-6"
+            >
+              <div className="text-center">
+                <div className="text-3xl font-serif text-nobel-gold">{totalFiles}</div>
+                <div className="text-xs uppercase tracking-wider text-white/50">Files</div>
+              </div>
+              <div className="w-px bg-white/20"></div>
+              <div className="text-center">
+                <div className="text-3xl font-serif text-nobel-gold">{totalFolders}</div>
+                <div className="text-xs uppercase tracking-wider text-white/50">Folders</div>
+              </div>
+              <div className="w-px bg-white/20"></div>
+              <div className="text-center">
+                <div className="text-3xl font-serif text-nobel-gold">{totalDownloads}</div>
+                <div className="text-xs uppercase tracking-wider text-white/50">Downloads</div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
+      {/* Search & Controls Bar */}
+      <div className="bg-white border-b border-slate-200 sticky top-0 z-40">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            {/* Search */}
+            <div className="relative flex-1 md:max-w-md w-full">
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-none px-4 py-3 focus-within:border-ui-blue focus-within:bg-white transition-all">
                 <Search size={18} className="text-slate-400" />
                 <input
                   type="text"
@@ -777,22 +846,22 @@ const AcademicBankPage = () => {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-80 overflow-y-auto"
+                    className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-none shadow-xl z-50 max-h-80 overflow-y-auto"
                   >
                     <div className="p-2">
-                      <div className="text-xs text-slate-400 px-3 py-2 border-b border-slate-100">
+                      <div className="text-xs text-slate-400 px-3 py-2 border-b border-slate-100 uppercase tracking-wider">
                         {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} found
                       </div>
                       {searchResults.map((result) => (
                         <button
                           key={result.id}
                           onClick={() => navigateToResource(result)}
-                          className="w-full flex items-start gap-3 p-3 hover:bg-slate-50 rounded-lg transition-colors text-left"
+                          className="w-full flex items-start gap-3 p-3 hover:bg-slate-50 transition-colors text-left"
                         >
                           {result.resource_type === 'folder' ? (
-                            <Folder className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
+                            <Folder className="w-5 h-5 text-ui-blue shrink-0 mt-0.5" />
                           ) : (
-                            <FileText className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+                            <FileText className="w-5 h-5 text-nobel-gold shrink-0 mt-0.5" />
                           )}
                           <div className="min-w-0 flex-1">
                             <div className="text-sm font-medium text-slate-700 truncate">
@@ -812,7 +881,7 @@ const AcademicBankPage = () => {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-6 text-center"
+                    className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-none shadow-xl z-50 p-6 text-center"
                   >
                     <FileIcon className="w-8 h-8 text-slate-300 mx-auto mb-2" />
                     <p className="text-sm text-slate-500">No files or folders found</p>
@@ -821,44 +890,66 @@ const AcademicBankPage = () => {
               </AnimatePresence>
             </div>
 
-            <div className="flex items-center gap-2">
-              {/* Sort Controls */}
-              <div className="flex items-center gap-2">
-                <Select value={sortBy} onValueChange={(v: 'name' | 'date' | 'downloads') => setSortBy(v)}>
-                  <SelectTrigger className="w-[130px] h-9 bg-white">
-                    <ArrowUpDown size={14} className="mr-1.5" />
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="name">Name</SelectItem>
-                    <SelectItem value="date">Date</SelectItem>
-                    <SelectItem value="downloads">Downloads</SelectItem>
-                  </SelectContent>
-                </Select>
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              {/* Admin Controls */}
+              {isStaff && (
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-9 px-2"
-                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                  className="gap-2 rounded-none border-slate-300"
+                  onClick={() => setShowStats(!showStats)}
                 >
-                  {sortOrder === 'asc' ? '↑' : '↓'}
+                  <BarChart3 size={16} />
+                  <span className="hidden sm:inline">Stats</span>
                 </Button>
-              </div>
+              )}
+              {isAdmin && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 rounded-none border-slate-300"
+                  onClick={() => setShowActivityLog(true)}
+                >
+                  <History size={16} />
+                  <span className="hidden sm:inline">Activity</span>
+                </Button>
+              )}
+
+              {/* Sort Controls */}
+              <Select value={sortBy} onValueChange={(v: 'name' | 'date' | 'downloads') => setSortBy(v)}>
+                <SelectTrigger className="w-[130px] h-9 bg-white rounded-none border-slate-300">
+                  <ArrowUpDown size={14} className="mr-1.5" />
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name">Name</SelectItem>
+                  <SelectItem value="date">Date</SelectItem>
+                  <SelectItem value="downloads">Downloads</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 px-2 rounded-none border-slate-300"
+                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              >
+                {sortOrder === 'asc' ? '↑' : '↓'}
+              </Button>
 
               {/* View Mode Toggle */}
-              <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1">
+              <div className="flex items-center gap-0 border border-slate-300">
                 <Button
-                  variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
                   size="icon"
-                  className="h-8 w-8"
+                  className={`h-9 w-9 rounded-none ${viewMode === 'grid' ? 'bg-ui-blue hover:bg-ui-dark' : ''}`}
                   onClick={() => setViewMode('grid')}
                 >
                   <Grid size={16} />
                 </Button>
                 <Button
-                  variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
                   size="icon"
-                  className="h-8 w-8"
+                  className={`h-9 w-9 rounded-none ${viewMode === 'list' ? 'bg-ui-blue hover:bg-ui-dark' : ''}`}
                   onClick={() => setViewMode('list')}
                 >
                   <List size={16} />
@@ -867,7 +958,10 @@ const AcademicBankPage = () => {
             </div>
           </div>
         </div>
+      </div>
 
+      {/* Main Content */}
+      <div className="container mx-auto px-6 py-8">
         {/* Stats Panel */}
         <AnimatePresence>
           {showStats && (
@@ -875,20 +969,20 @@ const AcademicBankPage = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="mb-6 overflow-hidden"
+              className="mb-8 overflow-hidden"
             >
-              <div className="bg-white border border-slate-200 rounded-xl p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <TrendingUp size={20} className="text-green-500" />
-                  <h3 className="font-semibold text-slate-800">Most Downloaded Files</h3>
+              <div className="bg-white border border-slate-200 p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <TrendingUp size={20} className="text-nobel-gold" />
+                  <h3 className="font-serif text-xl text-ui-blue">Most Downloaded Files</h3>
                 </div>
                 {topDownloaded.length === 0 ? (
                   <p className="text-sm text-slate-400">No download data yet</p>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                     {topDownloaded.map((file, index) => (
-                      <div key={file.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                        <span className="text-lg font-bold text-slate-300">#{index + 1}</span>
+                      <div key={file.id} className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-100 hover:border-nobel-gold/30 transition-colors">
+                        <span className="text-2xl font-serif text-nobel-gold">#{index + 1}</span>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium text-slate-700 truncate">{file.name}</p>
                           <p className="text-xs text-slate-400">{file.download_count} downloads</p>
@@ -902,9 +996,9 @@ const AcademicBankPage = () => {
           )}
         </AnimatePresence>
 
-        {/* Main Content Area */}
-        <div className="flex-1 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
-          {/* Toolbar / Breadcrumbs */}
+        {/* File Browser */}
+        <div className="bg-white border border-slate-200 overflow-hidden">
+          {/* Breadcrumbs & Actions */}
           <div className="border-b border-slate-100 p-4 flex items-center justify-between bg-slate-50/50">
             <div className="flex items-center text-sm text-slate-600 overflow-x-auto">
               {breadcrumbPath.map((crumb, index) => (
@@ -912,7 +1006,7 @@ const AcademicBankPage = () => {
                   {index > 0 && <ChevronRight size={16} className="mx-1 text-slate-400 shrink-0" />}
                   <button
                     onClick={() => index === 0 ? setCurrentPath([]) : handleNavigateUp(index - 1)}
-                    className={`hover:bg-slate-200 px-2 py-1 rounded transition-colors whitespace-nowrap ${index === breadcrumbPath.length - 1 ? 'font-semibold text-slate-900' : ''}`}
+                    className={`hover:text-ui-blue px-2 py-1 transition-colors whitespace-nowrap ${index === breadcrumbPath.length - 1 ? 'font-semibold text-ui-blue' : ''}`}
                   >
                     {crumb.name}
                   </button>
@@ -925,7 +1019,7 @@ const AcademicBankPage = () => {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="gap-2"
+                  className="gap-2 rounded-none border-slate-300"
                   onClick={() => {
                     setEditingFolder(null);
                     setNewFolderName('');
@@ -937,7 +1031,7 @@ const AcademicBankPage = () => {
                 </Button>
                 <Button
                   size="sm"
-                  className="gap-2"
+                  className="gap-2 rounded-none bg-ui-blue hover:bg-ui-dark"
                   onClick={() => setShowUploadModal(true)}
                 >
                   <Upload size={16} />
@@ -982,7 +1076,7 @@ const AcademicBankPage = () => {
           {/* File Grid/List with Drag and Drop */}
           <div 
             ref={dropZoneRef}
-            className={`flex-1 overflow-y-auto p-6 relative transition-colors ${isDragging ? 'bg-blue-50' : ''}`}
+            className={`min-h-[500px] p-6 relative transition-colors ${isDragging ? 'bg-ui-blue/5' : ''}`}
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
             onDragOver={handleDragOver}
@@ -990,48 +1084,63 @@ const AcademicBankPage = () => {
           >
             {/* Drag Overlay */}
             {isDragging && (
-              <div className="absolute inset-0 bg-blue-100/80 border-2 border-dashed border-blue-400 rounded-xl flex items-center justify-center z-10 pointer-events-none">
+              <div className="absolute inset-0 bg-ui-blue/10 border-2 border-dashed border-ui-blue flex items-center justify-center z-10 pointer-events-none">
                 <div className="text-center">
-                  <Upload size={48} className="mx-auto text-blue-500 mb-3" />
-                  <p className="text-blue-700 font-medium text-lg">Drop files here to upload</p>
-                  <p className="text-blue-500 text-sm">Up to 25 files at once</p>
+                  <Upload size={48} className="mx-auto text-ui-blue mb-3" />
+                  <p className="text-ui-blue font-serif text-xl">Drop files here to upload</p>
+                  <p className="text-ui-blue/60 text-sm mt-1">Up to 25 files at once</p>
                 </div>
               </div>
             )}
+            
             {items.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                <Folder size={64} className="mb-4 opacity-20" />
-                <p>This folder is empty</p>
+              <div className="h-[400px] flex flex-col items-center justify-center text-slate-400">
+                <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mb-6">
+                  <Folder size={40} className="text-slate-300" />
+                </div>
+                <p className="font-serif text-xl text-slate-500 mb-2">This folder is empty</p>
+                <p className="text-sm text-slate-400 mb-6">Upload files or create folders to get started</p>
                 {isStaff && (
-                  <Button
-                    variant="outline"
-                    className="mt-4 gap-2"
-                    onClick={() => {
-                      setEditingFolder(null);
-                      setNewFolderName('');
-                      setShowFolderModal(true);
-                    }}
-                  >
-                    <FolderPlus size={16} />
-                    Create a folder
-                  </Button>
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      className="gap-2 rounded-none border-slate-300"
+                      onClick={() => {
+                        setEditingFolder(null);
+                        setNewFolderName('');
+                        setShowFolderModal(true);
+                      }}
+                    >
+                      <FolderPlus size={16} />
+                      Create Folder
+                    </Button>
+                    <Button
+                      className="gap-2 rounded-none bg-ui-blue hover:bg-ui-dark"
+                      onClick={() => setShowUploadModal(true)}
+                    >
+                      <Upload size={16} />
+                      Upload Files
+                    </Button>
+                  </div>
                 )}
               </div>
             ) : (
-              <div className={viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4' : 'space-y-2'}>
+              <div className={viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4' : 'space-y-2'}>
                 {items.map((item) => (
                   <motion.div
                     key={item.id}
                     layout
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
                     className={`
-                      group cursor-pointer border border-slate-100 rounded-xl hover:border-blue-200 hover:bg-blue-50/30 transition-all relative
-                      ${viewMode === 'grid' ? 'p-4 flex flex-col aspect-[4/3]' : 'p-3 flex items-center gap-4'}
+                      group cursor-pointer border transition-all relative
+                      ${viewMode === 'grid' 
+                        ? 'p-4 flex flex-col bg-white border-slate-100 hover:border-ui-blue hover:shadow-md' 
+                        : 'p-4 flex items-center gap-4 bg-white border-slate-100 hover:border-ui-blue hover:bg-slate-50'}
                     `}
                   >
                     <div 
-                      className="flex-1 min-w-0"
+                      className={`flex-1 min-w-0 ${viewMode === 'grid' ? '' : 'flex items-center gap-4'}`}
                       onClick={() => {
                         if (item.resource_type === 'folder') {
                           handleNavigate(item.id);
@@ -1042,16 +1151,20 @@ const AcademicBankPage = () => {
                         }
                       }}
                     >
-                      <div className={`${viewMode === 'grid' ? 'mb-3' : ''} text-slate-500`}>
+                      <div className={`${viewMode === 'grid' ? 'mb-4 flex justify-center' : ''}`}>
                         {item.resource_type === 'folder' ? (
-                          <Folder className={`${viewMode === 'grid' ? 'w-10 h-10' : 'w-6 h-6'} text-slate-400 fill-blue-50`} />
+                          <div className={`${viewMode === 'grid' ? 'w-16 h-16' : 'w-10 h-10'} bg-ui-blue/10 flex items-center justify-center`}>
+                            <Folder className={`${viewMode === 'grid' ? 'w-8 h-8' : 'w-5 h-5'} text-ui-blue`} />
+                          </div>
                         ) : (
-                          <FileText className={`${viewMode === 'grid' ? 'w-10 h-10' : 'w-6 h-6'} text-red-400`} />
+                          <div className={`${viewMode === 'grid' ? 'w-16 h-16' : 'w-10 h-10'} bg-nobel-gold/10 flex items-center justify-center`}>
+                            <FileText className={`${viewMode === 'grid' ? 'w-8 h-8' : 'w-5 h-5'} text-nobel-gold`} />
+                          </div>
                         )}
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium text-slate-700 truncate group-hover:text-blue-700">
+                        <h4 className={`font-medium text-slate-700 truncate group-hover:text-ui-blue ${viewMode === 'grid' ? 'text-sm text-center' : 'text-sm'}`}>
                           {item.name}
                         </h4>
                         {viewMode === 'list' && (
@@ -1066,18 +1179,21 @@ const AcademicBankPage = () => {
                             )}
                           </div>
                         )}
+                        {viewMode === 'grid' && item.resource_type !== 'folder' && (
+                          <p className="text-xs text-slate-400 text-center mt-1">{item.file_size || ''}</p>
+                        )}
                       </div>
                     </div>
 
                     {/* Actions */}
                     <div className={`flex items-center gap-1 ${viewMode === 'grid' ? 'absolute top-2 right-2' : ''} opacity-0 group-hover:opacity-100 transition-opacity`}>
                       {item.resource_type !== 'folder' && canPreview(item) && (
-                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handlePreview(item)}>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 rounded-none" onClick={() => handlePreview(item)}>
                           <Eye size={14} />
                         </Button>
                       )}
                       {item.resource_type !== 'folder' && (
-                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleDownload(item)}>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 rounded-none" onClick={() => handleDownload(item)}>
                           <Download size={14} />
                         </Button>
                       )}
@@ -1085,7 +1201,7 @@ const AcademicBankPage = () => {
                         <Button 
                           size="icon" 
                           variant="ghost" 
-                          className="h-7 w-7"
+                          className="h-7 w-7 rounded-none"
                           onClick={(e) => {
                             e.stopPropagation();
                             setEditingFolder(item);
@@ -1100,7 +1216,7 @@ const AcademicBankPage = () => {
                         <Button 
                           size="icon" 
                           variant="ghost" 
-                          className="h-7 w-7 text-red-500 hover:text-red-600"
+                          className="h-7 w-7 rounded-none text-red-500 hover:text-red-600"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDeleteResource(item);
@@ -1120,26 +1236,29 @@ const AcademicBankPage = () => {
 
       {/* Folder Modal */}
       <Dialog open={showFolderModal} onOpenChange={setShowFolderModal}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md rounded-none">
           <DialogHeader>
-            <DialogTitle>{editingFolder ? 'Edit Folder' : 'New Folder'}</DialogTitle>
+            <DialogTitle className="font-serif text-xl text-ui-blue">{editingFolder ? 'Edit Folder' : 'Create New Folder'}</DialogTitle>
           </DialogHeader>
           <div className="py-4">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 block">Folder Name</label>
             <Input
-              placeholder="Folder name"
+              placeholder="Enter folder name..."
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (editingFolder ? handleEditFolder() : handleCreateFolder())}
+              className="rounded-none border-slate-300 focus:border-ui-blue"
             />
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowFolderModal(false)}>Cancel</Button>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowFolderModal(false)} className="rounded-none border-slate-300">Cancel</Button>
             <Button 
               onClick={editingFolder ? handleEditFolder : handleCreateFolder}
               disabled={savingFolder || !newFolderName.trim()}
+              className="rounded-none bg-ui-blue hover:bg-ui-dark"
             >
               {savingFolder && <Loader2 size={14} className="animate-spin mr-2" />}
-              {editingFolder ? 'Update' : 'Create'}
+              {editingFolder ? 'Update Folder' : 'Create Folder'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1147,26 +1266,30 @@ const AcademicBankPage = () => {
 
       {/* Document Preview Sidebar */}
       <Sheet open={showPreviewSidebar} onOpenChange={setShowPreviewSidebar}>
-        <SheetContent className="w-full sm:max-w-2xl p-0 flex flex-col">
-          <SheetHeader className="p-4 border-b border-slate-200 shrink-0">
+        <SheetContent className="w-full sm:max-w-2xl p-0 flex flex-col rounded-none">
+          <SheetHeader className="p-6 border-b border-slate-200 shrink-0 bg-ui-blue text-white">
             <div className="flex items-center justify-between">
-              <SheetTitle className="text-lg font-medium truncate pr-4">
-                {previewFile?.name}
-              </SheetTitle>
-              <div className="flex items-center gap-2 shrink-0">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="gap-2"
-                  onClick={() => previewFile && handleDownload(previewFile)}
-                >
-                  <Download size={14} />
-                  Download
-                </Button>
+              <div className="flex-1 min-w-0 pr-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <FileText size={16} className="text-nobel-gold" />
+                  <span className="text-xs uppercase tracking-wider text-white/60">Document Preview</span>
+                </div>
+                <SheetTitle className="text-lg font-serif text-white truncate">
+                  {previewFile?.name}
+                </SheetTitle>
               </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-2 rounded-none border-white/30 text-white hover:bg-white/10 hover:text-white shrink-0"
+                onClick={() => previewFile && handleDownload(previewFile)}
+              >
+                <Download size={14} />
+                Download
+              </Button>
             </div>
             {previewFile && (
-              <div className="flex items-center gap-4 text-xs text-slate-500 mt-2">
+              <div className="flex items-center gap-4 text-xs text-white/60 mt-3">
                 <span className="flex items-center gap-1">
                   <Clock size={12} />
                   {previewFile.created_at ? format(new Date(previewFile.created_at), 'MMM d, yyyy') : 'Unknown'}
@@ -1194,22 +1317,30 @@ const AcademicBankPage = () => {
 
       {/* Activity Log Sidebar */}
       <Sheet open={showActivityLog} onOpenChange={setShowActivityLog}>
-        <SheetContent className="w-full sm:max-w-lg p-0">
-          <SheetHeader className="p-4 border-b border-slate-200">
-            <SheetTitle className="flex items-center gap-2">
-              <History size={20} />
-              Activity Log
-            </SheetTitle>
+        <SheetContent className="w-full sm:max-w-lg p-0 rounded-none">
+          <SheetHeader className="p-6 border-b border-slate-200 bg-ui-blue text-white">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-nobel-gold/20 rounded-none">
+                <History size={20} className="text-nobel-gold" />
+              </div>
+              <div>
+                <SheetTitle className="font-serif text-xl text-white">Activity Log</SheetTitle>
+                <p className="text-xs text-white/60 mt-1">Recent changes to Academic Bank</p>
+              </div>
+            </div>
           </SheetHeader>
-          <ScrollArea className="h-[calc(100vh-80px)]">
+          <ScrollArea className="h-[calc(100vh-120px)]">
             {loadingLogs ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+                <Loader2 className="w-6 h-6 animate-spin text-ui-blue" />
               </div>
             ) : activityLogs.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-                <History size={48} className="mb-3 opacity-30" />
-                <p className="text-sm">No activity yet</p>
+              <div className="flex flex-col items-center justify-center py-16 text-slate-400">
+                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                  <History size={32} className="text-slate-300" />
+                </div>
+                <p className="font-medium text-slate-500">No activity yet</p>
+                <p className="text-sm text-slate-400 mt-1">Changes will appear here</p>
               </div>
             ) : (
               <div className="divide-y divide-slate-100">
@@ -1224,23 +1355,23 @@ const AcademicBankPage = () => {
                   return (
                     <div key={log.id} className="p-4 hover:bg-slate-50 transition-colors">
                       <div className="flex items-start gap-3">
-                        <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${getActionColor(log.action)}`}>
+                        <div className={`shrink-0 w-10 h-10 flex items-center justify-center ${getActionColor(log.action)}`}>
                           {resourceType === 'folder' ? (
-                            <Folder size={14} />
+                            <Folder size={16} />
                           ) : (
-                            <FileText size={14} />
+                            <FileText size={16} />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`text-xs font-medium px-2 py-0.5 rounded ${getActionColor(log.action)}`}>
+                            <span className={`text-xs font-bold uppercase tracking-wider px-2 py-1 ${getActionColor(log.action)}`}>
                               {getActionLabel(log.action)}
                             </span>
-                            <span className="text-sm font-medium text-slate-700 truncate">
-                              {resourceName}
-                            </span>
                           </div>
-                          <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
+                          <p className="text-sm font-medium text-slate-700 truncate mt-1">
+                            {resourceName}
+                          </p>
+                          <div className="flex items-center gap-3 mt-2 text-xs text-slate-500">
                             <span className="flex items-center gap-1">
                               <User size={10} />
                               {log.user_email}
@@ -1263,64 +1394,65 @@ const AcademicBankPage = () => {
 
       {/* Upload Options Modal */}
       <Dialog open={showUploadModal} onOpenChange={setShowUploadModal}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md rounded-none">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Upload size={20} />
-              Upload Files
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-4 space-y-3">
-            <p className="text-sm text-slate-500 mb-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-ui-blue/10 rounded-none">
+                <Upload size={20} className="text-ui-blue" />
+              </div>
+              <DialogTitle className="font-serif text-xl text-ui-blue">Upload Files</DialogTitle>
+            </div>
+            <p className="text-sm text-slate-500">
               Choose how you'd like to upload your files to the Academic Bank.
             </p>
-            
+          </DialogHeader>
+          <div className="py-4 space-y-3">
             {/* Single File Upload */}
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full flex items-center gap-4 p-4 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-xl transition-all group"
+              className="w-full flex items-center gap-4 p-4 bg-slate-50 hover:bg-ui-blue/5 border border-slate-200 hover:border-ui-blue transition-all group"
             >
-              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                <File size={24} className="text-blue-600" />
+              <div className="w-12 h-12 bg-ui-blue/10 flex items-center justify-center group-hover:bg-ui-blue/20 transition-colors">
+                <File size={24} className="text-ui-blue" />
               </div>
               <div className="flex-1 text-left">
                 <h4 className="font-medium text-slate-800">Single File</h4>
                 <p className="text-sm text-slate-500">Upload one file at a time</p>
               </div>
-              <ChevronRight size={20} className="text-slate-400 group-hover:text-blue-500" />
+              <ChevronRight size={20} className="text-slate-400 group-hover:text-ui-blue" />
             </button>
 
             {/* Multiple Files Upload */}
             <button
               onClick={() => multiFileInputRef.current?.click()}
-              className="w-full flex items-center gap-4 p-4 bg-slate-50 hover:bg-green-50 border border-slate-200 hover:border-green-300 rounded-xl transition-all group"
+              className="w-full flex items-center gap-4 p-4 bg-slate-50 hover:bg-nobel-gold/5 border border-slate-200 hover:border-nobel-gold transition-all group"
             >
-              <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                <Files size={24} className="text-green-600" />
+              <div className="w-12 h-12 bg-nobel-gold/10 flex items-center justify-center group-hover:bg-nobel-gold/20 transition-colors">
+                <Files size={24} className="text-nobel-gold" />
               </div>
               <div className="flex-1 text-left">
                 <h4 className="font-medium text-slate-800">Bulk Upload</h4>
                 <p className="text-sm text-slate-500">Upload up to 25 files at once</p>
               </div>
-              <ChevronRight size={20} className="text-slate-400 group-hover:text-green-500" />
+              <ChevronRight size={20} className="text-slate-400 group-hover:text-nobel-gold" />
             </button>
 
             {/* Folder Upload */}
             <button
               onClick={() => folderInputRef.current?.click()}
-              className="w-full flex items-center gap-4 p-4 bg-slate-50 hover:bg-purple-50 border border-slate-200 hover:border-purple-300 rounded-xl transition-all group"
+              className="w-full flex items-center gap-4 p-4 bg-slate-50 hover:bg-ui-dark/5 border border-slate-200 hover:border-ui-dark transition-all group"
             >
-              <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                <FolderUp size={24} className="text-purple-600" />
+              <div className="w-12 h-12 bg-ui-dark/10 flex items-center justify-center group-hover:bg-ui-dark/20 transition-colors">
+                <FolderUp size={24} className="text-ui-dark" />
               </div>
               <div className="flex-1 text-left">
                 <h4 className="font-medium text-slate-800">Folder Upload</h4>
                 <p className="text-sm text-slate-500">Upload an entire folder with its structure</p>
               </div>
-              <ChevronRight size={20} className="text-slate-400 group-hover:text-purple-500" />
+              <ChevronRight size={20} className="text-slate-400 group-hover:text-ui-dark" />
             </button>
           </div>
-          <div className="pt-2 border-t border-slate-100">
+          <div className="pt-4 border-t border-slate-100">
             <p className="text-xs text-slate-400 text-center">
               You can also drag and drop files directly onto the file area
             </p>
