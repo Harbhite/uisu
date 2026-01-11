@@ -35,7 +35,7 @@ const StudyToolsPage = lazy(() => import("./pages/resources/StudyToolsPage"));
 const SkillUpPage = lazy(() => import("./pages/resources/SkillUpPage"));
 const StudentMartPage = lazy(() => import("./pages/resources/StudentMartPage"));
 const FreshersGuidePage = lazy(() => import("./pages/resources/FreshersGuidePage"));
-const AlumniNetworkPage = lazy(() => import("./pages/resources/AlumniNetworkPage"));
+const CareerPathfinderPage = lazy(() => import("./pages/resources/CareerPathfinderPage"));
 const CampusHealthPage = lazy(() => import("./pages/resources/CampusHealthPage"));
 
 const queryClient = new QueryClient();
@@ -84,7 +84,7 @@ const AppRoutes = () => {
         <Route path="/resources/skill-up" element={<PageWrapper><SkillUpPage /></PageWrapper>} />
         <Route path="/resources/student-mart" element={<PageWrapper><StudentMartPage /></PageWrapper>} />
         <Route path="/resources/freshers-guide" element={<PageWrapper><FreshersGuidePage /></PageWrapper>} />
-        <Route path="/resources/alumni-network" element={<PageWrapper><AlumniNetworkPage /></PageWrapper>} />
+        <Route path="/resources/career-pathfinder" element={<PageWrapper><CareerPathfinderPage /></PageWrapper>} />
         <Route path="/resources/campus-health" element={<PageWrapper><CampusHealthPage /></PageWrapper>} />
 
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
