@@ -13,10 +13,21 @@ export const LeaderCard = ({ leader }: { leader: Leader }) => {
     const showImage = leader.image && leader.image !== "/placeholder.svg";
 
     return (
-        <motion.div variants={itemVariants}>
+        <motion.div 
+            variants={itemVariants}
+            whileHover={{ 
+                y: -8, 
+                scale: 1.02,
+                transition: { duration: 0.3, ease: "easeOut" }
+            }}
+            className="relative"
+        >
+            {/* Glow effect on hover */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/50 via-accent/50 to-primary/50 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500 -z-10" />
+            
             <Link 
                 to={`/leaders/${leader.id}`}
-                className="group block bg-background border border-border hover:border-accent transition-all duration-300"
+                className="group block bg-background border border-border hover:border-accent hover:shadow-2xl hover:shadow-primary/20 transition-all duration-300"
             >
                 {/* Image Container - Sharp corners */}
                 <div className="aspect-[4/5] bg-muted relative overflow-hidden">
