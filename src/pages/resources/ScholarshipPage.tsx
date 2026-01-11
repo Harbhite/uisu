@@ -2,15 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ArrowLeft, Search, GraduationCap, Calendar, DollarSign, 
-  Bookmark, BookmarkCheck, Share2, ExternalLink, Filter,
-  Clock, CheckCircle2, XCircle, AlertCircle, ChevronRight,
-  Award, Globe, Building2, TrendingUp, X
+  ArrowLeft, Search, GraduationCap, Calendar, 
+  Bookmark, BookmarkCheck, Share2, ExternalLink,
+  Clock, CheckCircle2, XCircle, AlertCircle,
+  Award, Globe, Building2, X, ArrowRight
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
@@ -194,26 +191,26 @@ const getDaysRemaining = (deadline: string) => {
 
 const getDeadlineStatus = (deadline: string) => {
   const days = getDaysRemaining(deadline);
-  if (days < 0) return { status: 'expired', color: 'text-red-500', bg: 'bg-red-50' };
-  if (days <= 7) return { status: 'urgent', color: 'text-orange-500', bg: 'bg-orange-50' };
-  if (days <= 30) return { status: 'soon', color: 'text-yellow-600', bg: 'bg-yellow-50' };
-  return { status: 'open', color: 'text-green-600', bg: 'bg-green-50' };
+  if (days < 0) return { status: 'expired', color: 'text-red-600' };
+  if (days <= 7) return { status: 'urgent', color: 'text-orange-600' };
+  if (days <= 30) return { status: 'soon', color: 'text-amber-600' };
+  return { status: 'open', color: 'text-green-700' };
 };
 
 const StatusBadge: React.FC<{ status: ApplicationStatus }> = ({ status }) => {
   const configs: Record<ApplicationStatus, { label: string; icon: typeof CheckCircle2; color: string }> = {
-    not_started: { label: 'Not Started', icon: Clock, color: 'bg-slate-100 text-slate-600' },
-    in_progress: { label: 'In Progress', icon: AlertCircle, color: 'bg-blue-100 text-blue-600' },
-    submitted: { label: 'Submitted', icon: CheckCircle2, color: 'bg-green-100 text-green-600' },
-    accepted: { label: 'Accepted', icon: CheckCircle2, color: 'bg-emerald-100 text-emerald-600' },
-    rejected: { label: 'Rejected', icon: XCircle, color: 'bg-red-100 text-red-600' }
+    not_started: { label: 'Not Started', icon: Clock, color: 'text-slate-500' },
+    in_progress: { label: 'In Progress', icon: AlertCircle, color: 'text-ui-blue' },
+    submitted: { label: 'Submitted', icon: CheckCircle2, color: 'text-green-600' },
+    accepted: { label: 'Accepted', icon: CheckCircle2, color: 'text-emerald-600' },
+    rejected: { label: 'Rejected', icon: XCircle, color: 'text-red-600' }
   };
 
   const config = configs[status];
   const Icon = config.icon;
 
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${config.color}`}>
+    <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest ${config.color}`}>
       <Icon size={12} />
       {config.label}
     </span>
@@ -231,98 +228,95 @@ const ScholarshipCard: React.FC<{
   const deadlineInfo = getDeadlineStatus(scholarship.deadline);
   const daysRemaining = getDaysRemaining(scholarship.deadline);
 
-  const categoryIcon = {
-    local: <Award size={20} />,
-    international: <Globe size={20} />,
-    corporate: <Building2 size={20} />
+  const categoryConfig = {
+    local: { icon: Award, label: 'Local', color: 'text-emerald-700' },
+    international: { icon: Globe, label: 'International', color: 'text-ui-blue' },
+    corporate: { icon: Building2, label: 'Corporate', color: 'text-nobel-gold' }
   };
 
-  const categoryColors = {
-    local: 'bg-emerald-100 text-emerald-600',
-    international: 'bg-blue-100 text-blue-600',
-    corporate: 'bg-amber-100 text-amber-600'
-  };
+  const config = categoryConfig[scholarship.category];
+  const CategoryIcon = config.icon;
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ delay: index * 0.05 }}
-      className="bg-card rounded-xl border border-border hover:border-nobel-gold hover:shadow-xl transition-all duration-300 group overflow-hidden"
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ delay: index * 0.05, duration: 0.4 }}
+      className="bg-white border border-slate-100 hover:border-nobel-gold/50 hover:shadow-lg transition-all duration-300 group"
     >
-      <div className="p-6">
-        <div className="flex justify-between items-start mb-4">
-          <div className={`p-3 rounded-lg ${categoryColors[scholarship.category]}`}>
-            {categoryIcon[scholarship.category]}
+      <div className="p-8">
+        <div className="flex justify-between items-start mb-6">
+          <div className={`w-12 h-12 bg-slate-50 border border-slate-100 flex items-center justify-center ${config.color}`}>
+            <CategoryIcon size={20} />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <button
               onClick={onToggleBookmark}
-              className={`p-2 rounded-full transition-all ${
+              className={`p-2 transition-colors ${
                 isBookmarked 
-                  ? 'bg-nobel-gold/10 text-nobel-gold' 
-                  : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                  ? 'text-nobel-gold' 
+                  : 'text-slate-300 hover:text-slate-600'
               }`}
             >
               {isBookmarked ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
             </button>
             <button
               onClick={onShare}
-              className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
+              className="p-2 text-slate-300 hover:text-slate-600 transition-colors"
             >
               <Share2 size={18} />
             </button>
           </div>
         </div>
 
-        <div className="mb-3">
-          <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest rounded ${categoryColors[scholarship.category]}`}>
-            {scholarship.category}
+        <div className="mb-4">
+          <span className={`text-[10px] font-bold uppercase tracking-widest ${config.color}`}>
+            {config.label}
           </span>
         </div>
 
-        <h3 className="font-serif text-xl text-foreground group-hover:text-ui-blue transition-colors mb-1">
+        <h3 className="font-serif text-2xl text-ui-blue group-hover:text-nobel-gold transition-colors mb-2 leading-tight">
           {scholarship.title}
         </h3>
-        <p className="text-sm text-muted-foreground mb-4">{scholarship.provider}</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">{scholarship.provider}</p>
 
-        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-4">
+        <p className="text-slate-600 leading-relaxed text-sm font-light line-clamp-2 mb-6">
           {scholarship.description}
         </p>
 
-        <div className="flex flex-wrap gap-1.5 mb-4">
+        <div className="flex flex-wrap gap-2 mb-6">
           {scholarship.eligibility.map((req, i) => (
-            <span key={i} className="px-2 py-0.5 bg-muted text-muted-foreground text-[10px] font-medium rounded-full">
+            <span key={i} className="px-3 py-1 bg-slate-50 text-slate-500 text-[10px] font-bold uppercase tracking-widest border border-slate-100">
               {req}
             </span>
           ))}
         </div>
 
-        <div className="flex items-center justify-between text-sm mb-4">
-          <div className="flex items-center gap-1.5 text-ui-blue font-semibold">
-            <DollarSign size={16} />
-            {scholarship.amount}
+        <div className="flex items-center justify-between border-t border-slate-100 pt-6">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-300 mb-1">Amount</div>
+            <div className="font-serif text-xl text-ui-blue">{scholarship.amount}</div>
           </div>
-          <div className={`flex items-center gap-1.5 ${deadlineInfo.color}`}>
-            <Calendar size={14} />
-            {daysRemaining > 0 ? `${daysRemaining} days left` : 'Expired'}
+          <div className="text-right">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-300 mb-1">Deadline</div>
+            <div className={`font-serif text-lg ${deadlineInfo.color}`}>
+              {daysRemaining > 0 ? `${daysRemaining} days` : 'Expired'}
+            </div>
           </div>
         </div>
-
-        <StatusBadge status={status} />
       </div>
 
-      <div className="px-6 py-4 border-t border-border bg-muted/30 flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">
-          Deadline: {new Date(scholarship.deadline).toLocaleDateString('en-NG', { 
-            month: 'short', day: 'numeric', year: 'numeric' 
-          })}
-        </span>
-        <Button size="sm" className="gap-2 text-xs">
-          Apply <ExternalLink size={12} />
-        </Button>
+      <div className="px-8 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
+        <StatusBadge status={status} />
+        <a 
+          href={scholarship.applicationUrl}
+          className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-ui-blue hover:text-nobel-gold transition-colors group/link"
+        >
+          Apply Now 
+          <ExternalLink size={12} className="group-hover/link:translate-x-0.5 transition-transform" />
+        </a>
       </div>
     </motion.div>
   );
@@ -341,44 +335,44 @@ const TrackerSidebar: React.FC<{
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={onClose} />
+        <div className="fixed inset-0 bg-ui-blue/20 backdrop-blur-sm z-40" onClick={onClose} />
       )}
       <motion.div
         initial={{ x: '100%' }}
         animate={{ x: isOpen ? 0 : '100%' }}
         transition={{ type: 'spring', damping: 25 }}
-        className="fixed right-0 top-0 h-full w-full max-w-md bg-card border-l border-border shadow-2xl z-50 overflow-y-auto"
+        className="fixed right-0 top-0 h-full w-full max-w-md bg-white border-l border-slate-200 shadow-2xl z-50 overflow-y-auto"
       >
-        <div className="p-6 border-b border-border sticky top-0 bg-card z-10">
-          <div className="flex items-center justify-between">
-            <h2 className="font-serif text-2xl text-foreground">Application Tracker</h2>
-            <button onClick={onClose} className="p-2 hover:bg-muted rounded-full transition-colors">
-              <X size={20} />
+        <div className="p-8 border-b border-slate-100 sticky top-0 bg-white z-10">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Your Applications</span>
+            <button onClick={onClose} className="p-2 hover:bg-slate-50 transition-colors">
+              <X size={20} className="text-slate-400" />
             </button>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">Track your saved scholarships</p>
+          <h2 className="font-serif text-3xl text-ui-blue">Application <span className="italic text-slate-300">Tracker</span></h2>
         </div>
 
-        <div className="p-6">
+        <div className="p-8">
           {savedScholarships.length === 0 ? (
-            <div className="text-center py-12">
-              <Bookmark className="mx-auto text-muted-foreground mb-4" size={48} />
-              <p className="text-muted-foreground">No saved scholarships yet</p>
-              <p className="text-sm text-muted-foreground mt-1">Bookmark scholarships to track them here</p>
+            <div className="text-center py-16">
+              <Bookmark className="mx-auto text-slate-200 mb-6" size={48} />
+              <p className="font-serif text-xl text-slate-400 mb-2">No saved scholarships</p>
+              <p className="text-sm text-slate-300">Bookmark scholarships to track them here</p>
             </div>
           ) : (
             <div className="space-y-4">
               {savedScholarships.map((scholarship) => (
-                <div key={scholarship.id} className="p-4 bg-muted/50 rounded-xl border border-border">
-                  <h4 className="font-medium text-foreground mb-1">{scholarship.title}</h4>
-                  <p className="text-xs text-muted-foreground mb-3">{scholarship.provider}</p>
+                <div key={scholarship.id} className="p-6 bg-slate-50 border border-slate-100">
+                  <h4 className="font-serif text-lg text-ui-blue mb-1">{scholarship.title}</h4>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">{scholarship.provider}</p>
                   
                   <div className="flex items-center justify-between">
                     <Select 
                       value={getStatus(scholarship.id)} 
                       onValueChange={(value) => setStatus(scholarship.id, value as ApplicationStatus)}
                     >
-                      <SelectTrigger className="w-[140px] h-8 text-xs">
+                      <SelectTrigger className="w-[140px] h-9 text-xs border-slate-200 rounded-none">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -390,7 +384,7 @@ const TrackerSidebar: React.FC<{
                       </SelectContent>
                     </Select>
                     
-                    <span className={`text-xs ${getDeadlineStatus(scholarship.deadline).color}`}>
+                    <span className={`text-xs font-bold ${getDeadlineStatus(scholarship.deadline).color}`}>
                       {getDaysRemaining(scholarship.deadline) > 0 
                         ? `${getDaysRemaining(scholarship.deadline)}d left`
                         : 'Expired'
@@ -409,10 +403,9 @@ const TrackerSidebar: React.FC<{
 
 const ScholarshipPage = () => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<ScholarshipCategory>('all');
-  const [amountFilter, setAmountFilter] = useState<string>('all');
   const [deadlineFilter, setDeadlineFilter] = useState<string>('all');
   const [trackerOpen, setTrackerOpen] = useState(false);
 
@@ -434,14 +427,12 @@ const ScholarshipPage = () => {
   const handleShare = (scholarship: Scholarship) => {
     const url = `${window.location.origin}/resources/scholarships?id=${scholarship.id}`;
     navigator.clipboard.writeText(url);
-    toast.success('Link copied to clipboard!', {
-      description: 'Share this scholarship with others'
-    });
+    toast.success('Link copied to clipboard!');
   };
 
   const handleBookmark = (id: string) => {
     toggle(id);
-    toast.success(isBookmarked(id) ? 'Removed from saved' : 'Saved to tracker');
+    toast.success(isBookmarked(id) ? 'Removed from tracker' : 'Added to tracker');
   };
 
   const filteredScholarships = useMemo(() => {
@@ -463,21 +454,21 @@ const ScholarshipPage = () => {
   }, [searchTerm, activeCategory, deadlineFilter]);
 
   const stats = [
-    { label: 'Total Scholarships', value: `${scholarships.length}+`, icon: GraduationCap },
-    { label: 'Total Available', value: '₦2B+', icon: TrendingUp },
-    { label: 'Active Deadlines', value: scholarships.filter(s => getDaysRemaining(s.deadline) > 0).length, icon: Calendar },
-    { label: 'Your Saved', value: bookmarks.length, icon: Bookmark }
+    { label: 'Scholarships', value: `${scholarships.length}+` },
+    { label: 'Total Available', value: '₦2B+' },
+    { label: 'Open Deadlines', value: scholarships.filter(s => getDaysRemaining(s.deadline) > 0).length.toString() },
+    { label: 'Your Saved', value: bookmarks.length.toString() }
   ];
 
   const categories: { value: ScholarshipCategory; label: string }[] = [
-    { value: 'all', label: 'All Scholarships' },
+    { value: 'all', label: 'All' },
     { value: 'local', label: 'Local' },
     { value: 'international', label: 'International' },
     { value: 'corporate', label: 'Corporate' }
   ];
 
   return (
-    <div className="min-h-screen bg-background pt-28 pb-16">
+    <div className="min-h-screen bg-slate-50 pt-32 pb-20">
       <SEO 
         title="Scholarship Finder - Resources" 
         description="Find local and international scholarships available to University of Ibadan students." 
@@ -486,39 +477,38 @@ const ScholarshipPage = () => {
       <div className="container mx-auto px-6">
         <button
           onClick={() => navigate('/resources')}
-          className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors mb-8"
+          className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors mb-12"
         >
-          <div className="p-2 rounded-full border border-border group-hover:border-nobel-gold transition-colors">
+          <div className="p-2 border border-slate-200 group-hover:border-nobel-gold transition-colors">
             <ArrowLeft size={14} />
           </div>
-          <span>Back to Resources</span>
+          <span>Resources</span>
         </button>
 
-        <div className="mb-12">
+        <div className="mb-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="flex items-center gap-4 mb-4"
           >
-            <GraduationCap className="text-nobel-gold w-8 h-8" />
-            <span className="text-xs font-bold tracking-[0.2em] uppercase text-muted-foreground">Funding Opportunities</span>
+            <GraduationCap className="text-nobel-gold w-6 h-6" />
+            <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-slate-400">Funding Opportunities</span>
           </motion.div>
 
           <motion.h1
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-5xl md:text-7xl font-serif text-ui-blue leading-[0.9] mb-6"
+            className="font-serif text-5xl md:text-7xl text-ui-blue mb-6"
           >
-            Scholarship <br />
-            <span className="italic text-muted-foreground">Finder</span>
+            Scholarship <span className="italic text-slate-300">Finder</span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-xl text-muted-foreground font-light max-w-2xl leading-relaxed"
+            className="text-xl text-slate-500 font-light max-w-2xl leading-relaxed"
           >
             Discover funding opportunities to support your academic journey. Local, international, and corporate scholarships curated for UI students.
           </motion.p>
@@ -528,36 +518,32 @@ const ScholarshipPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12"
+          className="grid grid-cols-2 md:grid-cols-4 gap-px bg-slate-200 border border-slate-200 mb-16"
         >
-          {stats.map((stat, i) => {
-            const Icon = stat.icon;
-            return (
-              <div key={i} className="bg-card p-6 rounded-xl border border-border">
-                <Icon className="text-nobel-gold mb-3" size={24} />
-                <div className="text-3xl font-serif text-foreground mb-1">{stat.value}</div>
-                <div className="text-xs text-muted-foreground uppercase tracking-widest">{stat.label}</div>
-              </div>
-            );
-          })}
+          {stats.map((stat, i) => (
+            <div key={i} className="bg-white p-8 text-center">
+              <div className="font-serif text-3xl md:text-4xl text-ui-blue mb-2">{stat.value}</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-300">{stat.label}</div>
+            </div>
+          ))}
         </motion.div>
 
-        <div className="mb-8 space-y-4 py-4 border-y border-border">
+        <div className="mb-12 space-y-6 pb-8 border-b border-slate-200">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
-              <Input
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
+              <input
                 type="text"
-                placeholder="Search scholarships by name or provider..."
+                placeholder="Search scholarships..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 h-12 text-base rounded-full border-border"
+                className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 focus:border-nobel-gold focus:outline-none text-lg font-serif transition-colors"
               />
             </div>
 
             <div className="flex gap-3">
               <Select value={deadlineFilter} onValueChange={setDeadlineFilter}>
-                <SelectTrigger className="w-[160px] h-12 rounded-full">
+                <SelectTrigger className="w-[160px] h-14 border-slate-200 rounded-none bg-white">
                   <SelectValue placeholder="Deadline" />
                 </SelectTrigger>
                 <SelectContent>
@@ -568,26 +554,25 @@ const ScholarshipPage = () => {
                 </SelectContent>
               </Select>
 
-              <Button 
+              <button 
                 onClick={() => setTrackerOpen(true)}
-                variant="outline" 
-                className="h-12 px-6 rounded-full gap-2"
+                className="h-14 px-6 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest hover:bg-nobel-gold transition-colors flex items-center gap-3"
               >
-                <Bookmark size={18} />
+                <Bookmark size={16} />
                 Tracker ({bookmarks.length})
-              </Button>
+              </button>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             {categories.map((cat) => (
               <button
                 key={cat.value}
                 onClick={() => setActiveCategory(cat.value)}
-                className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${
+                className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all ${
                   activeCategory === cat.value
-                    ? 'bg-ui-blue text-white shadow-md'
-                    : 'bg-card text-muted-foreground border border-border hover:border-ui-blue'
+                    ? 'bg-ui-blue text-white'
+                    : 'bg-white text-slate-500 border border-slate-200 hover:border-ui-blue'
                 }`}
               >
                 {cat.label}
@@ -616,11 +601,11 @@ const ScholarshipPage = () => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center py-20"
+            className="text-center py-24"
           >
-            <GraduationCap className="mx-auto text-muted-foreground mb-4" size={64} />
-            <h3 className="text-xl font-serif text-foreground mb-2">No scholarships found</h3>
-            <p className="text-muted-foreground">Try adjusting your filters or search term</p>
+            <GraduationCap className="mx-auto text-slate-200 mb-6" size={64} />
+            <h3 className="font-serif text-2xl text-slate-400 mb-2">No scholarships found</h3>
+            <p className="text-slate-300">Try adjusting your filters or search term</p>
           </motion.div>
         )}
       </div>
