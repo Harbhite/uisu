@@ -394,10 +394,10 @@ export const resourceCategories: ResourceCategory[] = [
   },
   {
     id: 'alumni',
-    title: 'Alumni Network',
-    description: 'Connect with past students, find mentors, and explore alumni stories.',
+    title: 'Career Pathfinder',
+    description: 'Discover career paths, explore trajectories by department, and learn from UI alumni journeys.',
     color: 'bg-cyan-500',
-    path: '/resources/alumni-network'
+    path: '/resources/career-pathfinder'
   },
   {
     id: 'health',
