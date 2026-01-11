@@ -1,288 +1,184 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ArrowLeft, Search, Briefcase, MapPin, Clock, Building2,
+import { 
+  ArrowLeft, Search, Briefcase, MapPin, Clock, Building2, 
   Bookmark, BookmarkCheck, ExternalLink, FileText, Users,
-  ChevronDown, ChevronRight, Download, CheckCircle2, Laptop,
-  GraduationCap, DollarSign, Filter, X
+  ChevronDown, Download, CheckCircle2
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
 
-type JobType = 'full-time' | 'part-time' | 'remote' | 'internship';
-type JobIndustry = 'tech' | 'finance' | 'education' | 'media' | 'healthcare' | 'consulting';
-type ExperienceLevel = 'entry' | 'mid' | 'senior';
-type ApplicationStatus = 'not_started' | 'applied' | 'interviewing' | 'offered' | 'rejected';
+type JobType = 'all' | 'full-time' | 'part-time' | 'remote' | 'internship';
 
 interface Job {
   id: string;
   title: string;
   company: string;
   location: string;
-  type: JobType;
-  industry: JobIndustry;
-  experience: ExperienceLevel;
-  salary?: string;
+  type: 'full-time' | 'part-time' | 'remote' | 'internship';
+  industry: string;
+  posted: string;
   description: string;
   requirements: string[];
-  postedDate: string;
-  deadline: string;
-  isInternship: boolean;
+  salary?: string;
 }
 
 const jobs: Job[] = [
   {
-    id: 'tech-intern-1',
+    id: 'campus-rep-mtn',
+    title: 'Campus Brand Ambassador',
+    company: 'MTN Nigeria',
+    location: 'University of Ibadan',
+    type: 'part-time',
+    industry: 'Telecommunications',
+    posted: '2 days ago',
+    description: 'Represent MTN brand on campus, organize activations, and drive student engagement.',
+    requirements: ['Current UI Student', 'Good Communication', '200-400 Level'],
+    salary: '₦30,000/month'
+  },
+  {
+    id: 'tech-intern-andela',
     title: 'Software Engineering Intern',
-    company: 'Andela Nigeria',
-    location: 'Lagos (Remote)',
+    company: 'Andela',
+    location: 'Lagos / Remote',
     type: 'internship',
-    industry: 'tech',
-    experience: 'entry',
-    salary: '₦150,000/month',
-    description: 'Join our engineering team and work on real-world projects using modern tech stack.',
-    requirements: ['200+ Level CS Student', 'Python or JavaScript', 'Problem-solving skills'],
-    postedDate: '2026-01-05',
-    deadline: '2026-02-28',
-    isInternship: true
+    industry: 'Technology',
+    posted: '1 week ago',
+    description: 'Join our engineering team to build products used by companies worldwide.',
+    requirements: ['Computer Science Student', 'JavaScript/Python', 'Problem Solving'],
+    salary: '₦150,000/month'
   },
   {
     id: 'research-assist',
     title: 'Research Assistant',
-    company: 'Dept. of Economics, UI',
-    location: 'On-Campus',
+    company: 'UI Department of Chemistry',
+    location: 'University of Ibadan',
     type: 'part-time',
-    industry: 'education',
-    experience: 'entry',
-    salary: '₦40,000/month',
-    description: 'Assist faculty members with ongoing research projects in development economics.',
-    requirements: ['Economics Student', 'CGPA 3.5+', 'STATA proficiency'],
-    postedDate: '2026-01-08',
-    deadline: '2026-01-31',
-    isInternship: false
-  },
-  {
-    id: 'graphic-design',
-    title: 'Graphic Design Intern',
-    company: 'Campus Press',
-    location: 'On-Campus',
-    type: 'internship',
-    industry: 'media',
-    experience: 'entry',
-    description: 'Create visual content for campus publications and digital platforms.',
-    requirements: ['Adobe Creative Suite', 'Portfolio required', 'Any department'],
-    postedDate: '2026-01-03',
-    deadline: '2026-02-15',
-    isInternship: true
-  },
-  {
-    id: 'frontend-dev',
-    title: 'Frontend Developer',
-    company: 'Paystack',
-    location: 'Lagos',
-    type: 'full-time',
-    industry: 'tech',
-    experience: 'entry',
-    salary: '₦350,000/month',
-    description: 'Build beautiful, responsive interfaces for our payment products.',
-    requirements: ['React/Vue.js', 'TypeScript', 'CSS expertise', 'Fresh graduate welcome'],
-    postedDate: '2026-01-02',
-    deadline: '2026-03-15',
-    isInternship: false
-  },
-  {
-    id: 'data-analyst',
-    title: 'Data Analyst Intern',
-    company: 'Access Bank',
-    location: 'Lagos',
-    type: 'internship',
-    industry: 'finance',
-    experience: 'entry',
-    salary: '₦100,000/month',
-    description: 'Analyze banking data and create insights for business decisions.',
-    requirements: ['Statistics/Math/Econ student', 'Excel/SQL', 'Attention to detail'],
-    postedDate: '2026-01-06',
-    deadline: '2026-02-28',
-    isInternship: true
+    industry: 'Research',
+    posted: '3 days ago',
+    description: 'Assist faculty with ongoing research projects and laboratory work.',
+    requirements: ['Chemistry Student', '300+ Level', 'Lab Experience'],
+    salary: '₦25,000/month'
   },
   {
     id: 'content-writer',
-    title: 'Content Writer',
+    title: 'Content Writer (Remote)',
     company: 'TechCabal',
     location: 'Remote',
     type: 'remote',
-    industry: 'media',
-    experience: 'entry',
-    salary: '₦80,000/month',
-    description: 'Write engaging articles about African tech ecosystem and startups.',
-    requirements: ['Strong writing skills', 'Interest in tech', 'Portfolio preferred'],
-    postedDate: '2026-01-07',
-    deadline: '2026-03-01',
-    isInternship: false
+    industry: 'Media',
+    posted: '5 days ago',
+    description: 'Write engaging articles about technology and startups in Africa.',
+    requirements: ['Excellent Writing', 'Tech Knowledge', 'Self-motivated'],
+    salary: '₦80,000/month'
   },
   {
-    id: 'graduate-trainee',
-    title: 'Graduate Trainee',
-    company: 'Shell Nigeria',
-    location: 'Port Harcourt',
+    id: 'grad-trainee-gtb',
+    title: 'Graduate Trainee Program',
+    company: 'GTBank',
+    location: 'Lagos',
     type: 'full-time',
-    industry: 'consulting',
-    experience: 'entry',
-    salary: '₦500,000/month',
-    description: 'Comprehensive 18-month program rotating through various departments.',
-    requirements: ['2:1 minimum', 'Engineering/Science degree', 'NYSC completed'],
-    postedDate: '2026-01-01',
-    deadline: '2026-04-30',
-    isInternship: false
+    industry: 'Banking',
+    posted: '1 week ago',
+    description: 'Comprehensive 12-month training program for fresh graduates.',
+    requirements: ['Recent Graduate', 'First Class/2.1', 'Under 26 years'],
+    salary: '₦250,000/month'
   },
   {
-    id: 'lab-assistant',
-    title: 'Laboratory Assistant',
-    company: 'UI Teaching Hospital',
-    location: 'On-Campus',
+    id: 'data-analyst-intern',
+    title: 'Data Analytics Intern',
+    company: 'Flutterwave',
+    location: 'Lagos / Remote',
+    type: 'internship',
+    industry: 'Fintech',
+    posted: '4 days ago',
+    description: 'Work with data team to analyze payment trends and generate insights.',
+    requirements: ['Statistics/Economics', 'Excel/Python', 'Analytical Mind'],
+    salary: '₦120,000/month'
+  },
+  {
+    id: 'library-assist',
+    title: 'Student Library Assistant',
+    company: 'Kenneth Dike Library',
+    location: 'University of Ibadan',
     type: 'part-time',
-    industry: 'healthcare',
-    experience: 'entry',
-    salary: '₦35,000/month',
-    description: 'Support laboratory operations and assist with medical tests.',
-    requirements: ['Medical Lab Science student', '300+ Level', 'Lab safety training'],
-    postedDate: '2026-01-04',
-    deadline: '2026-01-25',
-    isInternship: false
+    industry: 'Education',
+    posted: '1 day ago',
+    description: 'Help with library operations, shelving, and assisting other students.',
+    requirements: ['Current UI Student', 'Organized', 'Flexible Schedule'],
+    salary: '₦20,000/month'
   },
   {
     id: 'marketing-intern',
     title: 'Digital Marketing Intern',
-    company: 'Flutterwave',
-    location: 'Lagos (Hybrid)',
-    type: 'internship',
-    industry: 'tech',
-    experience: 'entry',
-    salary: '₦120,000/month',
-    description: 'Help grow our brand through creative digital marketing campaigns.',
-    requirements: ['Marketing knowledge', 'Social media savvy', 'Creative thinking'],
-    postedDate: '2026-01-09',
-    deadline: '2026-02-20',
-    isInternship: true
-  },
-  {
-    id: 'audit-trainee',
-    title: 'Audit Trainee',
-    company: 'KPMG Nigeria',
+    company: 'Paystack',
     location: 'Lagos',
-    type: 'full-time',
-    industry: 'consulting',
-    experience: 'entry',
-    salary: '₦280,000/month',
-    description: 'Join our audit practice and work with top Nigerian companies.',
-    requirements: ['Accounting degree', 'ICAN in progress', 'Strong analytical skills'],
-    postedDate: '2026-01-02',
-    deadline: '2026-03-31',
-    isInternship: false
-  },
-  {
-    id: 'teaching-assist',
-    title: 'Teaching Assistant',
-    company: 'Dept. of Computer Science, UI',
-    location: 'On-Campus',
-    type: 'part-time',
-    industry: 'education',
-    experience: 'entry',
-    salary: '₦25,000/month',
-    description: 'Assist lecturers with tutorials and grading for undergraduate courses.',
-    requirements: ['400+ Level CS student', 'CGPA 4.0+', 'Teaching interest'],
-    postedDate: '2026-01-10',
-    deadline: '2026-01-20',
-    isInternship: false
-  },
-  {
-    id: 'product-design',
-    title: 'Product Design Intern',
-    company: 'Kuda Bank',
-    location: 'Lagos (Remote)',
     type: 'internship',
-    industry: 'tech',
-    experience: 'entry',
-    salary: '₦130,000/month',
-    description: 'Design user-centered experiences for our mobile banking app.',
-    requirements: ['UI/UX portfolio', 'Figma proficiency', 'Design thinking'],
-    postedDate: '2026-01-08',
-    deadline: '2026-02-28',
-    isInternship: true
+    industry: 'Fintech',
+    posted: '6 days ago',
+    description: 'Support marketing campaigns, social media management, and content creation.',
+    requirements: ['Marketing Student', 'Social Media Savvy', 'Creative'],
+    salary: '₦100,000/month'
+  },
+  {
+    id: 'tutor-position',
+    title: 'Academic Tutor',
+    company: 'PrepClass',
+    location: 'Ibadan / Remote',
+    type: 'part-time',
+    industry: 'Education',
+    posted: '2 days ago',
+    description: 'Teach secondary school students in your area of expertise.',
+    requirements: ['300+ Level', 'CGPA 4.0+', 'Teaching Skills'],
+    salary: '₦3,000/hour'
+  },
+  {
+    id: 'ui-ux-intern',
+    title: 'UI/UX Design Intern',
+    company: 'Cowrywise',
+    location: 'Lagos / Remote',
+    type: 'internship',
+    industry: 'Fintech',
+    posted: '1 week ago',
+    description: 'Design user interfaces and experiences for our investment platform.',
+    requirements: ['Design Portfolio', 'Figma', 'User Research'],
+    salary: '₦130,000/month'
   }
 ];
 
 const cvResources = [
-  {
-    id: 'cv-template-1',
-    title: 'Professional CV Template',
-    description: 'Clean, ATS-friendly template perfect for corporate applications.',
-    format: 'DOCX',
-    downloads: 1234
-  },
-  {
-    id: 'cv-template-2',
-    title: 'Creative CV Template',
-    description: 'Stand out with this modern design for creative industries.',
-    format: 'DOCX',
-    downloads: 892
-  },
-  {
-    id: 'cv-template-3',
-    title: 'Academic CV Template',
-    description: 'Comprehensive template for research and academic positions.',
-    format: 'DOCX',
-    downloads: 567
-  },
-  {
-    id: 'cover-letter',
-    title: 'Cover Letter Template',
-    description: 'Compelling cover letter format that gets interviews.',
-    format: 'DOCX',
-    downloads: 1456
-  }
+  { title: 'ATS-Friendly CV Template', format: 'DOCX', description: 'Clean template that passes applicant tracking systems.' },
+  { title: 'Nigerian Graduate CV Guide', format: 'PDF', description: 'How to write a CV for the Nigerian job market.' },
+  { title: 'Cover Letter Templates', format: 'DOCX', description: 'Professional cover letter templates for various industries.' },
+  { title: 'LinkedIn Profile Optimization', format: 'PDF', description: 'Tips to make your LinkedIn profile stand out.' }
 ];
 
-const atsTips = [
-  'Use standard section headings (Education, Experience, Skills)',
-  'Avoid tables, columns, and graphics that confuse ATS',
-  'Include keywords from the job description',
-  'Use common fonts like Arial, Calibri, or Times New Roman',
-  'Save as .docx or .pdf (check job requirements)',
-  'Keep formatting simple and consistent'
-];
-
-const interviewQuestions = [
+const interviewTips = [
   {
-    category: 'General',
+    category: 'Preparation',
     questions: [
-      { q: 'Tell me about yourself', a: 'Structure your answer: Present role/studies → Past experience → Future goals. Keep it under 2 minutes.' },
-      { q: 'Why do you want this job?', a: 'Connect your skills and interests to the specific role and company mission.' },
-      { q: 'What are your strengths and weaknesses?', a: 'Be honest but strategic. For weaknesses, show how you\'re working to improve.' },
-      { q: 'Where do you see yourself in 5 years?', a: 'Show ambition while demonstrating commitment to the role and company.' }
+      { q: 'How do I research a company before an interview?', a: 'Visit their website, read recent news, understand their products/services, check LinkedIn for employee insights, and review their mission and values.' },
+      { q: 'What documents should I bring?', a: 'Bring multiple copies of your CV, certificates, ID card, a notepad, and any portfolio work relevant to the role.' },
+      { q: 'How early should I arrive?', a: 'Arrive 15-20 minutes early. This shows punctuality and gives you time to compose yourself.' }
     ]
   },
   {
-    category: 'Behavioral',
+    category: 'Common Questions',
     questions: [
-      { q: 'Describe a challenging situation you faced', a: 'Use the STAR method: Situation, Task, Action, Result.' },
-      { q: 'Tell me about a time you worked in a team', a: 'Highlight collaboration, communication, and your specific contribution.' },
-      { q: 'How do you handle pressure?', a: 'Give specific examples of how you stayed calm and delivered results.' }
+      { q: 'How do I answer "Tell me about yourself"?', a: 'Structure your answer: Present (current role/studies), Past (relevant experience), Future (why this role). Keep it under 2 minutes.' },
+      { q: 'What are your strengths and weaknesses?', a: 'Choose genuine strengths with examples. For weaknesses, mention something you\'ve actively worked to improve.' },
+      { q: 'Where do you see yourself in 5 years?', a: 'Show ambition while being realistic. Connect your goals to what the company can offer.' }
     ]
   },
   {
-    category: 'Technical (for Tech Roles)',
+    category: 'Technical Interviews',
     questions: [
-      { q: 'Explain your approach to problem-solving', a: 'Walk through your systematic approach: understand, plan, execute, test.' },
-      { q: 'Describe a project you\'re proud of', a: 'Focus on your role, technologies used, challenges overcome, and impact.' },
-      { q: 'How do you stay updated with technology?', a: 'Mention courses, communities, blogs, and personal projects.' }
+      { q: 'How do I prepare for case interviews?', a: 'Practice frameworks (MECE, Porter\'s Five Forces), do mock cases, think out loud, and structure your approach clearly.' },
+      { q: 'What about coding interviews?', a: 'Practice on LeetCode/HackerRank, study data structures, explain your thought process, and test your code.' },
+      { q: 'How do I handle questions I don\'t know?', a: 'Be honest, explain your thought process, relate to what you do know, and show eagerness to learn.' }
     ]
   }
 ];
@@ -299,7 +195,7 @@ const useBookmarks = (key: string) => {
   }, [bookmarks, key]);
 
   const toggle = (id: string) => {
-    setBookmarks(prev =>
+    setBookmarks(prev => 
       prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id]
     );
   };
@@ -309,120 +205,92 @@ const useBookmarks = (key: string) => {
   return { bookmarks, toggle, isBookmarked };
 };
 
-const useApplicationStatus = () => {
-  const [statuses, setStatuses] = useState<Record<string, ApplicationStatus>>(() => {
-    if (typeof window === 'undefined') return {};
-    const saved = localStorage.getItem('job-statuses');
-    return saved ? JSON.parse(saved) : {};
-  });
-
-  useEffect(() => {
-    localStorage.setItem('job-statuses', JSON.stringify(statuses));
-  }, [statuses]);
-
-  const setStatus = (id: string, status: ApplicationStatus) => {
-    setStatuses(prev => ({ ...prev, [id]: status }));
-  };
-
-  const getStatus = (id: string): ApplicationStatus => statuses[id] || 'not_started';
-
-  return { statuses, setStatus, getStatus };
-};
-
-const getDaysAgo = (date: string) => {
-  const posted = new Date(date);
-  const today = new Date();
-  const diffTime = today.getTime() - posted.getTime();
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  if (diffDays === 0) return 'Today';
-  if (diffDays === 1) return 'Yesterday';
-  return `${diffDays} days ago`;
+const typeConfig = {
+  'full-time': { label: 'Full-time', color: 'text-emerald-700 bg-emerald-50 border-emerald-100' },
+  'part-time': { label: 'Part-time', color: 'text-ui-blue bg-blue-50 border-blue-100' },
+  'remote': { label: 'Remote', color: 'text-purple-700 bg-purple-50 border-purple-100' },
+  'internship': { label: 'Internship', color: 'text-nobel-gold bg-amber-50 border-amber-100' }
 };
 
 const JobCard: React.FC<{
   job: Job;
   isBookmarked: boolean;
   onToggleBookmark: () => void;
-  onApply: () => void;
   index: number;
-}> = ({ job, isBookmarked, onToggleBookmark, onApply, index }) => {
-  const typeColors: Record<JobType, string> = {
-    'full-time': 'bg-emerald-100 text-emerald-700',
-    'part-time': 'bg-blue-100 text-blue-700',
-    'remote': 'bg-violet-100 text-violet-700',
-    'internship': 'bg-amber-100 text-amber-700'
-  };
-
-  const typeLabels: Record<JobType, string> = {
-    'full-time': 'Full-time',
-    'part-time': 'Part-time',
-    'remote': 'Remote',
-    'internship': 'Internship'
-  };
+}> = ({ job, isBookmarked, onToggleBookmark, index }) => {
+  const config = typeConfig[job.type];
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ delay: index * 0.05 }}
-      className="bg-card rounded-xl border border-border hover:border-nobel-gold hover:shadow-xl transition-all duration-300 group p-6"
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ delay: index * 0.05, duration: 0.4 }}
+      className="bg-white border border-slate-100 hover:border-nobel-gold/50 hover:shadow-lg transition-all duration-300 group"
     >
-      <div className="flex justify-between items-start mb-4">
-        <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center text-muted-foreground group-hover:bg-ui-blue group-hover:text-white transition-colors">
-          <Building2 size={24} />
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge className={typeColors[job.type]}>{typeLabels[job.type]}</Badge>
+      <div className="p-8">
+        <div className="flex justify-between items-start mb-4">
+          <div className="w-12 h-12 bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
+            <Building2 size={20} />
+          </div>
           <button
             onClick={onToggleBookmark}
-            className={`p-2 rounded-full transition-all ${
-              isBookmarked
-                ? 'bg-nobel-gold/10 text-nobel-gold'
-                : 'hover:bg-muted text-muted-foreground'
+            className={`p-2 transition-colors ${
+              isBookmarked 
+                ? 'text-nobel-gold' 
+                : 'text-slate-300 hover:text-slate-600'
             }`}
           >
             {isBookmarked ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
           </button>
         </div>
-      </div>
 
-      <h3 className="font-serif text-xl text-foreground group-hover:text-ui-blue transition-colors mb-1">
-        {job.title}
-      </h3>
-      <p className="text-sm text-muted-foreground mb-4">{job.company}</p>
-
-      <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-4">
-        {job.description}
-      </p>
-
-      <div className="flex flex-wrap gap-1.5 mb-4">
-        {job.requirements.slice(0, 3).map((req, i) => (
-          <span key={i} className="px-2 py-0.5 bg-muted text-muted-foreground text-[10px] font-medium rounded-full">
-            {req}
+        <div className="flex items-center gap-2 mb-3">
+          <span className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest border ${config.color}`}>
+            {config.label}
           </span>
-        ))}
-      </div>
-
-      <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
-        <span className="flex items-center gap-1"><MapPin size={12} /> {job.location}</span>
-        <span className="flex items-center gap-1"><Clock size={12} /> {getDaysAgo(job.postedDate)}</span>
-      </div>
-
-      {job.salary && (
-        <div className="flex items-center gap-1 text-sm font-medium text-ui-blue mb-4">
-          <DollarSign size={14} /> {job.salary}
+          <span className="text-[10px] text-slate-400">{job.industry}</span>
         </div>
-      )}
 
-      <div className="pt-4 border-t border-border flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">
-          Deadline: {new Date(job.deadline).toLocaleDateString('en-NG', { month: 'short', day: 'numeric' })}
-        </span>
-        <Button size="sm" onClick={onApply} className="gap-2 text-xs">
+        <h3 className="font-serif text-xl text-ui-blue group-hover:text-nobel-gold transition-colors mb-1">
+          {job.title}
+        </h3>
+        <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">{job.company}</p>
+
+        <p className="text-slate-600 leading-relaxed text-sm font-light mb-4">
+          {job.description}
+        </p>
+
+        <div className="flex flex-wrap gap-2 mb-4">
+          {job.requirements.slice(0, 3).map((req, i) => (
+            <span key={i} className="px-2 py-1 bg-slate-50 text-slate-500 text-[10px] font-bold uppercase tracking-widest border border-slate-100">
+              {req}
+            </span>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-4 text-xs text-slate-400">
+          <span className="flex items-center gap-1">
+            <MapPin size={12} /> {job.location}
+          </span>
+          <span className="flex items-center gap-1">
+            <Clock size={12} /> {job.posted}
+          </span>
+        </div>
+
+        {job.salary && (
+          <div className="mt-4 pt-4 border-t border-slate-100">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Salary</span>
+            <p className="font-serif text-lg text-ui-blue">{job.salary}</p>
+          </div>
+        )}
+      </div>
+
+      <div className="px-8 py-4 border-t border-slate-100 bg-slate-50">
+        <button className="flex items-center justify-center gap-2 w-full py-3 bg-ui-blue text-white text-[10px] font-bold uppercase tracking-widest hover:bg-nobel-gold transition-colors">
           Quick Apply <ExternalLink size={12} />
-        </Button>
+        </button>
       </div>
     </motion.div>
   );
@@ -431,150 +299,129 @@ const JobCard: React.FC<{
 const CareerHubPage = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
-  const [industryFilter, setIndustryFilter] = useState<string>('all');
-  const { bookmarks, toggle, isBookmarked } = useBookmarks('career-bookmarks');
-  const { getStatus, setStatus } = useApplicationStatus();
+  const [activeType, setActiveType] = useState<JobType>('all');
+  const [activeTab, setActiveTab] = useState('jobs');
+
+  const { bookmarks, toggle, isBookmarked } = useBookmarks('career-hub-bookmarks');
 
   const handleBookmark = (id: string) => {
     toggle(id);
     toast.success(isBookmarked(id) ? 'Removed from saved' : 'Job saved!');
   };
 
-  const handleApply = (job: Job) => {
-    setStatus(job.id, 'applied');
-    toast.success(`Applied to ${job.title}`, {
-      description: `at ${job.company}`
-    });
-  };
-
   const filteredJobs = useMemo(() => {
     return jobs.filter(job => {
-      if (job.isInternship) return false;
       const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            job.company.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesType = typeFilter === 'all' || job.type === typeFilter;
-      const matchesIndustry = industryFilter === 'all' || job.industry === industryFilter;
-      return matchesSearch && matchesType && matchesIndustry;
+      const matchesType = activeType === 'all' || job.type === activeType;
+      return matchesSearch && matchesType;
     });
-  }, [searchTerm, typeFilter, industryFilter]);
+  }, [searchTerm, activeType]);
 
-  const filteredInternships = useMemo(() => {
-    return jobs.filter(job => {
-      if (!job.isInternship) return false;
-      const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           job.company.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesIndustry = industryFilter === 'all' || job.industry === industryFilter;
-      return matchesSearch && matchesIndustry;
-    });
-  }, [searchTerm, industryFilter]);
+  const types: { value: JobType; label: string }[] = [
+    { value: 'all', label: 'All' },
+    { value: 'internship', label: 'Internships' },
+    { value: 'part-time', label: 'Part-time' },
+    { value: 'full-time', label: 'Full-time' },
+    { value: 'remote', label: 'Remote' }
+  ];
 
   return (
-    <div className="min-h-screen bg-background pt-28 pb-16">
-      <SEO
-        title="Career Hub - Resources"
-        description="Find jobs, internships, CV resources, and interview tips for your career."
+    <div className="min-h-screen bg-slate-50 pt-32 pb-20">
+      <SEO 
+        title="Career Hub - Resources" 
+        description="Find jobs, internships, and career resources for UI students." 
       />
 
       <div className="container mx-auto px-6">
         <button
           onClick={() => navigate('/resources')}
-          className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors mb-8"
+          className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors mb-12"
         >
-          <div className="p-2 rounded-full border border-border group-hover:border-nobel-gold transition-colors">
+          <div className="p-2 border border-slate-200 group-hover:border-nobel-gold transition-colors">
             <ArrowLeft size={14} />
           </div>
-          <span>Back to Resources</span>
+          <span>Resources</span>
         </button>
 
-        <div className="mb-12">
+        <div className="mb-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="flex items-center gap-4 mb-4"
           >
-            <Briefcase className="text-nobel-gold w-8 h-8" />
-            <span className="text-xs font-bold tracking-[0.2em] uppercase text-muted-foreground">Career Development</span>
+            <Briefcase className="text-nobel-gold w-6 h-6" />
+            <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-slate-400">Employment</span>
           </motion.div>
 
           <motion.h1
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-5xl md:text-7xl font-serif text-ui-blue leading-[0.9] mb-6"
+            className="font-serif text-5xl md:text-7xl text-ui-blue mb-6"
           >
-            Career <br />
-            <span className="italic text-muted-foreground">Hub</span>
+            Career <span className="italic text-slate-300">Hub</span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-xl text-muted-foreground font-light max-w-2xl leading-relaxed"
+            className="text-xl text-slate-500 font-light max-w-2xl leading-relaxed"
           >
-            Find opportunities, prepare your application materials, and ace your interviews. Your career journey starts here.
+            Discover opportunities tailored for students and fresh graduates. Jobs, internships, CV resources, and interview preparation.
           </motion.p>
         </div>
 
-        <Tabs defaultValue="jobs" className="w-full">
-          <TabsList className="w-full max-w-2xl grid grid-cols-4 mb-8">
-            <TabsTrigger value="jobs" className="gap-2">
-              <Briefcase size={16} /> Jobs
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full max-w-2xl bg-white border border-slate-200 p-1 h-auto mb-12 rounded-none">
+            <TabsTrigger 
+              value="jobs" 
+              className="flex-1 py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white rounded-none"
+            >
+              Jobs & Internships
             </TabsTrigger>
-            <TabsTrigger value="internships" className="gap-2">
-              <GraduationCap size={16} /> Internships
+            <TabsTrigger 
+              value="cv" 
+              className="flex-1 py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white rounded-none"
+            >
+              CV Resources
             </TabsTrigger>
-            <TabsTrigger value="cv" className="gap-2">
-              <FileText size={16} /> CV Resources
-            </TabsTrigger>
-            <TabsTrigger value="interview" className="gap-2">
-              <Users size={16} /> Interview Tips
+            <TabsTrigger 
+              value="interview" 
+              className="flex-1 py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white rounded-none"
+            >
+              Interview Tips
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="jobs">
-            <div className="mb-8 space-y-4 py-4 border-y border-border">
-              <div className="flex flex-col lg:flex-row gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
-                  <Input
-                    type="text"
-                    placeholder="Search jobs..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 h-12 text-base rounded-full border-border"
-                  />
-                </div>
+          <TabsContent value="jobs" className="mt-0">
+            <div className="mb-12 space-y-6 pb-8 border-b border-slate-200">
+              <div className="relative max-w-xl">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
+                <input
+                  type="text"
+                  placeholder="Search jobs or companies..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 focus:border-nobel-gold focus:outline-none text-lg font-serif transition-colors"
+                />
+              </div>
 
-                <div className="flex gap-3">
-                  <Select value={typeFilter} onValueChange={setTypeFilter}>
-                    <SelectTrigger className="w-[150px] h-12 rounded-full">
-                      <SelectValue placeholder="Job Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="full-time">Full-time</SelectItem>
-                      <SelectItem value="part-time">Part-time</SelectItem>
-                      <SelectItem value="remote">Remote</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <Select value={industryFilter} onValueChange={setIndustryFilter}>
-                    <SelectTrigger className="w-[150px] h-12 rounded-full">
-                      <SelectValue placeholder="Industry" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Industries</SelectItem>
-                      <SelectItem value="tech">Tech</SelectItem>
-                      <SelectItem value="finance">Finance</SelectItem>
-                      <SelectItem value="education">Education</SelectItem>
-                      <SelectItem value="media">Media</SelectItem>
-                      <SelectItem value="healthcare">Healthcare</SelectItem>
-                      <SelectItem value="consulting">Consulting</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="flex flex-wrap gap-2">
+                {types.map((type) => (
+                  <button
+                    key={type.value}
+                    onClick={() => setActiveType(type.value)}
+                    className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all ${
+                      activeType === type.value
+                        ? 'bg-ui-blue text-white'
+                        : 'bg-white text-slate-500 border border-slate-200 hover:border-ui-blue'
+                    }`}
+                  >
+                    {type.label}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -586,7 +433,6 @@ const CareerHubPage = () => {
                     job={job}
                     isBookmarked={isBookmarked(job.id)}
                     onToggleBookmark={() => handleBookmark(job.id)}
-                    onApply={() => handleApply(job)}
                     index={index}
                   />
                 ))}
@@ -594,193 +440,107 @@ const CareerHubPage = () => {
             </div>
 
             {filteredJobs.length === 0 && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
-                <Briefcase className="mx-auto text-muted-foreground mb-4" size={64} />
-                <h3 className="text-xl font-serif text-foreground mb-2">No jobs found</h3>
-                <p className="text-muted-foreground">Try adjusting your filters</p>
-              </motion.div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="internships">
-            <div className="mb-8 space-y-4 py-4 border-y border-border">
-              <div className="flex flex-col lg:flex-row gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
-                  <Input
-                    type="text"
-                    placeholder="Search internships..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 h-12 text-base rounded-full border-border"
-                  />
-                </div>
-
-                <Select value={industryFilter} onValueChange={setIndustryFilter}>
-                  <SelectTrigger className="w-[150px] h-12 rounded-full">
-                    <SelectValue placeholder="Industry" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Industries</SelectItem>
-                    <SelectItem value="tech">Tech</SelectItem>
-                    <SelectItem value="finance">Finance</SelectItem>
-                    <SelectItem value="media">Media</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="text-center py-24">
+                <Briefcase className="mx-auto text-slate-200 mb-6" size={64} />
+                <h3 className="font-serif text-2xl text-slate-400 mb-2">No jobs found</h3>
+                <p className="text-slate-300">Try adjusting your search or filters</p>
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <AnimatePresence mode="popLayout">
-                {filteredInternships.map((job, index) => (
-                  <JobCard
-                    key={job.id}
-                    job={job}
-                    isBookmarked={isBookmarked(job.id)}
-                    onToggleBookmark={() => handleBookmark(job.id)}
-                    onApply={() => handleApply(job)}
-                    index={index}
-                  />
-                ))}
-              </AnimatePresence>
-            </div>
-
-            {filteredInternships.length === 0 && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
-                <GraduationCap className="mx-auto text-muted-foreground mb-4" size={64} />
-                <h3 className="text-xl font-serif text-foreground mb-2">No internships found</h3>
-                <p className="text-muted-foreground">Try adjusting your filters</p>
-              </motion.div>
             )}
           </TabsContent>
 
-          <TabsContent value="cv">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-6">
-                <div>
-                  <h2 className="font-serif text-2xl text-foreground mb-2">CV Templates</h2>
-                  <p className="text-muted-foreground">Download ATS-friendly templates to create your perfect CV.</p>
-                </div>
+          <TabsContent value="cv" className="mt-0">
+            <div className="max-w-4xl">
+              <div className="mb-12">
+                <h2 className="font-serif text-3xl text-ui-blue mb-4">CV Resources & <span className="italic text-slate-300">Templates</span></h2>
+                <p className="text-slate-500 font-light">Download professional templates and guides to create a standout application.</p>
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {cvResources.map((resource, index) => (
-                    <motion.div
-                      key={resource.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="bg-card p-6 rounded-xl border border-border hover:border-nobel-gold hover:shadow-lg transition-all group"
-                    >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="p-3 bg-muted rounded-lg text-muted-foreground group-hover:bg-ui-blue group-hover:text-white transition-colors">
-                          <FileText size={24} />
-                        </div>
-                        <Badge variant="secondary">{resource.format}</Badge>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {cvResources.map((resource, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    className="bg-white border border-slate-100 p-8 hover:border-nobel-gold/50 hover:shadow-lg transition-all group"
+                  >
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="w-12 h-12 bg-slate-50 border border-slate-100 flex items-center justify-center text-ui-blue">
+                        <FileText size={20} />
                       </div>
-
-                      <h3 className="font-medium text-foreground mb-2">{resource.title}</h3>
-                      <p className="text-sm text-muted-foreground mb-4">{resource.description}</p>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">{resource.downloads.toLocaleString()} downloads</span>
-                        <Button size="sm" variant="outline" className="gap-2">
-                          <Download size={14} /> Download
-                        </Button>
+                      <div className="flex-1">
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-nobel-gold">{resource.format}</span>
+                        <h3 className="font-serif text-xl text-ui-blue group-hover:text-nobel-gold transition-colors">
+                          {resource.title}
+                        </h3>
                       </div>
-                    </motion.div>
+                    </div>
+                    <p className="text-slate-600 font-light text-sm mb-6">{resource.description}</p>
+                    <button className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-ui-blue hover:text-nobel-gold transition-colors">
+                      <Download size={14} /> Download
+                    </button>
+                  </motion.div>
+                ))}
+              </div>
+
+              <div className="mt-12 bg-ui-blue text-white p-8 md:p-12">
+                <h3 className="font-serif text-2xl mb-4">ATS Tips</h3>
+                <p className="text-white/70 font-light mb-6">Applicant Tracking Systems scan your CV before a human sees it. Here's how to pass:</p>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {[
+                    'Use standard section headings (Education, Experience, Skills)',
+                    'Avoid tables, graphics, and complex formatting',
+                    'Include keywords from the job description',
+                    'Save as .docx or .pdf format',
+                    'Use standard fonts like Arial or Times New Roman',
+                    'Keep formatting simple and clean'
+                  ].map((tip, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <CheckCircle2 size={16} className="text-nobel-gold mt-1 shrink-0" />
+                      <span className="text-white/80 text-sm">{tip}</span>
+                    </div>
                   ))}
                 </div>
               </div>
-
-              <div className="space-y-6">
-                <div className="bg-card p-6 rounded-xl border border-border">
-                  <h3 className="font-serif text-xl text-foreground mb-4">ATS Tips</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Applicant Tracking Systems scan your CV before humans see it. Make sure yours passes:
-                  </p>
-                  <ul className="space-y-3">
-                    {atsTips.map((tip, i) => (
-                      <li key={i} className="flex items-start gap-3 text-sm">
-                        <CheckCircle2 size={16} className="text-emerald-500 mt-0.5 shrink-0" />
-                        <span className="text-muted-foreground">{tip}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="bg-ui-blue p-6 rounded-xl text-white">
-                  <h4 className="font-serif text-lg mb-2">Need Help?</h4>
-                  <p className="text-sm text-white/70 mb-4">
-                    Book a CV review session with the Career Services office.
-                  </p>
-                  <Button variant="secondary" className="w-full">
-                    Book Session
-                  </Button>
-                </div>
-              </div>
             </div>
           </TabsContent>
 
-          <TabsContent value="interview">
+          <TabsContent value="interview" className="mt-0">
             <div className="max-w-4xl">
-              <div className="mb-8">
-                <h2 className="font-serif text-2xl text-foreground mb-2">Interview Preparation</h2>
-                <p className="text-muted-foreground">Common questions and how to answer them confidently.</p>
+              <div className="mb-12">
+                <h2 className="font-serif text-3xl text-ui-blue mb-4">Interview <span className="italic text-slate-300">Preparation</span></h2>
+                <p className="text-slate-500 font-light">Common questions and expert tips to ace your next interview.</p>
               </div>
 
-              <Accordion type="single" collapsible className="space-y-4">
-                {interviewQuestions.map((section, sectionIndex) => (
-                  <AccordionItem
-                    key={section.category}
-                    value={section.category}
-                    className="bg-card rounded-xl border border-border px-6"
+              <div className="space-y-8">
+                {interviewTips.map((section, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    className="bg-white border border-slate-100"
                   >
-                    <AccordionTrigger className="hover:no-underline py-6">
-                      <div className="flex items-center gap-4">
-                        <div className="p-2 bg-muted rounded-lg">
-                          <Users size={20} className="text-ui-blue" />
-                        </div>
-                        <span className="font-serif text-xl text-foreground">{section.category} Questions</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pb-6">
-                      <div className="space-y-6 pt-2">
-                        {section.questions.map((item, qIndex) => (
-                          <div key={qIndex} className="border-l-2 border-nobel-gold pl-4">
-                            <h4 className="font-medium text-foreground mb-2">"{item.q}"</h4>
-                            <p className="text-sm text-muted-foreground leading-relaxed">{item.a}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="mt-8 bg-gradient-to-r from-ui-blue to-ui-dark p-8 rounded-xl text-white"
-              >
-                <div className="flex items-start gap-6">
-                  <div className="p-4 bg-white/10 rounded-lg">
-                    <Laptop size={32} />
-                  </div>
-                  <div>
-                    <h3 className="font-serif text-2xl mb-2">Practice Mock Interviews</h3>
-                    <p className="text-white/70 mb-4">
-                      Schedule a practice interview with our career counselors or use AI-powered mock interview tools.
-                    </p>
-                    <div className="flex gap-3">
-                      <Button variant="secondary">Book with Counselor</Button>
-                      <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
-                        Try AI Practice
-                      </Button>
+                    <div className="p-6 border-b border-slate-100">
+                      <h3 className="font-serif text-xl text-ui-blue">{section.category}</h3>
                     </div>
-                  </div>
-                </div>
-              </motion.div>
+                    <Accordion type="single" collapsible className="w-full">
+                      {section.questions.map((item, j) => (
+                        <AccordionItem key={j} value={`${i}-${j}`} className="border-b border-slate-100 last:border-0">
+                          <AccordionTrigger className="px-6 py-4 text-left hover:no-underline hover:bg-slate-50 group">
+                            <span className="text-sm font-medium text-slate-700 group-hover:text-ui-blue transition-colors pr-4">
+                              {item.q}
+                            </span>
+                          </AccordionTrigger>
+                          <AccordionContent className="px-6 pb-6">
+                            <p className="text-slate-600 font-light leading-relaxed">{item.a}</p>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  </motion.div>
+                ))}
+              </div>
             </div>
           </TabsContent>
         </Tabs>

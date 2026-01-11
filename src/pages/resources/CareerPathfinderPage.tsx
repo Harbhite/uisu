@@ -1,28 +1,18 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ArrowLeft, Compass, GraduationCap, Briefcase, TrendingUp,
-  MapPin, Building2, Calendar, ChevronRight, Users, Star,
-  Globe, DollarSign, Clock, Filter, Search, X, Award
+import { 
+  ArrowLeft, Compass, ChevronRight, Building2, MapPin,
+  GraduationCap, Briefcase, TrendingUp, Users, X,
+  Calendar, Award, Globe
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-
-interface Department {
-  id: string;
-  name: string;
-  faculty: string;
-}
 
 interface CareerPath {
-  department: string;
-  avgStartingSalary: string;
-  topIndustries: string[];
-  timeToPromotion: string;
-  commonRoles: string[];
+  title: string;
+  percentage: number;
+  avgSalary: string;
 }
 
 interface Alumni {
@@ -36,501 +26,251 @@ interface Alumni {
   journey: {
     year: string;
     title: string;
-    description: string;
+    company: string;
   }[];
-  industries: string[];
 }
 
-const departments: Department[] = [
-  { id: 'cs', name: 'Computer Science', faculty: 'Science' },
-  { id: 'economics', name: 'Economics', faculty: 'Social Sciences' },
-  { id: 'medicine', name: 'Medicine & Surgery', faculty: 'Clinical Sciences' },
-  { id: 'law', name: 'Law', faculty: 'Law' },
-  { id: 'accounting', name: 'Accounting', faculty: 'Management Sciences' },
-  { id: 'eng-electrical', name: 'Electrical Engineering', faculty: 'Technology' },
-  { id: 'eng-civil', name: 'Civil Engineering', faculty: 'Technology' },
-  { id: 'pharmacy', name: 'Pharmacy', faculty: 'Pharmacy' },
-  { id: 'english', name: 'English', faculty: 'Arts' },
-  { id: 'mass-comm', name: 'Mass Communication', faculty: 'Social Sciences' },
-  { id: 'microbiology', name: 'Microbiology', faculty: 'Science' },
-  { id: 'biochemistry', name: 'Biochemistry', faculty: 'Science' }
-];
+interface DepartmentData {
+  name: string;
+  faculty: string;
+  avgStartingSalary: string;
+  topIndustries: string[];
+  timeToPromotion: string;
+  careerPaths: CareerPath[];
+}
 
-const careerPaths: CareerPath[] = [
-  {
-    department: 'cs',
-    avgStartingSalary: '₦350,000 - ₦600,000',
-    topIndustries: ['Fintech', 'E-commerce', 'Consulting', 'Telecommunications'],
-    timeToPromotion: '18-24 months',
-    commonRoles: ['Software Engineer', 'Data Analyst', 'Product Manager', 'DevOps Engineer']
+const departments: Record<string, DepartmentData> = {
+  'computer-science': {
+    name: 'Computer Science',
+    faculty: 'Science',
+    avgStartingSalary: '₦350,000/month',
+    topIndustries: ['Fintech', 'Big Tech', 'Consulting', 'Startups'],
+    timeToPromotion: '18 months',
+    careerPaths: [
+      { title: 'Software Engineer', percentage: 45, avgSalary: '₦400k' },
+      { title: 'Data Scientist', percentage: 20, avgSalary: '₦450k' },
+      { title: 'Product Manager', percentage: 15, avgSalary: '₦500k' },
+      { title: 'DevOps Engineer', percentage: 12, avgSalary: '₦380k' },
+      { title: 'Other', percentage: 8, avgSalary: 'Varies' }
+    ]
   },
-  {
-    department: 'economics',
-    avgStartingSalary: '₦200,000 - ₦400,000',
-    topIndustries: ['Banking', 'Consulting', 'Government', 'NGOs'],
-    timeToPromotion: '24-30 months',
-    commonRoles: ['Financial Analyst', 'Economist', 'Policy Analyst', 'Investment Banker']
+  'medicine': {
+    name: 'Medicine & Surgery',
+    faculty: 'Clinical Sciences',
+    avgStartingSalary: '₦250,000/month',
+    topIndustries: ['Hospitals', 'Research', 'Public Health', 'Pharma'],
+    timeToPromotion: '24 months',
+    careerPaths: [
+      { title: 'House Officer', percentage: 100, avgSalary: '₦250k' },
+      { title: 'Resident Doctor', percentage: 85, avgSalary: '₦400k' },
+      { title: 'Consultant', percentage: 40, avgSalary: '₦800k+' },
+      { title: 'Private Practice', percentage: 30, avgSalary: 'Varies' }
+    ]
   },
-  {
-    department: 'medicine',
-    avgStartingSalary: '₦150,000 - ₦300,000 (Housemanship)',
-    topIndustries: ['Healthcare', 'Pharmaceuticals', 'Research', 'Public Health'],
-    timeToPromotion: '5-7 years (Residency)',
-    commonRoles: ['Medical Doctor', 'Surgeon', 'Consultant', 'Medical Researcher']
+  'economics': {
+    name: 'Economics',
+    faculty: 'Social Sciences',
+    avgStartingSalary: '₦180,000/month',
+    topIndustries: ['Banking', 'Consulting', 'Government', 'Research'],
+    timeToPromotion: '20 months',
+    careerPaths: [
+      { title: 'Financial Analyst', percentage: 35, avgSalary: '₦250k' },
+      { title: 'Investment Banking', percentage: 20, avgSalary: '₦400k' },
+      { title: 'Economic Research', percentage: 15, avgSalary: '₦200k' },
+      { title: 'Management Consulting', percentage: 18, avgSalary: '₦350k' },
+      { title: 'Other', percentage: 12, avgSalary: 'Varies' }
+    ]
   },
-  {
-    department: 'law',
-    avgStartingSalary: '₦180,000 - ₦350,000',
-    topIndustries: ['Legal Practice', 'Corporate', 'Government', 'NGOs'],
-    timeToPromotion: '3-5 years (Senior Associate)',
-    commonRoles: ['Associate Lawyer', 'Corporate Counsel', 'Magistrate', 'Legal Consultant']
+  'law': {
+    name: 'Law',
+    faculty: 'Law',
+    avgStartingSalary: '₦150,000/month',
+    topIndustries: ['Law Firms', 'Corporate', 'Government', 'NGOs'],
+    timeToPromotion: '30 months',
+    careerPaths: [
+      { title: 'Associate Lawyer', percentage: 50, avgSalary: '₦200k' },
+      { title: 'Corporate Counsel', percentage: 25, avgSalary: '₦350k' },
+      { title: 'Litigation', percentage: 15, avgSalary: '₦250k' },
+      { title: 'Legal Tech', percentage: 10, avgSalary: '₦300k' }
+    ]
   },
-  {
-    department: 'accounting',
-    avgStartingSalary: '₦200,000 - ₦400,000',
-    topIndustries: ['Audit Firms', 'Banking', 'Oil & Gas', 'Consulting'],
-    timeToPromotion: '2-3 years',
-    commonRoles: ['Auditor', 'Financial Controller', 'Tax Consultant', 'CFO']
-  },
-  {
-    department: 'eng-electrical',
-    avgStartingSalary: '₦250,000 - ₦500,000',
-    topIndustries: ['Power', 'Telecommunications', 'Oil & Gas', 'Manufacturing'],
-    timeToPromotion: '2-3 years',
-    commonRoles: ['Power Engineer', 'Control Systems Engineer', 'Project Manager', 'Technical Director']
-  },
-  {
-    department: 'eng-civil',
-    avgStartingSalary: '₦200,000 - ₦400,000',
-    topIndustries: ['Construction', 'Real Estate', 'Government', 'Consulting'],
-    timeToPromotion: '3-4 years',
-    commonRoles: ['Site Engineer', 'Structural Engineer', 'Project Manager', 'Construction Manager']
-  },
-  {
-    department: 'pharmacy',
-    avgStartingSalary: '₦150,000 - ₦300,000',
-    topIndustries: ['Pharmaceutical Companies', 'Hospitals', 'Retail Pharmacy', 'Research'],
-    timeToPromotion: '2-3 years',
-    commonRoles: ['Pharmacist', 'Clinical Pharmacist', 'Regulatory Affairs', 'Medical Rep']
-  },
-  {
-    department: 'english',
-    avgStartingSalary: '₦120,000 - ₦250,000',
-    topIndustries: ['Media', 'Education', 'Publishing', 'Marketing'],
-    timeToPromotion: '2-3 years',
-    commonRoles: ['Content Writer', 'Editor', 'Teacher', 'Communications Manager']
-  },
-  {
-    department: 'mass-comm',
-    avgStartingSalary: '₦150,000 - ₦300,000',
-    topIndustries: ['Media', 'Advertising', 'PR', 'Digital Marketing'],
-    timeToPromotion: '2-3 years',
-    commonRoles: ['Journalist', 'PR Specialist', 'Brand Manager', 'Content Strategist']
-  },
-  {
-    department: 'microbiology',
-    avgStartingSalary: '₦150,000 - ₦280,000',
-    topIndustries: ['Pharmaceuticals', 'Food & Beverage', 'Research', 'Healthcare'],
-    timeToPromotion: '2-3 years',
-    commonRoles: ['Lab Scientist', 'Quality Control', 'Research Scientist', 'Microbiologist']
-  },
-  {
-    department: 'biochemistry',
-    avgStartingSalary: '₦150,000 - ₦300,000',
-    topIndustries: ['Pharmaceuticals', 'Biotechnology', 'Research', 'Healthcare'],
-    timeToPromotion: '2-3 years',
-    commonRoles: ['Biochemist', 'Research Scientist', 'Clinical Scientist', 'QA Analyst']
+  'engineering': {
+    name: 'Electrical Engineering',
+    faculty: 'Technology',
+    avgStartingSalary: '₦280,000/month',
+    topIndustries: ['Oil & Gas', 'Power', 'Telecom', 'Tech'],
+    timeToPromotion: '24 months',
+    careerPaths: [
+      { title: 'Field Engineer', percentage: 30, avgSalary: '₦300k' },
+      { title: 'Systems Engineer', percentage: 25, avgSalary: '₦350k' },
+      { title: 'Project Engineer', percentage: 20, avgSalary: '₦400k' },
+      { title: 'Technical Sales', percentage: 15, avgSalary: '₦280k' },
+      { title: 'Other', percentage: 10, avgSalary: 'Varies' }
+    ]
   }
-];
+};
 
 const alumni: Alumni[] = [
   {
-    id: 'alum-1',
-    name: 'Adaeze Okonkwo',
+    id: '1',
+    name: 'Olumide Adeyemi',
     graduationYear: '2018',
-    department: 'cs',
+    department: 'Computer Science',
     currentRole: 'Senior Software Engineer',
     company: 'Google',
-    location: 'United States',
+    location: 'London, UK',
     journey: [
-      { year: '2018', title: 'B.Sc. Computer Science, UI', description: 'Graduated with First Class Honours' },
-      { year: '2018-2019', title: 'Software Developer at Andela', description: 'Started career building products for US clients' },
-      { year: '2019-2021', title: 'Backend Engineer at Paystack', description: 'Built payment infrastructure serving millions' },
-      { year: '2021-Present', title: 'Senior Software Engineer at Google', description: 'Working on Google Cloud Platform' }
-    ],
-    industries: ['Tech', 'Fintech']
+      { year: '2018', title: 'Graduate', company: 'University of Ibadan' },
+      { year: '2018', title: 'Software Engineer Intern', company: 'Andela' },
+      { year: '2019', title: 'Junior Developer', company: 'Paystack' },
+      { year: '2021', title: 'Software Engineer', company: 'Google' },
+      { year: '2023', title: 'Senior Software Engineer', company: 'Google' }
+    ]
   },
   {
-    id: 'alum-2',
-    name: 'Olumide Bankole',
-    graduationYear: '2015',
-    department: 'economics',
-    currentRole: 'Investment Director',
-    company: 'Helios Investment Partners',
-    location: 'Nigeria',
-    journey: [
-      { year: '2015', title: 'B.Sc. Economics, UI', description: 'Graduated top 5 in class' },
-      { year: '2015-2017', title: 'Analyst at Access Bank', description: 'Started in corporate banking division' },
-      { year: '2017-2019', title: 'MBA at London Business School', description: 'Full scholarship recipient' },
-      { year: '2019-Present', title: 'Investment Director at Helios', description: 'Managing $500M+ portfolio' }
-    ],
-    industries: ['Finance', 'Private Equity']
-  },
-  {
-    id: 'alum-3',
-    name: 'Dr. Funke Adeyemi',
-    graduationYear: '2012',
-    department: 'medicine',
+    id: '2',
+    name: 'Funmilayo Okonkwo',
+    graduationYear: '2016',
+    department: 'Medicine',
     currentRole: 'Consultant Cardiologist',
     company: 'Lagos University Teaching Hospital',
-    location: 'Nigeria',
+    location: 'Lagos, Nigeria',
     journey: [
-      { year: '2012', title: 'MBBS, UI', description: 'Graduated with distinctions in Medicine' },
-      { year: '2012-2013', title: 'Housemanship at UCH', description: 'Completed rotations in all major departments' },
-      { year: '2013-2019', title: 'Residency at LUTH', description: 'Specialized in Cardiology' },
-      { year: '2019-Present', title: 'Consultant Cardiologist', description: 'Leading cardiac intervention unit' }
-    ],
-    industries: ['Healthcare']
+      { year: '2016', title: 'House Officer', company: 'UCH Ibadan' },
+      { year: '2017', title: 'Medical Officer', company: 'General Hospital' },
+      { year: '2018', title: 'Resident Doctor', company: 'LUTH' },
+      { year: '2023', title: 'Consultant Cardiologist', company: 'LUTH' }
+    ]
   },
   {
-    id: 'alum-4',
-    name: 'Chukwuemeka Obi',
-    graduationYear: '2016',
-    department: 'law',
-    currentRole: 'Partner',
-    company: 'Olaniwun Ajayi LP',
-    location: 'Nigeria',
-    journey: [
-      { year: '2016', title: 'LL.B, UI', description: 'Best Graduating Student in Faculty of Law' },
-      { year: '2017', title: 'Called to Bar', description: 'Nigerian Law School' },
-      { year: '2017-2020', title: 'Associate at Aluko & Oyebode', description: 'Corporate and Commercial practice' },
-      { year: '2020-Present', title: 'Partner at Olaniwun Ajayi', description: 'Leading M&A transactions' }
-    ],
-    industries: ['Legal', 'Corporate']
-  },
-  {
-    id: 'alum-5',
-    name: 'Aisha Mohammed',
+    id: '3',
+    name: 'Chukwuemeka Nwosu',
     graduationYear: '2017',
-    department: 'accounting',
-    currentRole: 'CFO',
-    company: 'Piggyvest',
-    location: 'Nigeria',
+    department: 'Economics',
+    currentRole: 'Vice President',
+    company: 'Goldman Sachs',
+    location: 'New York, USA',
     journey: [
-      { year: '2017', title: 'B.Sc. Accounting, UI', description: 'CGPA 4.8/5.0' },
-      { year: '2017-2019', title: 'Audit Associate at KPMG', description: 'Worked on major banking audits' },
-      { year: '2019-2021', title: 'Finance Manager at Flutterwave', description: 'Built financial operations' },
-      { year: '2021-Present', title: 'CFO at Piggyvest', description: 'Managing finances of leading fintech' }
-    ],
-    industries: ['Finance', 'Fintech']
+      { year: '2017', title: 'Graduate', company: 'University of Ibadan' },
+      { year: '2017', title: 'Graduate Trainee', company: 'GTBank' },
+      { year: '2019', title: 'MBA', company: 'Harvard Business School' },
+      { year: '2021', title: 'Associate', company: 'Goldman Sachs' },
+      { year: '2024', title: 'Vice President', company: 'Goldman Sachs' }
+    ]
   },
   {
-    id: 'alum-6',
-    name: 'Tunde Adeleke',
-    graduationYear: '2014',
-    department: 'eng-electrical',
-    currentRole: 'Engineering Director',
-    company: 'Microsoft',
-    location: 'United Kingdom',
-    journey: [
-      { year: '2014', title: 'B.Sc. Electrical Engineering, UI', description: 'First Class Honours' },
-      { year: '2014-2016', title: 'Engineer at MTN Nigeria', description: 'Network optimization' },
-      { year: '2016-2018', title: 'M.Sc. at Imperial College London', description: 'Communications Engineering' },
-      { year: '2018-Present', title: 'Engineering Director at Microsoft', description: 'Azure infrastructure team' }
-    ],
-    industries: ['Tech', 'Telecommunications']
-  },
-  {
-    id: 'alum-7',
-    name: 'Ngozi Eze',
+    id: '4',
+    name: 'Adaeze Eze',
     graduationYear: '2019',
-    department: 'mass-comm',
-    currentRole: 'Head of Communications',
-    company: 'Jumia',
-    location: 'Nigeria',
+    department: 'Law',
+    currentRole: 'Senior Associate',
+    company: 'Aluko & Oyebode',
+    location: 'Lagos, Nigeria',
     journey: [
-      { year: '2019', title: 'B.Sc. Mass Communication, UI', description: 'Award for Best Student Project' },
-      { year: '2019-2020', title: 'Content Creator at TechCabal', description: 'Covered African tech ecosystem' },
-      { year: '2020-2022', title: 'PR Manager at Kuda Bank', description: 'Led brand communications' },
-      { year: '2022-Present', title: 'Head of Communications at Jumia', description: 'Regional communications strategy' }
-    ],
-    industries: ['Media', 'Tech']
+      { year: '2019', title: 'Law School', company: 'Nigerian Law School' },
+      { year: '2020', title: 'Junior Associate', company: 'Templars' },
+      { year: '2022', title: 'Associate', company: 'Aluko & Oyebode' },
+      { year: '2025', title: 'Senior Associate', company: 'Aluko & Oyebode' }
+    ]
   },
   {
-    id: 'alum-8',
-    name: 'Dr. Yusuf Ibrahim',
-    graduationYear: '2013',
-    department: 'pharmacy',
-    currentRole: 'Director of Regulatory Affairs',
-    company: 'GSK',
-    location: 'United Kingdom',
-    journey: [
-      { year: '2013', title: 'B.Pharm, UI', description: 'Second Class Upper' },
-      { year: '2013-2015', title: 'Pharmacist at Nigerian Army Medical Corps', description: 'NYSC and extended service' },
-      { year: '2015-2018', title: 'M.Sc. Pharmaceutical Sciences, UCL', description: 'Regulatory Science focus' },
-      { year: '2018-Present', title: 'Director at GSK', description: 'Leading African regulatory strategy' }
-    ],
-    industries: ['Pharmaceutical']
-  },
-  {
-    id: 'alum-9',
-    name: 'Chiamaka Nwosu',
-    graduationYear: '2020',
-    department: 'biochemistry',
-    currentRole: 'Research Scientist',
-    company: 'Pfizer',
-    location: 'United States',
-    journey: [
-      { year: '2020', title: 'B.Sc. Biochemistry, UI', description: 'Best Project Award' },
-      { year: '2020-2022', title: 'Research Assistant at IITA', description: 'Agricultural biotechnology research' },
-      { year: '2022-2024', title: 'Ph.D. Biochemistry, MIT', description: 'Full fellowship' },
-      { year: '2024-Present', title: 'Research Scientist at Pfizer', description: 'Drug discovery team' }
-    ],
-    industries: ['Biotechnology', 'Pharmaceutical']
-  },
-  {
-    id: 'alum-10',
-    name: 'Babatunde Ogunlana',
-    graduationYear: '2016',
-    department: 'eng-civil',
-    currentRole: 'Project Director',
-    company: 'Julius Berger',
-    location: 'Nigeria',
-    journey: [
-      { year: '2016', title: 'B.Sc. Civil Engineering, UI', description: 'COREN registered' },
-      { year: '2016-2018', title: 'Site Engineer at RCC', description: 'Lagos infrastructure projects' },
-      { year: '2018-2021', title: 'Project Manager at Dangote', description: 'Refinery construction' },
-      { year: '2021-Present', title: 'Project Director at Julius Berger', description: 'Major highway projects' }
-    ],
-    industries: ['Construction', 'Infrastructure']
-  },
-  {
-    id: 'alum-11',
-    name: 'Folake Adeyanju',
-    graduationYear: '2017',
-    department: 'english',
-    currentRole: 'Managing Editor',
-    company: 'Guardian Nigeria',
-    location: 'Nigeria',
-    journey: [
-      { year: '2017', title: 'B.A. English, UI', description: 'First Class Honours' },
-      { year: '2017-2019', title: 'Staff Writer at The Cable', description: 'Investigative journalism' },
-      { year: '2019-2022', title: 'Senior Editor at BusinessDay', description: 'Business and economy desk' },
-      { year: '2022-Present', title: 'Managing Editor at Guardian', description: 'Editorial strategy' }
-    ],
-    industries: ['Media', 'Publishing']
-  },
-  {
-    id: 'alum-12',
-    name: 'Emeka Chukwu',
+    id: '5',
+    name: 'Ibrahim Yusuf',
     graduationYear: '2015',
-    department: 'cs',
-    currentRole: 'CTO',
-    company: 'Moniepoint',
-    location: 'Nigeria',
+    department: 'Engineering',
+    currentRole: 'Engineering Manager',
+    company: 'Shell Nigeria',
+    location: 'Port Harcourt, Nigeria',
     journey: [
-      { year: '2015', title: 'B.Sc. Computer Science, UI', description: 'First Class Honours' },
-      { year: '2015-2017', title: 'Software Engineer at Interswitch', description: 'Payment systems' },
-      { year: '2017-2019', title: 'Senior Engineer at Konga', description: 'E-commerce platform' },
-      { year: '2019-Present', title: 'CTO at Moniepoint', description: 'Building financial infrastructure' }
-    ],
-    industries: ['Fintech', 'Tech']
+      { year: '2015', title: 'Graduate Trainee', company: 'Shell Nigeria' },
+      { year: '2017', title: 'Field Engineer', company: 'Shell Nigeria' },
+      { year: '2019', title: 'Senior Engineer', company: 'Shell Nigeria' },
+      { year: '2022', title: 'Lead Engineer', company: 'Shell Nigeria' },
+      { year: '2024', title: 'Engineering Manager', company: 'Shell Nigeria' }
+    ]
   },
   {
-    id: 'alum-13',
-    name: 'Halima Yusuf',
-    graduationYear: '2018',
-    department: 'economics',
-    currentRole: 'Policy Advisor',
-    company: 'World Bank',
-    location: 'United States',
+    id: '6',
+    name: 'Ngozi Okafor',
+    graduationYear: '2020',
+    department: 'Computer Science',
+    currentRole: 'Product Manager',
+    company: 'Flutterwave',
+    location: 'Lagos, Nigeria',
     journey: [
-      { year: '2018', title: 'B.Sc. Economics, UI', description: 'Valedictorian' },
-      { year: '2018-2020', title: 'Research Analyst at CBN', description: 'Monetary policy research' },
-      { year: '2020-2022', title: 'M.P.P. at Harvard Kennedy School', description: 'Joint degree with MBA' },
-      { year: '2022-Present', title: 'Policy Advisor at World Bank', description: 'African development programs' }
-    ],
-    industries: ['Government', 'International Development']
-  },
-  {
-    id: 'alum-14',
-    name: 'Oluwaseun Bakare',
-    graduationYear: '2019',
-    department: 'microbiology',
-    currentRole: 'Quality Director',
-    company: 'Nigerian Breweries',
-    location: 'Nigeria',
-    journey: [
-      { year: '2019', title: 'B.Sc. Microbiology, UI', description: 'Second Class Upper' },
-      { year: '2019-2021', title: 'QC Analyst at Chi Limited', description: 'Beverage quality control' },
-      { year: '2021-2023', title: 'QA Manager at Nestlé', description: 'Regional quality assurance' },
-      { year: '2023-Present', title: 'Quality Director at Nigerian Breweries', description: 'National quality strategy' }
-    ],
-    industries: ['Food & Beverage', 'Manufacturing']
-  },
-  {
-    id: 'alum-15',
-    name: 'Kemi Adebayo',
-    graduationYear: '2016',
-    department: 'accounting',
-    currentRole: 'Partner',
-    company: 'PwC Nigeria',
-    location: 'Nigeria',
-    journey: [
-      { year: '2016', title: 'B.Sc. Accounting, UI', description: 'ICAN prize winner' },
-      { year: '2016-2019', title: 'Audit Associate at PwC', description: 'Financial services audit' },
-      { year: '2019-2022', title: 'Manager at PwC', description: 'Banking and Capital Markets' },
-      { year: '2022-Present', title: 'Partner at PwC', description: 'Advisory services' }
-    ],
-    industries: ['Consulting', 'Audit']
+      { year: '2020', title: 'Associate PM', company: 'Kuda Bank' },
+      { year: '2022', title: 'Product Manager', company: 'Paystack' },
+      { year: '2024', title: 'Senior PM', company: 'Flutterwave' }
+    ]
   }
 ];
 
-const JourneyModal: React.FC<{
-  alumni: Alumni | null;
-  onClose: () => void;
-}> = ({ alumni, onClose }) => {
-  if (!alumni) return null;
-
-  return (
-    <>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 z-50"
-        onClick={onClose}
-      />
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-card rounded-2xl border border-border shadow-2xl z-50 p-8"
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 hover:bg-muted rounded-full transition-colors"
-        >
-          <X size={20} />
-        </button>
-
-        <div className="flex items-start gap-4 mb-8">
-          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center text-2xl font-serif text-ui-blue">
-            {alumni.name.split(' ').map(n => n[0]).join('')}
-          </div>
-          <div>
-            <h2 className="font-serif text-2xl text-foreground">{alumni.name}</h2>
-            <p className="text-muted-foreground">{alumni.currentRole} at {alumni.company}</p>
-            <div className="flex items-center gap-2 mt-2">
-              <Badge variant="secondary" className="gap-1">
-                <MapPin size={12} /> {alumni.location}
-              </Badge>
-              <Badge variant="secondary" className="gap-1">
-                <GraduationCap size={12} /> Class of {alumni.graduationYear}
-              </Badge>
-            </div>
-          </div>
-        </div>
-
-        <h3 className="font-serif text-lg text-foreground mb-4">Career Journey</h3>
-        <div className="relative pl-6 border-l-2 border-nobel-gold space-y-6">
-          {alumni.journey.map((step, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="relative"
-            >
-              <div className="absolute -left-[29px] w-4 h-4 rounded-full bg-nobel-gold" />
-              <div className="text-xs font-bold text-nobel-gold uppercase tracking-widest mb-1">{step.year}</div>
-              <h4 className="font-medium text-foreground">{step.title}</h4>
-              <p className="text-sm text-muted-foreground">{step.description}</p>
-            </motion.div>
-          ))}
-        </div>
-
-        <div className="mt-8 pt-6 border-t border-border">
-          <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Industries</h4>
-          <div className="flex flex-wrap gap-2">
-            {alumni.industries.map((industry, i) => (
-              <Badge key={i} variant="outline">{industry}</Badge>
-            ))}
-          </div>
-        </div>
-      </motion.div>
-    </>
-  );
-};
+const departmentOptions = [
+  { value: 'computer-science', label: 'Computer Science' },
+  { value: 'medicine', label: 'Medicine & Surgery' },
+  { value: 'economics', label: 'Economics' },
+  { value: 'law', label: 'Law' },
+  { value: 'engineering', label: 'Electrical Engineering' }
+];
 
 const CareerPathfinderPage = () => {
   const navigate = useNavigate();
-  const [selectedDepartment, setSelectedDepartment] = useState<string>('');
+  const [selectedDept, setSelectedDept] = useState<string>('');
   const [selectedAlumni, setSelectedAlumni] = useState<Alumni | null>(null);
   const [industryFilter, setIndustryFilter] = useState<string>('all');
-  const [locationFilter, setLocationFilter] = useState<string>('all');
 
-  const currentPath = careerPaths.find(p => p.department === selectedDepartment);
-  const departmentInfo = departments.find(d => d.id === selectedDepartment);
-
-  const filteredAlumni = useMemo(() => {
-    return alumni.filter(a => {
-      const matchesDept = !selectedDepartment || a.department === selectedDepartment;
-      const matchesIndustry = industryFilter === 'all' || a.industries.some(i => i.toLowerCase().includes(industryFilter.toLowerCase()));
-      const matchesLocation = locationFilter === 'all' || 
-        (locationFilter === 'nigeria' && a.location === 'Nigeria') ||
-        (locationFilter === 'abroad' && a.location !== 'Nigeria');
-      return matchesDept && matchesIndustry && matchesLocation;
-    });
-  }, [selectedDepartment, industryFilter, locationFilter]);
-
-  const allIndustries = [...new Set(alumni.flatMap(a => a.industries))];
+  const deptData = selectedDept ? departments[selectedDept] : null;
+  
+  const filteredAlumni = alumni.filter(a => {
+    if (!selectedDept) return true;
+    const deptName = departments[selectedDept]?.name;
+    return a.department === deptName;
+  });
 
   return (
-    <div className="min-h-screen bg-background pt-28 pb-16">
-      <SEO
-        title="Career Pathfinder - Resources"
-        description="Discover career paths and connect with UI alumni across various industries."
+    <div className="min-h-screen bg-slate-50 pt-32 pb-20">
+      <SEO 
+        title="Career Pathfinder - Resources" 
+        description="Explore career paths and alumni journeys from the University of Ibadan." 
       />
 
       <div className="container mx-auto px-6">
         <button
           onClick={() => navigate('/resources')}
-          className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors mb-8"
+          className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors mb-12"
         >
-          <div className="p-2 rounded-full border border-border group-hover:border-nobel-gold transition-colors">
+          <div className="p-2 border border-slate-200 group-hover:border-nobel-gold transition-colors">
             <ArrowLeft size={14} />
           </div>
-          <span>Back to Resources</span>
+          <span>Resources</span>
         </button>
 
-        <div className="mb-12">
+        <div className="mb-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="flex items-center gap-4 mb-4"
           >
-            <Compass className="text-nobel-gold w-8 h-8" />
-            <span className="text-xs font-bold tracking-[0.2em] uppercase text-muted-foreground">Career Discovery</span>
+            <Compass className="text-nobel-gold w-6 h-6" />
+            <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-slate-400">Discover Your Future</span>
           </motion.div>
 
           <motion.h1
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-5xl md:text-7xl font-serif text-ui-blue leading-[0.9] mb-6"
+            className="font-serif text-5xl md:text-7xl text-ui-blue mb-6"
           >
-            Career <br />
-            <span className="italic text-muted-foreground">Pathfinder</span>
+            Career <span className="italic text-slate-300">Pathfinder</span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-xl text-muted-foreground font-light max-w-2xl leading-relaxed"
+            className="text-xl text-slate-500 font-light max-w-2xl leading-relaxed"
           >
-            Explore career trajectories based on your department and learn from UI alumni who've walked the path before you.
+            Explore where your degree can take you. See career trajectories, salary insights, and learn from alumni who walked this path before you.
           </motion.p>
         </div>
 
@@ -538,189 +278,231 @@ const CareerPathfinderPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-card p-6 rounded-xl border border-border mb-8"
+          className="mb-16"
         >
-          <h2 className="font-serif text-lg text-foreground mb-4">Select Your Department</h2>
-          <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-            <SelectTrigger className="w-full max-w-md h-12">
-              <SelectValue placeholder="Choose your department..." />
+          <div className="flex items-center gap-4 mb-6">
+            <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-slate-400">Select Your Department</span>
+            <div className="flex-1 h-px bg-slate-200" />
+          </div>
+
+          <Select value={selectedDept} onValueChange={setSelectedDept}>
+            <SelectTrigger className="w-full max-w-md h-14 bg-white border-slate-200 rounded-none text-lg font-serif">
+              <SelectValue placeholder="Choose a department..." />
             </SelectTrigger>
             <SelectContent>
-              {departments.map(dept => (
-                <SelectItem key={dept.id} value={dept.id}>
-                  {dept.name} ({dept.faculty})
-                </SelectItem>
+              {departmentOptions.map(opt => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </motion.div>
 
         <AnimatePresence mode="wait">
-          {currentPath && departmentInfo && (
+          {deptData && (
             <motion.div
-              key={selectedDepartment}
+              key={selectedDept}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="mb-12"
+              className="mb-20"
             >
-              <div className="bg-gradient-to-r from-ui-blue to-ui-dark rounded-2xl p-8 text-white mb-8">
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
-                  <div>
-                    <Badge className="bg-white/20 text-white border-white/30 mb-2">{departmentInfo.faculty}</Badge>
-                    <h2 className="font-serif text-3xl">{departmentInfo.name}</h2>
-                    <p className="text-white/70">Career trajectory insights</p>
-                  </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-slate-200 border border-slate-200 mb-12">
+                <div className="bg-white p-8">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-slate-300 mb-2">Avg. Starting Salary</div>
+                  <div className="font-serif text-2xl text-ui-blue">{deptData.avgStartingSalary}</div>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  <div className="bg-white/10 rounded-xl p-5">
-                    <DollarSign className="text-nobel-gold mb-2" size={24} />
-                    <div className="text-xs text-white/60 uppercase tracking-widest mb-1">Avg. Starting Salary</div>
-                    <div className="font-serif text-lg">{currentPath.avgStartingSalary}</div>
-                  </div>
-                  <div className="bg-white/10 rounded-xl p-5">
-                    <Clock className="text-nobel-gold mb-2" size={24} />
-                    <div className="text-xs text-white/60 uppercase tracking-widest mb-1">Time to Promotion</div>
-                    <div className="font-serif text-lg">{currentPath.timeToPromotion}</div>
-                  </div>
-                  <div className="bg-white/10 rounded-xl p-5 md:col-span-2">
-                    <Building2 className="text-nobel-gold mb-2" size={24} />
-                    <div className="text-xs text-white/60 uppercase tracking-widest mb-1">Top Industries</div>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {currentPath.topIndustries.map((industry, i) => (
-                        <span key={i} className="px-3 py-1 bg-white/10 rounded-full text-sm">
-                          {industry}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+                <div className="bg-white p-8">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-slate-300 mb-2">Time to Promotion</div>
+                  <div className="font-serif text-2xl text-ui-blue">{deptData.timeToPromotion}</div>
+                </div>
+                <div className="bg-white p-8">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-slate-300 mb-2">Faculty</div>
+                  <div className="font-serif text-2xl text-ui-blue">{deptData.faculty}</div>
+                </div>
+                <div className="bg-white p-8">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-slate-300 mb-2">Top Industries</div>
+                  <div className="font-serif text-lg text-ui-blue">{deptData.topIndustries.slice(0, 2).join(', ')}</div>
                 </div>
               </div>
 
-              <div className="bg-card rounded-xl border border-border p-6">
-                <h3 className="font-serif text-xl text-foreground mb-4">Common Career Paths</h3>
-                <div className="flex items-center gap-2 overflow-x-auto pb-2">
-                  {currentPath.commonRoles.map((role, index) => (
-                    <React.Fragment key={role}>
-                      <div className="flex items-center gap-2 px-4 py-2 bg-muted rounded-full whitespace-nowrap">
-                        <span className="text-xs font-bold text-muted-foreground">Year {index + 1}-{index + 3}</span>
-                        <span className="font-medium text-foreground">{role}</span>
+              <div className="grid lg:grid-cols-2 gap-12">
+                <div>
+                  <h3 className="font-serif text-2xl text-ui-blue mb-6">Career Distribution</h3>
+                  <div className="space-y-4">
+                    {deptData.careerPaths.map((path, i) => (
+                      <div key={i} className="bg-white border border-slate-100 p-6">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="font-serif text-lg text-ui-blue">{path.title}</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-nobel-gold">{path.avgSalary}</span>
+                        </div>
+                        <div className="h-2 bg-slate-100 overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${path.percentage}%` }}
+                            transition={{ duration: 0.8, delay: i * 0.1 }}
+                            className="h-full bg-ui-blue"
+                          />
+                        </div>
+                        <div className="text-right mt-2">
+                          <span className="text-xs text-slate-400">{path.percentage}% of graduates</span>
+                        </div>
                       </div>
-                      {index < currentPath.commonRoles.length - 1 && (
-                        <ChevronRight className="text-muted-foreground shrink-0" size={20} />
-                      )}
-                    </React.Fragment>
-                  ))}
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-serif text-2xl text-ui-blue mb-6">Top Industries</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {deptData.topIndustries.map((industry, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: i * 0.1 }}
+                        className="bg-white border border-slate-100 p-6 hover:border-nobel-gold/50 transition-colors"
+                      >
+                        <Building2 size={24} className="text-slate-300 mb-4" />
+                        <span className="font-serif text-lg text-ui-blue">{industry}</span>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        <section>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-            <div>
-              <h2 className="font-serif text-2xl text-foreground">Alumni Spotlights</h2>
-              <p className="text-muted-foreground">Learn from those who've walked the path</p>
-            </div>
-
-            <div className="flex gap-3">
-              <Select value={industryFilter} onValueChange={setIndustryFilter}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Industry" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Industries</SelectItem>
-                  {allIndustries.map(industry => (
-                    <SelectItem key={industry} value={industry.toLowerCase()}>{industry}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={locationFilter} onValueChange={setLocationFilter}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Location" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Locations</SelectItem>
-                  <SelectItem value="nigeria">Nigeria</SelectItem>
-                  <SelectItem value="abroad">International</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-8">
+            <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-slate-400">Alumni Spotlights</span>
+            <div className="flex-1 h-px bg-slate-200" />
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <AnimatePresence mode="popLayout">
-              {filteredAlumni.map((alum, index) => (
-                <motion.div
-                  key={alum.id}
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="bg-card rounded-xl border border-border hover:border-nobel-gold hover:shadow-xl transition-all p-6 group"
-                >
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="w-14 h-14 bg-muted rounded-full flex items-center justify-center text-lg font-serif text-ui-blue group-hover:bg-ui-blue group-hover:text-white transition-colors">
-                      {alum.name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-serif text-lg text-foreground truncate">{alum.name}</h3>
-                      <p className="text-sm text-muted-foreground truncate">{alum.currentRole}</p>
-                      <p className="text-xs text-nobel-gold font-medium">{alum.company}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <Badge variant="secondary" className="gap-1 text-[10px]">
-                      <GraduationCap size={10} /> {alum.graduationYear}
-                    </Badge>
-                    <Badge variant="secondary" className="gap-1 text-[10px]">
-                      <MapPin size={10} /> {alum.location}
-                    </Badge>
-                  </div>
-
-                  <div className="text-xs text-muted-foreground mb-4">
-                    {departments.find(d => d.id === alum.department)?.name}
-                  </div>
-
-                  <Button
-                    onClick={() => setSelectedAlumni(alum)}
-                    variant="outline"
-                    className="w-full gap-2"
-                  >
-                    View Journey <ChevronRight size={16} />
-                  </Button>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-
-          {filteredAlumni.length === 0 && (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredAlumni.map((person, i) => (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-20"
+              key={person.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className="bg-white border border-slate-100 hover:border-nobel-gold/50 hover:shadow-lg transition-all group"
             >
-              <Users className="mx-auto text-muted-foreground mb-4" size={64} />
-              <h3 className="text-xl font-serif text-foreground mb-2">No alumni found</h3>
-              <p className="text-muted-foreground">Try adjusting your filters</p>
-            </motion.div>
-          )}
-        </section>
-      </div>
+              <div className="p-8">
+                <div className="flex items-start gap-4 mb-6">
+                  <div className="w-16 h-16 bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
+                    <Users size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-serif text-xl text-ui-blue group-hover:text-nobel-gold transition-colors">
+                      {person.name}
+                    </h3>
+                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                      Class of {person.graduationYear}
+                    </p>
+                  </div>
+                </div>
 
-      <AnimatePresence>
-        {selectedAlumni && (
-          <JourneyModal
-            alumni={selectedAlumni}
-            onClose={() => setSelectedAlumni(null)}
-          />
-        )}
-      </AnimatePresence>
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <Briefcase size={14} className="text-slate-300" />
+                    {person.currentRole}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <Building2 size={14} className="text-slate-300" />
+                    {person.company}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <MapPin size={14} className="text-slate-300" />
+                    {person.location}
+                  </div>
+                </div>
+
+                <span className="px-3 py-1 bg-slate-50 text-slate-500 text-[10px] font-bold uppercase tracking-widest border border-slate-100">
+                  {person.department}
+                </span>
+              </div>
+
+              <div className="px-8 py-4 border-t border-slate-100 bg-slate-50">
+                <button
+                  onClick={() => setSelectedAlumni(person)}
+                  className="flex items-center justify-center gap-2 w-full py-3 bg-ui-blue text-white text-[10px] font-bold uppercase tracking-widest hover:bg-nobel-gold transition-colors"
+                >
+                  View Journey <ChevronRight size={12} />
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        <AnimatePresence>
+          {selectedAlumni && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-ui-blue/20 backdrop-blur-sm z-40"
+                onClick={() => setSelectedAlumni(null)}
+              />
+              <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 50 }}
+                className="fixed inset-x-4 top-[10%] md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-2xl bg-white border border-slate-200 shadow-2xl z-50 max-h-[80vh] overflow-y-auto"
+              >
+                <div className="sticky top-0 bg-white border-b border-slate-100 p-6 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-nobel-gold">Career Journey</span>
+                    <h2 className="font-serif text-2xl text-ui-blue">{selectedAlumni.name}</h2>
+                  </div>
+                  <button
+                    onClick={() => setSelectedAlumni(null)}
+                    className="p-2 hover:bg-slate-50 transition-colors"
+                  >
+                    <X size={20} className="text-slate-400" />
+                  </button>
+                </div>
+
+                <div className="p-8">
+                  <div className="grid grid-cols-2 gap-4 mb-8">
+                    <div className="bg-slate-50 border border-slate-100 p-4">
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Current Role</div>
+                      <div className="font-serif text-lg text-ui-blue">{selectedAlumni.currentRole}</div>
+                    </div>
+                    <div className="bg-slate-50 border border-slate-100 p-4">
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Company</div>
+                      <div className="font-serif text-lg text-ui-blue">{selectedAlumni.company}</div>
+                    </div>
+                  </div>
+
+                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-6">Career Timeline</h3>
+                  
+                  <div className="relative pl-8 border-l-2 border-slate-200 space-y-6">
+                    {selectedAlumni.journey.map((step, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                        className="relative"
+                      >
+                        <div className="absolute -left-[25px] w-4 h-4 bg-white border-2 border-ui-blue rounded-full" />
+                        <div className="bg-slate-50 border border-slate-100 p-4">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-nobel-gold">{step.year}</span>
+                          <h4 className="font-serif text-lg text-ui-blue">{step.title}</h4>
+                          <p className="text-sm text-slate-500">{step.company}</p>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };

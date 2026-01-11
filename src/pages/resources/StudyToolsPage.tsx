@@ -1,14 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ArrowLeft, Search, Brain, ExternalLink, Bookmark, BookmarkCheck,
-  Clock, Target, FileText, Calendar, Star, Sparkles, Timer,
-  Calculator, PenTool, BookOpen, Headphones, CheckSquare, Zap
+import { 
+  ArrowLeft, Search, Bookmark, BookmarkCheck, ExternalLink, Star,
+  Clock, Brain, FileText, BarChart3, Calendar, Pencil, Target, Zap
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
 type ToolCategory = 'all' | 'focus' | 'notes' | 'practice' | 'planning';
@@ -18,183 +15,174 @@ interface StudyTool {
   name: string;
   description: string;
   category: 'focus' | 'notes' | 'practice' | 'planning';
-  url: string;
-  isPremium: boolean;
+  pricing: 'free' | 'freemium' | 'premium';
   rating: number;
-  icon: string;
-  featured?: boolean;
+  url: string;
+  features: string[];
 }
 
-const tools: StudyTool[] = [
-  {
-    id: 'pomodoro',
-    name: 'Pomofocus',
-    description: 'Customizable Pomodoro timer with task lists and detailed reports to track your productivity.',
-    category: 'focus',
-    url: 'https://pomofocus.io',
-    isPremium: false,
-    rating: 4.8,
-    icon: 'Timer',
-    featured: true
-  },
+const studyTools: StudyTool[] = [
   {
     id: 'forest',
-    name: 'Forest App',
-    description: 'Stay focused by planting virtual trees. Leave the app and your tree dies - gamified productivity.',
+    name: 'Forest',
+    description: 'Stay focused by planting virtual trees. Your tree grows while you focus, dies if you leave the app.',
     category: 'focus',
-    url: 'https://forestapp.cc',
-    isPremium: true,
+    pricing: 'freemium',
+    rating: 4.8,
+    url: 'https://www.forestapp.cc/',
+    features: ['Gamified Focus', 'Real Tree Planting', 'Statistics']
+  },
+  {
+    id: 'pomofocus',
+    name: 'Pomofocus',
+    description: 'A customizable pomodoro timer that works on desktop and mobile browsers for focused work sessions.',
+    category: 'focus',
+    pricing: 'free',
     rating: 4.7,
-    icon: 'Target'
+    url: 'https://pomofocus.io/',
+    features: ['Customizable Timer', 'Task Integration', 'Reports']
   },
   {
     id: 'notion',
     name: 'Notion',
-    description: 'All-in-one workspace for notes, docs, wikis, and project management. Perfect for students.',
+    description: 'All-in-one workspace for notes, databases, wikis, and project management with powerful templates.',
     category: 'notes',
-    url: 'https://notion.so',
-    isPremium: false,
+    pricing: 'freemium',
     rating: 4.9,
-    icon: 'FileText',
-    featured: true
+    url: 'https://www.notion.so/',
+    features: ['Templates', 'Databases', 'Collaboration']
   },
   {
     id: 'obsidian',
     name: 'Obsidian',
-    description: 'Powerful knowledge base that works on local Markdown files. Build your second brain.',
+    description: 'A powerful knowledge base that works on local Markdown files with bidirectional linking.',
     category: 'notes',
-    url: 'https://obsidian.md',
-    isPremium: false,
+    pricing: 'free',
     rating: 4.8,
-    icon: 'Brain'
+    url: 'https://obsidian.md/',
+    features: ['Graph View', 'Plugins', 'Local Storage']
   },
   {
     id: 'anki',
     name: 'Anki',
-    description: 'Intelligent flashcard system using spaced repetition. Perfect for memorizing anything.',
+    description: 'Powerful flashcard app using spaced repetition algorithm for efficient memorization.',
     category: 'practice',
-    url: 'https://apps.ankiweb.net',
-    isPremium: false,
-    rating: 4.9,
-    icon: 'BookOpen',
-    featured: true
+    pricing: 'free',
+    rating: 4.7,
+    url: 'https://apps.ankiweb.net/',
+    features: ['Spaced Repetition', 'Custom Decks', 'Statistics']
   },
   {
     id: 'quizlet',
     name: 'Quizlet',
-    description: 'Create, share, and study flashcards. Access millions of study sets created by students.',
+    description: 'Create and study flashcards, play learning games, and test your knowledge with practice tests.',
     category: 'practice',
-    url: 'https://quizlet.com',
-    isPremium: false,
+    pricing: 'freemium',
     rating: 4.6,
-    icon: 'CheckSquare'
-  },
-  {
-    id: 'grammarly',
-    name: 'Grammarly',
-    description: 'AI-powered writing assistant that helps you write clear, mistake-free essays and papers.',
-    category: 'notes',
-    url: 'https://grammarly.com',
-    isPremium: true,
-    rating: 4.7,
-    icon: 'PenTool'
-  },
-  {
-    id: 'gpa-calculator',
-    name: 'UI GPA Calculator',
-    description: 'Calculate your CGPA and SGPA using the University of Ibadan grading system.',
-    category: 'planning',
-    url: '#',
-    isPremium: false,
-    rating: 4.5,
-    icon: 'Calculator'
-  },
-  {
-    id: 'google-calendar',
-    name: 'Google Calendar',
-    description: 'Schedule your classes, exams, and study sessions. Sync across all your devices.',
-    category: 'planning',
-    url: 'https://calendar.google.com',
-    isPremium: false,
-    rating: 4.8,
-    icon: 'Calendar'
+    url: 'https://quizlet.com/',
+    features: ['Flashcards', 'Games', 'Study Modes']
   },
   {
     id: 'todoist',
     name: 'Todoist',
-    description: 'Powerful task manager to organize your assignments, deadlines, and daily tasks.',
+    description: 'Task manager to organize your academic life with projects, labels, and priorities.',
     category: 'planning',
-    url: 'https://todoist.com',
-    isPremium: false,
-    rating: 4.7,
-    icon: 'CheckSquare'
+    pricing: 'freemium',
+    rating: 4.8,
+    url: 'https://todoist.com/',
+    features: ['Natural Language', 'Projects', 'Integrations']
   },
   {
-    id: 'brain-fm',
-    name: 'Brain.fm',
-    description: 'AI-generated music designed to improve focus, relaxation, and sleep while studying.',
-    category: 'focus',
-    url: 'https://brain.fm',
-    isPremium: true,
+    id: 'google-calendar',
+    name: 'Google Calendar',
+    description: 'Schedule classes, assignments, and study sessions with reminders and time blocking.',
+    category: 'planning',
+    pricing: 'free',
+    rating: 4.7,
+    url: 'https://calendar.google.com/',
+    features: ['Time Blocking', 'Reminders', 'Sharing']
+  },
+  {
+    id: 'grammarly',
+    name: 'Grammarly',
+    description: 'AI-powered writing assistant for essays, papers, and academic writing improvement.',
+    category: 'notes',
+    pricing: 'freemium',
     rating: 4.6,
-    icon: 'Headphones'
+    url: 'https://www.grammarly.com/',
+    features: ['Grammar Check', 'Plagiarism', 'Tone Detection']
   },
   {
     id: 'cold-turkey',
-    name: 'Cold Turkey Blocker',
-    description: 'Block distracting websites and apps during study sessions. Serious focus mode.',
+    name: 'Cold Turkey',
+    description: 'Block distracting websites and apps during study sessions with strict scheduling.',
     category: 'focus',
-    url: 'https://getcoldturkey.com',
-    isPremium: true,
+    pricing: 'freemium',
     rating: 4.5,
-    icon: 'Zap'
+    url: 'https://getcoldturkey.com/',
+    features: ['Website Blocker', 'App Blocker', 'Scheduling']
+  },
+  {
+    id: 'rescuetime',
+    name: 'RescueTime',
+    description: 'Automatic time tracking to understand your digital habits and improve productivity.',
+    category: 'focus',
+    pricing: 'freemium',
+    rating: 4.4,
+    url: 'https://www.rescuetime.com/',
+    features: ['Auto Tracking', 'Reports', 'Goals']
+  },
+  {
+    id: 'gpa-calculator',
+    name: 'GPA Calculator',
+    description: 'Calculate your cumulative GPA and plan your grades for upcoming semesters.',
+    category: 'planning',
+    pricing: 'free',
+    rating: 4.5,
+    url: 'https://gpacalculator.net/',
+    features: ['CGPA Calc', 'What-If Analysis', 'Multiple Scales']
   },
   {
     id: 'remnote',
     name: 'RemNote',
-    description: 'Note-taking app with built-in flashcards. Automatically converts notes to study materials.',
+    description: 'Note-taking app with built-in spaced repetition for turning notes into flashcards.',
     category: 'notes',
-    url: 'https://remnote.com',
-    isPremium: false,
+    pricing: 'freemium',
     rating: 4.6,
-    icon: 'Brain'
+    url: 'https://www.remnote.com/',
+    features: ['Notes + Flashcards', 'PDF Annotation', 'Knowledge Graph']
   },
   {
-    id: 'kahoot',
-    name: 'Kahoot!',
-    description: 'Create engaging quizzes and study with game-based learning. Great for group study.',
+    id: 'khan-academy',
+    name: 'Khan Academy',
+    description: 'Free courses and practice exercises for math, science, and test preparation.',
     category: 'practice',
-    url: 'https://kahoot.com',
-    isPremium: false,
-    rating: 4.5,
-    icon: 'Sparkles'
-  },
-  {
-    id: 'wolfram',
-    name: 'Wolfram Alpha',
-    description: 'Computational knowledge engine. Solve math problems, chemistry equations, and more.',
-    category: 'practice',
-    url: 'https://wolframalpha.com',
-    isPremium: true,
-    rating: 4.8,
-    icon: 'Calculator'
+    pricing: 'free',
+    rating: 4.9,
+    url: 'https://www.khanacademy.org/',
+    features: ['Video Lessons', 'Practice', 'Progress Tracking']
   },
   {
     id: 'my-study-life',
     name: 'My Study Life',
-    description: 'Digital school planner for students. Track classes, tasks, and exams in one place.',
+    description: 'Student planner to manage classes, tasks, and exams with a rotating weekly schedule.',
     category: 'planning',
-    url: 'https://mystudylife.com',
-    isPremium: false,
-    rating: 4.4,
-    icon: 'Calendar'
+    pricing: 'free',
+    rating: 4.5,
+    url: 'https://www.mystudylife.com/',
+    features: ['Class Schedule', 'Task Manager', 'Exam Planner']
+  },
+  {
+    id: 'brain-fm',
+    name: 'Brain.fm',
+    description: 'AI-generated music designed to improve focus, relaxation, and sleep during study.',
+    category: 'focus',
+    pricing: 'premium',
+    rating: 4.6,
+    url: 'https://www.brain.fm/',
+    features: ['Focus Music', 'Sleep Sounds', 'Science-Backed']
   }
 ];
-
-const iconMap: Record<string, React.ElementType> = {
-  Timer, Target, FileText, Calendar, Star, Brain, BookOpen,
-  CheckSquare, PenTool, Calculator, Headphones, Zap, Sparkles
-};
 
 const useBookmarks = (key: string) => {
   const [bookmarks, setBookmarks] = useState<string[]>(() => {
@@ -208,7 +196,7 @@ const useBookmarks = (key: string) => {
   }, [bookmarks, key]);
 
   const toggle = (id: string) => {
-    setBookmarks(prev =>
+    setBookmarks(prev => 
       prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id]
     );
   };
@@ -218,83 +206,17 @@ const useBookmarks = (key: string) => {
   return { bookmarks, toggle, isBookmarked };
 };
 
-const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
-  return (
-    <div className="flex items-center gap-1">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <Star
-          key={star}
-          size={12}
-          className={star <= Math.round(rating) ? 'text-amber-400 fill-amber-400' : 'text-slate-200'}
-        />
-      ))}
-      <span className="text-xs text-muted-foreground ml-1">{rating}</span>
-    </div>
-  );
+const categoryConfig = {
+  focus: { icon: Brain, label: 'Focus & Productivity', color: 'text-rose-600' },
+  notes: { icon: FileText, label: 'Note-Taking', color: 'text-ui-blue' },
+  practice: { icon: Target, label: 'Practice & Testing', color: 'text-emerald-600' },
+  planning: { icon: Calendar, label: 'Planning', color: 'text-nobel-gold' }
 };
 
-const FeaturedToolCard: React.FC<{
-  tool: StudyTool;
-  isBookmarked: boolean;
-  onToggleBookmark: () => void;
-}> = ({ tool, isBookmarked, onToggleBookmark }) => {
-  const Icon = iconMap[tool.icon] || Brain;
-
-  return (
-    <motion.a
-      href={tool.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -4 }}
-      className="relative bg-gradient-to-br from-ui-blue to-ui-dark p-6 rounded-xl text-white overflow-hidden group block"
-    >
-      <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-      <div className="absolute bottom-0 left-0 w-24 h-24 bg-nobel-gold/10 rounded-full translate-y-1/2 -translate-x-1/2" />
-
-      <div className="relative z-10">
-        <div className="flex justify-between items-start mb-4">
-          <div className="p-3 bg-white/10 rounded-lg backdrop-blur-sm">
-            <Icon size={24} />
-          </div>
-          <div className="flex items-center gap-2">
-            {tool.isPremium && (
-              <Badge className="bg-nobel-gold/20 text-nobel-gold border-nobel-gold/30 text-[10px]">
-                Premium
-              </Badge>
-            )}
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                onToggleBookmark();
-              }}
-              className={`p-2 rounded-full transition-all ${
-                isBookmarked ? 'bg-nobel-gold/20 text-nobel-gold' : 'hover:bg-white/10'
-              }`}
-            >
-              {isBookmarked ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
-            </button>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 mb-2">
-          <Sparkles size={14} className="text-nobel-gold" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">Featured</span>
-        </div>
-
-        <h3 className="font-serif text-2xl mb-2">{tool.name}</h3>
-        <p className="text-sm text-white/70 leading-relaxed mb-4 line-clamp-2">{tool.description}</p>
-
-        <div className="flex items-center justify-between">
-          <StarRating rating={tool.rating} />
-          <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white/60 group-hover:text-nobel-gold transition-colors">
-            Open <ExternalLink size={12} />
-          </span>
-        </div>
-      </div>
-    </motion.a>
-  );
+const pricingConfig = {
+  free: { label: 'Free', color: 'text-green-700 bg-green-50 border-green-100' },
+  freemium: { label: 'Freemium', color: 'text-ui-blue bg-blue-50 border-blue-100' },
+  premium: { label: 'Premium', color: 'text-amber-700 bg-amber-50 border-amber-100' }
 };
 
 const ToolCard: React.FC<{
@@ -303,71 +225,84 @@ const ToolCard: React.FC<{
   onToggleBookmark: () => void;
   index: number;
 }> = ({ tool, isBookmarked, onToggleBookmark, index }) => {
-  const Icon = iconMap[tool.icon] || Brain;
-
-  const categoryColors = {
-    focus: 'bg-rose-100 text-rose-600',
-    notes: 'bg-violet-100 text-violet-600',
-    practice: 'bg-emerald-100 text-emerald-600',
-    planning: 'bg-blue-100 text-blue-600'
-  };
+  const catConfig = categoryConfig[tool.category];
+  const priceConfig = pricingConfig[tool.pricing];
+  const CategoryIcon = catConfig.icon;
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ delay: index * 0.05 }}
-      className="bg-card rounded-xl border border-border hover:border-nobel-gold hover:shadow-xl transition-all duration-300 group overflow-hidden"
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ delay: index * 0.05, duration: 0.4 }}
+      className="bg-white border border-slate-100 hover:border-nobel-gold/50 hover:shadow-lg transition-all duration-300 group"
     >
-      <a href={tool.url} target="_blank" rel="noopener noreferrer" className="block p-6">
-        <div className="flex justify-between items-start mb-4">
-          <div className={`p-3 rounded-lg ${categoryColors[tool.category]} group-hover:scale-110 transition-transform`}>
-            <Icon size={24} />
+      <div className="p-8">
+        <div className="flex justify-between items-start mb-6">
+          <div className={`w-12 h-12 bg-slate-50 border border-slate-100 flex items-center justify-center ${catConfig.color}`}>
+            <CategoryIcon size={20} />
           </div>
-          <div className="flex items-center gap-2">
-            {tool.isPremium ? (
-              <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-[10px]">
-                Premium
-              </Badge>
-            ) : (
-              <Badge variant="secondary" className="text-[10px]">Free</Badge>
-            )}
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                onToggleBookmark();
-              }}
-              className={`p-2 rounded-full transition-all ${
-                isBookmarked
-                  ? 'bg-nobel-gold/10 text-nobel-gold'
-                  : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {isBookmarked ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
-            </button>
-          </div>
+          <button
+            onClick={onToggleBookmark}
+            className={`p-2 transition-colors ${
+              isBookmarked 
+                ? 'text-nobel-gold' 
+                : 'text-slate-300 hover:text-slate-600'
+            }`}
+          >
+            {isBookmarked ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
+          </button>
         </div>
 
-        <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest rounded ${categoryColors[tool.category]}`}>
-          {tool.category}
-        </span>
+        <div className="flex items-center gap-3 mb-4">
+          <span className={`text-[10px] font-bold uppercase tracking-widest ${catConfig.color}`}>
+            {catConfig.label}
+          </span>
+          <span className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest border ${priceConfig.color}`}>
+            {priceConfig.label}
+          </span>
+        </div>
 
-        <h3 className="font-serif text-xl text-foreground group-hover:text-ui-blue transition-colors mt-3 mb-2">
+        <h3 className="font-serif text-2xl text-ui-blue group-hover:text-nobel-gold transition-colors mb-3">
           {tool.name}
         </h3>
-        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-4">
+
+        <p className="text-slate-600 leading-relaxed text-sm font-light mb-6">
           {tool.description}
         </p>
 
-        <div className="flex items-center justify-between pt-4 border-t border-border">
-          <StarRating rating={tool.rating} />
-          <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground group-hover:text-ui-blue transition-colors">
-            Open <ExternalLink size={12} />
-          </span>
+        <div className="flex flex-wrap gap-2 mb-6">
+          {tool.features.map((feature, i) => (
+            <span key={i} className="px-3 py-1 bg-slate-50 text-slate-500 text-[10px] font-bold uppercase tracking-widest border border-slate-100">
+              {feature}
+            </span>
+          ))}
         </div>
-      </a>
+
+        <div className="flex items-center gap-1 text-nobel-gold">
+          {[...Array(5)].map((_, i) => (
+            <Star 
+              key={i} 
+              size={14} 
+              fill={i < Math.floor(tool.rating) ? 'currentColor' : 'none'}
+              className={i < Math.floor(tool.rating) ? '' : 'text-slate-200'}
+            />
+          ))}
+          <span className="ml-2 text-sm text-slate-500">{tool.rating}</span>
+        </div>
+      </div>
+
+      <div className="px-8 py-4 border-t border-slate-100 bg-slate-50">
+        <a 
+          href={tool.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full py-3 bg-ui-blue text-white text-[10px] font-bold uppercase tracking-widest hover:bg-nobel-gold transition-colors"
+        >
+          Visit Website <ExternalLink size={12} />
+        </a>
+      </div>
     </motion.div>
   );
 };
@@ -376,18 +311,16 @@ const StudyToolsPage = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<ToolCategory>('all');
+
   const { bookmarks, toggle, isBookmarked } = useBookmarks('study-tools-bookmarks');
 
   const handleBookmark = (id: string) => {
     toggle(id);
-    toast.success(isBookmarked(id) ? 'Removed from saved' : 'Tool saved!');
+    toast.success(isBookmarked(id) ? 'Removed from saved' : 'Added to saved tools');
   };
 
-  const featuredTools = tools.filter(t => t.featured);
-  
   const filteredTools = useMemo(() => {
-    return tools.filter(tool => {
-      if (tool.featured) return false;
+    return studyTools.filter(tool => {
       const matchesSearch = tool.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            tool.description.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = activeCategory === 'all' || tool.category === activeCategory;
@@ -395,109 +328,124 @@ const StudyToolsPage = () => {
     });
   }, [searchTerm, activeCategory]);
 
-  const categories: { value: ToolCategory; label: string; icon: React.ElementType }[] = [
-    { value: 'all', label: 'All Tools', icon: Sparkles },
-    { value: 'focus', label: 'Focus & Productivity', icon: Target },
-    { value: 'notes', label: 'Note-Taking', icon: FileText },
-    { value: 'practice', label: 'Practice & Testing', icon: BookOpen },
+  const categories: { value: ToolCategory; label: string; icon: typeof Brain }[] = [
+    { value: 'all', label: 'All Tools', icon: Zap },
+    { value: 'focus', label: 'Focus', icon: Brain },
+    { value: 'notes', label: 'Notes', icon: FileText },
+    { value: 'practice', label: 'Practice', icon: Target },
     { value: 'planning', label: 'Planning', icon: Calendar }
   ];
 
+  const featuredTool = studyTools.find(t => t.id === 'notion');
+
   return (
-    <div className="min-h-screen bg-background pt-28 pb-16">
-      <SEO
-        title="Study Tools - Resources"
-        description="Productivity apps, study techniques, and tools to boost your academic performance."
+    <div className="min-h-screen bg-slate-50 pt-32 pb-20">
+      <SEO 
+        title="Study Tools - Resources" 
+        description="Discover the best apps and tools to boost your academic productivity." 
       />
 
       <div className="container mx-auto px-6">
         <button
           onClick={() => navigate('/resources')}
-          className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors mb-8"
+          className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors mb-12"
         >
-          <div className="p-2 rounded-full border border-border group-hover:border-nobel-gold transition-colors">
+          <div className="p-2 border border-slate-200 group-hover:border-nobel-gold transition-colors">
             <ArrowLeft size={14} />
           </div>
-          <span>Back to Resources</span>
+          <span>Resources</span>
         </button>
 
-        <div className="mb-12">
+        <div className="mb-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="flex items-center gap-4 mb-4"
           >
-            <Brain className="text-nobel-gold w-8 h-8" />
-            <span className="text-xs font-bold tracking-[0.2em] uppercase text-muted-foreground">Productivity</span>
+            <Pencil className="text-nobel-gold w-6 h-6" />
+            <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-slate-400">Productivity Suite</span>
           </motion.div>
 
           <motion.h1
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-5xl md:text-7xl font-serif text-ui-blue leading-[0.9] mb-6"
+            className="font-serif text-5xl md:text-7xl text-ui-blue mb-6"
           >
-            Study <br />
-            <span className="italic text-muted-foreground">Tools</span>
+            Study <span className="italic text-slate-300">Tools</span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-xl text-muted-foreground font-light max-w-2xl leading-relaxed"
+            className="text-xl text-slate-500 font-light max-w-2xl leading-relaxed"
           >
-            Curated collection of apps and tools to help you study smarter, stay focused, and achieve academic excellence.
+            Curated collection of apps and tools to help you focus, take better notes, practice effectively, and plan your academic journey.
           </motion.p>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mb-12"
-        >
-          <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-6 flex items-center gap-2">
-            <Sparkles size={14} className="text-nobel-gold" />
-            Featured Tools
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {featuredTools.map((tool) => (
-              <FeaturedToolCard
-                key={tool.id}
-                tool={tool}
-                isBookmarked={isBookmarked(tool.id)}
-                onToggleBookmark={() => handleBookmark(tool.id)}
-              />
-            ))}
-          </div>
-        </motion.div>
-
-        <div className="mb-8 space-y-4 py-4 border-y border-border">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
-              <Input
-                type="text"
-                placeholder="Search tools..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 h-12 text-base rounded-full border-border"
-              />
+        {featuredTool && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mb-16 bg-ui-blue text-white p-8 md:p-12 relative overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-64 h-64 bg-nobel-gold/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
+            <div className="relative z-10 grid md:grid-cols-2 gap-8 items-center">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-nobel-gold mb-4 block">Featured Tool</span>
+                <h2 className="font-serif text-4xl mb-4">{featuredTool.name}</h2>
+                <p className="text-white/70 font-light mb-6">{featuredTool.description}</p>
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {featuredTool.features.map((f, i) => (
+                    <span key={i} className="px-3 py-1 bg-white/10 text-white text-[10px] font-bold uppercase tracking-widest">
+                      {f}
+                    </span>
+                  ))}
+                </div>
+                <a 
+                  href={featuredTool.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-nobel-gold text-ui-blue text-xs font-bold uppercase tracking-widest hover:bg-white transition-colors"
+                >
+                  Try {featuredTool.name} <ExternalLink size={14} />
+                </a>
+              </div>
+              <div className="hidden md:flex justify-end">
+                <div className="w-48 h-48 bg-white/10 border border-white/20 flex items-center justify-center">
+                  <FileText size={64} className="text-white/20" />
+                </div>
+              </div>
             </div>
+          </motion.div>
+        )}
+
+        <div className="mb-12 space-y-6 pb-8 border-b border-slate-200">
+          <div className="relative max-w-xl">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
+            <input
+              type="text"
+              placeholder="Search tools..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 focus:border-nobel-gold focus:outline-none text-lg font-serif transition-colors"
+            />
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             {categories.map((cat) => {
               const Icon = cat.icon;
               return (
                 <button
                   key={cat.value}
                   onClick={() => setActiveCategory(cat.value)}
-                  className={`flex items-center gap-2 px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${
+                  className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2 ${
                     activeCategory === cat.value
-                      ? 'bg-ui-blue text-white shadow-md'
-                      : 'bg-card text-muted-foreground border border-border hover:border-ui-blue'
+                      ? 'bg-ui-blue text-white'
+                      : 'bg-white text-slate-500 border border-slate-200 hover:border-ui-blue'
                   }`}
                 >
                   <Icon size={14} />
@@ -508,7 +456,7 @@ const StudyToolsPage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           <AnimatePresence mode="popLayout">
             {filteredTools.map((tool, index) => (
               <ToolCard
@@ -526,11 +474,11 @@ const StudyToolsPage = () => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center py-20"
+            className="text-center py-24"
           >
-            <Brain className="mx-auto text-muted-foreground mb-4" size={64} />
-            <h3 className="text-xl font-serif text-foreground mb-2">No tools found</h3>
-            <p className="text-muted-foreground">Try adjusting your search or category filter</p>
+            <Pencil className="mx-auto text-slate-200 mb-6" size={64} />
+            <h3 className="font-serif text-2xl text-slate-400 mb-2">No tools found</h3>
+            <p className="text-slate-300">Try adjusting your search or filter</p>
           </motion.div>
         )}
       </div>
