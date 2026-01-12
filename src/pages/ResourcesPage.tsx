@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Library, Briefcase, GraduationCap, Heart, Brain,
   Rocket, ShoppingBag, Compass, Users, Activity,
-  ArrowLeft, Search
+  ArrowLeft, Search, ArrowRight, Star
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { resourceCategories } from '@/lib/data';
@@ -23,16 +23,16 @@ const iconMap: { [key: string]: React.ElementType } = {
 };
 
 const colorMap: { [key: string]: string } = {
-  academic: 'bg-pink-200',
-  career: 'bg-lime-300',
-  scholarship: 'bg-amber-400',
-  wellness: 'bg-rose-100',
-  study: 'bg-violet-200',
-  skills: 'bg-orange-300',
-  market: 'bg-teal-200',
-  freshers: 'bg-indigo-200',
-  alumni: 'bg-cyan-200',
-  health: 'bg-red-200'
+  academic: 'bg-ui-blue',
+  career: 'bg-emerald-800',
+  scholarship: 'bg-amber-700',
+  wellness: 'bg-rose-800',
+  study: 'bg-violet-800',
+  skills: 'bg-orange-700',
+  market: 'bg-teal-800',
+  freshers: 'bg-indigo-800',
+  alumni: 'bg-cyan-800',
+  health: 'bg-red-800'
 };
 
 const containerVariants = {
@@ -66,42 +66,50 @@ const ResourcesPage = () => {
         description="Access a wealth of resources including academic materials, career tips, scholarships, and more."
       />
 
-      <div className="container mx-auto px-6 lg:px-12 max-w-5xl">
+      <div className="container mx-auto px-6 lg:px-12 max-w-6xl">
         {/* Back button */}
-        <button
+        <motion.button
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
           onClick={() => navigate('/')}
-          className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors mb-8"
+          className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500 hover:text-nobel-gold transition-colors mb-12"
         >
           <div className="p-2 rounded-full border border-slate-300 group-hover:border-nobel-gold transition-colors">
             <ArrowLeft size={14} />
           </div>
           <span>Back to Home</span>
-        </button>
+        </motion.button>
 
         {/* Hero Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-12 text-center"
+          className="mb-16"
         >
-          <h1 className="text-4xl md:text-6xl font-serif text-slate-900 leading-tight mb-4">
-            Resources for <span className="italic text-slate-400">your success</span>
+          <div className="flex items-center gap-3 mb-4">
+            <Star size={16} className="text-nobel-gold" fill="currentColor" />
+            <span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-400">Student Hub</span>
+          </div>
+          
+          <h1 className="text-5xl md:text-7xl font-serif text-ui-blue leading-tight mb-6">
+            Resources for <span className="italic text-slate-400">Success</span>
           </h1>
-          <p className="text-slate-500 max-w-xl mx-auto mb-8">
-            Everything you need to excel in your academic journey.
+          
+          <p className="text-slate-500 max-w-xl text-lg leading-relaxed mb-10">
+            Everything you need to excel in your academic journey and beyond. Curated tools, guides, and opportunities.
           </p>
 
           {/* Search Bar */}
-          <div className="max-w-2xl mx-auto relative mb-16">
+          <div className="max-w-xl relative">
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
               <Search size={20} />
             </div>
             <input
               type="text"
-              placeholder="Try a search instead"
+              placeholder="Search resources..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 rounded-xl border-none shadow-sm focus:ring-2 focus:ring-slate-200 bg-white text-slate-900 placeholder:text-slate-400 text-lg outline-none"
+              className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 text-base outline-none focus:border-nobel-gold focus:ring-2 focus:ring-nobel-gold/20 transition-all"
             />
           </div>
         </motion.div>
@@ -112,48 +120,111 @@ const ResourcesPage = () => {
           initial="hidden"
           animate="visible"
         >
-          <h2 className="text-xl font-bold text-slate-900 mb-6">Browse by subject</h2>
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-8 h-0.5 bg-nobel-gold"></div>
+            <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-slate-400">Browse Categories</h2>
+          </div>
 
           {filteredResources.length === 0 ? (
-             <div className="text-center py-12">
-               <p className="text-slate-500">No resources found matching your search.</p>
-             </div>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-20 bg-white border border-slate-200"
+            >
+              <Search size={48} className="mx-auto text-slate-300 mb-4" />
+              <p className="text-slate-500 text-lg">No resources found matching your search.</p>
+              <button 
+                onClick={() => setSearchQuery('')}
+                className="mt-4 text-nobel-gold font-medium hover:underline"
+              >
+                Clear search
+              </button>
+            </motion.div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredResources.map((resource) => {
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredResources.map((resource, index) => {
                 const Icon = iconMap[resource.id];
-                const bgColor = colorMap[resource.id] || 'bg-slate-100';
+                const bgColor = colorMap[resource.id] || 'bg-slate-800';
 
                 return (
                   <motion.div
                     key={resource.id}
                     variants={itemVariants}
+                    whileHover={{ y: -8, scale: 1.02 }}
+                    animate={{ 
+                      y: [0, -2, 0],
+                    }}
+                    transition={{
+                      y: { duration: 2.5 + index * 0.2, repeat: Infinity, ease: "easeInOut" },
+                    }}
                     onClick={() => navigate(resource.path)}
                     className={`
-                      ${bgColor} rounded-2xl p-6 cursor-pointer transition-all duration-300
-                      hover:shadow-lg hover:-translate-y-1
-                      min-h-[120px] flex items-center justify-between relative overflow-hidden group
+                      ${bgColor} cursor-pointer shadow-xl border border-white/10 overflow-hidden group 
+                      transition-all duration-300 relative h-52
                     `}
                   >
-                     {/* Title */}
-                     <div className="z-10 relative max-w-[70%]">
-                        <h3 className="font-serif text-2xl font-bold text-slate-900 leading-tight">
+                    {/* Content */}
+                    <div className="absolute inset-0 p-6 flex flex-col justify-between z-10 text-white">
+                      <div className="flex justify-between items-start">
+                        <motion.div 
+                          className="p-2.5 bg-white/10 backdrop-blur-md border border-white/10"
+                          animate={{ scale: [1, 1.05, 1] }}
+                          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: index * 0.15 }}
+                        >
+                          {Icon && <Icon size={22} />}
+                        </motion.div>
+                        <div className="w-8 h-8 flex items-center justify-center border border-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:rotate-45">
+                          <ArrowRight size={14} />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <p className="text-[9px] font-bold uppercase tracking-[0.3em] opacity-60 mb-2">Resource</p>
+                        <h3 className="font-serif text-2xl leading-tight tracking-tight mb-2">
                           {resource.title}
                         </h3>
-                     </div>
-
-                    {/* Icon */}
-                    <div className="z-10 relative w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
-                      {Icon && <Icon size={32} className="text-slate-900" />}
+                        <p className="text-xs text-white/60 line-clamp-2 leading-relaxed">
+                          {resource.description}
+                        </p>
+                        <motion.div 
+                          className="w-0 group-hover:w-10 h-0.5 bg-nobel-gold mt-3 transition-all duration-500"
+                          animate={{ opacity: [0.7, 1, 0.7] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        />
+                      </div>
                     </div>
 
-                    {/* Decorative Background Element (Subtle) */}
-                    <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-colors" />
+                    {/* Decorative Elements */}
+                    <motion.div 
+                      className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-white/5 to-transparent pointer-events-none"
+                      animate={{ opacity: [0.3, 0.6, 0.3] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                    <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-black/20 rounded-full blur-3xl group-hover:bg-nobel-gold/10 transition-colors duration-700"></div>
                   </motion.div>
                 );
               })}
             </div>
           )}
+        </motion.div>
+
+        {/* Footer CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mt-20 text-center"
+        >
+          <p className="text-slate-400 text-sm mb-4">
+            Can't find what you're looking for?
+          </p>
+          <button
+            onClick={() => navigate('/communities')}
+            className="inline-flex items-center gap-2 text-nobel-gold font-bold text-sm uppercase tracking-widest hover:gap-4 transition-all"
+          >
+            <span>Join a Community</span>
+            <ArrowRight size={16} />
+          </button>
         </motion.div>
       </div>
     </div>
