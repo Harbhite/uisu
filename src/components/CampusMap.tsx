@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, X, GraduationCap, Info, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
+import { MapPin, X, GraduationCap, Info, ChevronDown, ChevronUp, Map, Navigation, Sparkles, Users, Crown, Shield } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export interface Hall {
   id: string;
@@ -116,141 +117,294 @@ export const halls: Hall[] = [
   }
 ];
 
+const typeIcons = {
+  male: Shield,
+  female: Crown,
+  mixed: Users
+};
+
+const typeLabels = {
+  male: 'Male Hall',
+  female: 'Female Hall',
+  mixed: 'Mixed Hall'
+};
+
 export const CampusMap: React.FC = () => {
   const [selectedHall, setSelectedHall] = useState<Hall | null>(null);
   const [mapType, setMapType] = useState<'illustrated' | 'live'>('illustrated');
+  const [hoveredHall, setHoveredHall] = useState<string | null>(null);
 
   return (
-    <div className="space-y-4">
-        <div className="flex justify-end space-x-2">
-            <button
-                onClick={() => setMapType('illustrated')}
-                className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-md transition-colors ${mapType === 'illustrated' ? 'bg-ui-blue text-white' : 'bg-white text-slate-500 hover:bg-slate-100 border border-slate-200'}`}
-            >
-                Illustrated Map
-            </button>
-            <button
-                onClick={() => setMapType('live')}
-                className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-md transition-colors ${mapType === 'live' ? 'bg-ui-blue text-white' : 'bg-white text-slate-500 hover:bg-slate-100 border border-slate-200'}`}
-            >
-                Live Map
-            </button>
+    <div className="space-y-6">
+      {/* Map Type Toggle */}
+      <div className="flex justify-between items-center">
+        <p className="text-sm text-slate-500">
+          {mapType === 'illustrated' ? 'Click on pins to explore halls' : 'View live campus location'}
+        </p>
+        <div className="flex gap-2 bg-slate-100 p-1 border border-slate-200">
+          <button
+            onClick={() => setMapType('illustrated')}
+            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all ${
+              mapType === 'illustrated' 
+                ? 'bg-ui-blue text-white shadow-md' 
+                : 'text-slate-500 hover:text-ui-blue hover:bg-white'
+            }`}
+          >
+            <Map size={14} />
+            <span>Illustrated</span>
+          </button>
+          <button
+            onClick={() => setMapType('live')}
+            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all ${
+              mapType === 'live' 
+                ? 'bg-ui-blue text-white shadow-md' 
+                : 'text-slate-500 hover:text-ui-blue hover:bg-white'
+            }`}
+          >
+            <Navigation size={14} />
+            <span>Live Map</span>
+          </button>
         </div>
+      </div>
 
-        {mapType === 'illustrated' ? (
-            <div className="relative w-full h-[600px] bg-slate-100 rounded-xl overflow-hidden border border-slate-300 shadow-inner group select-none">
-            <div className="absolute inset-0 opacity-10 pointer-events-none" style={{
-                backgroundImage: 'radial-gradient(#444 1px, transparent 1px)',
-                backgroundSize: '20px 20px'
-            }}></div>
+      {mapType === 'illustrated' ? (
+        <div className="relative w-full h-[550px] md:h-[650px] bg-gradient-to-br from-slate-100 via-slate-50 to-white overflow-hidden border border-slate-200 shadow-inner group select-none">
+          {/* Grid Pattern Background */}
+          <div className="absolute inset-0 opacity-30 pointer-events-none" style={{
+            backgroundImage: `
+              linear-gradient(rgba(0,51,102,0.03) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(0,51,102,0.03) 1px, transparent 1px)
+            `,
+            backgroundSize: '40px 40px'
+          }}></div>
 
-            <div className="absolute top-6 left-6 text-slate-300 pointer-events-none">
-                <div className="text-6xl font-serif font-bold opacity-20">UI</div>
-                <div className="text-xs tracking-[0.5em] uppercase opacity-40 mt-2">Campus Map</div>
+          {/* Decorative Elements */}
+          <div className="absolute top-6 left-6 pointer-events-none z-10">
+            <div className="text-7xl font-serif font-bold text-ui-blue/5 leading-none">UI</div>
+            <div className="text-[10px] tracking-[0.5em] uppercase text-slate-300 mt-1 font-bold">Campus Map</div>
+          </div>
+
+          {/* Compass */}
+          <div className="absolute top-6 right-6 w-16 h-16 bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+            <div className="relative w-10 h-10">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-full h-0.5 bg-slate-200"></div>
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center rotate-90">
+                <div className="w-full h-0.5 bg-slate-200"></div>
+              </div>
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 text-[8px] font-bold text-ui-blue">N</div>
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-[8px] font-bold text-slate-400">S</div>
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 text-[8px] font-bold text-slate-400">W</div>
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 text-[8px] font-bold text-slate-400">E</div>
             </div>
+          </div>
 
-            {halls.map((hall) => (
-                <motion.button
+          {/* Legend */}
+          <div className="absolute bottom-6 left-6 bg-white/90 backdrop-blur-sm border border-slate-200 p-4 shadow-sm z-10">
+            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-3">Legend</p>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs text-slate-600">
+                <Shield size={12} className="text-ui-blue" />
+                <span>Male Hall</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-600">
+                <Crown size={12} className="text-pink-600" />
+                <span>Female Hall</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-600">
+                <Users size={12} className="text-teal-600" />
+                <span>Mixed Hall</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Hall Pins */}
+          {halls.map((hall, index) => {
+            const TypeIcon = typeIcons[hall.type];
+            const isHovered = hoveredHall === hall.id;
+            const isSelected = selectedHall?.id === hall.id;
+            
+            return (
+              <motion.button
                 key={hall.id}
-                className="absolute w-12 h-12 -ml-6 -mt-6 flex items-center justify-center group/pin cursor-pointer z-10"
-                style={{ top: hall.position.top, left: hall.position.left }}
+                className="absolute flex items-center justify-center z-20"
+                style={{ 
+                  top: hall.position.top, 
+                  left: hall.position.left,
+                  marginLeft: '-24px',
+                  marginTop: '-24px'
+                }}
                 onClick={() => setSelectedHall(hall)}
-                whileHover={{ scale: 1.1 }}
+                onMouseEnter={() => setHoveredHall(hall.id)}
+                onMouseLeave={() => setHoveredHall(null)}
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                >
+                transition={{ delay: 0.1 + index * 0.05, type: "spring", stiffness: 200 }}
+                whileHover={{ scale: 1.15 }}
+              >
+                {/* Pulse Ring */}
                 <motion.div
-                    className="w-full h-full flex items-center justify-center bg-white rounded-full shadow-md border-2 transition-colors group-hover/pin:bg-slate-100 relative"
-                    style={{ borderColor: hall.color }}
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: Math.random() * 2 }}
+                  className="absolute w-12 h-12 rounded-full"
+                  style={{ backgroundColor: `${hall.color}20` }}
+                  animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity, delay: index * 0.2 }}
+                />
+                
+                {/* Pin Container */}
+                <div 
+                  className={`relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
+                    isSelected ? 'ring-4 ring-offset-2 ring-nobel-gold' : ''
+                  }`}
+                  style={{ 
+                    backgroundColor: isHovered || isSelected ? hall.color : 'white',
+                    borderWidth: '3px',
+                    borderColor: hall.color,
+                    boxShadow: isHovered || isSelected ? `0 8px 25px ${hall.color}50` : '0 4px 12px rgba(0,0,0,0.15)'
+                  }}
                 >
-                    <MapPin size={20} style={{ color: hall.color }} />
-                </motion.div>
+                  <MapPin
+                    size={20} 
+                    style={{ color: isHovered || isSelected ? 'white' : hall.color }} 
+                  />
+                </div>
 
-                <div className="absolute top-14 whitespace-nowrap bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover/pin:opacity-100 transition-opacity pointer-events-none z-20 font-medium tracking-wide uppercase">
-                        {hall.name}
-                    </div>
-                </motion.button>
-            ))}
-
-            <AnimatePresence>
-                {selectedHall && (
-                <motion.div
-                    initial={{ opacity: 0, x: 50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 50 }}
-                    className="absolute top-4 right-4 bottom-4 w-full md:w-80 bg-white/95 backdrop-blur-md shadow-xl rounded-lg border border-slate-200 p-6 overflow-y-auto z-30 flex flex-col"
-                >
-                    <button
-                    onClick={() => setSelectedHall(null)}
-                    className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 transition-colors"
+                {/* Tooltip */}
+                <AnimatePresence>
+                  {isHovered && !selectedHall && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                      className="absolute top-full mt-3 left-1/2 -translate-x-1/2 z-30"
                     >
-                    <X size={20} />
-                    </button>
+                      <div 
+                        className="px-4 py-2 text-white text-xs font-bold tracking-wide whitespace-nowrap shadow-xl"
+                        style={{ backgroundColor: hall.color }}
+                      >
+                        <div className="text-white/70 text-[9px] uppercase tracking-widest mb-0.5">{hall.alias}</div>
+                        {hall.name}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+            );
+          })}
 
-                    <div className="mb-6">
-                        <div className="inline-block px-2 py-1 rounded-sm text-[10px] font-bold uppercase tracking-widest text-white mb-3" style={{ backgroundColor: selectedHall.color }}>
-                            {selectedHall.alias}
-                        </div>
-                        <h3 className="font-serif text-2xl text-slate-900 leading-tight">{selectedHall.name}</h3>
-                        <div className="h-0.5 w-12 mt-3 bg-slate-200"></div>
+          {/* Selected Hall Panel */}
+          <AnimatePresence>
+            {selectedHall && (
+              <motion.div
+                initial={{ opacity: 0, x: 100 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 100 }}
+                transition={{ type: "spring", damping: 25 }}
+                className="absolute top-4 right-4 bottom-4 w-full max-w-xs md:max-w-sm bg-white shadow-2xl border border-slate-200 overflow-hidden z-40 flex flex-col"
+              >
+                {/* Header with color */}
+                <div 
+                  className="p-6 text-white relative overflow-hidden"
+                  style={{ backgroundColor: selectedHall.color }}
+                >
+                  <button
+                    onClick={() => setSelectedHall(null)}
+                    className="absolute top-4 right-4 w-8 h-8 bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors"
+                  >
+                    <X size={16} />
+                  </button>
+                  
+                  <div className="inline-flex items-center gap-2 px-2 py-1 bg-white/20 text-[10px] font-bold uppercase tracking-widest mb-3">
+                    {React.createElement(typeIcons[selectedHall.type], { size: 12 })}
+                    {typeLabels[selectedHall.type]}
+                  </div>
+                  
+                  <h3 className="font-serif text-2xl leading-tight mb-1">{selectedHall.name}</h3>
+                  <p className="text-white/80 text-sm font-medium">{selectedHall.alias}</p>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                  {/* Motto */}
+                  <div className="bg-slate-50 border border-slate-100 p-4">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">Motto</p>
+                    <p className="font-serif italic text-ui-blue text-lg">"{selectedHall.motto}"</p>
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Info size={14} className="text-nobel-gold" />
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">About</p>
                     </div>
+                    <p className="text-sm text-slate-600 leading-relaxed">
+                      {selectedHall.desc}
+                    </p>
+                  </div>
 
-                    <div className="space-y-6">
-                        <div>
-                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-                                <Info size={12} /> About
-                            </h4>
-                            <p className="text-sm text-slate-600 leading-relaxed">
-                                {selectedHall.desc}
-                            </p>
-                        </div>
-
-                        <div className="bg-slate-50 p-4 rounded-md border border-slate-100">
-                            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Motto</h4>
-                            <p className="font-serif italic text-slate-800 text-lg">"{selectedHall.motto}"</p>
-                        </div>
-
-                        <div>
-                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-                                <GraduationCap size={12} /> Notable Alumni
-                            </h4>
-                            <ul className="text-sm text-slate-600 space-y-2">
-                                {selectedHall.notable.map((person, i) => (
-                                    <li key={i} className="flex items-start gap-2">
-                                        <span className="text-slate-300">•</span> {person}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
+                  {/* Notable Alumni */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <GraduationCap size={14} className="text-nobel-gold" />
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Notable Alumni</p>
                     </div>
-
-                    <div className="mt-auto pt-6 text-center">
-                        <button className="text-xs text-ui-blue font-bold uppercase tracking-widest hover:underline">View Hall Anthem</button>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedHall.notable.map((person, i) => (
+                        <span 
+                          key={i} 
+                          className="bg-slate-100 border border-slate-200 text-slate-700 text-xs px-3 py-1.5 font-medium"
+                        >
+                          {person}
+                        </span>
+                      ))}
                     </div>
-                </motion.div>
-                )}
-            </AnimatePresence>
+                  </div>
+                </div>
 
-            <div className="absolute bottom-4 left-0 right-0 text-center text-slate-400 text-xs md:hidden pointer-events-none">
-                Tap a pin to explore
+                {/* Footer */}
+                <div className="p-4 border-t border-slate-100 bg-slate-50">
+                  <Link 
+                    to={`/governance/hall/${selectedHall.id}`}
+                    className="flex items-center justify-center gap-2 w-full py-3 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest hover:bg-ui-dark transition-colors"
+                  >
+                    <Sparkles size={14} />
+                    View Full Profile
+                  </Link>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Mobile hint */}
+          <div className="absolute bottom-4 right-4 text-slate-400 text-xs md:hidden pointer-events-none bg-white/80 backdrop-blur-sm px-3 py-2 border border-slate-200">
+            <MapPin size={12} className="inline mr-1" />
+            Tap pins to explore
+          </div>
+        </div>
+      ) : (
+        <div className="w-full h-[550px] md:h-[650px] bg-slate-100 overflow-hidden border border-slate-200 shadow-inner relative">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3956.270929286467!2d3.896740614150868!3d7.441852894629474!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1039fc7c30000001%3A0x6b40209c11867e35!2sUniversity%20of%20Ibadan!5e0!3m2!1sen!2sng!4v1714574932371!5m2!1sen!2sng"
+            width="100%"
+            height="100%"
+            style={{ border: 0 }}
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          ></iframe>
+          
+          {/* Overlay info */}
+          <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm border border-slate-200 p-4 shadow-lg max-w-xs">
+            <div className="flex items-center gap-2 mb-2">
+              <Navigation size={16} className="text-ui-blue" />
+              <p className="text-sm font-bold text-ui-blue">University of Ibadan</p>
             </div>
-            </div>
-        ) : (
-            <div className="w-full h-[600px] bg-slate-100 rounded-xl overflow-hidden border border-slate-300 shadow-inner">
-                <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3956.270929286467!2d3.896740614150868!3d7.441852894629474!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1039fc7c30000001%3A0x6b40209c11867e35!2sUniversity%20of%20Ibadan!5e0!3m2!1sen!2sng!4v1714574932371!5m2!1sen!2sng"
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                ></iframe>
-            </div>
-        )}
+            <p className="text-xs text-slate-500">
+              Oduduwa Road, Ibadan, Oyo State, Nigeria
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -267,12 +421,12 @@ export const HallGrid: React.FC = () => {
             key={hall.id}
             layout
             onClick={() => setSelectedId(isSelected ? null : hall.id)}
-            className={`bg-white border-t-4 rounded-xl shadow-sm cursor-pointer transition-all duration-300 overflow-hidden ${isSelected ? 'shadow-lg ring-1 ring-slate-200 row-span-2' : 'hover:shadow-md'}`}
+            className={`bg-white border-t-4 shadow-sm cursor-pointer transition-all duration-300 overflow-hidden ${isSelected ? 'shadow-lg ring-1 ring-slate-200 row-span-2' : 'hover:shadow-md'}`}
             style={{ borderTopColor: hall.color }}
           >
              <div className="p-6">
                <div className="flex justify-between items-start mb-4">
-                  <div className="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider border border-slate-200">
+                  <div className="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-1 uppercase tracking-wider border border-slate-200">
                     {hall.alias}
                   </div>
                   <div className="text-slate-400">
@@ -280,7 +434,7 @@ export const HallGrid: React.FC = () => {
                   </div>
                </div>
 
-               <h3 className="font-serif text-xl font-bold text-slate-900 mb-2">{hall.name}</h3>
+               <h3 className="font-serif text-xl font-bold text-ui-blue mb-2">{hall.name}</h3>
                <p className="text-sm text-slate-500 italic font-serif mb-0">"{hall.motto}"</p>
 
                <AnimatePresence>
@@ -301,7 +455,7 @@ export const HallGrid: React.FC = () => {
                           </h4>
                           <div className="flex flex-wrap gap-2">
                              {hall.notable.map((person, idx) => (
-                               <span key={idx} className="bg-slate-50 border border-slate-200 text-slate-600 text-xs px-3 py-1.5 rounded-full font-medium">
+                               <span key={idx} className="bg-slate-50 border border-slate-200 text-slate-600 text-xs px-3 py-1.5 font-medium">
                                  {person}
                                </span>
                              ))}
