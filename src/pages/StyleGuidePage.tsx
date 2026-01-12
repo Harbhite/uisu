@@ -355,7 +355,11 @@ const StyleGuidePage: React.FC = () => {
                                 <span className="text-ui-blue">Executive_Council</span>
                             </div>
                         </div>
-                        <CopySnippet label="Breadcrumb" text="flex items-center gap-2 text-[10px] font-bold uppercase" />
+                        <CopySnippet label="Breadcrumb" text={`<div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+  <span className="hover:text-ui-blue cursor-pointer transition-colors">Home</span>
+  <ChevronRight size={12} />
+  <span>Governance</span>
+</div>`} fullWidth />
                     </div>
 
                     {/* Pagination */}
@@ -370,7 +374,11 @@ const StyleGuidePage: React.FC = () => {
                                 <div className="w-8 h-8 flex items-center justify-center border border-slate-200 text-slate-400 hover:border-ui-blue hover:text-ui-blue cursor-pointer transition-all"><ChevronRight size={14}/></div>
                             </div>
                         </div>
-                        <CopySnippet label="Pagination" text="w-8 h-8 border border-slate-200 font-mono" />
+                        <CopySnippet label="Pagination" text={`<div className="flex items-center gap-1">
+  <div className="w-8 h-8 flex items-center justify-center border border-slate-200 text-slate-400 hover:border-ui-blue hover:text-ui-blue transition-all"><ChevronLeft size={14}/></div>
+  <div className="w-8 h-8 flex items-center justify-center border border-ui-blue bg-ui-blue text-white font-mono text-[10px]">01</div>
+  {/* Additional pages... */}
+</div>`} fullWidth />
                     </div>
 
                     {/* Tabs */}
@@ -383,7 +391,10 @@ const StyleGuidePage: React.FC = () => {
                                 <div className="px-6 py-3 border-b-2 border-transparent text-slate-400 text-xs font-bold uppercase tracking-widest hover:text-slate-600 cursor-pointer">Disabled</div>
                             </div>
                         </div>
-                        <CopySnippet label="Tab Active" text="border-b-2 border-ui-blue text-ui-blue" />
+                        <CopySnippet label="Tab Active" text={`<div className="flex">
+  <div className="px-6 py-3 border-b-2 border-ui-blue text-ui-blue text-xs font-bold uppercase tracking-widest cursor-pointer">Active Tab</div>
+  <div className="px-6 py-3 border-b-2 border-transparent text-slate-400 text-xs font-bold uppercase tracking-widest hover:text-slate-600 cursor-pointer">Inactive Tab</div>
+</div>`} fullWidth />
                     </div>
                 </div>
             </section>
@@ -397,7 +408,7 @@ const StyleGuidePage: React.FC = () => {
                          <div className="p-8 bg-white border border-slate-200 flex justify-center">
                              <div className="w-8 h-8 border-4 border-slate-100 border-t-nobel-gold rounded-full animate-spin"></div>
                          </div>
-                         <CopySnippet label="Spinner" text="border-4 border-t-nobel-gold rounded-full animate-spin" />
+                         <CopySnippet label="Spinner" text={`<div className="w-8 h-8 border-4 border-slate-100 border-t-nobel-gold rounded-full animate-spin"></div>`} />
                      </div>
                      <div className="space-y-4">
                          <h5 className="text-[9px] font-bold uppercase text-slate-400">Skeleton Row</h5>
@@ -405,7 +416,7 @@ const StyleGuidePage: React.FC = () => {
                              <div className="h-4 bg-slate-100 animate-pulse w-3/4"></div>
                              <div className="h-4 bg-slate-100 animate-pulse w-1/2"></div>
                          </div>
-                         <CopySnippet label="Skeleton" text="bg-slate-100 animate-pulse" />
+                         <CopySnippet label="Skeleton" text={`<div className="h-4 bg-slate-100 animate-pulse w-3/4"></div>`} />
                      </div>
                      <div className="space-y-4">
                          <h5 className="text-[9px] font-bold uppercase text-slate-400">Progress Bar</h5>
@@ -414,7 +425,9 @@ const StyleGuidePage: React.FC = () => {
                                  <div className="absolute top-0 left-0 h-full w-2/3 bg-ui-blue"></div>
                              </div>
                          </div>
-                         <CopySnippet label="Progress" text="h-2 bg-slate-100 relative overflow-hidden" />
+                         <CopySnippet label="Progress" text={`<div className="w-full h-2 bg-slate-100 relative overflow-hidden">
+  <div className="absolute top-0 left-0 h-full w-2/3 bg-ui-blue"></div>
+</div>`} />
                      </div>
                 </div>
             </section>
@@ -427,15 +440,15 @@ const StyleGuidePage: React.FC = () => {
                     <div className="col-span-1 lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                         <div className="space-y-2">
                              <button className="w-full px-6 py-3 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest border border-ui-blue hover:bg-ui-dark transition-all">Primary Action</button>
-                             <CopySnippet label="Primary Btn" text="bg-ui-blue text-white hover:bg-ui-dark" />
+                             <CopySnippet label="Primary Btn" text={`<button className="w-full px-6 py-3 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest border border-ui-blue hover:bg-ui-dark transition-all">Primary Action</button>`} fullWidth />
                         </div>
                         <div className="space-y-2">
                              <button className="w-full px-6 py-3 bg-nobel-gold text-ui-blue text-xs font-bold uppercase tracking-widest border border-nobel-gold hover:bg-white transition-all">Secondary/Accent</button>
-                             <CopySnippet label="Accent Btn" text="bg-nobel-gold text-ui-blue hover:bg-white" />
+                             <CopySnippet label="Accent Btn" text={`<button className="w-full px-6 py-3 bg-nobel-gold text-ui-blue text-xs font-bold uppercase tracking-widest border border-nobel-gold hover:bg-white transition-all">Accent</button>`} fullWidth />
                         </div>
                         <div className="space-y-2">
                              <button className="w-full px-6 py-3 bg-transparent text-ui-blue text-xs font-bold uppercase tracking-widest border border-slate-300 hover:border-ui-blue transition-all">Ghost/Outline</button>
-                             <CopySnippet label="Ghost Btn" text="bg-transparent border border-slate-300" />
+                             <CopySnippet label="Ghost Btn" text={`<button className="w-full px-6 py-3 bg-transparent text-ui-blue text-xs font-bold uppercase tracking-widest border border-slate-300 hover:border-ui-blue transition-all">Ghost</button>`} fullWidth />
                         </div>
                     </div>
 
@@ -443,7 +456,7 @@ const StyleGuidePage: React.FC = () => {
                     <div className="space-y-4">
                         <h5 className="text-[9px] font-bold uppercase text-slate-400">Standard Input</h5>
                         <input type="text" placeholder="ENTER_DATA..." className="w-full bg-slate-50 border border-slate-200 p-3 text-[10px] font-mono outline-none focus:border-ui-blue transition-all" />
-                        <CopySnippet label="Input" text="bg-slate-50 border border-slate-200 font-mono" />
+                        <CopySnippet label="Input" text={`<input type="text" placeholder="ENTER_DATA..." className="w-full bg-slate-50 border border-slate-200 p-3 text-[10px] font-mono outline-none focus:border-ui-blue transition-all" />`} />
                     </div>
 
                     <div className="space-y-4">
@@ -452,7 +465,10 @@ const StyleGuidePage: React.FC = () => {
                             <input type="text" value="INVALID_KEY" readOnly className="w-full bg-red-50 border border-red-200 p-3 text-[10px] font-mono text-red-700 outline-none" />
                             <AlertTriangle size={14} className="absolute right-3 top-3 text-red-500"/>
                         </div>
-                        <CopySnippet label="Error Input" text="bg-red-50 border-red-200 text-red-700" />
+                        <CopySnippet label="Error Input" text={`<div className="relative">
+  <input type="text" className="w-full bg-red-50 border border-red-200 p-3 text-[10px] font-mono text-red-700 outline-none" />
+  <AlertTriangle size={14} className="absolute right-3 top-3 text-red-500"/>
+</div>`} />
                     </div>
 
                     {/* Toggles */}
@@ -464,7 +480,7 @@ const StyleGuidePage: React.FC = () => {
                              <div className="w-10 h-5 bg-slate-200 rounded-full relative"><div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full"></div></div>
                              <div className="w-10 h-5 bg-ui-blue rounded-full relative"><div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div></div>
                         </div>
-                        <CopySnippet label="Checkbox" text="w-5 h-5 border-2 border-ui-blue" />
+                        <CopySnippet label="Checkbox" text={`<div className="w-5 h-5 border-2 border-ui-blue bg-ui-blue flex items-center justify-center text-white"><Check size={12}/></div>`} />
                     </div>
                 </div>
             </section>
@@ -489,7 +505,16 @@ const StyleGuidePage: React.FC = () => {
                              </div>
                          ))}
                      </div>
-                     <CopySnippet label="Table Structure" text="grid grid-cols-12 border-b border-slate-100" fullWidth />
+                     <CopySnippet label="Table Structure" text={`<div className="border border-slate-200 bg-white">
+  <div className="grid grid-cols-12 bg-ui-blue text-white p-4 text-[9px] font-bold uppercase tracking-widest">
+      <div className="col-span-2">Ref_ID</div>
+      {/* ...headers */}
+  </div>
+  <div className="grid grid-cols-12 p-4 border-b border-slate-100 text-xs hover:bg-slate-50 transition-colors">
+      <div className="col-span-2 font-mono text-ui-blue">REC_001</div>
+      {/* ...data */}
+  </div>
+</div>`} fullWidth />
                 </div>
             </section>
 
@@ -518,6 +543,17 @@ const StyleGuidePage: React.FC = () => {
                           </div>
                      </div>
                 </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
+                    <CopySnippet label="Flow Diagram" text={`<div className="flex flex-col items-center gap-4">
+  <div className="px-6 py-3 bg-white border border-ui-blue text-ui-blue font-bold text-xs uppercase shadow-sm">Start</div>
+  <div className="h-8 w-px bg-slate-300"></div>
+  <div className="px-6 py-3 bg-white border border-slate-300 text-slate-500 font-bold text-xs uppercase shadow-sm">Process</div>
+</div>`} />
+                    <CopySnippet label="Bar Chart" text={`<div className="relative z-10 flex items-end gap-2 h-40">
+  <div className="flex-1 bg-nobel-gold hover:bg-white transition-colors" style={{ height: '50%' }}></div>
+  <div className="flex-1 bg-nobel-gold hover:bg-white transition-colors" style={{ height: '75%' }}></div>
+</div>`} />
+                </div>
             </section>
 
             {/* 9. 3D & Immersive */}
@@ -537,6 +573,16 @@ const StyleGuidePage: React.FC = () => {
                               3D elements leverage <code>@react-three/fiber</code>. Ensure all scenes are wrapped in a <code>Suspense</code> boundary with a fallback loader to maintain performance on lower-end devices.
                           </p>
                           <CopySnippet label="Canvas Import" text="import { Canvas } from '@react-three/fiber';" fullWidth />
+                          <div className="mt-4">
+                            <CopySnippet label="Canvas Setup" text={`<Canvas>
+  <ambientLight intensity={0.5} />
+  <pointLight position={[10, 10, 10]} />
+  <mesh rotation={[0, 0, 0]}>
+    <boxGeometry args={[1, 1, 1]} />
+    <meshStandardMaterial color={'#C5A059'} />
+  </mesh>
+</Canvas>`} fullWidth />
+                          </div>
                      </div>
                 </div>
             </section>
@@ -544,7 +590,7 @@ const StyleGuidePage: React.FC = () => {
             {/* 10. Cards & Containers */}
             <section>
                 <SectionHeader id="cards" icon={LayoutGrid} title="10. Cards & Containers" subtitle="Archetypes for content organization." />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                      {/* Executive Card */}
                      <div className="bg-white p-8 border border-slate-200 group relative shadow-sm hover:shadow-md transition-all">
                         <div className="absolute top-0 left-0 w-full h-1 bg-ui-blue transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500"></div>
@@ -564,6 +610,23 @@ const StyleGuidePage: React.FC = () => {
                         <p className="text-sm text-slate-600 font-light leading-relaxed italic">"Used for quotes, alumni records, and historical highlights."</p>
                      </div>
                 </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <CopySnippet label="Executive Card HTML" text={`<div className="bg-white p-8 border border-slate-200 group relative shadow-sm hover:shadow-md transition-all">
+  <div className="absolute top-0 left-0 w-full h-1 bg-ui-blue transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500"></div>
+  <div className="w-10 h-10 bg-slate-50 flex items-center justify-center text-ui-blue mb-4"><Shield size={20}/></div>
+  <h3 className="font-serif text-2xl text-ui-blue mb-2">Title</h3>
+  <p className="text-sm text-slate-500 font-light leading-relaxed mb-6">Description content.</p>
+  <div className="pt-4 border-t border-slate-100 flex justify-between items-center text-[9px] font-bold uppercase tracking-widest text-slate-400">
+      <span>Status: Active</span>
+      <ChevronRight size={14}/>
+  </div>
+</div>`} fullWidth />
+                    <CopySnippet label="Legacy Card HTML" text={`<div className="bg-slate-50 p-8 border-l-4 border-nobel-gold relative overflow-hidden">
+  <Award className="text-nobel-gold mb-4" size={28} />
+  <h3 className="font-serif text-2xl text-ui-blue mb-2 italic">Quote Title</h3>
+  <p className="text-sm text-slate-600 font-light leading-relaxed italic">"Quote text here."</p>
+</div>`} fullWidth />
+                </div>
             </section>
 
             {/* 11. Decor & Animation */}
@@ -577,6 +640,11 @@ const StyleGuidePage: React.FC = () => {
                               <div className="w-2 h-2 rotate-45 bg-nobel-gold"></div>
                               <div className="h-px flex-1 bg-slate-200"></div>
                           </div>
+                          <CopySnippet label="Divider" text={`<div className="flex items-center gap-4 py-4">
+  <div className="h-px flex-1 bg-slate-200"></div>
+  <div className="w-2 h-2 rotate-45 bg-nobel-gold"></div>
+  <div className="h-px flex-1 bg-slate-200"></div>
+</div>`} />
                      </div>
                      <div className="space-y-4">
                           <h5 className="text-[9px] font-bold uppercase text-slate-400">Grain Texture</h5>
@@ -590,6 +658,7 @@ const StyleGuidePage: React.FC = () => {
                           <div className="h-20 bg-white border border-slate-200 flex items-center justify-center hover:-translate-y-1 hover:shadow-lg transition-all duration-300 cursor-pointer">
                                <span className="text-xs font-bold text-ui-blue">HOVER ME</span>
                           </div>
+                          <CopySnippet label="Hover Lift" text="hover:-translate-y-1 hover:shadow-lg transition-all duration-300" />
                      </div>
                 </div>
             </section>
@@ -598,26 +667,44 @@ const StyleGuidePage: React.FC = () => {
             <section>
                 <SectionHeader id="assets" icon={Monitor} title="12. Assets & Media" subtitle="Standardized rendering for visual artifacts." />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                     <div className="aspect-video bg-slate-100 relative group overflow-hidden border border-slate-200">
-                          <div className="absolute inset-0 flex items-center justify-center z-10">
-                              <div className="w-16 h-16 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-ui-blue shadow-lg group-hover:scale-110 transition-transform cursor-pointer">
-                                  <Play size={24} className="ml-1"/>
+                     <div className="space-y-4">
+                        <div className="aspect-video bg-slate-100 relative group overflow-hidden border border-slate-200">
+                              <div className="absolute inset-0 flex items-center justify-center z-10">
+                                  <div className="w-16 h-16 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-ui-blue shadow-lg group-hover:scale-110 transition-transform cursor-pointer">
+                                      <Play size={24} className="ml-1"/>
+                                  </div>
                               </div>
-                          </div>
-                          <div className="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black/60 to-transparent">
-                              <div className="text-white text-sm font-bold">Video Thumbnail Overlay</div>
-                          </div>
+                              <div className="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black/60 to-transparent">
+                                  <div className="text-white text-sm font-bold">Video Thumbnail Overlay</div>
+                              </div>
+                        </div>
+                        <CopySnippet label="Video Card" text={`<div className="aspect-video bg-slate-100 relative group overflow-hidden border border-slate-200">
+  <div className="absolute inset-0 flex items-center justify-center z-10">
+      <div className="w-16 h-16 bg-white/80 backdrop-blur rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+          <Play size={24} />
+      </div>
+  </div>
+</div>`} fullWidth />
                      </div>
-                     <div className="p-4 border border-slate-200 bg-white flex items-start gap-4">
-                          <div className="w-20 h-20 bg-slate-50 flex items-center justify-center text-slate-300"><ImageIcon size={32}/></div>
-                          <div>
-                              <div className="text-xs font-bold uppercase text-ui-blue mb-1">Figure 1.2</div>
-                              <div className="text-sm text-slate-600 mb-2">Architectural Blueprint</div>
-                              <div className="flex gap-2">
-                                  <span className="px-2 py-1 bg-slate-100 text-[8px] font-bold uppercase text-slate-500">JPG</span>
-                                  <span className="px-2 py-1 bg-slate-100 text-[8px] font-bold uppercase text-slate-500">2.4 MB</span>
+                     <div className="space-y-4">
+                        <div className="p-4 border border-slate-200 bg-white flex items-start gap-4">
+                              <div className="w-20 h-20 bg-slate-50 flex items-center justify-center text-slate-300"><ImageIcon size={32}/></div>
+                              <div>
+                                  <div className="text-xs font-bold uppercase text-ui-blue mb-1">Figure 1.2</div>
+                                  <div className="text-sm text-slate-600 mb-2">Architectural Blueprint</div>
+                                  <div className="flex gap-2">
+                                      <span className="px-2 py-1 bg-slate-100 text-[8px] font-bold uppercase text-slate-500">JPG</span>
+                                      <span className="px-2 py-1 bg-slate-100 text-[8px] font-bold uppercase text-slate-500">2.4 MB</span>
+                                  </div>
                               </div>
-                          </div>
+                        </div>
+                        <CopySnippet label="Asset Row" text={`<div className="p-4 border border-slate-200 bg-white flex items-start gap-4">
+  <div className="w-20 h-20 bg-slate-50 flex items-center justify-center"><ImageIcon size={32}/></div>
+  <div>
+      <div className="text-xs font-bold uppercase text-ui-blue mb-1">Title</div>
+      <div className="text-sm text-slate-600 mb-2">Description</div>
+  </div>
+</div>`} fullWidth />
                      </div>
                 </div>
             </section>
@@ -632,6 +719,10 @@ const StyleGuidePage: React.FC = () => {
                               <ShieldCheck size={12}/>
                               <span className="text-[9px] font-bold uppercase tracking-widest">Official</span>
                           </div>
+                          <CopySnippet label="Badge" text={`<div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-ui-blue border border-blue-100 rounded-sm">
+  <ShieldCheck size={12}/>
+  <span className="text-[9px] font-bold uppercase tracking-widest">Official</span>
+</div>`} />
                      </div>
                      <div className="space-y-4">
                           <h5 className="text-[9px] font-bold uppercase text-slate-400">Locked Content</h5>
@@ -639,6 +730,10 @@ const StyleGuidePage: React.FC = () => {
                               <Lock size={16}/>
                               <span className="text-xs font-mono">ENCRYPTED_DATA_BLOCK</span>
                           </div>
+                          <CopySnippet label="Locked" text={`<div className="p-4 bg-slate-50 border border-slate-200 border-dashed flex items-center gap-3 text-slate-400">
+  <Lock size={16}/>
+  <span className="text-xs font-mono">ENCRYPTED</span>
+</div>`} />
                      </div>
                      <div className="space-y-4">
                           <h5 className="text-[9px] font-bold uppercase text-slate-400">Security Alert</h5>
@@ -646,6 +741,10 @@ const StyleGuidePage: React.FC = () => {
                               <ShieldAlert size={16}/>
                               <span className="text-[10px] font-bold uppercase tracking-widest">Unauthorized</span>
                           </div>
+                          <CopySnippet label="Alert" text={`<div className="p-4 bg-red-50 border border-red-100 text-red-800 flex items-center gap-3">
+  <ShieldAlert size={16}/>
+  <span className="text-[10px] font-bold uppercase tracking-widest">Unauthorized</span>
+</div>`} />
                      </div>
                 </div>
             </section>
@@ -654,12 +753,18 @@ const StyleGuidePage: React.FC = () => {
             <section>
                 <SectionHeader id="layout" icon={Grid} title="14. Layout & Grid" subtitle="Structural foundations and spacing tokens." />
                 <div className="space-y-8">
-                     <div className="grid grid-cols-12 gap-2 h-24">
-                          {[...Array(12)].map((_, i) => (
-                              <div key={i} className="bg-ui-blue/10 border border-ui-blue/20 flex items-center justify-center text-[9px] text-ui-blue font-mono">
-                                  Col
-                              </div>
-                          ))}
+                     <div className="space-y-4">
+                        <div className="grid grid-cols-12 gap-2 h-24">
+                              {[...Array(12)].map((_, i) => (
+                                  <div key={i} className="bg-ui-blue/10 border border-ui-blue/20 flex items-center justify-center text-[9px] text-ui-blue font-mono">
+                                      Col
+                                  </div>
+                              ))}
+                        </div>
+                        <CopySnippet label="Grid 12" text={`<div className="grid grid-cols-12 gap-2">
+  <div className="col-span-1">Col 1</div>
+  <div className="col-span-11">Col 11</div>
+</div>`} fullWidth />
                      </div>
                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                           <div>
@@ -753,7 +858,12 @@ const StyleGuidePage: React.FC = () => {
                             <div className="col-span-3">JURISDICTION</div>
                             <div className="col-span-3 text-right">METRIC_STATUS</div>
                         </div>
-                        <CopySnippet label="Header CSS" text="bg-ui-blue text-white px-8 py-5 text-[10px] font-bold uppercase tracking-[0.3em]" fullWidth />
+                        <CopySnippet label="Header CSS" text={`<div className="grid grid-cols-12 gap-4 bg-ui-blue text-white px-8 py-5 text-[10px] font-bold uppercase tracking-[0.3em] border border-ui-blue shadow-lg">
+  <div className="col-span-1">REF</div>
+  <div className="col-span-5">SUBJECT</div>
+  <div className="col-span-3">JURISDICTION</div>
+  <div className="col-span-3 text-right">STATUS</div>
+</div>`} fullWidth />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -764,7 +874,10 @@ const StyleGuidePage: React.FC = () => {
                                 <div className="text-[10px] font-bold text-ui-blue">SYSTEM_LOG_001</div>
                                 <CheckCircle2 size={14} className="text-green-500" />
                             </div>
-                            <CopySnippet label="Row Primary" text="p-4 bg-white border border-slate-200" />
+                            <CopySnippet label="Row Primary" text={`<div className="p-4 bg-white border border-slate-200 flex justify-between items-center">
+  <div className="text-[10px] font-bold text-ui-blue">DATA_001</div>
+  <CheckCircle2 size={14} className="text-green-500" />
+</div>`} />
                         </div>
                         {/* Row: Warning */}
                         <div className="space-y-4">
@@ -773,7 +886,10 @@ const StyleGuidePage: React.FC = () => {
                                 <div className="text-[10px] font-bold text-red-700">UNAUTHORIZED_ACCESS</div>
                                 <AlertTriangle size={14} className="text-red-500" />
                             </div>
-                            <CopySnippet label="Row Conflict" text="p-4 bg-red-50 border border-red-100" />
+                            <CopySnippet label="Row Conflict" text={`<div className="p-4 bg-red-50 border border-red-100 flex justify-between items-center">
+  <div className="text-[10px] font-bold text-red-700">ERROR</div>
+  <AlertTriangle size={14} className="text-red-500" />
+</div>`} />
                         </div>
                         {/* Summary Cell */}
                         <div className="space-y-4">
@@ -782,7 +898,10 @@ const StyleGuidePage: React.FC = () => {
                                 <div className="text-[8px] font-bold uppercase text-slate-400 mb-1">Cumulative Force</div>
                                 <div className="text-2xl font-mono text-ui-blue font-bold tracking-tighter">35,482</div>
                             </div>
-                            <CopySnippet label="Totals Cell" text="bg-slate-100 text-right font-mono" />
+                            <CopySnippet label="Totals Cell" text={`<div className="p-6 bg-slate-100 border border-slate-200 text-right">
+  <div className="text-[8px] font-bold uppercase text-slate-400 mb-1">Total</div>
+  <div className="text-2xl font-mono text-ui-blue font-bold tracking-tighter">0.00</div>
+</div>`} />
                         </div>
                     </div>
                 </div>
@@ -799,7 +918,10 @@ const StyleGuidePage: React.FC = () => {
                             <span className="text-[10px] font-bold uppercase tracking-widest">Category: CEC</span>
                             <X size={12} className="cursor-pointer hover:text-nobel-gold transition-colors" />
                         </div>
-                        <CopySnippet label="Filter Pill" text="px-5 py-2 bg-ui-blue text-white rounded-full" />
+                        <CopySnippet label="Filter Pill" text={`<div className="px-5 py-2 bg-ui-blue text-white rounded-full flex items-center gap-3 w-fit shadow-lg">
+  <span className="text-[10px] font-bold uppercase tracking-widest">Category</span>
+  <X size={12} className="cursor-pointer hover:text-nobel-gold" />
+</div>`} />
                     </div>
                     {/* Checkbox Group */}
                     <div className="space-y-4">
@@ -816,7 +938,12 @@ const StyleGuidePage: React.FC = () => {
                                 <span className="text-[10px] font-bold uppercase text-slate-400">Article 4 Section B</span>
                             </div>
                         </div>
-                        <CopySnippet label="Check Group" text="w-5 h-5 border-2 border-ui-blue" />
+                        <CopySnippet label="Check Group" text={`<div className="flex items-center gap-3">
+  <div className="w-5 h-5 border-2 border-ui-blue bg-white flex items-center justify-center">
+      <Check size={14} className="text-ui-blue" />
+  </div>
+  <span className="text-[10px] font-bold uppercase text-slate-600">Label</span>
+</div>`} />
                     </div>
                     {/* Sort Button */}
                     <div className="space-y-4">
@@ -825,7 +952,10 @@ const StyleGuidePage: React.FC = () => {
                             <SortDesc size={14} className="text-slate-300 group-hover:text-ui-blue" />
                             <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500 group-hover:text-ui-blue">Sequence Index</span>
                         </button>
-                        <CopySnippet label="Sort Btn" text="flex items-center gap-3 px-4 py-2 border" />
+                        <CopySnippet label="Sort Btn" text={`<button className="flex items-center gap-3 px-4 py-2 border border-slate-200 hover:border-ui-blue transition-colors group">
+  <SortDesc size={14} className="text-slate-300 group-hover:text-ui-blue" />
+  <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500 group-hover:text-ui-blue">Sort</span>
+</button>`} />
                     </div>
                     {/* Search Ghost */}
                     <div className="space-y-4">
@@ -834,7 +964,10 @@ const StyleGuidePage: React.FC = () => {
                             <Search size={14} className="absolute left-0 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-nobel-gold" />
                             <input type="text" placeholder="FILTER_SYSTEM_INDEX..." className="w-full bg-transparent border-b border-slate-200 pl-6 py-2 text-[10px] font-mono outline-none focus:border-nobel-gold transition-all" />
                         </div>
-                        <CopySnippet label="Ghost Search" text="border-b bg-transparent pl-6 py-2" />
+                        <CopySnippet label="Ghost Search" text={`<div className="relative group">
+  <Search size={14} className="absolute left-0 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-nobel-gold" />
+  <input type="text" className="w-full bg-transparent border-b border-slate-200 pl-6 py-2 text-[10px] font-mono outline-none focus:border-nobel-gold transition-all" />
+</div>`} />
                     </div>
                 </div>
             </section>
@@ -853,7 +986,13 @@ const StyleGuidePage: React.FC = () => {
                                 <div className="text-[9px] text-slate-400 leading-relaxed">The legislative entry has been successfully committed.</div>
                             </div>
                         </div>
-                        <CopySnippet label="Toast" text="bg-slate-900 border-l-2 border-nobel-gold p-4" />
+                        <CopySnippet label="Toast" text={`<div className="bg-slate-900 text-white p-4 border-l-2 border-nobel-gold shadow-xl flex items-start gap-3">
+  <div className="mt-0.5 text-nobel-gold"><CheckCircle2 size={16} /></div>
+  <div>
+      <div className="text-[10px] font-bold uppercase tracking-widest mb-1">Title</div>
+      <div className="text-[9px] text-slate-400 leading-relaxed">Message</div>
+  </div>
+</div>`} />
                     </div>
                     {/* Empty State */}
                     <div className="space-y-4">
@@ -867,7 +1006,13 @@ const StyleGuidePage: React.FC = () => {
                                 <div className="text-[9px] text-slate-400">Try adjusting your filter parameters.</div>
                             </div>
                         </div>
-                        <CopySnippet label="Empty State" text="p-8 bg-slate-50 border-dashed flex flex-col items-center" />
+                        <CopySnippet label="Empty State" text={`<div className="p-8 bg-slate-50 border border-slate-200 border-dashed flex flex-col items-center justify-center gap-4 text-center">
+  <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center text-slate-400"><Ghost size={24} /></div>
+  <div>
+      <div className="text-[10px] font-bold uppercase text-slate-500 mb-1">No Records</div>
+      <div className="text-[9px] text-slate-400">Message here.</div>
+  </div>
+</div>`} />
                     </div>
                     {/* 404 Visual */}
                     <div className="space-y-4">
@@ -877,7 +1022,11 @@ const StyleGuidePage: React.FC = () => {
                             <div className="text-6xl font-mono font-bold text-white/10 select-none">404</div>
                             <AlertTriangle size={32} className="text-nobel-gold absolute animate-bounce" />
                         </div>
-                        <CopySnippet label="404 Block" text="bg-ui-blue relative flex items-center justify-center" />
+                        <CopySnippet label="404 Block" text={`<div className="aspect-square bg-ui-blue relative overflow-hidden flex items-center justify-center">
+  <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+  <div className="text-6xl font-mono font-bold text-white/10 select-none">404</div>
+  <AlertTriangle size={32} className="text-nobel-gold absolute animate-bounce" />
+</div>`} />
                     </div>
                 </div>
             </section>
@@ -897,7 +1046,7 @@ const StyleGuidePage: React.FC = () => {
                                 </p>
                             </div>
                         </div>
-                        <CopySnippet label="Dropcap" text="text-5xl font-serif text-nobel-gold float-left" />
+                        <CopySnippet label="Dropcap" text={`<span className="text-5xl font-serif font-bold text-nobel-gold leading-[0.8] float-left mr-2 mt-1">T</span>`} />
                     </div>
                     {/* Blockquote */}
                     <div className="space-y-4">
@@ -909,7 +1058,13 @@ const StyleGuidePage: React.FC = () => {
                                 <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">First President, 1948</span>
                             </div>
                         </div>
-                        <CopySnippet label="Blockquote" text="border-l-4 border-ui-blue p-6 bg-slate-50" />
+                        <CopySnippet label="Blockquote" text={`<div className="p-6 bg-slate-50 border-l-4 border-ui-blue">
+  <p className="font-serif text-lg text-ui-blue italic mb-4">"Quote text."</p>
+  <div className="flex items-center gap-2">
+      <div className="h-px w-8 bg-slate-300"></div>
+      <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Author</span>
+  </div>
+</div>`} />
                     </div>
                     {/* Citation */}
                     <div className="space-y-4">
@@ -917,7 +1072,7 @@ const StyleGuidePage: React.FC = () => {
                         <div className="p-4 bg-white border border-slate-200 text-sm text-slate-600">
                             According to the 1972 decree <sup className="text-ui-blue font-bold cursor-pointer hover:text-nobel-gold transition-colors">[12]</sup>, the council holds absolute authority.
                         </div>
-                        <CopySnippet label="Citation" text="sup className='text-ui-blue font-bold cursor-pointer'" />
+                        <CopySnippet label="Citation" text={`<sup className="text-ui-blue font-bold cursor-pointer hover:text-nobel-gold transition-colors">[12]</sup>`} />
                     </div>
                 </div>
             </section>
