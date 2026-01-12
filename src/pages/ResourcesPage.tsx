@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useInView } from 'framer-motion';
+import { useRef } from 'react';
 import {
   Library, Briefcase, GraduationCap, Heart, Brain,
   Rocket, ShoppingBag, Compass, Users, Activity,
@@ -35,24 +37,71 @@ const colorMap: { [key: string]: string } = {
   health: 'bg-red-800'
 };
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08
-    }
-  }
-};
+interface ResourceCardProps {
+  resource: typeof resourceCategories[0];
+  index: number;
+}
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0 }
+const ResourceCard = ({ resource, index }: ResourceCardProps) => {
+  const navigate = useNavigate();
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
+  
+  const Icon = iconMap[resource.id];
+  const bgColor = colorMap[resource.id] || 'bg-slate-800';
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 40 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
+      transition={{ 
+        duration: 0.5, 
+        delay: index * 0.08,
+        ease: [0.25, 0.1, 0.25, 1]
+      }}
+      whileHover={{ y: -8, scale: 1.02 }}
+      onClick={() => navigate(resource.path)}
+      className={`
+        ${bgColor} cursor-pointer shadow-xl border border-white/10 overflow-hidden group 
+        transition-all duration-300 relative h-52
+      `}
+    >
+      {/* Content */}
+      <div className="absolute inset-0 p-6 flex flex-col justify-between z-10 text-white">
+        <div className="flex justify-between items-start">
+          <div className="p-2.5 bg-white/10 backdrop-blur-md border border-white/10">
+            {Icon && <Icon size={22} />}
+          </div>
+          <div className="w-8 h-8 flex items-center justify-center border border-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:rotate-45">
+            <ArrowRight size={14} />
+          </div>
+        </div>
+        
+        <div>
+          <p className="text-[9px] font-bold uppercase tracking-[0.3em] opacity-60 mb-2">Resource</p>
+          <h3 className="font-serif text-2xl leading-tight tracking-tight mb-2">
+            {resource.title}
+          </h3>
+          <p className="text-xs text-white/60 line-clamp-2 leading-relaxed">
+            {resource.description}
+          </p>
+          <div className="w-0 group-hover:w-10 h-0.5 bg-nobel-gold mt-3 transition-all duration-500" />
+        </div>
+      </div>
+
+      {/* Decorative Elements */}
+      <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-white/5 to-transparent pointer-events-none opacity-50" />
+      <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-black/20 rounded-full blur-3xl group-hover:bg-nobel-gold/10 transition-colors duration-700"></div>
+    </motion.div>
+  );
 };
 
 const ResourcesPage = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const headerRef = useRef(null);
+  const isHeaderInView = useInView(headerRef, { once: true });
 
   const filteredResources = resourceCategories.filter(resource =>
     resource.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -82,8 +131,10 @@ const ResourcesPage = () => {
 
         {/* Hero Section */}
         <motion.div
+          ref={headerRef}
           initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          animate={isHeaderInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ duration: 0.6 }}
           className="mb-16"
         >
           <div className="flex items-center gap-3 mb-4">
@@ -115,11 +166,7 @@ const ResourcesPage = () => {
         </motion.div>
 
         {/* Category Cards Grid */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
+        <div>
           <div className="flex items-center gap-3 mb-8">
             <div className="w-8 h-0.5 bg-nobel-gold"></div>
             <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-slate-400">Browse Categories</h2>
@@ -142,71 +189,12 @@ const ResourcesPage = () => {
             </motion.div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredResources.map((resource, index) => {
-                const Icon = iconMap[resource.id];
-                const bgColor = colorMap[resource.id] || 'bg-slate-800';
-
-                return (
-                  <motion.div
-                    key={resource.id}
-                    variants={itemVariants}
-                    whileHover={{ y: -8, scale: 1.02 }}
-                    animate={{ 
-                      y: [0, -2, 0],
-                    }}
-                    transition={{
-                      y: { duration: 2.5 + index * 0.2, repeat: Infinity, ease: "easeInOut" },
-                    }}
-                    onClick={() => navigate(resource.path)}
-                    className={`
-                      ${bgColor} cursor-pointer shadow-xl border border-white/10 overflow-hidden group 
-                      transition-all duration-300 relative h-52
-                    `}
-                  >
-                    {/* Content */}
-                    <div className="absolute inset-0 p-6 flex flex-col justify-between z-10 text-white">
-                      <div className="flex justify-between items-start">
-                        <motion.div 
-                          className="p-2.5 bg-white/10 backdrop-blur-md border border-white/10"
-                          animate={{ scale: [1, 1.05, 1] }}
-                          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: index * 0.15 }}
-                        >
-                          {Icon && <Icon size={22} />}
-                        </motion.div>
-                        <div className="w-8 h-8 flex items-center justify-center border border-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:rotate-45">
-                          <ArrowRight size={14} />
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <p className="text-[9px] font-bold uppercase tracking-[0.3em] opacity-60 mb-2">Resource</p>
-                        <h3 className="font-serif text-2xl leading-tight tracking-tight mb-2">
-                          {resource.title}
-                        </h3>
-                        <p className="text-xs text-white/60 line-clamp-2 leading-relaxed">
-                          {resource.description}
-                        </p>
-                        <motion.div 
-                          className="w-0 group-hover:w-10 h-0.5 bg-nobel-gold mt-3 transition-all duration-500"
-                          animate={{ opacity: [0.7, 1, 0.7] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Decorative Elements */}
-                    <motion.div 
-                      className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-white/5 to-transparent pointer-events-none"
-                      animate={{ opacity: [0.3, 0.6, 0.3] }}
-                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                    <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-black/20 rounded-full blur-3xl group-hover:bg-nobel-gold/10 transition-colors duration-700"></div>
-                  </motion.div>
-                );
-              })}
+              {filteredResources.map((resource, index) => (
+                <ResourceCard key={resource.id} resource={resource} index={index} />
+              ))}
             </div>
           )}
-        </motion.div>
+        </div>
 
         {/* Footer CTA */}
         <motion.div

@@ -107,6 +107,7 @@ export const Footer = () => {
                 <div className="flex gap-6">
                     <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
                     <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+                    <Link to="/style-guide" className="hover:text-white transition-colors">Style Guide</Link>
                 </div>
                 <span>&copy; {new Date().getFullYear()} UISU Archive.</span>
             </div>

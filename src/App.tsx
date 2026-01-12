@@ -37,6 +37,7 @@ const StudentMartPage = lazy(() => import("./pages/resources/StudentMartPage"));
 const FreshersGuidePage = lazy(() => import("./pages/resources/FreshersGuidePage"));
 const CareerPathfinderPage = lazy(() => import("./pages/resources/CareerPathfinderPage"));
 const CampusHealthPage = lazy(() => import("./pages/resources/CampusHealthPage"));
+const StyleGuidePage = lazy(() => import("./pages/StyleGuidePage"));
 
 const queryClient = new QueryClient();
 
@@ -86,6 +87,9 @@ const AppRoutes = () => {
         <Route path="/resources/freshers-guide" element={<PageWrapper><FreshersGuidePage /></PageWrapper>} />
         <Route path="/resources/career-pathfinder" element={<PageWrapper><CareerPathfinderPage /></PageWrapper>} />
         <Route path="/resources/campus-health" element={<PageWrapper><CampusHealthPage /></PageWrapper>} />
+
+        {/* Style Guide - only linked from footer */}
+        <Route path="/style-guide" element={<PageWrapper><StyleGuidePage /></PageWrapper>} />
 
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
