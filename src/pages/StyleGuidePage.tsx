@@ -143,6 +143,10 @@ const StyleGuidePage: React.FC = () => {
     { id: 'layout', label: 'Layout & Grid', icon: Grid },
     { id: 'brand', label: 'Brand Identity', icon: Star },
     { id: 'utilities', label: 'Utilities & Helpers', icon: Code },
+    { id: 'tabular', label: 'Tabular Matrix', icon: LayoutGrid },
+    { id: 'admin', label: 'Admin Controls', icon: Sliders },
+    { id: 'feedback', label: 'System Feedback', icon: MessageSquare },
+    { id: 'editorial', label: 'Rich Text & Editorial', icon: FileText },
   ];
 
   const handlePrint = () => {
@@ -716,7 +720,7 @@ const StyleGuidePage: React.FC = () => {
             </section>
 
             {/* 16. Utilities & Helpers */}
-            <section className="mb-32">
+            <section>
                 <SectionHeader id="utilities" icon={Code} title="16. Utilities & Helpers" subtitle="Functional classes and mixins for rapid development." />
                 <div className="grid grid-cols-1 gap-6">
                      <div className="bg-slate-900 text-slate-300 p-6 font-mono text-xs overflow-x-auto border border-white/10">
@@ -733,6 +737,188 @@ const StyleGuidePage: React.FC = () => {
                               @media print &#123; .no-print &#123; display: none !important; &#125; &#125;
                           </div>
                      </div>
+                </div>
+            </section>
+
+            {/* 17. Tabular Matrix */}
+            <section>
+                <SectionHeader id="tabular" icon={LayoutGrid} title="17. Tabular Matrix" subtitle="Complex data rendering for legislative and administrative records." />
+                <div className="space-y-8">
+                    {/* Header Archetype */}
+                    <div className="space-y-4">
+                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Legislative Header Archetype</h5>
+                        <div className="grid grid-cols-12 gap-4 bg-ui-blue text-white px-8 py-5 text-[10px] font-bold uppercase tracking-[0.3em] border border-ui-blue shadow-lg">
+                            <div className="col-span-1">REF</div>
+                            <div className="col-span-5">SUBJECT_NOMENCLATURE</div>
+                            <div className="col-span-3">JURISDICTION</div>
+                            <div className="col-span-3 text-right">METRIC_STATUS</div>
+                        </div>
+                        <CopySnippet label="Header CSS" text="bg-ui-blue text-white px-8 py-5 text-[10px] font-bold uppercase tracking-[0.3em]" fullWidth />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {/* Row: Standard */}
+                        <div className="space-y-4">
+                            <h5 className="text-[9px] font-bold uppercase text-slate-400">Data Row: Primary</h5>
+                            <div className="p-4 bg-white border border-slate-200 flex justify-between items-center">
+                                <div className="text-[10px] font-bold text-ui-blue">SYSTEM_LOG_001</div>
+                                <CheckCircle2 size={14} className="text-green-500" />
+                            </div>
+                            <CopySnippet label="Row Primary" text="p-4 bg-white border border-slate-200" />
+                        </div>
+                        {/* Row: Warning */}
+                        <div className="space-y-4">
+                            <h5 className="text-[9px] font-bold uppercase text-slate-400">Data Row: Conflict</h5>
+                            <div className="p-4 bg-red-50 border border-red-100 flex justify-between items-center">
+                                <div className="text-[10px] font-bold text-red-700">UNAUTHORIZED_ACCESS</div>
+                                <AlertTriangle size={14} className="text-red-500" />
+                            </div>
+                            <CopySnippet label="Row Conflict" text="p-4 bg-red-50 border border-red-100" />
+                        </div>
+                        {/* Summary Cell */}
+                        <div className="space-y-4">
+                            <h5 className="text-[9px] font-bold uppercase text-slate-400">Ledger Totals Cell</h5>
+                            <div className="p-6 bg-slate-100 border border-slate-200 text-right">
+                                <div className="text-[8px] font-bold uppercase text-slate-400 mb-1">Cumulative Force</div>
+                                <div className="text-2xl font-mono text-ui-blue font-bold tracking-tighter">35,482</div>
+                            </div>
+                            <CopySnippet label="Totals Cell" text="bg-slate-100 text-right font-mono" />
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* 18. Administrative Controls */}
+            <section>
+                <SectionHeader id="admin" icon={Sliders} title="18. Administrative Controls" subtitle="Interactive elements for system governance." />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {/* Filter Pill */}
+                    <div className="space-y-4">
+                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Filter Logic Pill</h5>
+                        <div className="px-5 py-2 bg-ui-blue text-white rounded-full flex items-center gap-3 w-fit shadow-lg">
+                            <span className="text-[10px] font-bold uppercase tracking-widest">Category: CEC</span>
+                            <X size={12} className="cursor-pointer hover:text-nobel-gold transition-colors" />
+                        </div>
+                        <CopySnippet label="Filter Pill" text="px-5 py-2 bg-ui-blue text-white rounded-full" />
+                    </div>
+                    {/* Checkbox Group */}
+                    <div className="space-y-4">
+                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Legislative Checklist</h5>
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                                <div className="w-5 h-5 border-2 border-ui-blue bg-white flex items-center justify-center">
+                                    <Check size={14} className="text-ui-blue" />
+                                </div>
+                                <span className="text-[10px] font-bold uppercase text-slate-600">Article 4 Section A</span>
+                            </div>
+                            <div className="flex items-center gap-3 opacity-40">
+                                <div className="w-5 h-5 border-2 border-slate-300 bg-white"></div>
+                                <span className="text-[10px] font-bold uppercase text-slate-400">Article 4 Section B</span>
+                            </div>
+                        </div>
+                        <CopySnippet label="Check Group" text="w-5 h-5 border-2 border-ui-blue" />
+                    </div>
+                    {/* Sort Button */}
+                    <div className="space-y-4">
+                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Ordering Controller</h5>
+                        <button className="flex items-center gap-3 px-4 py-2 border border-slate-200 hover:border-ui-blue transition-colors group">
+                            <SortDesc size={14} className="text-slate-300 group-hover:text-ui-blue" />
+                            <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500 group-hover:text-ui-blue">Sequence Index</span>
+                        </button>
+                        <CopySnippet label="Sort Btn" text="flex items-center gap-3 px-4 py-2 border" />
+                    </div>
+                    {/* Search Ghost */}
+                    <div className="space-y-4">
+                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Search Module: Ghost</h5>
+                        <div className="relative group">
+                            <Search size={14} className="absolute left-0 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-nobel-gold" />
+                            <input type="text" placeholder="FILTER_SYSTEM_INDEX..." className="w-full bg-transparent border-b border-slate-200 pl-6 py-2 text-[10px] font-mono outline-none focus:border-nobel-gold transition-all" />
+                        </div>
+                        <CopySnippet label="Ghost Search" text="border-b bg-transparent pl-6 py-2" />
+                    </div>
+                </div>
+            </section>
+
+            {/* 19. Empty States & Feedback */}
+            <section>
+                <SectionHeader id="feedback" icon={MessageSquare} title="19. System Feedback" subtitle="Visual signals for status and wayfinding." />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {/* Toast */}
+                    <div className="space-y-4">
+                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Toast Notification</h5>
+                        <div className="bg-slate-900 text-white p-4 border-l-2 border-nobel-gold shadow-xl flex items-start gap-3">
+                            <div className="mt-0.5 text-nobel-gold"><CheckCircle2 size={16} /></div>
+                            <div>
+                                <div className="text-[10px] font-bold uppercase tracking-widest mb-1">Record Archived</div>
+                                <div className="text-[9px] text-slate-400 leading-relaxed">The legislative entry has been successfully committed.</div>
+                            </div>
+                        </div>
+                        <CopySnippet label="Toast" text="bg-slate-900 border-l-2 border-nobel-gold p-4" />
+                    </div>
+                    {/* Empty State */}
+                    <div className="space-y-4">
+                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Empty State: Null</h5>
+                        <div className="p-8 bg-slate-50 border border-slate-200 border-dashed flex flex-col items-center justify-center gap-4 text-center">
+                            <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center text-slate-400">
+                                <Ghost size={24} />
+                            </div>
+                            <div>
+                                <div className="text-[10px] font-bold uppercase text-slate-500 mb-1">No Records Found</div>
+                                <div className="text-[9px] text-slate-400">Try adjusting your filter parameters.</div>
+                            </div>
+                        </div>
+                        <CopySnippet label="Empty State" text="p-8 bg-slate-50 border-dashed flex flex-col items-center" />
+                    </div>
+                    {/* 404 Visual */}
+                    <div className="space-y-4">
+                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Error Visual: 404</h5>
+                        <div className="aspect-square bg-ui-blue relative overflow-hidden flex items-center justify-center">
+                            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+                            <div className="text-6xl font-mono font-bold text-white/10 select-none">404</div>
+                            <AlertTriangle size={32} className="text-nobel-gold absolute animate-bounce" />
+                        </div>
+                        <CopySnippet label="404 Block" text="bg-ui-blue relative flex items-center justify-center" />
+                    </div>
+                </div>
+            </section>
+
+            {/* 20. Rich Text & Editorial */}
+            <section className="mb-32">
+                <SectionHeader id="editorial" icon={FileText} title="20. Rich Text & Editorial" subtitle="Typography for long-form content." />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Dropcap */}
+                    <div className="space-y-4">
+                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Ornate Dropcap</h5>
+                        <div className="p-6 bg-white border border-slate-200">
+                            <div className="flex items-start gap-3">
+                                <span className="text-5xl font-serif font-bold text-nobel-gold leading-[0.8] float-left mr-2 mt-1">T</span>
+                                <p className="text-sm text-slate-600 leading-relaxed font-light">
+                                    The foundations of the Union were laid not in brick, but in the collective consciousness of a new academic era. It began as a whisper in the halls.
+                                </p>
+                            </div>
+                        </div>
+                        <CopySnippet label="Dropcap" text="text-5xl font-serif text-nobel-gold float-left" />
+                    </div>
+                    {/* Blockquote */}
+                    <div className="space-y-4">
+                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Editorial Blockquote</h5>
+                        <div className="p-6 bg-slate-50 border-l-4 border-ui-blue">
+                            <p className="font-serif text-lg text-ui-blue italic mb-4">"We must be the architects of our own intellectual destiny."</p>
+                            <div className="flex items-center gap-2">
+                                <div className="h-px w-8 bg-slate-300"></div>
+                                <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">First President, 1948</span>
+                            </div>
+                        </div>
+                        <CopySnippet label="Blockquote" text="border-l-4 border-ui-blue p-6 bg-slate-50" />
+                    </div>
+                    {/* Citation */}
+                    <div className="space-y-4">
+                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Inline Citation</h5>
+                        <div className="p-4 bg-white border border-slate-200 text-sm text-slate-600">
+                            According to the 1972 decree <sup className="text-ui-blue font-bold cursor-pointer hover:text-nobel-gold transition-colors">[12]</sup>, the council holds absolute authority.
+                        </div>
+                        <CopySnippet label="Citation" text="sup className='text-ui-blue font-bold cursor-pointer'" />
+                    </div>
                 </div>
             </section>
 
