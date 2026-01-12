@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Library, Briefcase, GraduationCap, Heart, Brain,
   Rocket, ShoppingBag, Compass, Users, Activity,
-  ArrowRight, ArrowLeft
+  ArrowLeft, Search
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { resourceCategories } from '@/lib/data';
@@ -52,39 +52,12 @@ const itemVariants = {
 
 const ResourcesPage = () => {
   const navigate = useNavigate();
-  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Featured resources for the text grid
-  const featuredResources = [
-    {
-      title: "E-library with course materials",
-      description: "Access past questions, lecture notes, and textbooks from all 13 faculties.",
-      stat: "500+ files",
-      link: "/resources/academic-bank",
-      linkText: "Browse library"
-    },
-    {
-      title: "Career opportunities",
-      description: "Internships, job listings, and CV templates to kickstart your career.",
-      stat: "50+ listings",
-      link: "/resources/career-hub",
-      linkText: "See opportunities"
-    },
-    {
-      title: "Scholarship database",
-      description: "Local and international funding opportunities curated for UI students.",
-      stat: "100+ scholarships",
-      link: "/resources/scholarships",
-      linkText: "Find scholarships"
-    },
-    {
-      title: "Wellness resources",
-      description: "Mental health support, counseling services, and self-care tools.",
-      stat: "24/7 support",
-      link: "/resources/mental-wellness",
-      linkText: "Get help"
-    }
-  ];
+  const filteredResources = resourceCategories.filter(resource =>
+    resource.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    resource.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 pt-28 pb-16">
@@ -93,7 +66,7 @@ const ResourcesPage = () => {
         description="Access a wealth of resources including academic materials, career tips, scholarships, and more."
       />
 
-      <div className="container mx-auto px-6 lg:px-12">
+      <div className="container mx-auto px-6 lg:px-12 max-w-5xl">
         {/* Back button */}
         <button
           onClick={() => navigate('/')}
@@ -109,41 +82,28 @@ const ResourcesPage = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-16"
+          className="mb-12 text-center"
         >
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif text-slate-900 leading-[0.95] mb-8">
-            Resources for<br />
-            <span className="italic text-slate-400">your success</span>
+          <h1 className="text-4xl md:text-6xl font-serif text-slate-900 leading-tight mb-4">
+            Resources for <span className="italic text-slate-400">your success</span>
           </h1>
-        </motion.div>
+          <p className="text-slate-500 max-w-xl mx-auto mb-8">
+            Everything you need to excel in your academic journey.
+          </p>
 
-        {/* Featured Grid - Text Links */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-12 gap-y-8 mb-20 border-b border-slate-200 pb-16"
-        >
-          {featuredResources.map((item, index) => (
-            <motion.div
-              key={index}
-              variants={itemVariants}
-              className="group"
-            >
-              <p className="text-sm text-slate-600 leading-relaxed mb-4">
-                {item.description}
-              </p>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-slate-400">{item.stat}</span>
-                <button
-                  onClick={() => navigate(item.link)}
-                  className="text-sm font-semibold text-slate-900 underline underline-offset-4 hover:text-nobel-gold transition-colors"
-                >
-                  {item.linkText}
-                </button>
-              </div>
-            </motion.div>
-          ))}
+          {/* Search Bar */}
+          <div className="max-w-2xl mx-auto relative mb-16">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+              <Search size={20} />
+            </div>
+            <input
+              type="text"
+              placeholder="Try a search instead"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-4 rounded-xl border-none shadow-sm focus:ring-2 focus:ring-slate-200 bg-white text-slate-900 placeholder:text-slate-400 text-lg outline-none"
+            />
+          </div>
         </motion.div>
 
         {/* Category Cards Grid */}
@@ -151,71 +111,49 @@ const ResourcesPage = () => {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
         >
-          {resourceCategories.map((resource, index) => {
-            const Icon = iconMap[resource.id];
-            const bgColor = colorMap[resource.id] || 'bg-slate-100';
-            const isHovered = hoveredCard === resource.id;
-            
-            return (
-              <motion.div
-                key={resource.id}
-                variants={itemVariants}
-                onClick={() => navigate(resource.path)}
-                onMouseEnter={() => setHoveredCard(resource.id)}
-                onMouseLeave={() => setHoveredCard(null)}
-                className={`
-                  ${bgColor} rounded-2xl p-6 cursor-pointer transition-all duration-300
-                  ${isHovered ? 'shadow-xl -translate-y-1' : 'shadow-sm'}
-                  min-h-[280px] flex flex-col justify-between relative overflow-hidden
-                `}
-              >
-                {/* Icon */}
-                <div className="w-12 h-12 rounded-xl bg-slate-900/10 flex items-center justify-center mb-auto">
-                  {Icon && <Icon size={24} className="text-slate-900" />}
-                </div>
+          <h2 className="text-xl font-bold text-slate-900 mb-6">Browse by subject</h2>
 
-                {/* Content */}
-                <div className="mt-auto">
-                  <span className="text-xs font-medium text-slate-500 mb-2 block">
-                    {String(index + 1).padStart(2, '0')}.
-                  </span>
-                  <h3 className="font-serif text-xl font-bold text-slate-900 mb-3 leading-tight">
-                    {resource.title}
-                  </h3>
-                  
-                  {/* Expanded content on hover */}
-                  <motion.div
-                    initial={false}
-                    animate={{ 
-                      height: isHovered ? 'auto' : 0,
-                      opacity: isHovered ? 1 : 0
-                    }}
-                    className="overflow-hidden"
-                  >
-                    <p className="text-sm text-slate-600 mb-4 leading-relaxed">
-                      {resource.description}
-                    </p>
-                  </motion.div>
+          {filteredResources.length === 0 ? (
+             <div className="text-center py-12">
+               <p className="text-slate-500">No resources found matching your search.</p>
+             </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredResources.map((resource) => {
+                const Icon = iconMap[resource.id];
+                const bgColor = colorMap[resource.id] || 'bg-slate-100';
 
-                  {/* Arrow button */}
+                return (
                   <motion.div
-                    initial={false}
-                    animate={{ 
-                      opacity: isHovered ? 1 : 0,
-                      x: isHovered ? 0 : -10
-                    }}
-                    className="flex items-center gap-2 text-sm font-semibold text-slate-900"
+                    key={resource.id}
+                    variants={itemVariants}
+                    onClick={() => navigate(resource.path)}
+                    className={`
+                      ${bgColor} rounded-2xl p-6 cursor-pointer transition-all duration-300
+                      hover:shadow-lg hover:-translate-y-1
+                      min-h-[120px] flex items-center justify-between relative overflow-hidden group
+                    `}
                   >
-                    <div className="w-8 h-8 rounded-full border border-slate-900 flex items-center justify-center">
-                      <ArrowRight size={14} />
+                     {/* Title */}
+                     <div className="z-10 relative max-w-[70%]">
+                        <h3 className="font-serif text-2xl font-bold text-slate-900 leading-tight">
+                          {resource.title}
+                        </h3>
+                     </div>
+
+                    {/* Icon */}
+                    <div className="z-10 relative w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
+                      {Icon && <Icon size={32} className="text-slate-900" />}
                     </div>
+
+                    {/* Decorative Background Element (Subtle) */}
+                    <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-colors" />
                   </motion.div>
-                </div>
-              </motion.div>
-            );
-          })}
+                );
+              })}
+            </div>
+          )}
         </motion.div>
       </div>
     </div>
