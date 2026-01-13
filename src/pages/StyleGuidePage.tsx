@@ -1,8 +1,7 @@
-
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
-*/
+ */
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,143 +9,321 @@ import { Link } from 'react-router-dom';
 import { 
   ArrowLeft, ArrowRight, Star, Palette, Type, LayoutGrid, Zap,
   ShieldCheck, Box, Layers, MousePointer2, Copy, Check, Code,
-  Terminal, Component, ChevronRight, User, Search, Fingerprint,
-  Book, Award, Shield, Landmark, Bell, Calendar, Mail, Info,
-  Download, ExternalLink, Play, Trash2, Plus, Minus, Menu, X,
+  Terminal, ChevronRight, User, Search, Fingerprint,
+  Book, Award, Shield, Landmark, Bell, Info,
+  Download, Play, Trash2, Plus, X, Menu,
   Settings, Activity, Globe, Scale, Mic, Gavel, Coins, Trophy,
   AlertTriangle, CheckCircle2, XCircle, MoreHorizontal, Home,
   MessageSquare, Archive, ShieldAlert, ChevronDown, ChevronUp,
-  RefreshCcw, BarChart3, ListFilter, Sliders, Eye, EyeOff, Lock,
-  Unlock, FileText, Database, Cloud, FileCheck, UserCircle,
-  Hash, QrCode, HardDrive, History, Monitor, Command, Edit3,
-  Signature, MoreVertical, LogOut, ChevronLeft, Files, Ghost,
-  CreditCard, ClipboardCheck, GraduationCap, Bus, Wallet, Sparkles,
-  Filter, SortDesc, Square, Smartphone, Map, Image as ImageIcon,
-  Printer, Grid, Layout
+  RefreshCcw, BarChart3, ListFilter, Sliders, Eye, Lock,
+  FileText, Database, UserCircle,
+  Hash, Monitor, Command, Edit3,
+  GraduationCap, Sparkles,
+  Filter, SortDesc, Grid, Printer, Ghost,
+  Flag, Share2, ChevronLeft, Ruler, Clock, Mail, Phone,
+  Heart, Target, Users, Cpu, Loader2, Image as ImageIcon, RotateCcw, Map
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
+import { BarChart, Bar, XAxis, CartesianGrid, ResponsiveContainer, LineChart, Line } from 'recharts';
 
 // --- UTILITY COMPONENTS ---
 
-const CopySnippet = ({ text, label, fullWidth = false }: { text: string; label?: string; fullWidth?: boolean }) => {
+const CodeBlock = ({ code }: { code: string }) => {
   const [copied, setCopied] = useState(false);
-
   const handleCopy = () => {
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
   return (
-    <div className={`group relative flex items-center justify-between bg-slate-900 text-slate-300 p-3 rounded-none border border-white/10 font-mono text-[10px] overflow-hidden ${fullWidth ? 'w-full' : ''} no-print`}>
-      <div className="flex flex-col flex-1 min-w-0">
-        {label && <span className="text-[8px] text-slate-500 uppercase tracking-widest mb-1">{label}</span>}
-        <span className="truncate pr-2">{text}</span>
+    <div className="relative mt-2 no-print">
+      <div className="bg-slate-900 p-4 font-mono text-[10px] text-slate-400 overflow-x-auto border border-white/5 max-h-40 overflow-y-auto">
+        <pre className="whitespace-pre-wrap">{code}</pre>
       </div>
-      <button
+      <button 
         onClick={handleCopy}
-        className="shrink-0 p-2 bg-white/5 hover:bg-nobel-gold hover:text-ui-blue transition-all"
-        title="Copy to clipboard"
+        className="absolute top-2 right-2 px-2 py-1 bg-white/5 hover:bg-accent hover:text-primary text-[8px] font-bold uppercase tracking-widest transition-all"
       >
-        {copied ? <Check size={14} /> : <Copy size={14} />}
+        {copied ? 'Copied' : 'Copy JSX'}
       </button>
-      <AnimatePresence>
-        {copied && (
-          <motion.div
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0 }}
-            className="absolute right-12 bg-nobel-gold text-ui-blue px-2 py-1 text-[8px] font-bold uppercase tracking-widest shadow-lg"
-          >
-            Copied
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
 
-const SectionHeader = ({ icon: Icon, title, subtitle, id }: { icon: any, title: string, subtitle?: string, id: string }) => (
-  <div id={id} className="scroll-mt-32 mb-12 pb-4 border-b border-slate-200 mt-24 first:mt-0 break-inside-avoid-page">
-    <div className="flex items-center gap-3 text-xs font-bold text-slate-400 uppercase tracking-[0.3em] mb-2">
-      <Icon size={16} /> {title}
+const SectionHeader = ({ id, icon: Icon, title, subtitle }: { id: string; icon: any; title: string; subtitle: string }) => (
+  <div id={id} className="pt-32 mb-12 border-b border-slate-200 pb-6 scroll-mt-32 break-inside-avoid-page">
+    <div className="flex items-center gap-4 text-primary mb-2">
+      <Icon size={24} />
+      <h2 className="text-3xl font-serif italic">{title}</h2>
     </div>
-    {subtitle && <p className="text-sm text-slate-500 font-light">{subtitle}</p>}
+    <p className="text-slate-500 font-light tracking-wide">{subtitle}</p>
   </div>
 );
 
-interface ColorSwatchProps {
-    name: string;
-    hex: string;
-    usage: string;
-    variants?: { name: string; hex: string }[];
-}
-
-const ColorSwatch: React.FC<ColorSwatchProps> = ({ name, hex, usage, variants }) => (
-    <div className="bg-white border border-slate-200 p-6 flex flex-col gap-4 shadow-sm group hover:border-nobel-gold transition-colors break-inside-avoid">
-        <div
-            className="w-full h-32 border border-slate-100 group-hover:scale-[1.02] transition-transform shadow-inner relative overflow-hidden print:border-slate-300"
-            style={{ backgroundColor: hex }}
-        >
-          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay print:hidden"></div>
-        </div>
-        <div>
-            <div className="flex justify-between items-center mb-1">
-                <span className="font-serif text-xl text-ui-blue">{name}</span>
-            </div>
-            <p className="text-[9px] uppercase font-bold tracking-widest text-slate-400 mb-4 h-12 overflow-hidden">{usage}</p>
-
-            <div className="space-y-4">
-                <CopySnippet label="Primary HEX" text={hex} fullWidth />
-
-                {variants && (
-                    <div className="space-y-2 pt-2 border-t border-slate-50">
-                        <span className="text-[8px] font-bold uppercase tracking-[0.3em] text-slate-300">Tonal Registry</span>
-                        <div className="flex gap-2">
-                           {variants.map(v => (
-                               <div
-                                 key={v.hex}
-                                 className="w-full h-6 border border-slate-100 cursor-pointer hover:scale-105 transition-transform print:border-slate-300"
-                                 style={{ backgroundColor: v.hex }}
-                                 title={`${v.name}: ${v.hex}`}
-                                 onClick={() => navigator.clipboard.writeText(v.hex)}
-                               ></div>
-                           ))}
-                        </div>
-                    </div>
-                )}
-            </div>
-        </div>
+const RegistryItem = ({ title, code, children, description }: { title: string; code: string; children?: React.ReactNode; description?: string }) => (
+  <div className="mb-8 group break-inside-avoid">
+    <div className="flex justify-between items-end mb-4">
+      <div>
+        <h4 className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">{title}</h4>
+        {description && <p className="text-xs text-slate-500 mt-1">{description}</p>}
+      </div>
     </div>
+    <div className="p-8 bg-white border border-slate-200 flex items-center justify-center min-h-[160px] relative overflow-hidden shadow-sm print:border-slate-300">
+      <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[radial-gradient(#000_1px,transparent_1px)] bg-[size:20px_20px] print:hidden"></div>
+      {children}
+    </div>
+    <CodeBlock code={code} />
+  </div>
+);
+
+const ColorBox = ({ name, hex, usage, variants }: { name: string; hex: string; usage: string; variants?: { name: string; hex: string }[] }) => (
+  <div className="bg-white border border-slate-200 p-6 flex flex-col gap-6 shadow-sm group hover:border-accent transition-colors break-inside-avoid">
+    <div 
+      className="w-full h-40 border border-slate-100 group-hover:scale-[1.02] transition-transform duration-500 shadow-inner relative overflow-hidden print:border-slate-300" 
+      style={{ backgroundColor: hex }} 
+    >
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay print:hidden"></div>
+    </div>
+    <div>
+      <span className="font-serif text-2xl text-primary block mb-2">{name}</span>
+      <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-400 mb-6 h-12 overflow-hidden">{usage}</p>
+      <div className="bg-slate-900 p-3 flex justify-between items-center text-[10px] font-mono text-accent shadow-lg no-print">
+        <span>{hex}</span>
+        <Copy size={12} className="cursor-pointer hover:text-white transition-colors" onClick={() => navigator.clipboard.writeText(hex)} />
+      </div>
+      {variants && (
+        <div className="space-y-2 pt-4 mt-4 border-t border-slate-100">
+          <span className="text-[8px] font-bold uppercase tracking-[0.3em] text-slate-300">Tonal Registry</span>
+          <div className="flex gap-2">
+            {variants.map(v => (
+              <div
+                key={v.hex}
+                className="w-full h-6 border border-slate-100 cursor-pointer hover:scale-105 transition-transform print:border-slate-300"
+                style={{ backgroundColor: v.hex }}
+                title={`${v.name}: ${v.hex}`}
+                onClick={() => navigator.clipboard.writeText(v.hex)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+// --- AI COMPONENT ARCHITECT ---
+
+const AIComponentArchitect = () => {
+  const [prompt, setPrompt] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{ type: 'existing' | 'generated' | 'error', content: any } | null>(null);
+
+  const registryMapping = [
+    { id: 'cat-1', keywords: ['color', 'blue', 'gold', 'palette', 'chromatic', 'hex'] },
+    { id: 'cat-2', keywords: ['font', 'text', 'heading', 'typography', 'serif', 'mono', 'type'] },
+    { id: 'cat-3', keywords: ['icon', 'shield', 'gavel', 'star', 'symbol', 'lucide'] },
+    { id: 'cat-4', keywords: ['menu', 'nav', 'breadcrumb', 'spatial', 'link', 'sidebar', 'navigation'] },
+    { id: 'cat-5', keywords: ['loader', 'loading', 'spinner', 'progress', 'skeleton'] },
+    { id: 'cat-6', keywords: ['button', 'cta', 'click', 'command', 'action', 'execute', 'form', 'input'] },
+    { id: 'cat-7', keywords: ['table', 'list', 'ledger', 'row', 'grid', 'matrix', 'listing'] },
+    { id: 'cat-8', keywords: ['chart', 'graph', 'bar', 'line', 'data', 'visualization', 'diagram', 'flow'] },
+    { id: 'cat-9', keywords: ['3d', 'immersive', 'canvas', 'webgl', 'three'] },
+    { id: 'cat-10', keywords: ['card', 'box', 'announcement', 'container', 'artifact'] },
+    { id: 'cat-11', keywords: ['decor', 'animation', 'texture', 'grain', 'pattern'] },
+    { id: 'cat-12', keywords: ['asset', 'media', 'image', 'audio', 'player'] },
+    { id: 'cat-13', keywords: ['security', 'auth', 'identity', 'verification', 'badge'] },
+    { id: 'cat-14', keywords: ['layout', 'grid', 'spacing', 'container', 'structure'] },
+    { id: 'cat-15', keywords: ['brand', 'logo', 'tone', 'voice', 'identity'] },
+    { id: 'cat-16', keywords: ['utility', 'helper', 'mixin', 'class'] },
+    { id: 'cat-17', keywords: ['tabular', 'header', 'cell', 'ledger'] },
+    { id: 'cat-18', keywords: ['admin', 'control', 'filter', 'sort', 'checkbox'] },
+    { id: 'cat-19', keywords: ['toast', 'alert', 'message', 'feedback', 'notification', 'empty'] },
+    { id: 'cat-20', keywords: ['rich', 'editorial', 'dropcap', 'blockquote', 'citation'] },
+    { id: 'cat-21', keywords: ['overlay', 'modal', 'popup', 'dialog'] },
+    { id: 'cat-22', keywords: ['tab', 'control', 'segmented', 'pill'] },
+    { id: 'cat-23', keywords: ['merit', 'award', 'badge', 'medal'] },
+    { id: 'cat-24', keywords: ['tooltip', 'hint', 'info', 'slate'] },
+  ];
+
+  const handleArchitect = async () => {
+    if (!prompt.trim()) return;
+    setLoading(true);
+    setResult(null);
+
+    // Check for existing components
+    const searchLower = prompt.toLowerCase();
+    const existing = registryMapping.find(cat => 
+      cat.keywords.some(k => searchLower.includes(k))
+    );
+
+    if (existing) {
+      setResult({
+        type: 'existing',
+        content: existing.id
+      });
+      setLoading(false);
+      const element = document.getElementById(existing.id);
+      if (element) element.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+
+    // Simulate AI response for components not in registry
+    setTimeout(() => {
+      setResult({
+        type: 'generated',
+        content: {
+          name: `Custom ${prompt} Component`,
+          description: `A custom component for "${prompt}" following the Aluta Protocol design system.`,
+          code: `<div className="p-6 bg-white border border-slate-200">
+  <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">
+    ${prompt.toUpperCase()}
+  </div>
+  <div className="font-serif text-xl text-primary">
+    Custom Component
+  </div>
+</div>`
+        }
+      });
+      setLoading(false);
+    }, 1500);
+  };
+
+  return (
+    <section className="mt-20 bg-slate-900 border border-accent/30 p-8 shadow-2xl relative overflow-hidden group no-print">
+      <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none group-hover:opacity-20 transition-opacity">
+        <Cpu size={120} className="text-accent" />
+      </div>
+      
+      <div className="relative z-10">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-accent text-primary">
+            <Terminal size={18} />
+          </div>
+          <h3 className="text-xl font-serif italic text-white">Component Navigator</h3>
+        </div>
+        
+        <p className="text-slate-400 text-xs mb-8 uppercase tracking-widest max-w-xl">
+          Protocol: Input your UI requirement. The system will locate existing assets or provide component templates following the Aluta aesthetic.
+        </p>
+
+        <div className="flex gap-4">
+          <input 
+            type="text" 
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleArchitect()}
+            placeholder="e.g., Find a navigation breadcrumb..."
+            className="flex-1 bg-slate-800 border border-slate-700 px-6 py-4 text-white font-mono text-sm focus:border-accent outline-none transition-colors"
+          />
+          <button 
+            onClick={handleArchitect}
+            disabled={loading}
+            className="bg-accent text-primary px-8 py-4 font-bold uppercase tracking-widest text-xs hover:bg-white transition-all disabled:opacity-50 flex items-center gap-2"
+          >
+            {loading ? <Loader2 className="animate-spin" size={16} /> : <Search size={16} />} 
+            {loading ? 'Searching...' : 'Navigate'}
+          </button>
+        </div>
+
+        <AnimatePresence>
+          {result && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-8 border-t border-slate-800 pt-8"
+            >
+              {result.type === 'existing' && (
+                <div className="bg-primary/50 border border-accent/50 p-6 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <CheckCircle2 className="text-green-400" />
+                    <div>
+                      <h4 className="text-white font-serif text-lg">Asset Found in Registry</h4>
+                      <p className="text-slate-400 text-xs uppercase tracking-widest">Localized as: {result.content}</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => document.getElementById(result.content)?.scrollIntoView({ behavior: 'smooth' })}
+                    className="text-accent text-xs font-bold uppercase tracking-widest hover:text-white flex items-center gap-2"
+                  >
+                    Navigate to Section <ArrowRight size={14} />
+                  </button>
+                </div>
+              )}
+
+              {result.type === 'generated' && (
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 text-accent">
+                    <Sparkles size={16} />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Component Template</span>
+                  </div>
+                  <div className="bg-white border border-slate-200 p-8 shadow-inner overflow-hidden flex flex-col items-center">
+                    <div className="text-[9px] font-bold text-slate-300 uppercase tracking-widest mb-8">Preview</div>
+                    <div className="max-w-md text-center p-8 border border-slate-100 italic font-serif text-slate-400">
+                      "{result.content.description}"
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="text-white text-xs font-bold uppercase tracking-widest">{result.content.name}</h4>
+                    </div>
+                    <CodeBlock code={result.content.code} />
+                  </div>
+                </div>
+              )}
+
+              {result.type === 'error' && (
+                <div className="bg-red-950 border border-red-500 p-6 flex items-center gap-4">
+                  <AlertTriangle className="text-red-500" />
+                  <span className="text-red-200 text-xs font-bold uppercase tracking-widest">{result.content}</span>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </section>
+  );
+};
+
+// Social icon components
+const Twitter = ({ size, className }: { size?: number, className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size || 24} height={size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
+);
+const Linkedin = ({ size, className }: { size?: number, className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size || 24} height={size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
 );
 
 // --- MAIN PAGE COMPONENT ---
 
 const StyleGuidePage: React.FC = () => {
-  const [activeSection, setActiveSection] = useState('colour');
+  const [activeSection, setActiveSection] = useState('cat-1');
 
   const categories = [
-    { id: 'colour', label: 'Colour', icon: Palette },
-    { id: 'typography', label: 'Typography', icon: Type },
-    { id: 'iconography', label: 'Iconography', icon: Terminal },
-    { id: 'navigations', label: 'Navigations', icon: Map },
-    { id: 'loadings', label: 'Loadings', icon: RefreshCcw },
-    { id: 'forms', label: 'Forms & Interactive', icon: Box },
-    { id: 'tables', label: 'Tables & Listings', icon: ListFilter },
-    { id: 'diagrams', label: 'Diagrams & Flows', icon: Activity },
-    { id: '3d', label: '3D & Immersive', icon: Globe },
-    { id: 'cards', label: 'Cards & Containers', icon: LayoutGrid },
-    { id: 'decor', label: 'Decor & Animation', icon: Sparkles },
-    { id: 'assets', label: 'Assets & Media', icon: Monitor },
-    { id: 'security', label: 'Security & Identity', icon: ShieldCheck },
-    { id: 'layout', label: 'Layout & Grid', icon: Grid },
-    { id: 'brand', label: 'Brand Identity', icon: Star },
-    { id: 'utilities', label: 'Utilities & Helpers', icon: Code },
-    { id: 'tabular', label: 'Tabular Matrix', icon: LayoutGrid },
-    { id: 'admin', label: 'Admin Controls', icon: Sliders },
-    { id: 'feedback', label: 'System Feedback', icon: MessageSquare },
-    { id: 'editorial', label: 'Rich Text & Editorial', icon: FileText },
+    { id: 'cat-1', label: '01. Colours', icon: Palette },
+    { id: 'cat-2', label: '02. Typography', icon: Type },
+    { id: 'cat-3', label: '03. Iconography', icon: Terminal },
+    { id: 'cat-4', label: '04. Navigation', icon: Map },
+    { id: 'cat-5', label: '05. Loaders', icon: RefreshCcw },
+    { id: 'cat-6', label: '06. Forms', icon: Edit3 },
+    { id: 'cat-7', label: '07. Tables', icon: ListFilter },
+    { id: 'cat-8', label: '08. Diagrams', icon: BarChart3 },
+    { id: 'cat-9', label: '09. Immersive', icon: Globe },
+    { id: 'cat-10', label: '10. Cards', icon: LayoutGrid },
+    { id: 'cat-11', label: '11. Decor', icon: Sparkles },
+    { id: 'cat-12', label: '12. Media', icon: Monitor },
+    { id: 'cat-13', label: '13. Security', icon: ShieldCheck },
+    { id: 'cat-14', label: '14. Layout', icon: Grid },
+    { id: 'cat-15', label: '15. Brand', icon: Star },
+    { id: 'cat-16', label: '16. Utilities', icon: Code },
+    { id: 'cat-17', label: '17. Tabular', icon: LayoutGrid },
+    { id: 'cat-18', label: '18. Admin', icon: Sliders },
+    { id: 'cat-19', label: '19. Feedback', icon: MessageSquare },
+    { id: 'cat-20', label: '20. Editorial', icon: FileText },
+    { id: 'cat-21', label: '21. Overlays', icon: Layers },
+    { id: 'cat-22', label: '22. Tabs', icon: Command },
+    { id: 'cat-23', label: '23. Badges', icon: Award },
+    { id: 'cat-24', label: '24. Tooltips', icon: Info },
   ];
 
   const handlePrint = () => {
@@ -155,13 +332,12 @@ const StyleGuidePage: React.FC = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      // Simple scroll spy logic
       const sections = categories.map(c => document.getElementById(c.id));
-      const scrollPosition = window.scrollY + 150;
+      const scrollPosition = window.scrollY + 200;
 
       for (const section of sections) {
         if (section && section.offsetTop <= scrollPosition && (section.offsetTop + section.offsetHeight) > scrollPosition) {
-            setActiveSection(section.id);
+          setActiveSection(section.id);
         }
       }
     };
@@ -170,920 +346,628 @@ const StyleGuidePage: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 selection:bg-nobel-gold selection:text-white print:bg-white">
+    <div className="min-h-screen bg-slate-50 selection:bg-accent selection:text-white print:bg-white">
       <SEO
-        title="Style Guide & Aluta Protocol"
-        description="The comprehensive visual ledger and design doctrine for the UISU Archive platform."
+        title="Visual Registry & Aluta Protocol"
+        description="The comprehensive design manual and component registry for the UISU Archive platform."
       />
 
-      {/* Navigation Sidebar (Hidden on Print) */}
-      <nav className="fixed top-0 left-0 w-64 h-screen bg-white border-r border-slate-200 z-50 overflow-y-auto hidden lg:block no-print">
-         <div className="p-8 border-b border-slate-100">
-            <Link to="/" className="flex items-center gap-2 group mb-6">
-               <ArrowLeft size={14} className="text-slate-400 group-hover:text-nobel-gold transition-colors"/>
-               <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 group-hover:text-ui-blue">Back to App</span>
-            </Link>
-            <h1 className="font-serif text-2xl text-ui-blue mb-2">Design <br/><span className="italic text-slate-400">Doctrine</span></h1>
-            <p className="text-[10px] text-slate-400 uppercase tracking-widest">Version 2.4.0</p>
-         </div>
-         <div className="p-4 space-y-1">
+      {/* Table of Contents Sidebar */}
+      <aside className="fixed left-0 top-0 h-full w-64 bg-white border-r border-slate-200 z-40 overflow-y-auto hidden xl:block no-print">
+        <div className="p-8 border-b border-slate-100">
+          <Link to="/" className="flex items-center gap-2 group mb-6">
+            <ArrowLeft size={14} className="text-slate-400 group-hover:text-accent transition-colors"/>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 group-hover:text-primary">Back to App</span>
+          </Link>
+          <h1 className="font-serif text-2xl text-primary mb-2">Visual <br/><span className="italic text-slate-300">Registry</span></h1>
+          <p className="text-[10px] text-slate-400 uppercase tracking-widest">Version 2.4.0</p>
+        </div>
+        
+        <div className="p-4">
+          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 px-4">Archive Index</div>
+          <nav className="space-y-1">
             {categories.map((cat) => (
-                <a
-                   key={cat.id}
-                   href={`#${cat.id}`}
-                   className={`flex items-center gap-3 px-4 py-3 text-xs font-bold uppercase tracking-widest transition-all rounded-sm ${activeSection === cat.id ? 'bg-ui-blue text-white shadow-md' : 'text-slate-500 hover:bg-slate-50 hover:text-ui-blue'}`}
-                >
-                   <cat.icon size={14} />
-                   <span>{cat.label}</span>
-                </a>
+              <a 
+                key={cat.id} 
+                href={`#${cat.id}`} 
+                className={`flex items-center gap-3 px-4 py-2 text-[11px] font-medium transition-all rounded-sm ${activeSection === cat.id ? 'bg-primary text-white shadow-md' : 'text-slate-500 hover:bg-slate-50 hover:text-primary'}`}
+              >
+                <cat.icon size={12} />
+                {cat.label}
+              </a>
             ))}
-         </div>
-         <div className="p-8 border-t border-slate-100 mt-4">
-            <Button onClick={handlePrint} variant="outline" className="w-full gap-2 text-xs font-bold uppercase tracking-widest border-slate-300">
-               <Printer size={14}/> Print PDF
-            </Button>
-         </div>
-      </nav>
+          </nav>
+        </div>
+        
+        <div className="p-8 border-t border-slate-100 mt-4">
+          <Button onClick={handlePrint} variant="outline" className="w-full gap-2 text-xs font-bold uppercase tracking-widest border-slate-300">
+            <Printer size={14}/> Print PDF
+          </Button>
+        </div>
+      </aside>
 
-      {/* Mobile Header (Hidden on Print) */}
-      <div className="lg:hidden sticky top-0 bg-white/90 backdrop-blur-md z-40 border-b border-slate-200 p-4 flex justify-between items-center no-print">
-         <div className="font-serif text-xl text-ui-blue">Design Doctrine</div>
-         <Button onClick={handlePrint} size="sm" variant="ghost"><Printer size={16}/></Button>
+      {/* Mobile Header */}
+      <div className="xl:hidden sticky top-0 bg-white/90 backdrop-blur-md z-40 border-b border-slate-200 p-4 flex justify-between items-center no-print">
+        <div className="font-serif text-xl text-primary">Visual Registry</div>
+        <Button onClick={handlePrint} size="sm" variant="ghost"><Printer size={16}/></Button>
       </div>
 
       {/* Main Content Area */}
-      <main className="lg:pl-64 w-full">
-         <div className="container mx-auto px-6 py-20 max-w-5xl">
-
-            {/* Intro Header */}
-            <div className="mb-24 break-after-avoid">
-                <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-1 bg-nobel-gold"></div>
-                    <span className="text-xs font-bold tracking-[0.2em] uppercase text-slate-500">The Visual Ledger</span>
-                </div>
-                <h1 className="text-5xl md:text-8xl font-serif text-ui-blue leading-[0.9] mb-8">
-                    The Aluta <br/> <span className="italic text-slate-300">Protocol</span>
-                </h1>
-                <p className="text-xl text-slate-600 font-light max-w-2xl leading-relaxed">
-                    A comprehensive design system mandating visual severity, intellectual integrity, and archival density. Every pixel is a historical record.
-                </p>
+      <main className="xl:pl-64">
+        <div className="container mx-auto px-6 md:px-12 py-32 max-w-6xl">
+          
+          {/* Header */}
+          <header className="mb-20 break-after-avoid">
+            <div className="flex items-center gap-4 mb-6">
+              <Palette className="text-accent" size={32} />
+              <span className="text-sm font-bold tracking-[0.5em] uppercase text-slate-400">The Aluta Protocol</span>
             </div>
+            <h1 className="text-7xl md:text-9xl font-serif text-primary leading-none mb-8">Visual <br/> <span className="italic text-slate-300">Registry</span></h1>
+            <p className="text-2xl text-slate-600 font-light max-w-3xl leading-relaxed">
+              A definitive design manual for the intellectual vanguard. 24 categories of archival components engineered for legislative clarity and performance.
+            </p>
 
-            {/* 1. Colour */}
-            <section>
-                <SectionHeader id="colour" icon={Palette} title="01. Colour" subtitle="The chromatic standard for the intellectual vanguard." />
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 mb-8">
-                    <ColorSwatch
-                        name="UI Blue"
-                        hex="#003366"
-                        usage="Primary Brand Identity, High-Hierarchy Text, Navigation Frames."
-                        variants={[
-                            { name: "Blue Dark", hex: "#002244" },
-                            { name: "Blue Soft", hex: "#003366CC" }
-                        ]}
-                    />
-                    <ColorSwatch
-                        name="Nobel Gold"
-                        hex="#C5A059"
-                        usage="Interactive Highlights, Achievements, Metadata Accents, Active States."
-                        variants={[
-                            { name: "Gold Pale", hex: "#E9D8B6" },
-                            { name: "Gold Muted", hex: "#A6864B" }
-                        ]}
-                    />
-                    <ColorSwatch
-                        name="Heritage Slate"
-                        hex="#1E293B"
-                        usage="Neutral Components, Secondary Metadata, Archival Textures."
-                        variants={[
-                            { name: "Slate Light", hex: "#F1F5F9" },
-                            { name: "Slate Heavy", hex: "#0F172A" }
-                        ]}
-                    />
-                    <ColorSwatch
-                        name="Archive Cream"
-                        hex="#F9F8F4"
-                        usage="Base Page Background, Tactile Paper Emulation, Content Slates."
-                        variants={[
-                            { name: "Cream Deep", hex: "#F2EFE9" },
-                            { name: "Cream pure", hex: "#FFFFFF" }
-                        ]}
-                    />
+            {/* AI Component Navigator */}
+            <AIComponentArchitect />
+          </header>
+
+          {/* 01. COLOURS */}
+          <SectionHeader id="cat-1" icon={Palette} title="01. Colour Palette" subtitle="The chromatic DNA of official student representation." />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-24">
+            <ColorBox 
+              name="UI Blue" 
+              hex="#003366" 
+              usage="Primary Framework, Navigation, High-Hierarchy Text"
+              variants={[
+                { name: "Blue Dark", hex: "#002244" },
+                { name: "Blue Soft", hex: "#003366CC" }
+              ]}
+            />
+            <ColorBox 
+              name="Nobel Gold" 
+              hex="#C5A059" 
+              usage="Interactivity, Merit, Achievements, Active States"
+              variants={[
+                { name: "Gold Pale", hex: "#E9D8B6" },
+                { name: "Gold Muted", hex: "#A6864B" }
+              ]}
+            />
+            <ColorBox 
+              name="Heritage Slate" 
+              hex="#1E293B" 
+              usage="System Metadata, Archival Textures, Code Blocks"
+              variants={[
+                { name: "Slate Light", hex: "#F1F5F9" },
+                { name: "Slate Heavy", hex: "#0F172A" }
+              ]}
+            />
+            <ColorBox 
+              name="Archive Cream" 
+              hex="#F9F8F4" 
+              usage="Tactile Base Canvas, Background, Content Slates"
+              variants={[
+                { name: "Cream Deep", hex: "#F2EFE9" },
+                { name: "Cream Pure", hex: "#FFFFFF" }
+              ]}
+            />
+          </div>
+
+          {/* 02. TYPOGRAPHY */}
+          <SectionHeader id="cat-2" icon={Type} title="02. Typography" subtitle="Standardized font hierarchies for intellectual weight." />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-24">
+            <RegistryItem title="Primary Serif (Display)" code={`<h1 className="font-serif text-6xl text-primary italic">...</h1>`}>
+              <p className="font-serif text-5xl text-primary italic">Intellectualism & Welfare</p>
+            </RegistryItem>
+            <RegistryItem title="Technical Mono (Labels)" code={`<code className="font-mono text-sm bg-slate-900 text-accent p-2">...</code>`}>
+              <code className="font-mono text-sm bg-slate-900 text-accent p-2">RECORD_REF_#2024_048</code>
+            </RegistryItem>
+          </div>
+
+          {/* 03. ICONOGRAPHY */}
+          <SectionHeader id="cat-3" icon={Terminal} title="03. Iconography Registry" subtitle="Standard 24px symbols for functional clarity." />
+          <div className="bg-white border border-slate-200 p-12 mb-24">
+            <div className="grid grid-cols-4 md:grid-cols-8 lg:grid-cols-10 gap-10">
+              {[
+                {i:Shield, n:'Shield'}, {i:Gavel, n:'Gavel'}, {i:Star, n:'Star'}, {i:Award, n:'Award'}, 
+                {i:Book, n:'Archive'}, {i:Landmark, n:'Union'}, {i:Scale, n:'Justice'}, {i:Fingerprint, n:'Auth'},
+                {i:Bell, n:'Notice'}, {i:Search, n:'Query'}, {i:Terminal, n:'Sys'}, {i:Users, n:'Group'},
+                {i:Mail, n:'Post'}, {i:Phone, n:'Comms'}, {i:Flag, n:'Legacy'}, {i:Target, n:'Focus'},
+                {i:Heart, n:'Welfare'}, {i:Database, n:'Data'}, {i:Zap, n:'Action'}, {i:Layers, n:'State'}
+              ].map((item, idx) => (
+                <div key={idx} className="flex flex-col items-center gap-2 group cursor-pointer" onClick={() => navigator.clipboard.writeText(`<${item.n} size={24} />`)}>
+                  <div className="w-10 h-10 flex items-center justify-center bg-slate-50 text-slate-300 group-hover:bg-primary group-hover:text-accent transition-all"><item.i size={20}/></div>
+                  <span className="text-[8px] font-bold uppercase text-slate-400">{item.n}</span>
                 </div>
-            </section>
+              ))}
+            </div>
+          </div>
 
-            {/* 2. Typography */}
-            <section>
-                <SectionHeader id="typography" icon={Type} title="02. Typography" subtitle="The balance between academic tradition and modern clarity." />
-                <div className="space-y-16">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 border-b border-slate-100 pb-12">
-                        <div className="lg:col-span-4">
-                            <h4 className="font-bold text-xs text-slate-400 uppercase tracking-widest mb-4">Serif Typeface</h4>
-                            <div className="font-serif text-5xl text-ui-blue mb-4">Playfair Display</div>
-                            <CopySnippet label="CSS Definition" text="font-family: 'Playfair Display', serif;" />
-                        </div>
-                        <div className="lg:col-span-8 space-y-6">
-                            <div className="text-6xl font-serif text-ui-blue italic">Aa Bb Cc</div>
-                            <div className="text-4xl font-serif text-slate-800">"Knowledge is the fount of life."</div>
-                            <p className="text-sm text-slate-500 max-w-md">Used for all primary headings, titles, and high-impact statements to evoke institutional authority.</p>
-                        </div>
-                    </div>
+          {/* 04. NAVIGATION */}
+          <SectionHeader id="cat-4" icon={Map} title="04. Spatial Navigation" subtitle="Spatial controllers for the archive matrix." />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-24">
+            <RegistryItem title="Archive Breadcrumb" code={`<div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+  <span>ROOT</span> <ChevronRight size={10}/> <span>LEGISLATIVE</span> <ChevronRight size={10}/> <span className="text-primary">SECTION_1</span>
+</div>`}>
+              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                <span>ROOT</span> <ChevronRight size={10}/> <span>LEGISLATIVE</span> <ChevronRight size={10}/> <span className="text-primary">SECTION_1</span>
+              </div>
+            </RegistryItem>
+            <RegistryItem title="Vertical Sidebar Link" code={`<div className="flex items-center gap-3 border-l-4 border-accent p-3 bg-slate-50 text-xs font-bold uppercase">
+  <Home size={14}/> Dashboard Root
+</div>`}>
+              <div className="w-full flex items-center gap-3 text-primary border-l-4 border-accent p-4 bg-slate-50 font-bold text-xs uppercase tracking-widest"><Home size={14}/> Dashboard Root</div>
+            </RegistryItem>
+          </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-                        <div className="lg:col-span-4">
-                            <h4 className="font-bold text-xs text-slate-400 uppercase tracking-widest mb-4">Sans Typeface</h4>
-                            <div className="font-sans text-3xl font-bold text-ui-blue mb-4">Inter</div>
-                            <CopySnippet label="CSS Definition" text="font-family: 'Inter', sans-serif;" />
-                        </div>
-                        <div className="lg:col-span-8 space-y-6">
-                            <div className="text-6xl font-sans text-ui-blue font-bold">Aa Bb Cc</div>
-                            <div className="text-xl font-sans text-slate-600 leading-relaxed font-light">
-                                Reliable, high-legibility rendering for body content, navigational elements, and technical data points.
-                            </div>
-                            <div className="flex flex-wrap gap-4">
-                                <div className="text-xs font-bold uppercase tracking-[0.4em] text-slate-400 border border-slate-200 px-3 py-1">METADATA CAPS</div>
-                                <div className="text-sm font-mono text-slate-500 bg-slate-100 px-2 py-1">Technical_Mono_Code</div>
-                            </div>
-                        </div>
-                    </div>
+          {/* 05. LOADERS */}
+          <SectionHeader id="cat-5" icon={RefreshCcw} title="05. Activity Loaders" subtitle="Indication of temporal system processing." />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-24">
+            <RegistryItem title="Branded Spinner" code={`<motion.div animate={{rotate:360}} transition={{duration:4,repeat:Infinity,ease:"linear"}}><Star /></motion.div>`}>
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }} className="text-accent">
+                <Star size={48} />
+              </motion.div>
+            </RegistryItem>
+            <RegistryItem title="Processing Strip" code={`<div className="h-1 bg-slate-100 relative overflow-hidden"><motion.div className="absolute inset-y-0 w-1/3 bg-primary" /></div>`}>
+              <div className="w-full h-1 bg-slate-100 overflow-hidden relative">
+                <motion.div 
+                  initial={{ x: '-100%' }} animate={{ x: '100%' }} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute inset-y-0 w-1/3 bg-primary"
+                />
+              </div>
+            </RegistryItem>
+            <RegistryItem title="Skeleton Media" code={`<div className="aspect-video bg-slate-100 animate-pulse"></div>`}>
+              <div className="w-full aspect-video bg-slate-100 animate-pulse flex items-center justify-center">
+                <ImageIcon className="text-slate-200" size={40} />
+              </div>
+            </RegistryItem>
+          </div>
+
+          {/* 06. FORMS */}
+          <SectionHeader id="cat-6" icon={Edit3} title="06. Form Protocol" subtitle="Precise inputs for archival ingestion." />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-24">
+            <RegistryItem title="Primary Command" code={`<button className="px-8 py-3 bg-primary text-white text-xs font-bold uppercase tracking-widest">Execute</button>`}>
+              <button className="px-8 py-3 bg-primary text-white rounded-none text-xs font-bold uppercase tracking-widest border border-primary hover:bg-accent hover:text-primary transition-all shadow-lg">Execute</button>
+            </RegistryItem>
+            <RegistryItem title="Standard Query Input" code={`<input className="w-full bg-white border border-slate-200 px-4 py-3" />`}>
+              <input type="text" placeholder="Enter Reference ID..." className="w-full bg-white border border-slate-200 px-4 py-3 outline-none focus:border-accent transition-colors text-sm font-light" />
+            </RegistryItem>
+            <RegistryItem title="Switch Protocol" code={`<div className="w-14 h-7 bg-primary p-1 flex items-center justify-end"><div className="w-5 h-5 bg-white"></div></div>`}>
+              <div className="w-14 h-7 bg-primary p-1 flex items-center justify-end shadow-inner cursor-pointer"><div className="w-5 h-5 bg-white shadow-lg"></div></div>
+            </RegistryItem>
+          </div>
+
+          {/* 07. TABLES */}
+          <SectionHeader id="cat-7" icon={ListFilter} title="07. Tables & Ledger Matrix" subtitle="Administrative density structures." />
+          <RegistryItem title="Ledger Row Archetype" code={`<div className="grid grid-cols-12 gap-4 px-8 py-4 bg-white border border-slate-200 items-center">
+  <div className="col-span-1 font-mono text-slate-300">#048</div>
+  <div className="col-span-8 font-serif text-lg text-primary">Document_Title.pdf</div>
+  <div className="col-span-3 text-right"><span className="px-2 py-1 bg-green-50 text-green-600 text-[8px] font-bold uppercase">Verified</span></div>
+</div>`}>
+            <div className="w-full grid grid-cols-12 gap-4 px-8 py-4 bg-white border border-slate-200 items-center hover:bg-slate-50 transition-colors cursor-pointer group">
+              <div className="col-span-1 text-[10px] font-mono text-slate-300">#048</div>
+              <div className="col-span-8 font-serif text-lg text-primary group-hover:text-accent transition-colors">Constitutional_Amendment_V1_Final.pdf</div>
+              <div className="col-span-3 text-right"><span className="px-2 py-1 bg-green-50 text-green-600 border border-green-200 text-[8px] font-bold uppercase tracking-widest">Verified</span></div>
+            </div>
+          </RegistryItem>
+
+          {/* 08. DIAGRAMS */}
+          <SectionHeader id="cat-8" icon={BarChart3} title="08. Diagrams & Data Flow" subtitle="Standardized quantitative rendering." />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-24">
+            <RegistryItem title="Growth Matrix (Bar)" code={`<BarChart data={[{n:'1948',v:40},{n:'1960',v:70},{n:'1990',v:35},{n:'2024',v:55}]}>
+  <Bar dataKey="v" fill="#003366" />
+</BarChart>`}>
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={[{n:'1948',v:40},{n:'1960',v:70},{n:'1990',v:35},{n:'2024',v:55}]}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                    <XAxis dataKey="n" tick={{fontSize: 10, fill: '#64748b'}} axisLine={false} tickLine={false} />
+                    <Bar dataKey="v" fill="#003366" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </RegistryItem>
+            <RegistryItem title="Activity Trend (Line)" code={`<LineChart data={[{n:'1',v:20},{n:'2',v:60},{n:'3',v:40},{n:'4',v:80}]}>
+  <Line type="monotone" stroke="#C5A059" strokeWidth={3} />
+</LineChart>`}>
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={[{n:'1',v:20},{n:'2',v:60},{n:'3',v:40},{n:'4',v:80}]}>
+                    <Line type="monotone" dataKey="v" stroke="#C5A059" strokeWidth={3} dot={{fill:'#003366', strokeWidth:2, r:5}} />
+                    <XAxis hide />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </RegistryItem>
+          </div>
+
+          {/* 09. IMMERSIVE */}
+          <SectionHeader id="cat-9" icon={Globe} title="09. 3D & Immersive" subtitle="Interactive spatial elements and canvases." />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-24">
+            <RegistryItem title="Canvas Placeholder" code={`<div className="aspect-video bg-black relative overflow-hidden">
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/30 via-black to-black"></div>
+  <div className="w-24 h-24 border border-accent/50 rotate-45 animate-pulse"></div>
+</div>`}>
+              <div className="aspect-video bg-black relative overflow-hidden flex items-center justify-center group w-full">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/30 via-black to-black"></div>
+                <div className="w-24 h-24 border border-accent/50 rotate-45 animate-pulse relative z-10 group-hover:rotate-90 transition-transform duration-700">
+                  <div className="absolute inset-2 border border-primary/50"></div>
                 </div>
-            </section>
+                <div className="absolute bottom-4 left-4 text-xs font-mono text-accent">CANVAS_RENDER_01</div>
+              </div>
+            </RegistryItem>
+            <div className="p-6 bg-slate-50 border border-slate-200">
+              <h5 className="font-bold text-xs uppercase tracking-widest text-slate-400 mb-4">Implementation Note</h5>
+              <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                3D elements use React Three Fiber with Drei helpers. The system supports WebGL canvas, particle effects, and interactive spatial navigation.
+              </p>
+              <CodeBlock code={`import { Canvas } from '@react-three/fiber'
+import { OrbitControls } from '@react-three/drei'
 
-            {/* 3. Iconography */}
-            <section>
-                <SectionHeader id="iconography" icon={Terminal} title="03. Iconography" subtitle="Curated symbols from the Lucide system." />
-                <div className="bg-white border border-slate-200 p-8">
-                    <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-8">
-                        {[
-                            { icon: Shield, name: 'Shield' }, { icon: Gavel, name: 'Gavel' },
-                            { icon: Landmark, name: 'Landmark' }, { icon: Star, name: 'Star' },
-                            { icon: Award, name: 'Award' }, { icon: Fingerprint, name: 'Fingerprint' },
-                            { icon: Terminal, name: 'Terminal' }, { icon: User, name: 'User' },
-                            { icon: Book, name: 'Book' }, { icon: Scale, name: 'Scale' },
-                            { icon: Coins, name: 'Coins' }, { icon: Trophy, name: 'Trophy' },
-                            { icon: Mic, name: 'Mic' }, { icon: Bell, name: 'Bell' },
-                            { icon: Search, name: 'Search' }, { icon: LayoutGrid, name: 'Grid' },
-                            { icon: AlertTriangle, name: 'Alert' }, { icon: CheckCircle2, name: 'Success' },
-                            { icon: XCircle, name: 'Error' }, { icon: MoreHorizontal, name: 'More' },
-                            { icon: Home, name: 'Home' }, { icon: MessageSquare, name: 'Chat' },
-                            { icon: Archive, name: 'Archive' }, { icon: ShieldAlert, name: 'Restricted' },
-                        ].map((item, idx) => (
-                            <div key={idx} className="flex flex-col items-center gap-3 group cursor-pointer" onClick={() => navigator.clipboard.writeText(`<${item.name} size={24} />`)}>
-                                <div className="w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-400 group-hover:bg-ui-blue group-hover:text-white transition-all rounded-sm">
-                                    <item.icon size={20} />
-                                </div>
-                                <span className="text-[8px] font-bold uppercase tracking-widest text-slate-300 group-hover:text-slate-900 transition-colors">{item.name}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* 4. Navigations */}
-            <section>
-                <SectionHeader id="navigations" icon={Map} title="04. Navigations" subtitle="Wayfinding systems and hierarchical indicators." />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Breadcrumbs */}
-                    <div className="space-y-4">
-                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Breadcrumb Trail</h5>
-                        <div className="p-4 bg-white border border-slate-200">
-                            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                                <span className="hover:text-ui-blue cursor-pointer transition-colors">Home</span>
-                                <ChevronRight size={12} />
-                                <span className="hover:text-ui-blue cursor-pointer transition-colors">Governance</span>
-                                <ChevronRight size={12} />
-                                <span className="text-ui-blue">Executive_Council</span>
-                            </div>
-                        </div>
-                        <CopySnippet label="Breadcrumb" text={`<div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-  <span className="hover:text-ui-blue cursor-pointer transition-colors">Home</span>
-  <ChevronRight size={12} />
-  <span>Governance</span>
-</div>`} fullWidth />
-                    </div>
-
-                    {/* Pagination */}
-                    <div className="space-y-4">
-                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Pagination Sequence</h5>
-                        <div className="p-4 bg-white border border-slate-200 flex justify-center">
-                            <div className="flex items-center gap-1">
-                                <div className="w-8 h-8 flex items-center justify-center border border-slate-200 text-slate-400 hover:border-ui-blue hover:text-ui-blue cursor-pointer transition-all"><ChevronLeft size={14}/></div>
-                                <div className="w-8 h-8 flex items-center justify-center border border-ui-blue bg-ui-blue text-white font-mono text-[10px]">01</div>
-                                <div className="w-8 h-8 flex items-center justify-center border border-slate-200 text-slate-500 font-mono text-[10px] hover:border-nobel-gold cursor-pointer transition-all">02</div>
-                                <div className="w-8 h-8 flex items-center justify-center border border-slate-200 text-slate-500 font-mono text-[10px] hover:border-nobel-gold cursor-pointer transition-all">...</div>
-                                <div className="w-8 h-8 flex items-center justify-center border border-slate-200 text-slate-400 hover:border-ui-blue hover:text-ui-blue cursor-pointer transition-all"><ChevronRight size={14}/></div>
-                            </div>
-                        </div>
-                        <CopySnippet label="Pagination" text={`<div className="flex items-center gap-1">
-  <div className="w-8 h-8 flex items-center justify-center border border-slate-200 text-slate-400 hover:border-ui-blue hover:text-ui-blue transition-all"><ChevronLeft size={14}/></div>
-  <div className="w-8 h-8 flex items-center justify-center border border-ui-blue bg-ui-blue text-white font-mono text-[10px]">01</div>
-  {/* Additional pages... */}
-</div>`} fullWidth />
-                    </div>
-
-                    {/* Tabs */}
-                    <div className="space-y-4 md:col-span-2">
-                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Tab Interface</h5>
-                        <div className="bg-slate-50 border-b border-slate-200">
-                            <div className="flex">
-                                <div className="px-6 py-3 border-b-2 border-ui-blue text-ui-blue text-xs font-bold uppercase tracking-widest cursor-pointer">Active Tab</div>
-                                <div className="px-6 py-3 border-b-2 border-transparent text-slate-400 text-xs font-bold uppercase tracking-widest hover:text-slate-600 cursor-pointer">Inactive Tab</div>
-                                <div className="px-6 py-3 border-b-2 border-transparent text-slate-400 text-xs font-bold uppercase tracking-widest hover:text-slate-600 cursor-pointer">Disabled</div>
-                            </div>
-                        </div>
-                        <CopySnippet label="Tab Active" text={`<div className="flex">
-  <div className="px-6 py-3 border-b-2 border-ui-blue text-ui-blue text-xs font-bold uppercase tracking-widest cursor-pointer">Active Tab</div>
-  <div className="px-6 py-3 border-b-2 border-transparent text-slate-400 text-xs font-bold uppercase tracking-widest hover:text-slate-600 cursor-pointer">Inactive Tab</div>
-</div>`} fullWidth />
-                    </div>
-                </div>
-            </section>
-
-            {/* 5. Loadings */}
-            <section>
-                <SectionHeader id="loadings" icon={RefreshCcw} title="05. Loadings" subtitle="States of data retrieval and processing." />
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                     <div className="space-y-4">
-                         <h5 className="text-[9px] font-bold uppercase text-slate-400">Circular Loader</h5>
-                         <div className="p-8 bg-white border border-slate-200 flex justify-center">
-                             <div className="w-8 h-8 border-4 border-slate-100 border-t-nobel-gold rounded-full animate-spin"></div>
-                         </div>
-                         <CopySnippet label="Spinner" text={`<div className="w-8 h-8 border-4 border-slate-100 border-t-nobel-gold rounded-full animate-spin"></div>`} />
-                     </div>
-                     <div className="space-y-4">
-                         <h5 className="text-[9px] font-bold uppercase text-slate-400">Skeleton Row</h5>
-                         <div className="p-8 bg-white border border-slate-200 space-y-3">
-                             <div className="h-4 bg-slate-100 animate-pulse w-3/4"></div>
-                             <div className="h-4 bg-slate-100 animate-pulse w-1/2"></div>
-                         </div>
-                         <CopySnippet label="Skeleton" text={`<div className="h-4 bg-slate-100 animate-pulse w-3/4"></div>`} />
-                     </div>
-                     <div className="space-y-4">
-                         <h5 className="text-[9px] font-bold uppercase text-slate-400">Progress Bar</h5>
-                         <div className="p-8 bg-white border border-slate-200 flex items-center">
-                             <div className="w-full h-2 bg-slate-100 relative overflow-hidden">
-                                 <div className="absolute top-0 left-0 h-full w-2/3 bg-ui-blue"></div>
-                             </div>
-                         </div>
-                         <CopySnippet label="Progress" text={`<div className="w-full h-2 bg-slate-100 relative overflow-hidden">
-  <div className="absolute top-0 left-0 h-full w-2/3 bg-ui-blue"></div>
-</div>`} />
-                     </div>
-                </div>
-            </section>
-
-            {/* 6. Forms & Interactive */}
-            <section>
-                <SectionHeader id="forms" icon={Box} title="06. Forms & Interactive" subtitle="Input mechanisms and action triggers." />
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {/* Buttons */}
-                    <div className="col-span-1 lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-                        <div className="space-y-2">
-                             <button className="w-full px-6 py-3 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest border border-ui-blue hover:bg-ui-dark transition-all">Primary Action</button>
-                             <CopySnippet label="Primary Btn" text={`<button className="w-full px-6 py-3 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest border border-ui-blue hover:bg-ui-dark transition-all">Primary Action</button>`} fullWidth />
-                        </div>
-                        <div className="space-y-2">
-                             <button className="w-full px-6 py-3 bg-nobel-gold text-ui-blue text-xs font-bold uppercase tracking-widest border border-nobel-gold hover:bg-white transition-all">Secondary/Accent</button>
-                             <CopySnippet label="Accent Btn" text={`<button className="w-full px-6 py-3 bg-nobel-gold text-ui-blue text-xs font-bold uppercase tracking-widest border border-nobel-gold hover:bg-white transition-all">Accent</button>`} fullWidth />
-                        </div>
-                        <div className="space-y-2">
-                             <button className="w-full px-6 py-3 bg-transparent text-ui-blue text-xs font-bold uppercase tracking-widest border border-slate-300 hover:border-ui-blue transition-all">Ghost/Outline</button>
-                             <CopySnippet label="Ghost Btn" text={`<button className="w-full px-6 py-3 bg-transparent text-ui-blue text-xs font-bold uppercase tracking-widest border border-slate-300 hover:border-ui-blue transition-all">Ghost</button>`} fullWidth />
-                        </div>
-                    </div>
-
-                    {/* Inputs */}
-                    <div className="space-y-4">
-                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Standard Input</h5>
-                        <input type="text" placeholder="ENTER_DATA..." className="w-full bg-slate-50 border border-slate-200 p-3 text-[10px] font-mono outline-none focus:border-ui-blue transition-all" />
-                        <CopySnippet label="Input" text={`<input type="text" placeholder="ENTER_DATA..." className="w-full bg-slate-50 border border-slate-200 p-3 text-[10px] font-mono outline-none focus:border-ui-blue transition-all" />`} />
-                    </div>
-
-                    <div className="space-y-4">
-                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Error State</h5>
-                        <div className="relative">
-                            <input type="text" value="INVALID_KEY" readOnly className="w-full bg-red-50 border border-red-200 p-3 text-[10px] font-mono text-red-700 outline-none" />
-                            <AlertTriangle size={14} className="absolute right-3 top-3 text-red-500"/>
-                        </div>
-                        <CopySnippet label="Error Input" text={`<div className="relative">
-  <input type="text" className="w-full bg-red-50 border border-red-200 p-3 text-[10px] font-mono text-red-700 outline-none" />
-  <AlertTriangle size={14} className="absolute right-3 top-3 text-red-500"/>
-</div>`} />
-                    </div>
-
-                    {/* Toggles */}
-                    <div className="space-y-4">
-                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Toggles & Checks</h5>
-                        <div className="flex gap-4 p-4 bg-white border border-slate-200">
-                             <div className="w-5 h-5 border-2 border-ui-blue bg-ui-blue flex items-center justify-center text-white"><Check size={12}/></div>
-                             <div className="w-5 h-5 border-2 border-slate-300"></div>
-                             <div className="w-10 h-5 bg-slate-200 rounded-full relative"><div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full"></div></div>
-                             <div className="w-10 h-5 bg-ui-blue rounded-full relative"><div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div></div>
-                        </div>
-                        <CopySnippet label="Checkbox" text={`<div className="w-5 h-5 border-2 border-ui-blue bg-ui-blue flex items-center justify-center text-white"><Check size={12}/></div>`} />
-                    </div>
-                </div>
-            </section>
-
-            {/* 7. Tables & Listings */}
-            <section>
-                <SectionHeader id="tables" icon={ListFilter} title="07. Tables & Listings" subtitle="Complex data rendering for records." />
-                <div className="space-y-8">
-                     <div className="border border-slate-200 bg-white">
-                         <div className="grid grid-cols-12 bg-ui-blue text-white p-4 text-[9px] font-bold uppercase tracking-widest">
-                             <div className="col-span-2">Ref_ID</div>
-                             <div className="col-span-6">Subject</div>
-                             <div className="col-span-2">Date</div>
-                             <div className="col-span-2 text-right">Status</div>
-                         </div>
-                         {[1,2,3].map(i => (
-                             <div key={i} className="grid grid-cols-12 p-4 border-b border-slate-100 text-xs hover:bg-slate-50 transition-colors">
-                                 <div className="col-span-2 font-mono text-ui-blue">REC_{i}00X</div>
-                                 <div className="col-span-6 font-medium text-slate-700">Annual Legislative Report V.{i}</div>
-                                 <div className="col-span-2 text-slate-500">Oct {i}, 2024</div>
-                                 <div className="col-span-2 text-right"><span className="px-2 py-1 bg-green-50 text-green-700 text-[8px] font-bold uppercase rounded-sm">Verified</span></div>
-                             </div>
-                         ))}
-                     </div>
-                     <CopySnippet label="Table Structure" text={`<div className="border border-slate-200 bg-white">
-  <div className="grid grid-cols-12 bg-ui-blue text-white p-4 text-[9px] font-bold uppercase tracking-widest">
-      <div className="col-span-2">Ref_ID</div>
-      {/* ...headers */}
-  </div>
-  <div className="grid grid-cols-12 p-4 border-b border-slate-100 text-xs hover:bg-slate-50 transition-colors">
-      <div className="col-span-2 font-mono text-ui-blue">REC_001</div>
-      {/* ...data */}
-  </div>
-</div>`} fullWidth />
-                </div>
-            </section>
-
-            {/* 8. Diagrams & Flows */}
-            <section>
-                <SectionHeader id="diagrams" icon={Activity} title="08. Diagrams & Flows" subtitle="Visualizing processes and structural hierarchies." />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                     <div className="p-8 bg-slate-50 border border-slate-200 flex flex-col items-center gap-4">
-                          <div className="px-6 py-3 bg-white border border-ui-blue text-ui-blue font-bold text-xs uppercase shadow-sm">Initiation</div>
-                          <div className="h-8 w-px bg-slate-300"></div>
-                          <div className="px-6 py-3 bg-white border border-slate-300 text-slate-500 font-bold text-xs uppercase shadow-sm">Review</div>
-                          <div className="h-8 w-px bg-slate-300"></div>
-                          <div className="flex gap-8">
-                              <div className="px-4 py-2 bg-green-50 border border-green-200 text-green-700 text-[9px] uppercase font-bold">Approve</div>
-                              <div className="px-4 py-2 bg-red-50 border border-red-200 text-red-700 text-[9px] uppercase font-bold">Reject</div>
-                          </div>
-                     </div>
-                     <div className="p-8 bg-slate-900 border border-slate-800 relative overflow-hidden">
-                          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5"></div>
-                          <div className="relative z-10 flex items-end gap-2 h-40">
-                              {[30, 50, 45, 70, 60, 85, 90].map((h, i) => (
-                                  <div key={i} className="flex-1 bg-nobel-gold hover:bg-white transition-colors cursor-pointer relative group" style={{ height: `${h}%` }}>
-                                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] text-white opacity-0 group-hover:opacity-100 transition-opacity">{h}%</div>
-                                  </div>
-                              ))}
-                          </div>
-                     </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
-                    <CopySnippet label="Flow Diagram" text={`<div className="flex flex-col items-center gap-4">
-  <div className="px-6 py-3 bg-white border border-ui-blue text-ui-blue font-bold text-xs uppercase shadow-sm">Start</div>
-  <div className="h-8 w-px bg-slate-300"></div>
-  <div className="px-6 py-3 bg-white border border-slate-300 text-slate-500 font-bold text-xs uppercase shadow-sm">Process</div>
-</div>`} />
-                    <CopySnippet label="Bar Chart" text={`<div className="relative z-10 flex items-end gap-2 h-40">
-  <div className="flex-1 bg-nobel-gold hover:bg-white transition-colors" style={{ height: '50%' }}></div>
-  <div className="flex-1 bg-nobel-gold hover:bg-white transition-colors" style={{ height: '75%' }}></div>
-</div>`} />
-                </div>
-            </section>
-
-            {/* 9. 3D & Immersive */}
-            <section>
-                <SectionHeader id="3d" icon={Globe} title="09. 3D & Immersive" subtitle="Interactive spatial elements and canvases." />
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                     <div className="aspect-video bg-black relative overflow-hidden flex items-center justify-center group">
-                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-ui-blue/30 via-black to-black"></div>
-                          <div className="w-24 h-24 border border-nobel-gold/50 rotate-45 animate-pulse relative z-10 group-hover:rotate-90 transition-transform duration-700">
-                              <div className="absolute inset-2 border border-ui-blue/50"></div>
-                          </div>
-                          <div className="absolute bottom-4 left-4 text-xs font-mono text-nobel-gold">CANVAS_RENDER_01</div>
-                     </div>
-                     <div className="p-6 bg-slate-50 border border-slate-200">
-                          <h5 className="font-bold text-xs uppercase tracking-widest text-slate-400 mb-4">Implementation Note</h5>
-                          <p className="text-sm text-slate-600 leading-relaxed mb-4">
-                              3D elements leverage <code>@react-three/fiber</code>. Ensure all scenes are wrapped in a <code>Suspense</code> boundary with a fallback loader to maintain performance on lower-end devices.
-                          </p>
-                          <CopySnippet label="Canvas Import" text="import { Canvas } from '@react-three/fiber';" fullWidth />
-                          <div className="mt-4">
-                            <CopySnippet label="Canvas Setup" text={`<Canvas>
-  <ambientLight intensity={0.5} />
-  <pointLight position={[10, 10, 10]} />
-  <mesh rotation={[0, 0, 0]}>
-    <boxGeometry args={[1, 1, 1]} />
-    <meshStandardMaterial color={'#C5A059'} />
+<Canvas>
+  <OrbitControls />
+  <mesh>
+    <boxGeometry />
+    <meshStandardMaterial color="#C5A059" />
   </mesh>
-</Canvas>`} fullWidth />
-                          </div>
-                     </div>
-                </div>
-            </section>
+</Canvas>`} />
+            </div>
+          </div>
 
-            {/* 10. Cards & Containers */}
-            <section>
-                <SectionHeader id="cards" icon={LayoutGrid} title="10. Cards & Containers" subtitle="Archetypes for content organization." />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                     {/* Executive Card */}
-                     <div className="bg-white p-8 border border-slate-200 group relative shadow-sm hover:shadow-md transition-all">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-ui-blue transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500"></div>
-                        <div className="w-10 h-10 bg-slate-50 flex items-center justify-center text-ui-blue mb-4"><Shield size={20}/></div>
-                        <h3 className="font-serif text-2xl text-ui-blue mb-2">Executive Module</h3>
-                        <p className="text-sm text-slate-500 font-light leading-relaxed mb-6">Official container for high-hierarchy governance data.</p>
-                        <div className="pt-4 border-t border-slate-100 flex justify-between items-center text-[9px] font-bold uppercase tracking-widest text-slate-400">
-                            <span>Status: Active</span>
-                            <ChevronRight size={14}/>
-                        </div>
-                     </div>
-
-                     {/* Legacy Card */}
-                     <div className="bg-slate-50 p-8 border-l-4 border-nobel-gold relative overflow-hidden">
-                        <Award className="text-nobel-gold mb-4" size={28} />
-                        <h3 className="font-serif text-2xl text-ui-blue mb-2 italic">Legacy Block</h3>
-                        <p className="text-sm text-slate-600 font-light leading-relaxed italic">"Used for quotes, alumni records, and historical highlights."</p>
-                     </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <CopySnippet label="Executive Card HTML" text={`<div className="bg-white p-8 border border-slate-200 group relative shadow-sm hover:shadow-md transition-all">
-  <div className="absolute top-0 left-0 w-full h-1 bg-ui-blue transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500"></div>
-  <div className="w-10 h-10 bg-slate-50 flex items-center justify-center text-ui-blue mb-4"><Shield size={20}/></div>
-  <h3 className="font-serif text-2xl text-ui-blue mb-2">Title</h3>
-  <p className="text-sm text-slate-500 font-light leading-relaxed mb-6">Description content.</p>
-  <div className="pt-4 border-t border-slate-100 flex justify-between items-center text-[9px] font-bold uppercase tracking-widest text-slate-400">
-      <span>Status: Active</span>
-      <ChevronRight size={14}/>
-  </div>
-</div>`} fullWidth />
-                    <CopySnippet label="Legacy Card HTML" text={`<div className="bg-slate-50 p-8 border-l-4 border-nobel-gold relative overflow-hidden">
-  <Award className="text-nobel-gold mb-4" size={28} />
-  <h3 className="font-serif text-2xl text-ui-blue mb-2 italic">Quote Title</h3>
-  <p className="text-sm text-slate-600 font-light leading-relaxed italic">"Quote text here."</p>
-</div>`} fullWidth />
-                </div>
-            </section>
-
-            {/* 11. Decor & Animation */}
-            <section>
-                <SectionHeader id="decor" icon={Sparkles} title="11. Decor & Animation" subtitle="Visual flourishes and motion patterns." />
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                     <div className="space-y-4">
-                          <h5 className="text-[9px] font-bold uppercase text-slate-400">Ornate Divider</h5>
-                          <div className="flex items-center gap-4 py-4">
-                              <div className="h-px flex-1 bg-slate-200"></div>
-                              <div className="w-2 h-2 rotate-45 bg-nobel-gold"></div>
-                              <div className="h-px flex-1 bg-slate-200"></div>
-                          </div>
-                          <CopySnippet label="Divider" text={`<div className="flex items-center gap-4 py-4">
-  <div className="h-px flex-1 bg-slate-200"></div>
-  <div className="w-2 h-2 rotate-45 bg-nobel-gold"></div>
-  <div className="h-px flex-1 bg-slate-200"></div>
-</div>`} />
-                     </div>
-                     <div className="space-y-4">
-                          <h5 className="text-[9px] font-bold uppercase text-slate-400">Grain Texture</h5>
-                          <div className="h-20 bg-slate-200 relative overflow-hidden">
-                               <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-multiply"></div>
-                          </div>
-                          <CopySnippet label="CSS Class" text="noise-overlay" />
-                     </div>
-                     <div className="space-y-4">
-                          <h5 className="text-[9px] font-bold uppercase text-slate-400">Hover Lift</h5>
-                          <div className="h-20 bg-white border border-slate-200 flex items-center justify-center hover:-translate-y-1 hover:shadow-lg transition-all duration-300 cursor-pointer">
-                               <span className="text-xs font-bold text-ui-blue">HOVER ME</span>
-                          </div>
-                          <CopySnippet label="Hover Lift" text="hover:-translate-y-1 hover:shadow-lg transition-all duration-300" />
-                     </div>
-                </div>
-            </section>
-
-            {/* 12. Assets & Media */}
-            <section>
-                <SectionHeader id="assets" icon={Monitor} title="12. Assets & Media" subtitle="Standardized rendering for visual artifacts." />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                     <div className="space-y-4">
-                        <div className="aspect-video bg-slate-100 relative group overflow-hidden border border-slate-200">
-                              <div className="absolute inset-0 flex items-center justify-center z-10">
-                                  <div className="w-16 h-16 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-ui-blue shadow-lg group-hover:scale-110 transition-transform cursor-pointer">
-                                      <Play size={24} className="ml-1"/>
-                                  </div>
-                              </div>
-                              <div className="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black/60 to-transparent">
-                                  <div className="text-white text-sm font-bold">Video Thumbnail Overlay</div>
-                              </div>
-                        </div>
-                        <CopySnippet label="Video Card" text={`<div className="aspect-video bg-slate-100 relative group overflow-hidden border border-slate-200">
-  <div className="absolute inset-0 flex items-center justify-center z-10">
-      <div className="w-16 h-16 bg-white/80 backdrop-blur rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-          <Play size={24} />
-      </div>
-  </div>
-</div>`} fullWidth />
-                     </div>
-                     <div className="space-y-4">
-                        <div className="p-4 border border-slate-200 bg-white flex items-start gap-4">
-                              <div className="w-20 h-20 bg-slate-50 flex items-center justify-center text-slate-300"><ImageIcon size={32}/></div>
-                              <div>
-                                  <div className="text-xs font-bold uppercase text-ui-blue mb-1">Figure 1.2</div>
-                                  <div className="text-sm text-slate-600 mb-2">Architectural Blueprint</div>
-                                  <div className="flex gap-2">
-                                      <span className="px-2 py-1 bg-slate-100 text-[8px] font-bold uppercase text-slate-500">JPG</span>
-                                      <span className="px-2 py-1 bg-slate-100 text-[8px] font-bold uppercase text-slate-500">2.4 MB</span>
-                                  </div>
-                              </div>
-                        </div>
-                        <CopySnippet label="Asset Row" text={`<div className="p-4 border border-slate-200 bg-white flex items-start gap-4">
-  <div className="w-20 h-20 bg-slate-50 flex items-center justify-center"><ImageIcon size={32}/></div>
+          {/* 10. CARDS */}
+          <SectionHeader id="cat-10" icon={LayoutGrid} title="10. Archival Cards" subtitle="System containers for data modules." />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-24">
+            <RegistryItem title="Announcement Block" code={`<div className="p-8 bg-white border border-slate-200 border-l-4 border-primary">
+  <div className="text-[8px] font-bold text-accent uppercase tracking-[0.4em] mb-4">Urgent Dispatch</div>
+  <h4 className="font-serif text-2xl text-primary mb-4">Title</h4>
+  <p className="text-sm text-slate-500">Content</p>
+</div>`}>
+              <div className="bg-white p-8 border border-slate-200 border-l-4 border-primary w-full group">
+                <div className="text-[8px] font-bold text-accent uppercase tracking-[0.4em] mb-4">Urgent Dispatch</div>
+                <h4 className="font-serif text-2xl text-primary mb-4 group-hover:text-accent transition-colors">Senate Reform Session</h4>
+                <p className="text-sm text-slate-500 font-light line-clamp-2">Administrative review of the 2024 budgetary framework following the resumption cycle.</p>
+              </div>
+            </RegistryItem>
+            <RegistryItem title="Personnel Artifact" code={`<div className="bg-slate-900 text-white p-6 border-l-4 border-accent flex items-center gap-6">
+  <div className="w-16 h-16 bg-slate-800"></div>
   <div>
-      <div className="text-xs font-bold uppercase text-ui-blue mb-1">Title</div>
-      <div className="text-sm text-slate-600 mb-2">Description</div>
+    <div className="text-[8px] font-bold text-accent uppercase">ROLE</div>
+    <h4 className="font-serif text-xl">Name</h4>
   </div>
-</div>`} fullWidth />
-                     </div>
+</div>`}>
+              <div className="bg-slate-900 text-white p-6 border border-white/10 border-l-4 border-accent w-full flex items-center gap-6">
+                <div className="w-16 h-16 bg-slate-800 border border-white/5 flex-shrink-0"></div>
+                <div>
+                  <div className="text-[8px] font-bold text-accent uppercase tracking-widest mb-1">PRESIDENT</div>
+                  <h4 className="font-serif text-xl">Aweda Bolaji</h4>
+                  <div className="text-[10px] text-slate-500 font-mono mt-2">ID: UISU_2024_001</div>
                 </div>
-            </section>
+              </div>
+            </RegistryItem>
+          </div>
 
-            {/* 13. Security & Identity */}
-            <section>
-                <SectionHeader id="security" icon={ShieldCheck} title="13. Security & Identity" subtitle="Visual signals for authentication and access." />
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                     <div className="space-y-4">
-                          <h5 className="text-[9px] font-bold uppercase text-slate-400">Verified Badge</h5>
-                          <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-ui-blue border border-blue-100 rounded-sm">
-                              <ShieldCheck size={12}/>
-                              <span className="text-[9px] font-bold uppercase tracking-widest">Official</span>
-                          </div>
-                          <CopySnippet label="Badge" text={`<div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-ui-blue border border-blue-100 rounded-sm">
-  <ShieldCheck size={12}/>
-  <span className="text-[9px] font-bold uppercase tracking-widest">Official</span>
-</div>`} />
-                     </div>
-                     <div className="space-y-4">
-                          <h5 className="text-[9px] font-bold uppercase text-slate-400">Locked Content</h5>
-                          <div className="p-4 bg-slate-50 border border-slate-200 border-dashed flex items-center gap-3 text-slate-400">
-                              <Lock size={16}/>
-                              <span className="text-xs font-mono">ENCRYPTED_DATA_BLOCK</span>
-                          </div>
-                          <CopySnippet label="Locked" text={`<div className="p-4 bg-slate-50 border border-slate-200 border-dashed flex items-center gap-3 text-slate-400">
-  <Lock size={16}/>
-  <span className="text-xs font-mono">ENCRYPTED</span>
-</div>`} />
-                     </div>
-                     <div className="space-y-4">
-                          <h5 className="text-[9px] font-bold uppercase text-slate-400">Security Alert</h5>
-                          <div className="p-4 bg-red-50 border border-red-100 text-red-800 flex items-center gap-3">
-                              <ShieldAlert size={16}/>
-                              <span className="text-[10px] font-bold uppercase tracking-widest">Unauthorized</span>
-                          </div>
-                          <CopySnippet label="Alert" text={`<div className="p-4 bg-red-50 border border-red-100 text-red-800 flex items-center gap-3">
-  <ShieldAlert size={16}/>
-  <span className="text-[10px] font-bold uppercase tracking-widest">Unauthorized</span>
-</div>`} />
-                     </div>
+          {/* 11. DECOR */}
+          <SectionHeader id="cat-11" icon={Sparkles} title="11. Decorative Textures" subtitle="Atmospheric treatments for layering." />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-24">
+            <RegistryItem title="Archival Grain" code={`<div className="bg-slate-900 relative"><div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay"></div></div>`}>
+              <div className="w-full h-40 bg-slate-900 relative overflow-hidden flex items-center justify-center border border-white/5 shadow-2xl">
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay"></div>
+                <span className="text-white/20 text-[10px] font-bold uppercase tracking-[1em]">Grain Pattern</span>
+              </div>
+            </RegistryItem>
+            <RegistryItem title="Branded Mesh" code={`<div className="bg-primary relative"><div className="absolute inset-0 bg-gradient-to-br from-accent/20 to-transparent"></div></div>`}>
+              <div className="w-full h-40 bg-primary relative overflow-hidden flex items-center justify-center border border-white/5 shadow-2xl">
+                <div className="absolute inset-0 bg-gradient-to-br from-accent/20 to-transparent"></div>
+                <span className="text-white/20 text-[10px] font-bold uppercase tracking-[1em]">Mesh Canvas</span>
+              </div>
+            </RegistryItem>
+          </div>
+
+          {/* 12. MEDIA */}
+          <SectionHeader id="cat-12" icon={Monitor} title="12. Assets & Media" subtitle="Visual and audio content rendering." />
+          <RegistryItem title="Audio Archive Player" code={`<div className="flex items-center gap-8 bg-slate-900 text-white p-6 border-l-4 border-accent">
+  <div className="w-12 h-12 bg-white/10 flex items-center justify-center"><Play size={24}/></div>
+  <div>
+    <div className="text-[8px] font-bold text-accent uppercase tracking-[0.4em]">RECORD_ID</div>
+    <div className="font-serif text-xl">Title</div>
+    <div className="w-full h-1 bg-white/10 mt-4"><div className="w-1/3 h-full bg-accent"></div></div>
+  </div>
+</div>`}>
+            <div className="w-full flex items-center gap-8 bg-slate-900 text-white p-6 border-l-4 border-accent shadow-2xl">
+              <div className="w-12 h-12 bg-white/10 flex items-center justify-center cursor-pointer hover:bg-accent hover:text-primary transition-colors">
+                <Play size={24} fill="currentColor"/>
+              </div>
+              <div className="flex-1">
+                <div className="text-[8px] font-bold text-accent uppercase tracking-[0.4em] mb-1">RECORD_#1971_ADEPEJU</div>
+                <div className="font-serif text-xl">Oral Testimony: Feb Protest</div>
+                <div className="w-full h-1 bg-white/10 mt-4 overflow-hidden"><div className="w-1/3 h-full bg-accent"></div></div>
+              </div>
+            </div>
+          </RegistryItem>
+
+          {/* 13. SECURITY */}
+          <SectionHeader id="cat-13" icon={ShieldCheck} title="13. Security & Identity" subtitle="Systems for verified presence." />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-24">
+            <RegistryItem title="Verification Seal" code={`<div className="p-2 border-2 border-green-500 text-green-500"><CheckCircle2 size={32}/></div>`}>
+              <div className="p-2 border-2 border-green-500 text-green-500 shadow-xl shadow-green-500/10"><CheckCircle2 size={32} /></div>
+            </RegistryItem>
+            <RegistryItem title="Digital ID Plaque" code={`<div className="bg-white p-4 border border-slate-200 flex items-center gap-4">
+  <div className="w-12 h-12 bg-slate-100 flex items-center justify-center"><UserCircle size={24}/></div>
+  <div>
+    <div className="text-[10px] font-bold text-primary uppercase">Role</div>
+    <div className="text-[8px] text-slate-400 font-mono">ID: XXX</div>
+  </div>
+</div>`}>
+              <div className="bg-white p-4 border border-slate-200 flex items-center gap-4 w-full">
+                <div className="w-12 h-12 bg-slate-100 flex items-center justify-center text-slate-300"><UserCircle size={24}/></div>
+                <div>
+                  <div className="text-[10px] font-bold text-primary uppercase tracking-widest">Global Scribe</div>
+                  <div className="text-[8px] text-slate-400 font-mono">ID: UISU/2024/003</div>
                 </div>
-            </section>
+              </div>
+            </RegistryItem>
+          </div>
 
-            {/* 14. Layout & Grid */}
-            <section>
-                <SectionHeader id="layout" icon={Grid} title="14. Layout & Grid" subtitle="Structural foundations and spacing tokens." />
-                <div className="space-y-8">
-                     <div className="space-y-4">
-                        <div className="grid grid-cols-12 gap-2 h-24">
-                              {[...Array(12)].map((_, i) => (
-                                  <div key={i} className="bg-ui-blue/10 border border-ui-blue/20 flex items-center justify-center text-[9px] text-ui-blue font-mono">
-                                      Col
-                                  </div>
-                              ))}
-                        </div>
-                        <CopySnippet label="Grid 12" text={`<div className="grid grid-cols-12 gap-2">
+          {/* 14. LAYOUT */}
+          <SectionHeader id="cat-14" icon={Grid} title="14. Layout & Grid" subtitle="Structural foundations and spacing tokens." />
+          <div className="space-y-8 mb-24">
+            <div className="grid grid-cols-12 gap-2 h-24">
+              {[...Array(12)].map((_, i) => (
+                <div key={i} className="bg-primary/10 border border-primary/20 flex items-center justify-center text-[9px] text-primary font-mono">Col</div>
+              ))}
+            </div>
+            <CodeBlock code={`<div className="grid grid-cols-12 gap-2">
   <div className="col-span-1">Col 1</div>
   <div className="col-span-11">Col 11</div>
-</div>`} fullWidth />
-                     </div>
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                          <div>
-                              <h5 className="text-[9px] font-bold uppercase text-slate-400 mb-2">Container Max-Widths</h5>
-                              <ul className="text-xs space-y-2 font-mono text-slate-600">
-                                  <li>sm: 640px</li>
-                                  <li>md: 768px</li>
-                                  <li>lg: 1024px</li>
-                                  <li>xl: 1280px</li>
-                                  <li>2xl: 1536px</li>
-                              </ul>
-                          </div>
-                          <div>
-                              <h5 className="text-[9px] font-bold uppercase text-slate-400 mb-2">Spacing Scale</h5>
-                              <div className="flex flex-col gap-2">
-                                  <div className="flex items-center gap-2"><div className="w-4 h-4 bg-nobel-gold"></div><span className="text-[10px] font-mono">p-4 (1rem)</span></div>
-                                  <div className="flex items-center gap-2"><div className="w-8 h-8 bg-nobel-gold"></div><span className="text-[10px] font-mono">p-8 (2rem)</span></div>
-                              </div>
-                          </div>
-                     </div>
-                </div>
-            </section>
+</div>`} />
+          </div>
 
-            {/* 15. Brand Identity */}
-            <section>
-                <SectionHeader id="brand" icon={Star} title="15. Brand Identity" subtitle="Tone, voice, and logo usage guidelines." />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                     <div className="p-8 border border-slate-200 bg-white">
-                          <h4 className="font-serif text-2xl text-ui-blue mb-4">Tone of Voice</h4>
-                          <p className="text-sm text-slate-600 leading-relaxed mb-4">
-                              The UISU Archive speaks with <span className="font-bold text-ui-blue">institutional authority</span> and <span className="font-bold text-ui-blue">historical reverence</span>. Language should be precise, slightly formal, and intellectually rigorous. Avoid slang or overly casual phrasing.
-                          </p>
-                          <div className="flex gap-4 text-xs">
-                               <div className="flex-1 p-3 bg-green-50 text-green-800 border border-green-100">
-                                   <span className="font-bold block mb-1">DO:</span>
-                                   "The protocol mandates verification."
-                               </div>
-                               <div className="flex-1 p-3 bg-red-50 text-red-800 border border-red-100">
-                                   <span className="font-bold block mb-1">DON'T:</span>
-                                   "You gotta check this out."
-                               </div>
-                          </div>
-                     </div>
-                     <div className="p-8 border border-slate-200 bg-ui-blue text-white">
-                          <h4 className="font-serif text-2xl mb-4">Logo Usage</h4>
-                          <div className="flex items-center gap-4 mb-6">
-                               <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-ui-blue font-serif font-bold text-xl">U</div>
-                               <div>
-                                   <div className="text-lg font-bold uppercase tracking-widest">UISU Archive</div>
-                                   <div className="text-[9px] text-slate-300 uppercase tracking-[0.4em]">Est. 1948</div>
-                               </div>
-                          </div>
-                          <p className="text-xs text-slate-300 leading-relaxed opacity-80">
-                              Always maintain clear space around the logomark. Do not alter colors or aspect ratio.
-                          </p>
-                     </div>
+          {/* 15. BRAND */}
+          <SectionHeader id="cat-15" icon={Star} title="15. Brand Identity" subtitle="Tone, voice, and logo usage guidelines." />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-24">
+            <div className="p-8 border border-slate-200 bg-white">
+              <h4 className="font-serif text-2xl text-primary mb-4">Tone of Voice</h4>
+              <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                The UISU Archive speaks with <span className="font-bold text-primary">institutional authority</span> and <span className="font-bold text-primary">historical reverence</span>. Language should be precise, slightly formal, and intellectually rigorous.
+              </p>
+              <div className="flex gap-4 text-xs">
+                <div className="flex-1 p-3 bg-green-50 text-green-800 border border-green-100">
+                  <span className="font-bold block mb-1">DO:</span>
+                  "The protocol mandates verification."
                 </div>
-            </section>
-
-            {/* 16. Utilities & Helpers */}
-            <section>
-                <SectionHeader id="utilities" icon={Code} title="16. Utilities & Helpers" subtitle="Functional classes and mixins for rapid development." />
-                <div className="grid grid-cols-1 gap-6">
-                     <div className="bg-slate-900 text-slate-300 p-6 font-mono text-xs overflow-x-auto border border-white/10">
-                          <div className="mb-4">
-                              <span className="text-nobel-gold">// Hide scrollbar but allow scroll</span><br/>
-                              .no-scrollbar::-webkit-scrollbar &#123; display: none; &#125;
-                          </div>
-                          <div className="mb-4">
-                              <span className="text-nobel-gold">// Marquee Animation</span><br/>
-                              .animate-marquee &#123; animation: marquee 20s linear infinite; &#125;
-                          </div>
-                          <div>
-                              <span className="text-nobel-gold">// Print Hide</span><br/>
-                              @media print &#123; .no-print &#123; display: none !important; &#125; &#125;
-                          </div>
-                     </div>
+                <div className="flex-1 p-3 bg-red-50 text-red-800 border border-red-100">
+                  <span className="font-bold block mb-1">DON'T:</span>
+                  "You gotta check this out."
                 </div>
-            </section>
+              </div>
+            </div>
+            <div className="p-8 border border-slate-200 bg-primary text-white">
+              <h4 className="font-serif text-2xl mb-4">Logo Usage</h4>
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary font-serif font-bold text-xl">U</div>
+                <div>
+                  <div className="text-lg font-bold uppercase tracking-widest">UISU Archive</div>
+                  <div className="text-[9px] text-slate-300 uppercase tracking-[0.4em]">Est. 1948</div>
+                </div>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed opacity-80">
+                Always maintain clear space around the logomark. Do not alter colors or aspect ratio.
+              </p>
+            </div>
+          </div>
 
-            {/* 17. Tabular Matrix */}
-            <section>
-                <SectionHeader id="tabular" icon={LayoutGrid} title="17. Tabular Matrix" subtitle="Complex data rendering for legislative and administrative records." />
-                <div className="space-y-8">
-                    {/* Header Archetype */}
-                    <div className="space-y-4">
-                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Legislative Header Archetype</h5>
-                        <div className="grid grid-cols-12 gap-4 bg-ui-blue text-white px-8 py-5 text-[10px] font-bold uppercase tracking-[0.3em] border border-ui-blue shadow-lg">
-                            <div className="col-span-1">REF</div>
-                            <div className="col-span-5">SUBJECT_NOMENCLATURE</div>
-                            <div className="col-span-3">JURISDICTION</div>
-                            <div className="col-span-3 text-right">METRIC_STATUS</div>
-                        </div>
-                        <CopySnippet label="Header CSS" text={`<div className="grid grid-cols-12 gap-4 bg-ui-blue text-white px-8 py-5 text-[10px] font-bold uppercase tracking-[0.3em] border border-ui-blue shadow-lg">
+          {/* 16. UTILITIES */}
+          <SectionHeader id="cat-16" icon={Code} title="16. Utilities & Helpers" subtitle="Functional classes and mixins for rapid development." />
+          <div className="bg-slate-900 text-slate-300 p-6 font-mono text-xs overflow-x-auto border border-white/10 mb-24">
+            <div className="mb-4">
+              <span className="text-accent">// Hide scrollbar but allow scroll</span><br/>
+              .no-scrollbar::-webkit-scrollbar &#123; display: none; &#125;
+            </div>
+            <div className="mb-4">
+              <span className="text-accent">// Marquee Animation</span><br/>
+              .animate-marquee &#123; animation: marquee 20s linear infinite; &#125;
+            </div>
+            <div>
+              <span className="text-accent">// Print Hide</span><br/>
+              @media print &#123; .no-print &#123; display: none !important; &#125; &#125;
+            </div>
+          </div>
+
+          {/* 17. TABULAR */}
+          <SectionHeader id="cat-17" icon={LayoutGrid} title="17. Tabular Matrix" subtitle="Complex data rendering for legislative and administrative records." />
+          <div className="space-y-8 mb-24">
+            <div className="grid grid-cols-12 gap-4 bg-primary text-white px-8 py-5 text-[10px] font-bold uppercase tracking-[0.3em] border border-primary shadow-lg">
+              <div className="col-span-1">REF</div>
+              <div className="col-span-5">SUBJECT_NOMENCLATURE</div>
+              <div className="col-span-3">JURISDICTION</div>
+              <div className="col-span-3 text-right">METRIC_STATUS</div>
+            </div>
+            <CodeBlock code={`<div className="grid grid-cols-12 gap-4 bg-primary text-white px-8 py-5 text-[10px] font-bold uppercase tracking-[0.3em]">
   <div className="col-span-1">REF</div>
   <div className="col-span-5">SUBJECT</div>
   <div className="col-span-3">JURISDICTION</div>
   <div className="col-span-3 text-right">STATUS</div>
-</div>`} fullWidth />
-                    </div>
+</div>`} />
+          </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {/* Row: Standard */}
-                        <div className="space-y-4">
-                            <h5 className="text-[9px] font-bold uppercase text-slate-400">Data Row: Primary</h5>
-                            <div className="p-4 bg-white border border-slate-200 flex justify-between items-center">
-                                <div className="text-[10px] font-bold text-ui-blue">SYSTEM_LOG_001</div>
-                                <CheckCircle2 size={14} className="text-green-500" />
-                            </div>
-                            <CopySnippet label="Row Primary" text={`<div className="p-4 bg-white border border-slate-200 flex justify-between items-center">
-  <div className="text-[10px] font-bold text-ui-blue">DATA_001</div>
-  <CheckCircle2 size={14} className="text-green-500" />
-</div>`} />
-                        </div>
-                        {/* Row: Warning */}
-                        <div className="space-y-4">
-                            <h5 className="text-[9px] font-bold uppercase text-slate-400">Data Row: Conflict</h5>
-                            <div className="p-4 bg-red-50 border border-red-100 flex justify-between items-center">
-                                <div className="text-[10px] font-bold text-red-700">UNAUTHORIZED_ACCESS</div>
-                                <AlertTriangle size={14} className="text-red-500" />
-                            </div>
-                            <CopySnippet label="Row Conflict" text={`<div className="p-4 bg-red-50 border border-red-100 flex justify-between items-center">
-  <div className="text-[10px] font-bold text-red-700">ERROR</div>
-  <AlertTriangle size={14} className="text-red-500" />
-</div>`} />
-                        </div>
-                        {/* Summary Cell */}
-                        <div className="space-y-4">
-                            <h5 className="text-[9px] font-bold uppercase text-slate-400">Ledger Totals Cell</h5>
-                            <div className="p-6 bg-slate-100 border border-slate-200 text-right">
-                                <div className="text-[8px] font-bold uppercase text-slate-400 mb-1">Cumulative Force</div>
-                                <div className="text-2xl font-mono text-ui-blue font-bold tracking-tighter">35,482</div>
-                            </div>
-                            <CopySnippet label="Totals Cell" text={`<div className="p-6 bg-slate-100 border border-slate-200 text-right">
-  <div className="text-[8px] font-bold uppercase text-slate-400 mb-1">Total</div>
-  <div className="text-2xl font-mono text-ui-blue font-bold tracking-tighter">0.00</div>
-</div>`} />
-                        </div>
-                    </div>
+          {/* 18. ADMIN */}
+          <SectionHeader id="cat-18" icon={Sliders} title="18. Administrative Controls" subtitle="Interactive elements for system governance." />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-24">
+            <RegistryItem title="Filter Logic Pill" code={`<div className="px-5 py-2 bg-primary text-white rounded-full flex items-center gap-3">
+  <span className="text-[10px] font-bold uppercase">Category: CEC</span>
+  <X size={12} />
+</div>`}>
+              <div className="px-5 py-2 bg-primary text-white rounded-full flex items-center gap-3 w-fit shadow-lg">
+                <span className="text-[10px] font-bold uppercase tracking-widest">Category: CEC</span>
+                <X size={12} className="cursor-pointer hover:text-accent transition-colors" />
+              </div>
+            </RegistryItem>
+            <RegistryItem title="Legislative Checklist" code={`<div className="flex items-center gap-3">
+  <div className="w-5 h-5 border-2 border-primary bg-white flex items-center justify-center"><Check size={14}/></div>
+  <span className="text-[10px] font-bold uppercase">Label</span>
+</div>`}>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-5 h-5 border-2 border-primary bg-white flex items-center justify-center"><Check size={14} className="text-primary" /></div>
+                  <span className="text-[10px] font-bold uppercase text-slate-600">Article 4 Section A</span>
                 </div>
-            </section>
-
-            {/* 18. Administrative Controls */}
-            <section>
-                <SectionHeader id="admin" icon={Sliders} title="18. Administrative Controls" subtitle="Interactive elements for system governance." />
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {/* Filter Pill */}
-                    <div className="space-y-4">
-                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Filter Logic Pill</h5>
-                        <div className="px-5 py-2 bg-ui-blue text-white rounded-full flex items-center gap-3 w-fit shadow-lg">
-                            <span className="text-[10px] font-bold uppercase tracking-widest">Category: CEC</span>
-                            <X size={12} className="cursor-pointer hover:text-nobel-gold transition-colors" />
-                        </div>
-                        <CopySnippet label="Filter Pill" text={`<div className="px-5 py-2 bg-ui-blue text-white rounded-full flex items-center gap-3 w-fit shadow-lg">
-  <span className="text-[10px] font-bold uppercase tracking-widest">Category</span>
-  <X size={12} className="cursor-pointer hover:text-nobel-gold" />
-</div>`} />
-                    </div>
-                    {/* Checkbox Group */}
-                    <div className="space-y-4">
-                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Legislative Checklist</h5>
-                        <div className="space-y-3">
-                            <div className="flex items-center gap-3">
-                                <div className="w-5 h-5 border-2 border-ui-blue bg-white flex items-center justify-center">
-                                    <Check size={14} className="text-ui-blue" />
-                                </div>
-                                <span className="text-[10px] font-bold uppercase text-slate-600">Article 4 Section A</span>
-                            </div>
-                            <div className="flex items-center gap-3 opacity-40">
-                                <div className="w-5 h-5 border-2 border-slate-300 bg-white"></div>
-                                <span className="text-[10px] font-bold uppercase text-slate-400">Article 4 Section B</span>
-                            </div>
-                        </div>
-                        <CopySnippet label="Check Group" text={`<div className="flex items-center gap-3">
-  <div className="w-5 h-5 border-2 border-ui-blue bg-white flex items-center justify-center">
-      <Check size={14} className="text-ui-blue" />
-  </div>
-  <span className="text-[10px] font-bold uppercase text-slate-600">Label</span>
-</div>`} />
-                    </div>
-                    {/* Sort Button */}
-                    <div className="space-y-4">
-                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Ordering Controller</h5>
-                        <button className="flex items-center gap-3 px-4 py-2 border border-slate-200 hover:border-ui-blue transition-colors group">
-                            <SortDesc size={14} className="text-slate-300 group-hover:text-ui-blue" />
-                            <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500 group-hover:text-ui-blue">Sequence Index</span>
-                        </button>
-                        <CopySnippet label="Sort Btn" text={`<button className="flex items-center gap-3 px-4 py-2 border border-slate-200 hover:border-ui-blue transition-colors group">
-  <SortDesc size={14} className="text-slate-300 group-hover:text-ui-blue" />
-  <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500 group-hover:text-ui-blue">Sort</span>
-</button>`} />
-                    </div>
-                    {/* Search Ghost */}
-                    <div className="space-y-4">
-                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Search Module: Ghost</h5>
-                        <div className="relative group">
-                            <Search size={14} className="absolute left-0 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-nobel-gold" />
-                            <input type="text" placeholder="FILTER_SYSTEM_INDEX..." className="w-full bg-transparent border-b border-slate-200 pl-6 py-2 text-[10px] font-mono outline-none focus:border-nobel-gold transition-all" />
-                        </div>
-                        <CopySnippet label="Ghost Search" text={`<div className="relative group">
-  <Search size={14} className="absolute left-0 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-nobel-gold" />
-  <input type="text" className="w-full bg-transparent border-b border-slate-200 pl-6 py-2 text-[10px] font-mono outline-none focus:border-nobel-gold transition-all" />
-</div>`} />
-                    </div>
+                <div className="flex items-center gap-3 opacity-40">
+                  <div className="w-5 h-5 border-2 border-slate-300 bg-white"></div>
+                  <span className="text-[10px] font-bold uppercase text-slate-400">Article 4 Section B</span>
                 </div>
-            </section>
+              </div>
+            </RegistryItem>
+            <RegistryItem title="Ordering Controller" code={`<button className="flex items-center gap-3 px-4 py-2 border border-slate-200 hover:border-primary">
+  <SortDesc size={14} />
+  <span className="text-[9px] font-bold uppercase">Sequence Index</span>
+</button>`}>
+              <button className="flex items-center gap-3 px-4 py-2 border border-slate-200 hover:border-primary transition-colors group">
+                <SortDesc size={14} className="text-slate-300 group-hover:text-primary" />
+                <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500 group-hover:text-primary">Sequence Index</span>
+              </button>
+            </RegistryItem>
+          </div>
 
-            {/* 19. Empty States & Feedback */}
-            <section>
-                <SectionHeader id="feedback" icon={MessageSquare} title="19. System Feedback" subtitle="Visual signals for status and wayfinding." />
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {/* Toast */}
-                    <div className="space-y-4">
-                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Toast Notification</h5>
-                        <div className="bg-slate-900 text-white p-4 border-l-2 border-nobel-gold shadow-xl flex items-start gap-3">
-                            <div className="mt-0.5 text-nobel-gold"><CheckCircle2 size={16} /></div>
-                            <div>
-                                <div className="text-[10px] font-bold uppercase tracking-widest mb-1">Record Archived</div>
-                                <div className="text-[9px] text-slate-400 leading-relaxed">The legislative entry has been successfully committed.</div>
-                            </div>
-                        </div>
-                        <CopySnippet label="Toast" text={`<div className="bg-slate-900 text-white p-4 border-l-2 border-nobel-gold shadow-xl flex items-start gap-3">
-  <div className="mt-0.5 text-nobel-gold"><CheckCircle2 size={16} /></div>
-  <div>
-      <div className="text-[10px] font-bold uppercase tracking-widest mb-1">Title</div>
-      <div className="text-[9px] text-slate-400 leading-relaxed">Message</div>
-  </div>
-</div>`} />
-                    </div>
-                    {/* Empty State */}
-                    <div className="space-y-4">
-                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Empty State: Null</h5>
-                        <div className="p-8 bg-slate-50 border border-slate-200 border-dashed flex flex-col items-center justify-center gap-4 text-center">
-                            <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center text-slate-400">
-                                <Ghost size={24} />
-                            </div>
-                            <div>
-                                <div className="text-[10px] font-bold uppercase text-slate-500 mb-1">No Records Found</div>
-                                <div className="text-[9px] text-slate-400">Try adjusting your filter parameters.</div>
-                            </div>
-                        </div>
-                        <CopySnippet label="Empty State" text={`<div className="p-8 bg-slate-50 border border-slate-200 border-dashed flex flex-col items-center justify-center gap-4 text-center">
-  <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center text-slate-400"><Ghost size={24} /></div>
-  <div>
-      <div className="text-[10px] font-bold uppercase text-slate-500 mb-1">No Records</div>
-      <div className="text-[9px] text-slate-400">Message here.</div>
-  </div>
-</div>`} />
-                    </div>
-                    {/* 404 Visual */}
-                    <div className="space-y-4">
-                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Error Visual: 404</h5>
-                        <div className="aspect-square bg-ui-blue relative overflow-hidden flex items-center justify-center">
-                            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-                            <div className="text-6xl font-mono font-bold text-white/10 select-none">404</div>
-                            <AlertTriangle size={32} className="text-nobel-gold absolute animate-bounce" />
-                        </div>
-                        <CopySnippet label="404 Block" text={`<div className="aspect-square bg-ui-blue relative overflow-hidden flex items-center justify-center">
-  <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-  <div className="text-6xl font-mono font-bold text-white/10 select-none">404</div>
-  <AlertTriangle size={32} className="text-nobel-gold absolute animate-bounce" />
-</div>`} />
-                    </div>
+          {/* 19. FEEDBACK */}
+          <SectionHeader id="cat-19" icon={MessageSquare} title="19. System Feedback" subtitle="Visual signals for system states." />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-24">
+            <RegistryItem title="System Toast" code={`<div className="bg-slate-900 text-white p-4 shadow-2xl border-l-4 border-accent flex items-center gap-4">
+  <CheckCircle2 className="text-green-500" size={16} />
+  <span className="text-[10px] font-bold uppercase tracking-widest">Protocol_Synchronized</span>
+</div>`}>
+              <div className="bg-slate-900 text-white p-4 shadow-2xl border-l-4 border-accent flex items-center gap-4 w-full">
+                <CheckCircle2 className="text-green-500" size={16} />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Protocol_Synchronized</span>
+              </div>
+            </RegistryItem>
+            <RegistryItem title="Empty State: Null" code={`<div className="p-8 bg-slate-50 border border-slate-200 border-dashed flex flex-col items-center justify-center gap-4">
+  <Ghost size={24} />
+  <div className="text-[10px] font-bold uppercase">No Records Found</div>
+</div>`}>
+              <div className="p-8 bg-slate-50 border border-slate-200 border-dashed flex flex-col items-center justify-center gap-4 text-center w-full">
+                <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center text-slate-400"><Ghost size={24} /></div>
+                <div>
+                  <div className="text-[10px] font-bold uppercase text-slate-500 mb-1">No Records Found</div>
+                  <div className="text-[9px] text-slate-400">Try adjusting your filter parameters.</div>
                 </div>
-            </section>
+              </div>
+            </RegistryItem>
+          </div>
 
-            {/* 20. Rich Text & Editorial */}
-            <section className="mb-32">
-                <SectionHeader id="editorial" icon={FileText} title="20. Rich Text & Editorial" subtitle="Typography for long-form content." />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Dropcap */}
-                    <div className="space-y-4">
-                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Ornate Dropcap</h5>
-                        <div className="p-6 bg-white border border-slate-200">
-                            <div className="flex items-start gap-3">
-                                <span className="text-5xl font-serif font-bold text-nobel-gold leading-[0.8] float-left mr-2 mt-1">T</span>
-                                <p className="text-sm text-slate-600 leading-relaxed font-light">
-                                    The foundations of the Union were laid not in brick, but in the collective consciousness of a new academic era. It began as a whisper in the halls.
-                                </p>
-                            </div>
-                        </div>
-                        <CopySnippet label="Dropcap" text={`<span className="text-5xl font-serif font-bold text-nobel-gold leading-[0.8] float-left mr-2 mt-1">T</span>`} />
-                    </div>
-                    {/* Blockquote */}
-                    <div className="space-y-4">
-                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Editorial Blockquote</h5>
-                        <div className="p-6 bg-slate-50 border-l-4 border-ui-blue">
-                            <p className="font-serif text-lg text-ui-blue italic mb-4">"We must be the architects of our own intellectual destiny."</p>
-                            <div className="flex items-center gap-2">
-                                <div className="h-px w-8 bg-slate-300"></div>
-                                <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">First President, 1948</span>
-                            </div>
-                        </div>
-                        <CopySnippet label="Blockquote" text={`<div className="p-6 bg-slate-50 border-l-4 border-ui-blue">
-  <p className="font-serif text-lg text-ui-blue italic mb-4">"Quote text."</p>
-  <div className="flex items-center gap-2">
-      <div className="h-px w-8 bg-slate-300"></div>
-      <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Author</span>
-  </div>
-</div>`} />
-                    </div>
-                    {/* Citation */}
-                    <div className="space-y-4">
-                        <h5 className="text-[9px] font-bold uppercase text-slate-400">Inline Citation</h5>
-                        <div className="p-4 bg-white border border-slate-200 text-sm text-slate-600">
-                            According to the 1972 decree <sup className="text-ui-blue font-bold cursor-pointer hover:text-nobel-gold transition-colors">[12]</sup>, the council holds absolute authority.
-                        </div>
-                        <CopySnippet label="Citation" text={`<sup className="text-ui-blue font-bold cursor-pointer hover:text-nobel-gold transition-colors">[12]</sup>`} />
-                    </div>
+          {/* 20. EDITORIAL */}
+          <SectionHeader id="cat-20" icon={FileText} title="20. Rich Text & Editorial" subtitle="Typography for long-form content." />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-24">
+            <RegistryItem title="Ornate Dropcap" code={`<span className="text-5xl font-serif font-bold text-accent leading-[0.8] float-left mr-2 mt-1">T</span>`}>
+              <div className="p-6 bg-white border border-slate-200 w-full">
+                <div className="flex items-start gap-3">
+                  <span className="text-5xl font-serif font-bold text-accent leading-[0.8] float-left mr-2 mt-1">T</span>
+                  <p className="text-sm text-slate-600 leading-relaxed font-light">
+                    The foundations of the Union were laid not in brick, but in the collective consciousness of a new academic era.
+                  </p>
                 </div>
-            </section>
+              </div>
+            </RegistryItem>
+            <RegistryItem title="Editorial Blockquote" code={`<div className="p-6 bg-slate-50 border-l-4 border-primary">
+  <p className="font-serif text-lg text-primary italic mb-4">"Quote text."</p>
+  <span className="text-[9px] font-bold uppercase text-slate-500">Author</span>
+</div>`}>
+              <div className="p-6 bg-slate-50 border-l-4 border-primary w-full">
+                <p className="font-serif text-lg text-primary italic mb-4">"We must be the architects of our own intellectual destiny."</p>
+                <div className="flex items-center gap-2">
+                  <div className="h-px w-8 bg-slate-300"></div>
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">First President, 1948</span>
+                </div>
+              </div>
+            </RegistryItem>
+          </div>
 
-            {/* Footer */}
-            <div className="mt-32 pt-16 border-t border-slate-200 text-center relative overflow-hidden break-inside-avoid">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-nobel-gold/5 blur-3xl rounded-full"></div>
-                <Star size={40} className="mx-auto text-nobel-gold/20 mb-6" />
-                <p className="text-[10px] font-bold uppercase tracking-[1em] text-slate-300 relative z-10">Intellectualism & Welfare Protocol</p>
+          {/* 21. OVERLAYS */}
+          <SectionHeader id="cat-21" icon={Layers} title="21. Overlay Protocols" subtitle="Standard focus and context layers." />
+          <RegistryItem title="System Dispatch Modal" code={`<div className="bg-white shadow-2xl p-12 max-w-md border border-slate-200 flex flex-col items-center text-center">
+  <ShieldAlert className="text-red-500 mb-6" size={48} />
+  <h4 className="font-serif text-2xl text-primary mb-4">Title</h4>
+  <p className="text-xs text-slate-500 mb-8">Message</p>
+  <button className="w-full py-4 bg-primary text-white text-[10px] font-bold uppercase">Action</button>
+</div>`}>
+            <div className="bg-white border border-slate-200 shadow-2xl p-12 flex flex-col items-center text-center max-w-sm">
+              <ShieldAlert className="text-red-500 mb-6" size={48} />
+              <h4 className="font-serif text-2xl text-primary mb-4 leading-tight">Identity Verification Required</h4>
+              <p className="text-xs text-slate-500 mb-8 font-light">Confirm biometric authorization before accessing restricted archives.</p>
+              <button className="w-full py-4 bg-primary text-white text-[10px] font-bold uppercase tracking-widest hover:bg-accent hover:text-primary transition-all">Verify_Identity</button>
             </div>
-         </div>
+          </RegistryItem>
+
+          {/* 22. TABS */}
+          <SectionHeader id="cat-22" icon={Command} title="22. Tab & Control Stacks" subtitle="Standardized state toggles." />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-24">
+            <RegistryItem title="Segmented Tab Row" code={`<div className="flex border border-slate-200 w-full">
+  <div className="flex-1 text-center py-3 bg-primary text-white text-[10px] font-bold uppercase">ACTIVE</div>
+  <div className="flex-1 text-center py-3 text-slate-400 text-[10px] font-bold uppercase border-l border-slate-200">INACTIVE</div>
+</div>`}>
+              <div className="flex border border-slate-200 w-full">
+                <div className="flex-1 text-center py-3 bg-primary text-white text-[10px] font-bold uppercase tracking-widest">EXECUTIVE</div>
+                <div className="flex-1 text-center py-3 text-slate-400 text-[10px] font-bold uppercase tracking-widest border-l border-slate-200">LEGISLATIVE</div>
+              </div>
+            </RegistryItem>
+            <RegistryItem title="Active Pill Control" code={`<div className="flex gap-3">
+  <span className="px-4 py-2 bg-primary text-white text-[9px] font-bold uppercase">Active</span>
+  <span className="px-4 py-2 bg-slate-100 text-slate-400 text-[9px] font-bold uppercase">Pending</span>
+</div>`}>
+              <div className="flex gap-3">
+                <span className="px-4 py-2 bg-primary text-white text-[9px] font-bold uppercase tracking-widest">Active</span>
+                <span className="px-4 py-2 bg-slate-100 text-slate-400 text-[9px] font-bold uppercase tracking-widest">Pending</span>
+              </div>
+            </RegistryItem>
+          </div>
+
+          {/* 23. BADGES */}
+          <SectionHeader id="cat-23" icon={Award} title="23. Badge & Medal Systems" subtitle="Merit indicators for personnel records." />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-24">
+            <RegistryItem title="Gold Merit Star" code={`<div className="p-3 bg-primary text-accent shadow-xl"><Star size={24} fill="currentColor"/></div>`}>
+              <div className="p-3 bg-primary text-accent shadow-xl shadow-primary/20"><Star size={24} fill="currentColor"/></div>
+            </RegistryItem>
+            <RegistryItem title="Merit Level Plate" code={`<div className="px-4 py-1 bg-red-950 text-red-500 border border-red-500/30 text-[8px] font-bold uppercase">LEVEL 5 ACCESS</div>`}>
+              <div className="px-4 py-1 bg-red-950 text-red-500 border border-red-500/30 text-[8px] font-bold uppercase tracking-[0.4em] text-center shadow-lg">LEVEL 5 ACCESS</div>
+            </RegistryItem>
+            <RegistryItem title="Signature Hologram" code={`<div className="font-serif italic text-2xl text-primary border-b-2 border-slate-200 pb-2">Signature</div>`}>
+              <div className="font-serif italic text-2xl text-primary border-b-2 border-slate-200 pb-2">Wole Soyinka</div>
+            </RegistryItem>
+          </div>
+
+          {/* 24. TOOLTIPS */}
+          <SectionHeader id="cat-24" icon={Info} title="24. Tooltip & Info Slates" subtitle="Contextual data layers." />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-24">
+            <RegistryItem title="Context Tooltip" code={`<div className="bg-slate-900 text-white px-4 py-2 text-[8px] font-mono border border-white/10 shadow-2xl relative">
+  RECORD_ID: ARCH_048_VERIFIED
+  <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-8 border-transparent border-b-slate-900"></div>
+</div>`}>
+              <div className="bg-slate-900 text-white px-4 py-2 text-[8px] font-mono whitespace-nowrap border border-white/10 shadow-2xl relative">
+                RECORD_ID: ARCH_048_VERIFIED
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-8 border-transparent border-b-slate-900"></div>
+              </div>
+            </RegistryItem>
+            <RegistryItem title="Status Information Slate" code={`<div className="p-6 bg-blue-50 text-blue-800 border border-blue-100 flex items-center gap-4">
+  <Info size={18} />
+  <span className="text-[10px] font-bold uppercase tracking-widest">Protocol currently in read-only mode</span>
+</div>`}>
+              <div className="p-6 bg-blue-50 text-blue-800 border border-blue-100 flex items-center gap-4 w-full">
+                <Info size={18} />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Protocol currently in read-only mode</span>
+              </div>
+            </RegistryItem>
+          </div>
+
+          {/* Global Registry Footer */}
+          <div className="mt-60 text-center pb-40 relative break-inside-avoid">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-px bg-slate-200"></div>
+            <Star size={40} className="mx-auto text-accent/10 mb-8 mt-20" />
+            <p className="text-[10px] font-bold uppercase tracking-[1.5em] text-slate-300">Intellectualism & Welfare Protocol • v2.4.0</p>
+            <div className="mt-8 flex justify-center gap-8 text-[8px] font-mono text-slate-400 uppercase tracking-widest">
+              <span>EST: 1948</span>
+              <span>LOC: IBADAN, NG</span>
+              <span>SYS: ARCHIVE_LIVE</span>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   );
