@@ -263,8 +263,8 @@ export const CampusMap: React.FC = () => {
                     boxShadow: isHovered || isSelected ? `0 8px 25px ${hall.color}50` : '0 4px 12px rgba(0,0,0,0.15)'
                   }}
                 >
-                  <MapPin
-                    size={20} 
+                  <TypeIcon
+                    size={18} 
                     style={{ color: isHovered || isSelected ? 'white' : hall.color }} 
                   />
                 </div>
@@ -393,8 +393,8 @@ export const CampusMap: React.FC = () => {
             referrerPolicy="no-referrer-when-downgrade"
           ></iframe>
           
-          {/* Overlay info */}
-          <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm border border-slate-200 p-4 shadow-lg max-w-xs">
+          {/* Overlay info - moved to top right */}
+          <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm border border-slate-200 p-4 shadow-lg max-w-xs">
             <div className="flex items-center gap-2 mb-2">
               <Navigation size={16} className="text-ui-blue" />
               <p className="text-sm font-bold text-ui-blue">University of Ibadan</p>
