@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Star, Pencil, Plus, Trash2, Save, X, Loader2, Upload, Search, Filter, Download, FileUp, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Star, Pencil, Plus, Trash2, Save, X, Loader2, Upload, Search, Filter, Download, FileUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { Button } from '@/components/ui/button';
@@ -466,114 +466,49 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
                             )}
                         </div>
 
-                        <div className="space-y-2">
-                            {filteredLegislators.length === 0 ? (
-                                <div className="bg-white rounded-lg border border-slate-200 p-12 text-center">
-                                    <p className="text-slate-500 font-serif text-xl italic">No legislators found matching your search</p>
-                                </div>
-                            ) : (
-                                <motion.div
-                                    variants={containerVariants}
-                                    initial="hidden"
-                                    animate="visible"
-                                    className="space-y-2"
-                                >
-                                    {filteredLegislators.map((leg, index) => (
-                                        <motion.div
-                                            key={leg.id}
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: index * 0.03 }}
-                                            onClick={() => !isStaff && navigate(`/current-leaders/${leg.id}`)}
-                                            className={`group relative bg-white border border-slate-100 hover:border-nobel-gold/30 hover:shadow-lg transition-all duration-300 ${!isStaff ? 'cursor-pointer' : ''} overflow-hidden rounded-lg`}
-                                        >
-                                            {/* Gold accent bar on left */}
-                                            <div className="absolute left-0 top-0 h-full w-1 bg-slate-200 group-hover:bg-nobel-gold transition-colors duration-300"></div>
-
-                                            <div className="pl-6 pr-6 py-5 flex items-center gap-6">
-                                                {/* Row number */}
-                                                <div className="flex-shrink-0 w-10 text-center">
-                                                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">{String(index + 1).padStart(2, '0')}</span>
-                                                </div>
-
-                                                {/* Avatar with initials */}
-                                                <div className="flex-shrink-0">
-                                                    <div className="w-12 h-12 rounded-full bg-ui-blue/10 border-2 border-ui-blue/20 flex items-center justify-center">
-                                                        <span className="text-sm font-bold text-ui-blue">
-                                                            {leg.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                {/* Name and details */}
-                                                <div className="flex-1 min-w-0">
-                                                    <h3 className="font-serif text-xl text-ui-blue group-hover:text-nobel-gold transition-colors duration-300 truncate">
-                                                        {leg.name}
-                                                    </h3>
-                                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mt-1">Honourable Member</p>
-                                                </div>
-
-                                                {/* Constituency badge */}
-                                                <div className="flex-shrink-0 hidden sm:block">
-                                                    <span className="px-3 py-1 bg-ui-blue/5 text-ui-blue text-[10px] font-bold uppercase tracking-widest rounded-full">
-                                                        {leg.constituency}
-                                                    </span>
-                                                </div>
-
-                                                {/* Admin actions */}
-                                                {isStaff && (
-                                                    <div className="flex-shrink-0 flex gap-2">
-                                                        <Button 
-                                                            size="icon" 
-                                                            variant="ghost" 
-                                                            className="h-9 w-9 hover:bg-ui-blue/10 hover:text-ui-blue" 
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                openEditModal(leg);
-                                                            }}
-                                                        >
-                                                            <Pencil size={14} />
-                                                        </Button>
-                                                        <Button 
-                                                            size="icon" 
-                                                            variant="ghost" 
-                                                            className="h-9 w-9 hover:bg-red-50 hover:text-red-600" 
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleDelete(leg.id);
-                                                            }}
-                                                        >
-                                                            <Trash2 size={14} />
-                                                        </Button>
-                                                    </div>
-                                                )}
-
-                                                {/* Arrow indicator (only for non-staff) */}
-                                                {!isStaff && (
-                                                    <div className="flex-shrink-0">
-                                                        <ArrowRight className="text-slate-300 group-hover:text-nobel-gold group-hover:translate-x-1 transition-all duration-300" size={20} />
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Constituency badge for mobile */}
-                                            <div className="sm:hidden px-6 pb-4 pt-0">
-                                                <span className="px-3 py-1 bg-ui-blue/5 text-ui-blue text-[10px] font-bold uppercase tracking-widest rounded-full inline-block">
-                                                    {leg.constituency}
-                                                </span>
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                </motion.div>
-                            )}
-
-                            {/* Footer stats */}
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-slate-50 border-b border-slate-200">
+                                        <tr>
+                                            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Name</th>
+                                            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Constituency</th>
+                                            {isStaff && <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Actions</th>}
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {filteredLegislators.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={isStaff ? 4 : 3} className="px-6 py-8 text-center text-slate-500">
+                                                    No legislators found matching your search
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            filteredLegislators.map((leg) => (
+                                                <tr key={leg.id} className="hover:bg-slate-50/50 transition-colors">
+                                                    <td className="px-6 py-4 font-medium text-slate-900">{leg.name}</td>
+                                                    <td className="px-6 py-4 text-slate-600">{leg.constituency}</td>
+                                                    {isStaff && (
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex gap-2">
+                                                                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEditModal(leg)}>
+                                                                    <Pencil size={14} />
+                                                                </Button>
+                                                                <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => handleDelete(leg.id)}>
+                                                                    <Trash2 size={14} />
+                                                                </Button>
+                                                            </div>
+                                                        </td>
+                                                    )}
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                             {filteredLegislators.length > 0 && (
-                                <div className="pt-4 pb-2 flex items-center justify-between">
-                                    <p className="text-sm text-slate-500">
-                                        Showing <span className="font-bold text-ui-blue">{filteredLegislators.length}</span> of <span className="font-bold text-ui-blue">{allLegislators.length}</span> legislators
-                                    </p>
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Student Representatives Council</p>
+                                <div className="px-6 py-3 bg-slate-50 border-t border-slate-200 text-sm text-slate-500">
+                                    Showing {filteredLegislators.length} of {allLegislators.length} legislators
                                 </div>
                             )}
                         </div>
