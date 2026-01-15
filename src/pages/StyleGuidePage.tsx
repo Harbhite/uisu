@@ -156,6 +156,97 @@ const StyleGuidePage: React.FC = () => {
     window.print();
   };
 
+  const handleExportHTML = () => {
+    const styleContent = [
+      '/* UISU Archive Design System - Exported Stylesheet */',
+      ':root {',
+      '  --ui-blue: #003366;',
+      '  --nobel-gold: #C5A059;',
+      '  --ui-dark: #001F3D;',
+      '  --nobel-cream: #FAF9F7;',
+      '  --slate-50: #f8fafc;',
+      '  --slate-200: #e2e8f0;',
+      '  --slate-300: #cbd5e1;',
+      '  --slate-500: #64748b;',
+      '  --slate-800: #1e293b;',
+      '  --font-serif: "Playfair Display", Georgia, serif;',
+      '  --font-sans: system-ui, -apple-system, sans-serif;',
+      '}',
+      '* { box-sizing: border-box; margin: 0; padding: 0; }',
+      'body { font-family: var(--font-sans); background: var(--slate-50); color: var(--slate-800); }',
+      '.btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.75rem; cursor: pointer; border: none; }',
+      '.btn-primary { background: var(--ui-blue); color: white; }',
+      '.btn-gold { background: var(--nobel-gold); color: var(--ui-blue); }',
+      '.btn-outline { background: transparent; border: 2px solid var(--slate-300); color: var(--slate-500); }',
+      '.card { background: white; border: 1px solid var(--slate-200); padding: 1.5rem; }',
+      '.font-serif { font-family: var(--font-serif); }',
+      '.text-primary { color: var(--ui-blue); }',
+      '.badge { display: inline-flex; padding: 0.25rem 0.75rem; font-size: 0.625rem; font-weight: 700; text-transform: uppercase; }',
+      '.badge-gold { background: var(--nobel-gold); color: var(--ui-blue); }',
+      '.input { width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--slate-300); background: white; }',
+      '.divider-gold { width: 6rem; height: 0.25rem; background: var(--nobel-gold); }',
+    ].join('\\n');
+
+    const htmlContent = [
+      '<!DOCTYPE html>',
+      '<html lang="en">',
+      '<head>',
+      '  <meta charset="UTF-8">',
+      '  <meta name="viewport" content="width=device-width, initial-scale=1.0">',
+      '  <title>UISU Archive - Design System Export</title>',
+      '  <style>' + styleContent + '</style>',
+      '  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">',
+      '</head>',
+      '<body>',
+      '  <div style="max-width: 1200px; margin: 0 auto; padding: 2rem;">',
+      '    <header style="text-align: center; margin-bottom: 4rem; padding: 3rem; background: var(--ui-blue); color: white;">',
+      '      <h1 class="font-serif" style="font-size: 2.5rem; margin-bottom: 0.5rem;">UISU Archive</h1>',
+      '      <p style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.2em; opacity: 0.7;">Design System v2.4.0</p>',
+      '    </header>',
+      '    <section style="margin-bottom: 3rem;">',
+      '      <h2 class="font-serif text-primary" style="font-size: 1.5rem; margin-bottom: 1rem;">Colors</h2>',
+      '      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">',
+      '        <div class="card"><div style="height: 80px; background: var(--ui-blue);"></div><p class="font-serif">UI Blue #003366</p></div>',
+      '        <div class="card"><div style="height: 80px; background: var(--nobel-gold);"></div><p class="font-serif">Nobel Gold #C5A059</p></div>',
+      '        <div class="card"><div style="height: 80px; background: var(--ui-dark);"></div><p class="font-serif">UI Dark #001F3D</p></div>',
+      '        <div class="card"><div style="height: 80px; background: var(--nobel-cream); border: 1px solid var(--slate-200);"></div><p class="font-serif">Nobel Cream #FAF9F7</p></div>',
+      '      </div>',
+      '    </section>',
+      '    <section style="margin-bottom: 3rem;">',
+      '      <h2 class="font-serif text-primary" style="font-size: 1.5rem; margin-bottom: 1rem;">Buttons</h2>',
+      '      <div style="display: flex; gap: 1rem;"><button class="btn btn-primary">Primary</button><button class="btn btn-gold">Gold</button><button class="btn btn-outline">Outline</button></div>',
+      '    </section>',
+      '    <section style="margin-bottom: 3rem;">',
+      '      <h2 class="font-serif text-primary" style="font-size: 1.5rem; margin-bottom: 1rem;">Badges</h2>',
+      '      <span class="badge badge-gold">Executive</span>',
+      '    </section>',
+      '    <section style="margin-bottom: 3rem;">',
+      '      <h2 class="font-serif text-primary" style="font-size: 1.5rem; margin-bottom: 1rem;">Form Elements</h2>',
+      '      <input class="input" type="text" placeholder="Enter text..." style="max-width: 400px;">',
+      '    </section>',
+      '    <section style="margin-bottom: 3rem;">',
+      '      <h2 class="font-serif text-primary" style="font-size: 1.5rem; margin-bottom: 1rem;">Dividers</h2>',
+      '      <div class="divider-gold"></div>',
+      '    </section>',
+      '    <footer style="text-align: center; padding: 2rem; border-top: 1px solid var(--slate-200);">',
+      '      <p style="font-size: 0.625rem; text-transform: uppercase; letter-spacing: 0.3em; color: var(--slate-500);">UISU Archive Design System v2.4.0</p>',
+      '    </footer>',
+      '  </div>',
+      '</body>',
+      '</html>'
+    ].join('\\n');
+
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'uisu-design-system.html';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   useEffect(() => {
     const handleScroll = () => {
       const sections = categories.map(c => document.getElementById(c.id));
@@ -229,9 +320,12 @@ const StyleGuidePage: React.FC = () => {
           </nav>
         </div>
         
-        <div className="p-8 border-t border-slate-100 mt-4">
+        <div className="p-8 border-t border-slate-100 mt-4 space-y-3">
           <Button onClick={handlePrint} variant="outline" className="w-full gap-2 text-xs font-bold uppercase tracking-widest border-slate-300">
             <Printer size={14}/> Print PDF
+          </Button>
+          <Button onClick={handleExportHTML} variant="outline" className="w-full gap-2 text-xs font-bold uppercase tracking-widest border-accent text-accent hover:bg-accent hover:text-primary">
+            <Download size={14}/> Export HTML/CSS
           </Button>
         </div>
       </aside>
@@ -239,7 +333,10 @@ const StyleGuidePage: React.FC = () => {
       {/* Mobile Header */}
       <div className="xl:hidden sticky top-0 bg-white/90 backdrop-blur-md z-40 border-b border-slate-200 p-4 flex justify-between items-center no-print">
         <div className="font-serif text-xl text-primary">Visual Registry</div>
-        <Button onClick={handlePrint} size="sm" variant="ghost"><Printer size={16}/></Button>
+        <div className="flex gap-2">
+          <Button onClick={handleExportHTML} size="sm" variant="ghost"><Download size={16}/></Button>
+          <Button onClick={handlePrint} size="sm" variant="ghost"><Printer size={16}/></Button>
+        </div>
       </div>
 
       {/* Main Content Area */}
