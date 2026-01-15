@@ -37,6 +37,8 @@ const StudentMartPage = lazy(() => import("./pages/resources/StudentMartPage"));
 const FreshersGuidePage = lazy(() => import("./pages/resources/FreshersGuidePage"));
 const CareerPathfinderPage = lazy(() => import("./pages/resources/CareerPathfinderPage"));
 const CampusHealthPage = lazy(() => import("./pages/resources/CampusHealthPage"));
+const GPACalculatorPage = lazy(() => import("./pages/resources/GPACalculatorPage"));
+const CalculatorSuitePage = lazy(() => import("./pages/resources/CalculatorSuitePage"));
 const StyleGuidePage = lazy(() => import("./pages/StyleGuidePage"));
 
 const queryClient = new QueryClient();
@@ -87,6 +89,8 @@ const AppRoutes = () => {
         <Route path="/resources/freshers-guide" element={<PageWrapper><FreshersGuidePage /></PageWrapper>} />
         <Route path="/resources/career-pathfinder" element={<PageWrapper><CareerPathfinderPage /></PageWrapper>} />
         <Route path="/resources/campus-health" element={<PageWrapper><CampusHealthPage /></PageWrapper>} />
+        <Route path="/resources/gpa-calculator" element={<PageWrapper><GPACalculatorPage /></PageWrapper>} />
+        <Route path="/resources/calculator-suite" element={<PageWrapper><CalculatorSuitePage /></PageWrapper>} />
 
         {/* Style Guide - only linked from footer */}
         <Route path="/style-guide" element={<PageWrapper><StyleGuidePage /></PageWrapper>} />

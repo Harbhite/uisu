@@ -405,5 +405,19 @@ export const resourceCategories: ResourceCategory[] = [
     description: 'Clinic schedules, emergency contacts, and physical health resources.',
     color: 'bg-red-500',
     path: '/resources/campus-health'
+  },
+  {
+    id: 'gpa',
+    title: 'GPA Calculator',
+    description: 'Calculate your semester and cumulative GPA with our easy-to-use tool.',
+    color: 'bg-emerald-500',
+    path: '/resources/gpa-calculator'
+  },
+  {
+    id: 'calculators',
+    title: 'Calculator Suite',
+    description: 'A collection of 10 calculators: basic, scientific, percentage, unit converter, and more.',
+    color: 'bg-violet-500',
+    path: '/resources/calculator-suite'
   }
 ];
