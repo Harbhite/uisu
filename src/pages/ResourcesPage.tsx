@@ -6,7 +6,7 @@ import { useRef } from 'react';
 import {
   Library, Briefcase, GraduationCap, Heart, Brain,
   Rocket, ShoppingBag, Compass, Users, Activity,
-  ArrowLeft, Search, ArrowRight, Star
+  ArrowLeft, Search, ArrowRight, Star, Calculator, Grip
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { resourceCategories } from '@/lib/data';
@@ -21,7 +21,9 @@ const iconMap: { [key: string]: React.ElementType } = {
   market: ShoppingBag,
   freshers: Compass,
   alumni: Users,
-  health: Activity
+  health: Activity,
+  gpa: Calculator,
+  calculators: Grip
 };
 
 const colorMap: { [key: string]: string } = {
@@ -34,7 +36,9 @@ const colorMap: { [key: string]: string } = {
   market: 'bg-teal-800',
   freshers: 'bg-indigo-800',
   alumni: 'bg-cyan-800',
-  health: 'bg-red-800'
+  health: 'bg-red-800',
+  gpa: 'bg-emerald-700',
+  calculators: 'bg-violet-700'
 };
 
 interface ResourceCardProps {
