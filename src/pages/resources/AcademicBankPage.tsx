@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Search, Folder, FileText, Download, Plus,
   Grid, List, ChevronRight, Edit2, Trash2, Upload, X, FolderPlus, Loader2,
   Eye, FileIcon, BarChart3, TrendingUp, ArrowUpDown, Files, FolderUp, File,
-  History, Clock, User, BookOpen, Star, GraduationCap
+  History, Clock, User, BookOpen, Star, GraduationCap, Share2, Link2
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SEO } from '@/components/SEO';
@@ -51,6 +51,7 @@ interface SearchResult extends AcademicResource {
 
 const AcademicBankPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { isStaff, isAdmin } = useAdminCheck();
   const [resources, setResources] = useState<AcademicResource[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,6 +113,35 @@ const AcademicBankPage = () => {
 
     fetchResources();
   }, []);
+
+  // Handle shared folder link from URL
+  useEffect(() => {
+    const folderId = searchParams.get('folder');
+    if (folderId && resources.length > 0) {
+      // Build the path to the folder
+      const buildPathToFolder = (targetId: string): string[] => {
+        const path: string[] = [];
+        let currentId: string | null = targetId;
+        
+        while (currentId) {
+          const resource = resources.find(r => r.id === currentId);
+          if (resource) {
+            path.unshift(resource.id);
+            currentId = resource.parent_id;
+          } else {
+            break;
+          }
+        }
+        return path;
+      };
+      
+      const folder = resources.find(r => r.id === folderId && r.resource_type === 'folder');
+      if (folder) {
+        const pathToFolder = buildPathToFolder(folderId);
+        setCurrentPath(pathToFolder);
+      }
+    }
+  }, [searchParams, resources]);
 
   // Fetch activity logs (admin only)
   const fetchActivityLogs = useCallback(async () => {
@@ -791,28 +821,6 @@ const AcademicBankPage = () => {
               </motion.p>
             </div>
 
-            {/* Stats Cards */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              className="flex gap-6"
-            >
-              <div className="text-center">
-                <div className="text-3xl font-serif text-nobel-gold">{totalFiles}</div>
-                <div className="text-xs uppercase tracking-wider text-white/50">Files</div>
-              </div>
-              <div className="w-px bg-white/20"></div>
-              <div className="text-center">
-                <div className="text-3xl font-serif text-nobel-gold">{totalFolders}</div>
-                <div className="text-xs uppercase tracking-wider text-white/50">Folders</div>
-              </div>
-              <div className="w-px bg-white/20"></div>
-              <div className="text-center">
-                <div className="text-3xl font-serif text-nobel-gold">{totalDownloads}</div>
-                <div className="text-xs uppercase tracking-wider text-white/50">Downloads</div>
-              </div>
-            </motion.div>
           </div>
         </div>
       </div>
@@ -1197,6 +1205,22 @@ const AcademicBankPage = () => {
                           <Download size={14} />
                         </Button>
                       )}
+                      {item.resource_type === 'folder' && (
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-7 w-7 rounded-none text-ui-blue hover:text-ui-dark"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const shareUrl = `${window.location.origin}/resources/academic-bank?folder=${item.id}`;
+                            navigator.clipboard.writeText(shareUrl);
+                            toast.success('Folder link copied to clipboard!');
+                          }}
+                          title="Share folder link"
+                        >
+                          <Link2 size={14} />
+                        </Button>
+                      )}
                       {isStaff && item.resource_type === 'folder' && (
                         <Button 
                           size="icon" 
@@ -1459,6 +1483,36 @@ const AcademicBankPage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Stats Footer */}
+      <div className="bg-ui-blue text-white py-12">
+        <div className="container mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16"
+          >
+            <div className="text-center">
+              <div className="text-4xl md:text-5xl font-serif text-nobel-gold">{totalFiles}</div>
+              <div className="text-xs uppercase tracking-[0.2em] text-white/60 mt-2">Files</div>
+            </div>
+            <div className="hidden md:block w-px h-16 bg-white/20"></div>
+            <div className="text-center">
+              <div className="text-4xl md:text-5xl font-serif text-nobel-gold">{totalFolders}</div>
+              <div className="text-xs uppercase tracking-[0.2em] text-white/60 mt-2">Folders</div>
+            </div>
+            <div className="hidden md:block w-px h-16 bg-white/20"></div>
+            <div className="text-center">
+              <div className="text-4xl md:text-5xl font-serif text-nobel-gold">{totalDownloads}</div>
+              <div className="text-xs uppercase tracking-[0.2em] text-white/60 mt-2">Downloads</div>
+            </div>
+          </motion.div>
+          <p className="text-center text-xs text-white/40 mt-8 uppercase tracking-[0.3em]">
+            Academic Bank • University of Ibadan Students' Union
+          </p>
+        </div>
+      </div>
 
       {/* Upload Queue */}
       {isQueueVisible && (
