@@ -121,8 +121,7 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
     const filteredLegislators = allLegislators.filter(leg => {
         const matchesSearch = legislatorSearch === '' || 
             leg.name.toLowerCase().includes(legislatorSearch.toLowerCase()) ||
-            (leg.constituency && leg.constituency.toLowerCase().includes(legislatorSearch.toLowerCase())) ||
-            (leg.level && leg.level.includes(legislatorSearch));
+            (leg.constituency && leg.constituency.toLowerCase().includes(legislatorSearch.toLowerCase()));
         
         const matchesConstituency = constituencyFilter === 'all' || leg.constituency === constituencyFilter;
         
@@ -432,7 +431,7 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
                             <div className="relative flex-1 max-w-lg">
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                                 <Input
-                                    placeholder="Search by name, constituency, or level..."
+                                    placeholder="Search by name or constituency..."
                                     value={legislatorSearch}
                                     onChange={(e) => setLegislatorSearch(e.target.value)}
                                     className="pl-11 h-12 border-slate-200 rounded-none bg-white focus:border-ui-blue focus:ring-0 text-sm"
@@ -475,10 +474,9 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
                             {/* Desktop Table Header - Sticky */}
                             <div className="hidden md:grid grid-cols-12 bg-ui-blue text-white sticky top-0 z-10">
                                 <div className="col-span-1 px-4 lg:px-6 py-4 text-xs font-bold uppercase tracking-[0.15em] border-r border-white/10">#</div>
-                                <div className={`${isStaff ? 'col-span-4' : 'col-span-5'} px-4 lg:px-6 py-4 text-xs font-bold uppercase tracking-[0.15em] border-r border-white/10`}>Honourable Member</div>
-                                <div className={`${isStaff ? 'col-span-3' : 'col-span-4'} px-4 lg:px-6 py-4 text-xs font-bold uppercase tracking-[0.15em] border-r border-white/10`}>Constituency</div>
-                                <div className="col-span-2 px-4 lg:px-6 py-4 text-xs font-bold uppercase tracking-[0.15em]">Level</div>
-                                {isStaff && <div className="col-span-2 px-4 lg:px-6 py-4 text-xs font-bold uppercase tracking-[0.15em] border-l border-white/10">Actions</div>}
+                                <div className={`${isStaff ? 'col-span-5' : 'col-span-6'} px-4 lg:px-6 py-4 text-xs font-bold uppercase tracking-[0.15em] border-r border-white/10`}>Honourable Member</div>
+                                <div className={`${isStaff ? 'col-span-4' : 'col-span-5'} px-4 lg:px-6 py-4 text-xs font-bold uppercase tracking-[0.15em] ${isStaff ? 'border-r border-white/10' : ''}`}>Constituency</div>
+                                {isStaff && <div className="col-span-2 px-4 lg:px-6 py-4 text-xs font-bold uppercase tracking-[0.15em]">Actions</div>}
                             </div>
                             
                             {/* Mobile Header */}
@@ -514,7 +512,7 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
                                                     <div className="col-span-1 px-4 lg:px-6 py-5 flex items-center">
                                                         <span className="text-xs font-bold text-slate-300 tabular-nums">{String(globalIndex + 1).padStart(2, '0')}</span>
                                                     </div>
-                                                    <div className={`${isStaff ? 'col-span-4' : 'col-span-5'} px-4 lg:px-6 py-5 flex items-center gap-3 lg:gap-4`}>
+                                                    <div className={`${isStaff ? 'col-span-5' : 'col-span-6'} px-4 lg:px-6 py-5 flex items-center gap-3 lg:gap-4`}>
                                                         <div className="w-9 h-9 lg:w-10 lg:h-10 bg-gradient-to-br from-ui-blue to-ui-blue/70 flex items-center justify-center flex-shrink-0">
                                                             <span className="text-white text-sm font-bold">{globalIndex + 1}</span>
                                                         </div>
@@ -523,16 +521,11 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
                                                             <p className="text-xs text-slate-400 mt-0.5 truncate">{leg.role}</p>
                                                         </div>
                                                     </div>
-                                                    <div className={`${isStaff ? 'col-span-3' : 'col-span-4'} px-4 lg:px-6 py-5 flex items-center`}>
+                                                    <div className={`${isStaff ? 'col-span-4' : 'col-span-5'} px-4 lg:px-6 py-5 flex items-center`}>
                                                         <div className="flex items-center gap-2 min-w-0">
                                                             <div className="w-2 h-2 bg-nobel-gold flex-shrink-0"></div>
                                                             <span className="text-slate-600 truncate">{leg.constituency || '—'}</span>
                                                         </div>
-                                                    </div>
-                                                    <div className="col-span-2 px-4 lg:px-6 py-5 flex items-center">
-                                                        <span className="inline-flex items-center px-2 lg:px-3 py-1 bg-slate-100 text-xs font-bold uppercase tracking-wider text-slate-600">
-                                                            {leg.level ? (leg.level.toString().toLowerCase().includes('level') ? leg.level : `${leg.level} Level`) : '—'}
-                                                        </span>
                                                     </div>
                                                     {isStaff && (
                                                         <div className="col-span-2 px-4 lg:px-6 py-5 flex items-center gap-2">
@@ -577,11 +570,6 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
                                                                     <MapPin size={12} className="text-nobel-gold" />
                                                                     <span>{leg.constituency || '—'}</span>
                                                                 </div>
-                                                                {leg.level && (
-                                                                    <span className="inline-flex items-center px-2 py-0.5 bg-slate-100 text-xs font-bold uppercase tracking-wider text-slate-600">
-                                                                        {leg.level.toString().toLowerCase().includes('level') ? leg.level : `${leg.level} Level`}
-                                                                    </span>
-                                                                )}
                                                             </div>
                                                             {isStaff && (
                                                                 <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
@@ -683,14 +671,6 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
                                         value={formData.constituency}
                                         onChange={(e) => setFormData({ ...formData, constituency: e.target.value })}
                                         placeholder="e.g., Faculty of Law"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium mb-1 block">Level</label>
-                                    <Input
-                                        value={formData.level}
-                                        onChange={(e) => setFormData({ ...formData, level: e.target.value })}
-                                        placeholder="e.g., 400"
                                     />
                                 </div>
                             </>
