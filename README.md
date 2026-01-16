@@ -146,5 +146,5 @@ Distributed under the MIT License.
 <p align="center">
   <img src="public/favicon.png" width="50" alt="UISU Logo" />
   <br/>
-  <em>Greatest Uites!</em>
+  <em>Made with 🤎 by Habibi for the Greatest Uites!</em>
 </p>
