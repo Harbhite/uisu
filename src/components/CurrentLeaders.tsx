@@ -428,23 +428,26 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
                         </div>
 
                         {/* Search and Filter Controls */}
-                        <div className="mb-6 flex flex-col sm:flex-row gap-4">
-                            <div className="relative flex-1 max-w-md">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                        <div className="mb-8 flex flex-col lg:flex-row gap-4 items-start lg:items-center">
+                            <div className="relative flex-1 max-w-lg">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                                 <Input
                                     placeholder="Search by name, constituency, or level..."
                                     value={legislatorSearch}
                                     onChange={(e) => setLegislatorSearch(e.target.value)}
-                                    className="pl-10"
+                                    className="pl-11 h-12 border-slate-200 rounded-none bg-white focus:border-ui-blue focus:ring-0 text-sm"
                                 />
                             </div>
-                            <div className="flex items-center gap-2">
-                                <Filter size={18} className="text-slate-400" />
+                            <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-slate-400">
+                                    <Filter size={14} />
+                                    <span>Filter</span>
+                                </div>
                                 <Select value={constituencyFilter} onValueChange={setConstituencyFilter}>
-                                    <SelectTrigger className="w-[200px]">
-                                        <SelectValue placeholder="Filter by constituency" />
+                                    <SelectTrigger className="w-[220px] h-12 rounded-none border-slate-200 bg-white text-sm">
+                                        <SelectValue placeholder="All Constituencies" />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="rounded-none border-slate-200">
                                         <SelectItem value="all">All Constituencies</SelectItem>
                                         {constituencies.map(c => (
                                             <SelectItem key={c} value={c!}>{c}</SelectItem>
@@ -456,59 +459,107 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
                                 <Button 
                                     variant="ghost" 
                                     size="sm"
+                                    className="text-xs font-bold uppercase tracking-wider hover:text-destructive"
                                     onClick={() => {
                                         setLegislatorSearch('');
                                         setConstituencyFilter('all');
                                     }}
                                 >
-                                    <X size={14} className="mr-1" /> Clear
+                                    <X size={14} className="mr-1" /> Clear Filters
                                 </Button>
                             )}
                         </div>
 
-                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left">
-                                    <thead className="bg-slate-50 border-b border-slate-200">
-                                        <tr>
-                                            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Name</th>
-                                            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Constituency</th>
-                                            {isStaff && <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Actions</th>}
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100">
-                                        {filteredLegislators.length === 0 ? (
-                                            <tr>
-                                                <td colSpan={isStaff ? 4 : 3} className="px-6 py-8 text-center text-slate-500">
-                                                    No legislators found matching your search
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            filteredLegislators.map((leg) => (
-                                                <tr key={leg.id} className="hover:bg-slate-50/50 transition-colors">
-                                                    <td className="px-6 py-4 font-medium text-slate-900">{leg.name}</td>
-                                                    <td className="px-6 py-4 text-slate-600">{leg.constituency}</td>
-                                                    {isStaff && (
-                                                        <td className="px-6 py-4">
-                                                            <div className="flex gap-2">
-                                                                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEditModal(leg)}>
-                                                                    <Pencil size={14} />
-                                                                </Button>
-                                                                <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => handleDelete(leg.id)}>
-                                                                    <Trash2 size={14} />
-                                                                </Button>
-                                                            </div>
-                                                        </td>
-                                                    )}
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
+                        {/* Legislators Grid/Table */}
+                        <div className="border border-slate-200 bg-white">
+                            {/* Table Header */}
+                            <div className="grid grid-cols-12 bg-ui-blue text-white">
+                                <div className="col-span-1 px-6 py-4 text-xs font-bold uppercase tracking-[0.15em] border-r border-white/10">#</div>
+                                <div className="col-span-5 px-6 py-4 text-xs font-bold uppercase tracking-[0.15em] border-r border-white/10">Honourable Member</div>
+                                <div className="col-span-4 px-6 py-4 text-xs font-bold uppercase tracking-[0.15em] border-r border-white/10">Constituency</div>
+                                {isStaff && <div className="col-span-2 px-6 py-4 text-xs font-bold uppercase tracking-[0.15em]">Actions</div>}
+                                {!isStaff && <div className="col-span-2 px-6 py-4 text-xs font-bold uppercase tracking-[0.15em]">Level</div>}
                             </div>
+                            
+                            {/* Table Body */}
+                            <div className="divide-y divide-slate-100">
+                                {filteredLegislators.length === 0 ? (
+                                    <div className="px-6 py-16 text-center">
+                                        <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-100 mb-4">
+                                            <Search size={24} className="text-slate-400" />
+                                        </div>
+                                        <p className="text-slate-500 font-medium">No legislators found</p>
+                                        <p className="text-slate-400 text-sm mt-1">Try adjusting your search or filter criteria</p>
+                                    </div>
+                                ) : (
+                                    filteredLegislators.map((leg, index) => (
+                                        <motion.div 
+                                            key={leg.id} 
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: index * 0.02 }}
+                                            className="grid grid-cols-12 group hover:bg-slate-50/80 transition-all duration-200 cursor-pointer"
+                                            onClick={() => navigate(`/current-leaders/${leg.id}`)}
+                                        >
+                                            <div className="col-span-1 px-6 py-5 flex items-center">
+                                                <span className="text-xs font-bold text-slate-300 tabular-nums">{String(index + 1).padStart(2, '0')}</span>
+                                            </div>
+                                            <div className="col-span-5 px-6 py-5 flex items-center gap-4">
+                                                <div className="w-10 h-10 bg-gradient-to-br from-ui-blue to-ui-blue/70 flex items-center justify-center flex-shrink-0">
+                                                    <span className="text-white text-sm font-bold">{leg.name.charAt(0)}</span>
+                                                </div>
+                                                <div>
+                                                    <p className="font-serif text-ui-blue font-semibold group-hover:text-nobel-gold transition-colors">{leg.name}</p>
+                                                    <p className="text-xs text-slate-400 mt-0.5">{leg.role}</p>
+                                                </div>
+                                            </div>
+                                            <div className="col-span-4 px-6 py-5 flex items-center">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2 h-2 bg-nobel-gold"></div>
+                                                    <span className="text-slate-600">{leg.constituency || '—'}</span>
+                                                </div>
+                                            </div>
+                                            {isStaff ? (
+                                                <div className="col-span-2 px-6 py-5 flex items-center gap-2">
+                                                    <Button 
+                                                        size="icon" 
+                                                        variant="ghost" 
+                                                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" 
+                                                        onClick={(e) => { e.stopPropagation(); openEditModal(leg); }}
+                                                    >
+                                                        <Pencil size={14} />
+                                                    </Button>
+                                                    <Button 
+                                                        size="icon" 
+                                                        variant="ghost" 
+                                                        className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" 
+                                                        onClick={(e) => { e.stopPropagation(); handleDelete(leg.id); }}
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </Button>
+                                                </div>
+                                            ) : (
+                                                <div className="col-span-2 px-6 py-5 flex items-center">
+                                                    <span className="inline-flex items-center px-3 py-1 bg-slate-100 text-xs font-bold uppercase tracking-wider text-slate-600">
+                                                        {leg.level || '—'}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    ))
+                                )}
+                            </div>
+                            
+                            {/* Table Footer */}
                             {filteredLegislators.length > 0 && (
-                                <div className="px-6 py-3 bg-slate-50 border-t border-slate-200 text-sm text-slate-500">
-                                    Showing {filteredLegislators.length} of {allLegislators.length} legislators
+                                <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+                                    <p className="text-xs font-bold uppercase tracking-[0.15em] text-slate-400">
+                                        Showing {filteredLegislators.length} of {allLegislators.length} members
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 bg-ui-blue"></div>
+                                        <span className="text-xs text-slate-500">University of Ibadan Student Legislature</span>
+                                    </div>
                                 </div>
                             )}
                         </div>
