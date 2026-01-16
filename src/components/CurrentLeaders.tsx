@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Star, Pencil, Plus, Trash2, Save, X, Loader2, Upload, Search, Filter, Download, FileUp } from 'lucide-react';
+import { ArrowLeft, Star, Pencil, Plus, Trash2, Save, X, Loader2, Upload, Search, Filter, Download, FileUp, ChevronLeft, ChevronRight, MapPin, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { Button } from '@/components/ui/button';
@@ -73,7 +73,10 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
     const [legislatorSearch, setLegislatorSearch] = useState('');
     const [constituencyFilter, setConstituencyFilter] = useState('all');
     const importFileRef = useRef<HTMLInputElement>(null);
-
+    
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
     const fetchLeaders = useCallback(async () => {
         const { data, error } = await supabase
             .from('leaders')
@@ -128,6 +131,18 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
         
         return matchesSearch && matchesConstituency;
     });
+
+    // Pagination calculations
+    const totalPages = Math.ceil(filteredLegislators.length / itemsPerPage);
+    const paginatedLegislators = filteredLegislators.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
+    // Reset to page 1 when filters change
+    React.useEffect(() => {
+        setCurrentPage(1);
+    }, [legislatorSearch, constituencyFilter]);
 
     const openCreateModal = (category: string) => {
         setEditingLeader(null);
@@ -471,19 +486,25 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
                         </div>
 
                         {/* Legislators Grid/Table */}
-                        <div className="border border-slate-200 bg-white">
-                            {/* Table Header */}
-                            <div className="grid grid-cols-12 bg-ui-blue text-white">
-                                <div className="col-span-1 px-6 py-4 text-xs font-bold uppercase tracking-[0.15em] border-r border-white/10">#</div>
-                                <div className="col-span-5 px-6 py-4 text-xs font-bold uppercase tracking-[0.15em] border-r border-white/10">Honourable Member</div>
-                                <div className="col-span-4 px-6 py-4 text-xs font-bold uppercase tracking-[0.15em] border-r border-white/10">Constituency</div>
-                                {isStaff && <div className="col-span-2 px-6 py-4 text-xs font-bold uppercase tracking-[0.15em]">Actions</div>}
-                                {!isStaff && <div className="col-span-2 px-6 py-4 text-xs font-bold uppercase tracking-[0.15em]">Level</div>}
+                        <div className="border border-slate-200 bg-white overflow-hidden">
+                            {/* Desktop Table Header - Sticky */}
+                            <div className="hidden md:grid grid-cols-12 bg-ui-blue text-white sticky top-0 z-10">
+                                <div className="col-span-1 px-4 lg:px-6 py-4 text-xs font-bold uppercase tracking-[0.15em] border-r border-white/10">#</div>
+                                <div className="col-span-5 px-4 lg:px-6 py-4 text-xs font-bold uppercase tracking-[0.15em] border-r border-white/10">Honourable Member</div>
+                                <div className="col-span-4 px-4 lg:px-6 py-4 text-xs font-bold uppercase tracking-[0.15em] border-r border-white/10">Constituency</div>
+                                {isStaff && <div className="col-span-2 px-4 lg:px-6 py-4 text-xs font-bold uppercase tracking-[0.15em]">Actions</div>}
+                                {!isStaff && <div className="col-span-2 px-4 lg:px-6 py-4 text-xs font-bold uppercase tracking-[0.15em]">Level</div>}
+                            </div>
+                            
+                            {/* Mobile Header */}
+                            <div className="md:hidden bg-ui-blue text-white px-4 py-3 flex items-center justify-between sticky top-0 z-10">
+                                <span className="text-xs font-bold uppercase tracking-[0.15em]">Honourable Members</span>
+                                <span className="text-xs opacity-70">{paginatedLegislators.length} shown</span>
                             </div>
                             
                             {/* Table Body */}
-                            <div className="divide-y divide-slate-100">
-                                {filteredLegislators.length === 0 ? (
+                            <div className="divide-y divide-slate-100 max-h-[600px] overflow-y-auto">
+                                {paginatedLegislators.length === 0 ? (
                                     <div className="px-6 py-16 text-center">
                                         <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-100 mb-4">
                                             <Search size={24} className="text-slate-400" />
@@ -492,73 +513,192 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
                                         <p className="text-slate-400 text-sm mt-1">Try adjusting your search or filter criteria</p>
                                     </div>
                                 ) : (
-                                    filteredLegislators.map((leg, index) => (
-                                        <motion.div 
-                                            key={leg.id} 
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: index * 0.02 }}
-                                            className="grid grid-cols-12 group hover:bg-slate-50/80 transition-all duration-200 cursor-pointer"
-                                            onClick={() => navigate(`/current-leaders/${leg.id}`)}
-                                        >
-                                            <div className="col-span-1 px-6 py-5 flex items-center">
-                                                <span className="text-xs font-bold text-slate-300 tabular-nums">{String(index + 1).padStart(2, '0')}</span>
-                                            </div>
-                                            <div className="col-span-5 px-6 py-5 flex items-center gap-4">
-                                                <div className="w-10 h-10 bg-gradient-to-br from-ui-blue to-ui-blue/70 flex items-center justify-center flex-shrink-0">
-                                                    <span className="text-white text-sm font-bold">{leg.name.charAt(0)}</span>
+                                    paginatedLegislators.map((leg, index) => {
+                                        const globalIndex = (currentPage - 1) * itemsPerPage + index;
+                                        return (
+                                            <motion.div 
+                                                key={leg.id} 
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                transition={{ delay: index * 0.02 }}
+                                                className="group hover:bg-slate-50/80 transition-all duration-200 cursor-pointer"
+                                                onClick={() => navigate(`/current-leaders/${leg.id}`)}
+                                            >
+                                                {/* Desktop Row */}
+                                                <div className="hidden md:grid grid-cols-12">
+                                                    <div className="col-span-1 px-4 lg:px-6 py-5 flex items-center">
+                                                        <span className="text-xs font-bold text-slate-300 tabular-nums">{String(globalIndex + 1).padStart(2, '0')}</span>
+                                                    </div>
+                                                    <div className="col-span-5 px-4 lg:px-6 py-5 flex items-center gap-3 lg:gap-4">
+                                                        <div className="w-9 h-9 lg:w-10 lg:h-10 bg-gradient-to-br from-ui-blue to-ui-blue/70 flex items-center justify-center flex-shrink-0">
+                                                            <span className="text-white text-sm font-bold">{leg.name.charAt(0)}</span>
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <p className="font-serif text-ui-blue font-semibold group-hover:text-nobel-gold transition-colors truncate">{leg.name}</p>
+                                                            <p className="text-xs text-slate-400 mt-0.5 truncate">{leg.role}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-span-4 px-4 lg:px-6 py-5 flex items-center">
+                                                        <div className="flex items-center gap-2 min-w-0">
+                                                            <div className="w-2 h-2 bg-nobel-gold flex-shrink-0"></div>
+                                                            <span className="text-slate-600 truncate">{leg.constituency || '—'}</span>
+                                                        </div>
+                                                    </div>
+                                                    {isStaff ? (
+                                                        <div className="col-span-2 px-4 lg:px-6 py-5 flex items-center gap-2">
+                                                            <Button 
+                                                                size="icon" 
+                                                                variant="ghost" 
+                                                                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" 
+                                                                onClick={(e) => { e.stopPropagation(); openEditModal(leg); }}
+                                                            >
+                                                                <Pencil size={14} />
+                                                            </Button>
+                                                            <Button 
+                                                                size="icon" 
+                                                                variant="ghost" 
+                                                                className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" 
+                                                                onClick={(e) => { e.stopPropagation(); handleDelete(leg.id); }}
+                                                            >
+                                                                <Trash2 size={14} />
+                                                            </Button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="col-span-2 px-4 lg:px-6 py-5 flex items-center">
+                                                            <span className="inline-flex items-center px-2 lg:px-3 py-1 bg-slate-100 text-xs font-bold uppercase tracking-wider text-slate-600">
+                                                                {leg.level || '—'}
+                                                            </span>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                <div>
-                                                    <p className="font-serif text-ui-blue font-semibold group-hover:text-nobel-gold transition-colors">{leg.name}</p>
-                                                    <p className="text-xs text-slate-400 mt-0.5">{leg.role}</p>
+
+                                                {/* Mobile Card */}
+                                                <div className="md:hidden p-4">
+                                                    <div className="flex items-start gap-3">
+                                                        <div className="w-12 h-12 bg-gradient-to-br from-ui-blue to-ui-blue/70 flex items-center justify-center flex-shrink-0">
+                                                            <span className="text-white font-bold">{leg.name.charAt(0)}</span>
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-start justify-between gap-2">
+                                                                <div className="min-w-0">
+                                                                    <p className="font-serif text-ui-blue font-semibold">{leg.name}</p>
+                                                                    <p className="text-xs text-slate-400 mt-0.5">{leg.role}</p>
+                                                                </div>
+                                                                <span className="text-xs font-bold text-slate-300 tabular-nums flex-shrink-0">
+                                                                    #{String(globalIndex + 1).padStart(2, '0')}
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex flex-wrap items-center gap-3 mt-3">
+                                                                <div className="flex items-center gap-1.5 text-sm text-slate-600">
+                                                                    <MapPin size={12} className="text-nobel-gold" />
+                                                                    <span>{leg.constituency || '—'}</span>
+                                                                </div>
+                                                                {leg.level && (
+                                                                    <span className="inline-flex items-center px-2 py-0.5 bg-slate-100 text-xs font-bold uppercase tracking-wider text-slate-600">
+                                                                        {leg.level}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            {isStaff && (
+                                                                <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
+                                                                    <Button 
+                                                                        size="sm" 
+                                                                        variant="outline" 
+                                                                        className="h-8 text-xs flex-1"
+                                                                        onClick={(e) => { e.stopPropagation(); openEditModal(leg); }}
+                                                                    >
+                                                                        <Pencil size={12} className="mr-1" /> Edit
+                                                                    </Button>
+                                                                    <Button 
+                                                                        size="sm" 
+                                                                        variant="outline" 
+                                                                        className="h-8 text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
+                                                                        onClick={(e) => { e.stopPropagation(); handleDelete(leg.id); }}
+                                                                    >
+                                                                        <Trash2 size={12} />
+                                                                    </Button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div className="col-span-4 px-6 py-5 flex items-center">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-2 h-2 bg-nobel-gold"></div>
-                                                    <span className="text-slate-600">{leg.constituency || '—'}</span>
-                                                </div>
-                                            </div>
-                                            {isStaff ? (
-                                                <div className="col-span-2 px-6 py-5 flex items-center gap-2">
-                                                    <Button 
-                                                        size="icon" 
-                                                        variant="ghost" 
-                                                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" 
-                                                        onClick={(e) => { e.stopPropagation(); openEditModal(leg); }}
-                                                    >
-                                                        <Pencil size={14} />
-                                                    </Button>
-                                                    <Button 
-                                                        size="icon" 
-                                                        variant="ghost" 
-                                                        className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" 
-                                                        onClick={(e) => { e.stopPropagation(); handleDelete(leg.id); }}
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </Button>
-                                                </div>
-                                            ) : (
-                                                <div className="col-span-2 px-6 py-5 flex items-center">
-                                                    <span className="inline-flex items-center px-3 py-1 bg-slate-100 text-xs font-bold uppercase tracking-wider text-slate-600">
-                                                        {leg.level || '—'}
-                                                    </span>
-                                                </div>
-                                            )}
-                                        </motion.div>
-                                    ))
+                                            </motion.div>
+                                        );
+                                    })
                                 )}
                             </div>
                             
-                            {/* Table Footer */}
+                            {/* Pagination & Footer */}
                             {filteredLegislators.length > 0 && (
-                                <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-                                    <p className="text-xs font-bold uppercase tracking-[0.15em] text-slate-400">
-                                        Showing {filteredLegislators.length} of {allLegislators.length} members
-                                    </p>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-3 h-3 bg-ui-blue"></div>
-                                        <span className="text-xs text-slate-500">University of Ibadan Student Legislature</span>
+                                <div className="px-4 lg:px-6 py-4 bg-slate-50 border-t border-slate-200">
+                                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                        {/* Info */}
+                                        <div className="flex items-center gap-4 text-xs text-slate-500">
+                                            <div className="flex items-center gap-2">
+                                                <Users size={14} className="text-ui-blue" />
+                                                <span>
+                                                    Showing {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredLegislators.length)} of {filteredLegislators.length}
+                                                </span>
+                                            </div>
+                                            <div className="hidden sm:flex items-center gap-2">
+                                                <div className="w-2 h-2 bg-ui-blue"></div>
+                                                <span>UISU Legislature</span>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Pagination Controls */}
+                                        {totalPages > 1 && (
+                                            <div className="flex items-center gap-1">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                    disabled={currentPage === 1}
+                                                    className="h-8 w-8 p-0 rounded-none"
+                                                >
+                                                    <ChevronLeft size={14} />
+                                                </Button>
+                                                
+                                                {/* Page Numbers */}
+                                                <div className="flex items-center gap-1">
+                                                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                                        .filter(page => {
+                                                            if (totalPages <= 5) return true;
+                                                            if (page === 1 || page === totalPages) return true;
+                                                            if (Math.abs(page - currentPage) <= 1) return true;
+                                                            return false;
+                                                        })
+                                                        .map((page, idx, arr) => (
+                                                            <React.Fragment key={page}>
+                                                                {idx > 0 && arr[idx - 1] !== page - 1 && (
+                                                                    <span className="px-1 text-slate-400">...</span>
+                                                                )}
+                                                                <Button
+                                                                    variant={currentPage === page ? "default" : "outline"}
+                                                                    size="sm"
+                                                                    onClick={() => setCurrentPage(page)}
+                                                                    className={`h-8 w-8 p-0 rounded-none text-xs ${
+                                                                        currentPage === page ? 'bg-ui-blue text-white' : ''
+                                                                    }`}
+                                                                >
+                                                                    {page}
+                                                                </Button>
+                                                            </React.Fragment>
+                                                        ))
+                                                    }
+                                                </div>
+                                                
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                                    disabled={currentPage === totalPages}
+                                                    className="h-8 w-8 p-0 rounded-none"
+                                                >
+                                                    <ChevronRight size={14} />
+                                                </Button>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )}

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Plus, Trash2, Calculator, GraduationCap, 
-  RotateCcw, Download, TrendingUp, Award, BookOpen
+  RotateCcw, Download, TrendingUp, Award, BookOpen, Share2, Image
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
@@ -18,40 +18,77 @@ interface Course {
   grade: string;
 }
 
-const gradePoints: { [key: string]: number } = {
-  'A': 5.0,
-  'B': 4.0,
-  'C': 3.0,
-  'D': 2.0,
-  'E': 1.0,
-  'F': 0.0,
+type ScaleType = '4.0' | '5.0';
+
+const gradePoints: { [key in ScaleType]: { [grade: string]: number } } = {
+  '5.0': {
+    'A': 5.0,
+    'B': 4.0,
+    'C': 3.0,
+    'D': 2.0,
+    'E': 1.0,
+    'F': 0.0,
+  },
+  '4.0': {
+    'A': 4.0,
+    'B': 3.0,
+    'C': 2.0,
+    'D': 1.0,
+    'F': 0.0,
+  },
 };
 
-const gradeDescriptions: { [key: string]: string } = {
-  'A': 'Excellent (70-100%)',
-  'B': 'Very Good (60-69%)',
-  'C': 'Good (50-59%)',
-  'D': 'Fair (45-49%)',
-  'E': 'Pass (40-44%)',
-  'F': 'Fail (0-39%)',
+const gradeDescriptions: { [key in ScaleType]: { [grade: string]: string } } = {
+  '5.0': {
+    'A': 'Excellent (70-100%)',
+    'B': 'Very Good (60-69%)',
+    'C': 'Good (50-59%)',
+    'D': 'Fair (45-49%)',
+    'E': 'Pass (40-44%)',
+    'F': 'Fail (0-39%)',
+  },
+  '4.0': {
+    'A': 'Excellent (90-100%)',
+    'B': 'Good (80-89%)',
+    'C': 'Average (70-79%)',
+    'D': 'Below Average (60-69%)',
+    'F': 'Fail (0-59%)',
+  },
 };
 
-const classificationRanges = [
-  { min: 4.5, max: 5.0, label: 'First Class', color: 'bg-emerald-500', icon: Award },
-  { min: 3.5, max: 4.49, label: 'Second Class Upper', color: 'bg-blue-500', icon: TrendingUp },
-  { min: 2.5, max: 3.49, label: 'Second Class Lower', color: 'bg-amber-500', icon: BookOpen },
-  { min: 1.5, max: 2.49, label: 'Third Class', color: 'bg-orange-500', icon: GraduationCap },
-  { min: 1.0, max: 1.49, label: 'Pass', color: 'bg-red-400', icon: Calculator },
-  { min: 0, max: 0.99, label: 'Fail', color: 'bg-red-600', icon: Calculator },
-];
+const classificationRanges: { [key in ScaleType]: Array<{ min: number; max: number; label: string; color: string; icon: typeof Award }> } = {
+  '5.0': [
+    { min: 4.5, max: 5.0, label: 'First Class', color: 'bg-emerald-500', icon: Award },
+    { min: 3.5, max: 4.49, label: 'Second Class Upper', color: 'bg-blue-500', icon: TrendingUp },
+    { min: 2.5, max: 3.49, label: 'Second Class Lower', color: 'bg-amber-500', icon: BookOpen },
+    { min: 1.5, max: 2.49, label: 'Third Class', color: 'bg-orange-500', icon: GraduationCap },
+    { min: 1.0, max: 1.49, label: 'Pass', color: 'bg-red-400', icon: Calculator },
+    { min: 0, max: 0.99, label: 'Fail', color: 'bg-red-600', icon: Calculator },
+  ],
+  '4.0': [
+    { min: 3.6, max: 4.0, label: 'Summa Cum Laude', color: 'bg-emerald-500', icon: Award },
+    { min: 3.3, max: 3.59, label: 'Magna Cum Laude', color: 'bg-blue-500', icon: TrendingUp },
+    { min: 3.0, max: 3.29, label: 'Cum Laude', color: 'bg-amber-500', icon: BookOpen },
+    { min: 2.0, max: 2.99, label: 'Good Standing', color: 'bg-orange-500', icon: GraduationCap },
+    { min: 1.0, max: 1.99, label: 'Probation', color: 'bg-red-400', icon: Calculator },
+    { min: 0, max: 0.99, label: 'Fail', color: 'bg-red-600', icon: Calculator },
+  ],
+};
 
 const GPACalculatorPage = () => {
   const navigate = useNavigate();
+  const resultCardRef = useRef<HTMLDivElement>(null);
+  const [scaleType, setScaleType] = useState<ScaleType>('5.0');
   const [courses, setCourses] = useState<Course[]>([
     { id: '1', name: '', units: 3, grade: '' }
   ]);
   const [semesterName, setSemesterName] = useState('First Semester');
   const [academicYear, setAcademicYear] = useState('2024/2025');
+  const [exporting, setExporting] = useState(false);
+
+  const currentGradePoints = gradePoints[scaleType];
+  const currentGradeDescriptions = gradeDescriptions[scaleType];
+  const currentClassificationRanges = classificationRanges[scaleType];
 
   const addCourse = () => {
     setCourses([...courses, { 
@@ -77,11 +114,11 @@ const GPACalculatorPage = () => {
   };
 
   const calculateGPA = () => {
-    const validCourses = courses.filter(c => c.grade && c.units > 0);
+    const validCourses = courses.filter(c => c.grade && c.units > 0 && currentGradePoints[c.grade] !== undefined);
     if (validCourses.length === 0) return 0;
 
     const totalPoints = validCourses.reduce((sum, course) => {
-      return sum + (gradePoints[course.grade] * course.units);
+      return sum + (currentGradePoints[course.grade] * course.units);
     }, 0);
 
     const totalUnits = validCourses.reduce((sum, course) => sum + course.units, 0);
@@ -89,11 +126,11 @@ const GPACalculatorPage = () => {
   };
 
   const getTotalUnits = () => {
-    return courses.filter(c => c.grade).reduce((sum, c) => sum + c.units, 0);
+    return courses.filter(c => c.grade && currentGradePoints[c.grade] !== undefined).reduce((sum, c) => sum + c.units, 0);
   };
 
   const getClassification = (gpa: number) => {
-    return classificationRanges.find(r => gpa >= r.min && gpa <= r.max) || classificationRanges[5];
+    return currentClassificationRanges.find(r => gpa >= r.min && gpa <= r.max) || currentClassificationRanges[currentClassificationRanges.length - 1];
   };
 
   const resetCalculator = () => {
@@ -101,34 +138,151 @@ const GPACalculatorPage = () => {
     toast.success('Calculator reset');
   };
 
-  const exportResults = () => {
+  const handleScaleChange = (newScale: ScaleType) => {
+    setScaleType(newScale);
+    // Reset grades that don't exist in the new scale
+    setCourses(courses.map(c => ({
+      ...c,
+      grade: gradePoints[newScale][c.grade] !== undefined ? c.grade : ''
+    })));
+    toast.success(`Switched to ${newScale} scale`);
+  };
+
+  const exportAsImage = async () => {
+    if (!resultCardRef.current) return;
+    
+    setExporting(true);
+    try {
+      // Create canvas
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas not supported');
+
+      const gpa = calculateGPA();
+      const classification = getClassification(gpa);
+      const validCourses = courses.filter(c => c.grade && currentGradePoints[c.grade] !== undefined);
+
+      // Canvas dimensions
+      canvas.width = 800;
+      canvas.height = 600 + (validCourses.length * 40);
+
+      // Background
+      ctx.fillStyle = '#0a1628';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Header bar
+      ctx.fillStyle = '#C5A059';
+      ctx.fillRect(0, 0, canvas.width, 8);
+
+      // Title
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 32px Georgia, serif';
+      ctx.fillText('GPA Calculation Report', 40, 60);
+
+      // Scale badge
+      ctx.fillStyle = '#1e3a5f';
+      ctx.fillRect(40, 80, 100, 30);
+      ctx.fillStyle = '#C5A059';
+      ctx.font = 'bold 14px Inter, sans-serif';
+      ctx.fillText(`${scaleType} SCALE`, 55, 100);
+
+      // Semester info
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '16px Inter, sans-serif';
+      ctx.fillText(`${semesterName} • ${academicYear}`, 40, 140);
+
+      // GPA Result Box
+      const gpaBoxY = 180;
+      ctx.fillStyle = classification.color.includes('emerald') ? '#10b981' :
+                      classification.color.includes('blue') ? '#3b82f6' :
+                      classification.color.includes('amber') ? '#f59e0b' :
+                      classification.color.includes('orange') ? '#f97316' : '#ef4444';
+      ctx.fillRect(40, gpaBoxY, 720, 150);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 72px Georgia, serif';
+      ctx.fillText(gpa.toFixed(2), 60, gpaBoxY + 90);
+      ctx.font = '24px Georgia, serif';
+      ctx.fillText(classification.label, 60, gpaBoxY + 130);
+
+      // Stats
+      ctx.fillStyle = 'rgba(255,255,255,0.8)';
+      ctx.font = '14px Inter, sans-serif';
+      ctx.fillText(`Total Units: ${getTotalUnits()}`, 500, gpaBoxY + 90);
+      ctx.fillText(`Total Points: ${(gpa * getTotalUnits()).toFixed(1)}`, 500, gpaBoxY + 115);
+
+      // Courses header
+      const coursesStartY = gpaBoxY + 180;
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(40, coursesStartY, 720, 40);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'bold 12px Inter, sans-serif';
+      ctx.fillText('COURSE', 60, coursesStartY + 26);
+      ctx.fillText('UNITS', 450, coursesStartY + 26);
+      ctx.fillText('GRADE', 550, coursesStartY + 26);
+      ctx.fillText('POINTS', 670, coursesStartY + 26);
+
+      // Course rows
+      validCourses.forEach((course, i) => {
+        const rowY = coursesStartY + 40 + (i * 40);
+        ctx.fillStyle = i % 2 === 0 ? '#0f172a' : '#1e293b';
+        ctx.fillRect(40, rowY, 720, 40);
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '14px Inter, sans-serif';
+        ctx.fillText(course.name || `Course ${i + 1}`, 60, rowY + 26);
+        ctx.fillText(course.units.toString(), 465, rowY + 26);
+        ctx.fillStyle = '#C5A059';
+        ctx.fillText(course.grade, 570, rowY + 26);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText((currentGradePoints[course.grade] * course.units).toFixed(1), 685, rowY + 26);
+      });
+
+      // Footer
+      const footerY = coursesStartY + 60 + (validCourses.length * 40);
+      ctx.fillStyle = '#64748b';
+      ctx.font = '12px Inter, sans-serif';
+      ctx.fillText(`Generated on ${new Date().toLocaleDateString()} • University of Ibadan Students' Union`, 40, footerY);
+
+      // Convert to image and download
+      const dataUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.download = `GPA_Report_${academicYear.replace('/', '-')}_${scaleType}.png`;
+      link.href = dataUrl;
+      link.click();
+      
+      toast.success('GPA report exported as image');
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Failed to export image');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const shareGPA = async () => {
     const gpa = calculateGPA();
     const classification = getClassification(gpa);
-    const validCourses = courses.filter(c => c.grade);
     
-    const content = `
-GPA CALCULATION REPORT
-======================
-${semesterName} - ${academicYear}
-Generated: ${new Date().toLocaleDateString()}
+    const shareText = `🎓 My GPA Report\n\n📊 GPA: ${gpa.toFixed(2)} (${scaleType} Scale)\n🏆 Classification: ${classification.label}\n📚 Total Units: ${getTotalUnits()}\n📅 ${semesterName} - ${academicYear}\n\n#UISU #GPA #AcademicExcellence`;
 
-COURSES:
-${validCourses.map(c => `- ${c.name || 'Course'}: ${c.units} units, Grade ${c.grade}`).join('\n')}
-
-SUMMARY:
-Total Units: ${getTotalUnits()}
-GPA: ${gpa.toFixed(2)}
-Classification: ${classification.label}
-    `.trim();
-
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `GPA_Report_${academicYear.replace('/', '-')}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('Report exported');
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'My GPA Report',
+          text: shareText,
+        });
+        toast.success('Shared successfully');
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          await navigator.clipboard.writeText(shareText);
+          toast.success('Copied to clipboard');
+        }
+      }
+    } else {
+      await navigator.clipboard.writeText(shareText);
+      toast.success('Copied to clipboard');
+    }
   };
 
   const gpa = calculateGPA();
@@ -139,7 +293,7 @@ Classification: ${classification.label}
     <div className="min-h-screen bg-slate-50 pt-28 pb-16">
       <SEO 
         title="GPA Calculator - Resources" 
-        description="Calculate your semester and cumulative GPA with our easy-to-use tool." 
+        description="Calculate your semester and cumulative GPA with our easy-to-use tool. Supports both 4.0 and 5.0 grading scales." 
       />
 
       <div className="container mx-auto px-6 lg:px-12 max-w-5xl">
@@ -150,7 +304,7 @@ Classification: ${classification.label}
           onClick={() => navigate('/resources')}
           className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500 hover:text-nobel-gold transition-colors mb-12"
         >
-          <div className="p-2 rounded-full border border-slate-300 group-hover:border-nobel-gold transition-colors">
+          <div className="p-2 border border-slate-300 group-hover:border-nobel-gold transition-colors">
             <ArrowLeft size={14} />
           </div>
           <span>Back to Resources</span>
@@ -172,7 +326,7 @@ Classification: ${classification.label}
           </h1>
           
           <p className="text-slate-500 max-w-xl text-lg leading-relaxed">
-            Calculate your Grade Point Average using the Nigerian university 5.0 scale. Track your academic performance across semesters.
+            Calculate your Grade Point Average with support for both 4.0 and 5.0 grading scales. Export and share your results.
           </p>
         </motion.div>
 
@@ -184,6 +338,35 @@ Classification: ${classification.label}
             transition={{ delay: 0.1 }}
             className="lg:col-span-2"
           >
+            {/* Scale Selector */}
+            <div className="bg-white border border-slate-200 p-6 mb-6">
+              <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 mb-4">Grading Scale</h2>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => handleScaleChange('5.0')}
+                  className={`flex-1 py-4 px-6 border-2 transition-all ${
+                    scaleType === '5.0' 
+                      ? 'border-ui-blue bg-ui-blue text-white' 
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="text-2xl font-serif font-bold">5.0</div>
+                  <div className={`text-xs mt-1 ${scaleType === '5.0' ? 'text-white/70' : 'text-slate-400'}`}>Nigerian Scale</div>
+                </button>
+                <button
+                  onClick={() => handleScaleChange('4.0')}
+                  className={`flex-1 py-4 px-6 border-2 transition-all ${
+                    scaleType === '4.0' 
+                      ? 'border-ui-blue bg-ui-blue text-white' 
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="text-2xl font-serif font-bold">4.0</div>
+                  <div className={`text-xs mt-1 ${scaleType === '4.0' ? 'text-white/70' : 'text-slate-400'}`}>American Scale</div>
+                </button>
+              </div>
+            </div>
+
             {/* Semester Info */}
             <div className="bg-white border border-slate-200 p-6 mb-6">
               <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 mb-4">Semester Information</h2>
@@ -191,10 +374,10 @@ Classification: ${classification.label}
                 <div>
                   <label className="block text-xs font-medium text-slate-500 mb-2">Semester</label>
                   <Select value={semesterName} onValueChange={setSemesterName}>
-                    <SelectTrigger className="bg-slate-50 border-slate-200">
+                    <SelectTrigger className="bg-slate-50 border-slate-200 rounded-none">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="rounded-none">
                       <SelectItem value="First Semester">First Semester</SelectItem>
                       <SelectItem value="Second Semester">Second Semester</SelectItem>
                     </SelectContent>
@@ -203,10 +386,10 @@ Classification: ${classification.label}
                 <div>
                   <label className="block text-xs font-medium text-slate-500 mb-2">Academic Year</label>
                   <Select value={academicYear} onValueChange={setAcademicYear}>
-                    <SelectTrigger className="bg-slate-50 border-slate-200">
+                    <SelectTrigger className="bg-slate-50 border-slate-200 rounded-none">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="rounded-none">
                       <SelectItem value="2024/2025">2024/2025</SelectItem>
                       <SelectItem value="2023/2024">2023/2024</SelectItem>
                       <SelectItem value="2022/2023">2022/2023</SelectItem>
@@ -225,20 +408,10 @@ Classification: ${classification.label}
                     variant="outline" 
                     size="sm" 
                     onClick={resetCalculator}
-                    className="text-xs"
+                    className="text-xs rounded-none"
                   >
                     <RotateCcw size={14} className="mr-1" />
                     Reset
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={exportResults}
-                    className="text-xs"
-                    disabled={getTotalUnits() === 0}
-                  >
-                    <Download size={14} className="mr-1" />
-                    Export
                   </Button>
                 </div>
               </div>
@@ -269,7 +442,7 @@ Classification: ${classification.label}
                           placeholder={`Course ${index + 1}`}
                           value={course.name}
                           onChange={(e) => updateCourse(course.id, 'name', e.target.value)}
-                          className="bg-slate-50 border-slate-200"
+                          className="bg-slate-50 border-slate-200 rounded-none"
                         />
                       </div>
 
@@ -280,10 +453,10 @@ Classification: ${classification.label}
                           value={course.units.toString()} 
                           onValueChange={(v) => updateCourse(course.id, 'units', parseInt(v))}
                         >
-                          <SelectTrigger className="bg-slate-50 border-slate-200">
+                          <SelectTrigger className="bg-slate-50 border-slate-200 rounded-none">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="rounded-none">
                             {[1, 2, 3, 4, 5, 6].map(u => (
                               <SelectItem key={u} value={u.toString()}>{u}</SelectItem>
                             ))}
@@ -298,11 +471,11 @@ Classification: ${classification.label}
                           value={course.grade} 
                           onValueChange={(v) => updateCourse(course.id, 'grade', v)}
                         >
-                          <SelectTrigger className="bg-slate-50 border-slate-200">
+                          <SelectTrigger className="bg-slate-50 border-slate-200 rounded-none">
                             <SelectValue placeholder="Select" />
                           </SelectTrigger>
-                          <SelectContent>
-                            {Object.entries(gradePoints).map(([grade, points]) => (
+                          <SelectContent className="rounded-none">
+                            {Object.entries(currentGradePoints).map(([grade, points]) => (
                               <SelectItem key={grade} value={grade}>
                                 {grade} ({points.toFixed(1)})
                               </SelectItem>
@@ -314,11 +487,13 @@ Classification: ${classification.label}
                       {/* Points & Delete */}
                       <div className="sm:col-span-2 flex items-center justify-between sm:justify-center gap-2">
                         <span className="text-lg font-serif text-ui-blue">
-                          {course.grade ? (gradePoints[course.grade] * course.units).toFixed(1) : '—'}
+                          {course.grade && currentGradePoints[course.grade] !== undefined 
+                            ? (currentGradePoints[course.grade] * course.units).toFixed(1) 
+                            : '—'}
                         </span>
                         <button
                           onClick={() => removeCourse(course.id)}
-                          className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                         >
                           <Trash2 size={16} />
                         </button>
@@ -333,7 +508,7 @@ Classification: ${classification.label}
                 <Button 
                   variant="outline" 
                   onClick={addCourse}
-                  className="w-full border-dashed border-slate-300 hover:border-nobel-gold hover:text-nobel-gold"
+                  className="w-full border-dashed border-slate-300 hover:border-nobel-gold hover:text-nobel-gold rounded-none"
                 >
                   <Plus size={16} className="mr-2" />
                   Add Course
@@ -350,12 +525,15 @@ Classification: ${classification.label}
             className="lg:col-span-1 space-y-6"
           >
             {/* GPA Result */}
-            <div className={`${classification.color} text-white p-8 relative overflow-hidden`}>
+            <div ref={resultCardRef} className={`${classification.color} text-white p-8 relative overflow-hidden`}>
               <div className="absolute -right-8 -bottom-8 opacity-10">
                 <ClassificationIcon size={120} />
               </div>
               
-              <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-80 mb-2">Your GPA</p>
+              <div className="flex items-center gap-2 mb-2">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-80">Your GPA</p>
+                <span className="px-2 py-0.5 bg-white/20 text-xs font-bold">{scaleType}</span>
+              </div>
               <div className="text-6xl font-serif mb-4">{gpa.toFixed(2)}</div>
               <p className="text-lg font-medium">{classification.label}</p>
               
@@ -369,19 +547,45 @@ Classification: ${classification.label}
                   <span className="font-bold">{(gpa * getTotalUnits()).toFixed(1)}</span>
                 </div>
               </div>
+
+              {/* Export & Share Buttons */}
+              <div className="mt-6 pt-6 border-t border-white/20 flex gap-2">
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  onClick={exportAsImage}
+                  disabled={getTotalUnits() === 0 || exporting}
+                  className="flex-1 rounded-none bg-white/20 hover:bg-white/30 text-white border-0"
+                >
+                  <Image size={14} className="mr-1" />
+                  {exporting ? 'Exporting...' : 'Export'}
+                </Button>
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  onClick={shareGPA}
+                  disabled={getTotalUnits() === 0}
+                  className="flex-1 rounded-none bg-white/20 hover:bg-white/30 text-white border-0"
+                >
+                  <Share2 size={14} className="mr-1" />
+                  Share
+                </Button>
+              </div>
             </div>
 
             {/* Grade Scale Reference */}
             <div className="bg-white border border-slate-200 p-6">
-              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 mb-4">Grade Scale</h3>
+              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 mb-4">
+                Grade Scale ({scaleType})
+              </h3>
               <div className="space-y-3">
-                {Object.entries(gradePoints).map(([grade, points]) => (
+                {Object.entries(currentGradePoints).map(([grade, points]) => (
                   <div key={grade} className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-3">
                       <span className="w-8 h-8 flex items-center justify-center bg-slate-100 font-bold text-ui-blue">
                         {grade}
                       </span>
-                      <span className="text-slate-500 text-xs">{gradeDescriptions[grade]}</span>
+                      <span className="text-slate-500 text-xs">{currentGradeDescriptions[grade]}</span>
                     </div>
                     <span className="font-mono font-bold text-slate-700">{points.toFixed(1)}</span>
                   </div>
@@ -393,7 +597,7 @@ Classification: ${classification.label}
             <div className="bg-white border border-slate-200 p-6">
               <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 mb-4">Classification</h3>
               <div className="space-y-2">
-                {classificationRanges.slice(0, 5).map((range) => (
+                {currentClassificationRanges.slice(0, 5).map((range) => (
                   <div key={range.label} className="flex items-center justify-between text-sm">
                     <span className="text-slate-600">{range.label}</span>
                     <span className="font-mono text-slate-400 text-xs">
