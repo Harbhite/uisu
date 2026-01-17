@@ -293,6 +293,7 @@ const Index = () => {
     { name: "Documents", href: "/documents" },
     { name: "Inks Vault", href: "/inks-vault" },
     { name: "Campus Map", href: "/campus-map" },
+    { name: "Halls of Residence", href: "/halls" },
     { name: "Communities", href: "/communities" },
     { name: "Events", href: "/events" },
     { name: "Announcements", href: "/announcements" },

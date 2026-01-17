@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Landmark, Users, Scale, Gavel, Mic, Book, Coins, Shield, Trophy, Star, ArrowRight, MapPin, Loader2, Briefcase, FileText, Heart, Globe, Building2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { ArrowLeft, Landmark, Users, Scale, Gavel, Mic, Book, Coins, Shield, Trophy, Star, ArrowRight, MapPin, Loader2, Briefcase, FileText, Heart, Globe, Building2, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface GovernanceProps {
   onBack: () => void;
@@ -23,21 +22,172 @@ const itemVariants = {
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
 };
 
+// --- Helper Components ---
+
+const ActivityIcon = ({ size, className }: { size?: number, className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size || 24} height={size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+);
+
+const RoleCard = ({ title, desc, icon, isDark = false }: { title: string, desc: string, icon: React.ReactNode, isDark?: boolean }) => (
+    <motion.div
+        variants={itemVariants}
+        className={`p-8 border transition-all duration-300 group relative overflow-hidden ${isDark ? "bg-ui-blue border-ui-blue text-white" : "bg-white border-slate-200 hover:border-nobel-gold text-slate-900"}`}
+    >
+        <div className={`absolute top-0 left-0 w-full h-1 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left ${isDark ? "bg-nobel-gold" : "bg-nobel-gold"}`}></div>
+
+        <div className={`mb-6 ${isDark ? "text-nobel-gold" : "text-ui-blue"}`}>
+            {icon}
+        </div>
+        <h3 className="font-serif text-3xl mb-4 leading-none">{title}</h3>
+        <p className={`text-sm leading-relaxed ${isDark ? "text-slate-400" : "text-slate-500"}`}>{desc}</p>
+    </motion.div>
+);
+
+const CommitteeCard = ({ title, desc, icon, type }: { title: string, desc: string, icon: React.ReactNode, type: string }) => {
+    // Simple slugify for the ID
+    const slug = title.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-').replace(/[^\w-]+/g, '');
+
+    return (
+        <Link
+            to={`/governance/committee/${slug}`}
+            className="block h-full"
+        >
+            <motion.div
+                variants={itemVariants}
+                className="bg-white p-8 border border-slate-200 hover:shadow-lg hover:border-nobel-gold transition-all duration-300 group flex flex-col h-full cursor-pointer relative"
+            >
+                <div className="flex items-center justify-between mb-6">
+                    <div className="p-3 bg-slate-50 text-ui-blue group-hover:bg-ui-blue group-hover:text-white transition-colors">
+                        {icon}
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 border border-slate-100 px-2 py-1">{type}</span>
+                </div>
+                <h4 className="font-serif text-2xl text-ui-blue mb-3 group-hover:text-nobel-gold transition-colors">{title}</h4>
+                <p className="text-sm text-slate-500 font-light leading-relaxed flex-grow">
+                    {desc}
+                </p>
+                <div className="mt-6 pt-6 border-t border-slate-100 flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-nobel-gold transition-colors">View Mandate</span>
+                    <ArrowRight size={14} className="text-slate-300 group-hover:translate-x-1 group-hover:text-nobel-gold transition-all" />
+                </div>
+            </motion.div>
+        </Link>
+    );
+};
+
+const AccordionSection = ({ title, children, defaultOpen }: { title: string, children: React.ReactNode, defaultOpen: boolean }) => {
+    const [isOpen, setIsOpen] = useState(defaultOpen);
+
+    return (
+        <div className="border border-slate-200 bg-white rounded-sm overflow-hidden">
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-full flex items-center justify-between p-6 bg-slate-50 hover:bg-slate-100 transition-colors"
+            >
+                <div className="flex items-center gap-3">
+                    <span className="w-1.5 h-1.5 rounded-full bg-nobel-gold"></span>
+                    <h3 className="font-serif text-2xl text-ui-blue">{title}</h3>
+                </div>
+                <div className={`transform transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
+                    <ChevronDown className="text-slate-400" />
+                </div>
+            </button>
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="overflow-hidden"
+                    >
+                        <div className="p-6 border-t border-slate-100">
+                            {children}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
+
+// --- Data ---
+
+const legislativeCommittees = [
+    {
+        title: "Finance & Budget Committee",
+        icon: <Coins size={24} />,
+        desc: "Scrutinizes the budget proposals of the Executive Council, monitors spending, and ensures financial transparency.",
+        type: "Standing"
+    },
+    {
+        title: "Disciplinary Committee",
+        icon: <Scale size={24} />,
+        desc: "Investigates allegations of misconduct, maintains order, and upholds the constitution and code of conduct.",
+        type: "Judicial"
+    },
+    {
+        title: "Audit Committee",
+        icon: <FileText size={24} />,
+        desc: "Independently reviews financial records and ensures compliance with financial regulations.",
+        type: "Standing"
+    }
+];
+
+const executiveCommittees = [
+    {
+        title: "Student Welfare Board",
+        icon: <Heart size={24} />,
+        desc: "Oversees student accommodation, pricing regulation, and general welfare conditions on campus.",
+        type: "Statutory"
+    },
+    {
+        title: "Sports Council",
+        icon: <Trophy size={24} />,
+        desc: "Organizes the SU Cup, Inter-Faculty Games, and promotes sporting activities across the university.",
+        type: "Social"
+    },
+    {
+        title: "Press & Publicity Committee",
+        icon: <Globe size={24} />,
+        desc: "Manages the Union's public relations, press releases, social media, and media presence.",
+        type: "Executive"
+    },
+    {
+        title: "Academic Committee",
+        icon: <Briefcase size={24} />,
+        desc: "Liaises with the university management on academic matters, calendars, and library services.",
+        type: "Statutory"
+    },
+    {
+        title: "Projects & Capital Committee",
+        icon: <Building2 size={24} />,
+        desc: "Oversees the construction, renovation, and maintenance of Union projects and assets.",
+        type: "Ad-hoc"
+    },
+    {
+        title: "Health Committee",
+        icon: <ActivityIcon size={24} />,
+        desc: "Ensures the Jaja Clinic serves students effectively, organizes health drives, and promotes health awareness.",
+        type: "Welfare"
+    }
+];
+
 export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
   const [activeTab, setActiveTab] = useState<'cec' | 'src' | 'committees'>('cec');
 
   return (
     <div className="min-h-screen bg-slate-50 pt-32 pb-16">
       <div className="container mx-auto px-6">
-        <button 
-            onClick={onBack}
-            className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors mb-12"
+        <Link
+            to="/"
+            className="group inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors mb-12"
         >
             <div className="p-2 rounded-full border border-slate-300 group-hover:border-nobel-gold transition-colors">
                 <ArrowLeft size={14} />
             </div>
             <span>Back to Home</span>
-        </button>
+        </Link>
 
         <div className="mb-20 relative">
              <motion.div 
@@ -216,56 +366,23 @@ export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    className="max-w-5xl mx-auto space-y-6"
                 >
-                    <CommitteeCard
-                        title="Student Welfare Board"
-                        icon={<Heart size={24} />}
-                        desc="Oversees student accommodation, pricing regulation, and general welfare conditions on campus."
-                        type="Statutory"
-                    />
-                    <CommitteeCard
-                        title="Disciplinary Committee"
-                        icon={<Scale size={24} />}
-                        desc="Maintains discipline and order among students, hearing cases of misconduct and recommending sanctions."
-                        type="Judicial"
-                    />
-                    <CommitteeCard
-                        title="Sports Council"
-                        icon={<Trophy size={24} />}
-                        desc="Organizes the SU Cup, Inter-Faculty Games, and promotes sporting activities."
-                        type="Social"
-                    />
-                    <CommitteeCard
-                        title="Finance & Budget"
-                        icon={<Coins size={24} />}
-                        desc="Scrutinizes the budget proposals of the Executive Council and monitors spending."
-                        type="Legislative"
-                    />
-                    <CommitteeCard
-                        title="Press & Publicity"
-                        icon={<Globe size={24} />}
-                        desc="Manages the Union's public relations, press releases, and media presence."
-                        type="Executive"
-                    />
-                    <CommitteeCard
-                        title="Academic Committee"
-                        icon={<Briefcase size={24} />}
-                        desc="Liaises with the university management on academic matters, calendars, and library services."
-                        type="Statutory"
-                    />
-                    <CommitteeCard
-                        title="Projects & Capital"
-                        icon={<Building2 size={24} />}
-                        desc="Oversees the construction and maintenance of Union projects and assets."
-                        type="Ad-hoc"
-                    />
-                    <CommitteeCard
-                        title="Health Committee"
-                        icon={<ActivityIcon size={24} />}
-                        desc="Ensures the Jaja Clinic serves students effectively and promotes health awareness."
-                        type="Welfare"
-                    />
+                   <AccordionSection title="Legislative Committees" defaultOpen={true}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {legislativeCommittees.map((committee, index) => (
+                                <CommitteeCard key={index} {...committee} />
+                            ))}
+                        </div>
+                   </AccordionSection>
+
+                   <AccordionSection title="Executive Committees" defaultOpen={false}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {executiveCommittees.map((committee, index) => (
+                                <CommitteeCard key={index} {...committee} />
+                            ))}
+                        </div>
+                   </AccordionSection>
                 </motion.div>
             )}
 
@@ -274,44 +391,3 @@ export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
     </div>
   );
 };
-
-const ActivityIcon = ({ size, className }: { size?: number, className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size || 24} height={size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-);
-
-const RoleCard = ({ title, desc, icon, isDark = false }: { title: string, desc: string, icon: React.ReactNode, isDark?: boolean }) => (
-    <motion.div 
-        variants={itemVariants}
-        className={`p-8 border transition-all duration-300 group relative overflow-hidden ${isDark ? "bg-ui-blue border-ui-blue text-white" : "bg-white border-slate-200 hover:border-nobel-gold text-slate-900"}`}
-    >
-        <div className={`absolute top-0 left-0 w-full h-1 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left ${isDark ? "bg-nobel-gold" : "bg-nobel-gold"}`}></div>
-        
-        <div className={`mb-6 ${isDark ? "text-nobel-gold" : "text-ui-blue"}`}>
-            {icon}
-        </div>
-        <h3 className="font-serif text-3xl mb-4 leading-none">{title}</h3>
-        <p className={`text-sm leading-relaxed ${isDark ? "text-slate-400" : "text-slate-500"}`}>{desc}</p>
-    </motion.div>
-);
-
-const CommitteeCard = ({ title, desc, icon, type }: { title: string, desc: string, icon: React.ReactNode, type: string }) => (
-    <motion.div
-        variants={itemVariants}
-        className="bg-white p-8 border border-slate-200 hover:shadow-lg transition-all duration-300 group flex flex-col h-full"
-    >
-        <div className="flex items-center justify-between mb-6">
-            <div className="p-3 bg-slate-50 text-ui-blue group-hover:bg-ui-blue group-hover:text-white transition-colors">
-                {icon}
-            </div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 border border-slate-100 px-2 py-1">{type}</span>
-        </div>
-        <h4 className="font-serif text-2xl text-ui-blue mb-3">{title}</h4>
-        <p className="text-sm text-slate-500 font-light leading-relaxed flex-grow">
-            {desc}
-        </p>
-        <div className="mt-6 pt-6 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-nobel-gold group-hover:text-ui-blue transition-colors">View Mandate</span>
-            <ArrowRight size={14} className="text-slate-300 group-hover:translate-x-1 transition-transform" />
-        </div>
-    </motion.div>
-);
