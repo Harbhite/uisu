@@ -268,6 +268,41 @@ export type Database = {
         }
         Relationships: []
       }
+      event_rsvps: {
+        Row: {
+          created_at: string | null
+          event_id: string
+          id: string
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_id: string
+          id?: string
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_rsvps_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           created_at: string | null
@@ -438,6 +473,35 @@ export type Database = {
           },
         ]
       }
+      ink_likes: {
+        Row: {
+          created_at: string | null
+          id: string
+          piece_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          piece_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          piece_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ink_likes_piece_id_fkey"
+            columns: ["piece_id"]
+            isOneToOne: false
+            referencedRelation: "ink_pieces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ink_pieces: {
         Row: {
           author_name: string
@@ -486,6 +550,57 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
           view_count?: number | null
+        }
+        Relationships: []
+      }
+      job_listings: {
+        Row: {
+          application_url: string | null
+          company: string
+          created_at: string | null
+          deadline: string | null
+          description: string | null
+          id: string
+          industry: string
+          is_active: boolean | null
+          job_type: string
+          location: string
+          requirements: string[] | null
+          salary: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          application_url?: string | null
+          company: string
+          created_at?: string | null
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          industry: string
+          is_active?: boolean | null
+          job_type: string
+          location: string
+          requirements?: string[] | null
+          salary?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          application_url?: string | null
+          company?: string
+          created_at?: string | null
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          industry?: string
+          is_active?: boolean | null
+          job_type?: string
+          location?: string
+          requirements?: string[] | null
+          salary?: string | null
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }

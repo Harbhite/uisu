@@ -275,20 +275,19 @@ const AdminDashboard = () => {
       } else if (activeTab === "publications") {
          try {
            const { data, error } = await supabase
-             .from("inks_pieces" as any)
+             .from("ink_pieces")
              .select("*")
-             .order("date", { ascending: false });
+             .order("created_at", { ascending: false });
 
            if (error) {
-             console.warn("Could not fetch publications from DB (table might be missing), using fallback data.");
-             // Sort fallback data by date desc
-             const sorted = [...inksPieces].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-             setPublications(sorted);
+             console.warn("Could not fetch publications from DB:", error.message);
+             setPublications([]);
            } else {
              setPublications(data || []);
            }
          } catch (err) {
-            setPublications(inksPieces);
+            console.error("Failed to fetch publications:", err);
+            setPublications([]);
          }
       } else if (activeTab === "admins") {
         const { data, error } = await supabase
