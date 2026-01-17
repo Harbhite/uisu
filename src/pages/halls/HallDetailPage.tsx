@@ -65,7 +65,7 @@ const HallDetailPage = () => {
   useEffect(() => {
     const fetchHall = async () => {
       if (!id) {
-        navigate('/governance');
+        navigate('/halls');
         return;
       }
 
@@ -290,7 +290,7 @@ const HallDetailPage = () => {
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-slate-800 mb-4">Hall Not Found</h2>
-          <Button onClick={() => navigate('/governance')}>Return to Governance</Button>
+          <Button onClick={() => navigate('/halls')}>Return to Halls</Button>
         </div>
       </div>
     );
@@ -676,8 +676,8 @@ const HallDetailPage = () => {
               </ul>
             </motion.div>
 
-            <Button onClick={() => navigate('/governance')} variant="outline" className="w-full gap-2">
-              <ArrowLeft size={14} /> Back to Governance
+            <Button onClick={() => navigate('/halls')} variant="outline" className="w-full gap-2">
+              <ArrowLeft size={14} /> Back to Halls
             </Button>
           </div>
         </div>
