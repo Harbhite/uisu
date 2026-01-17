@@ -561,6 +561,7 @@ const InksVaultPage = () => {
             ))}
             </motion.div>
           </div>
+        </div>
 
         {/* Content */}
         {activeTab === 'published' ? (
