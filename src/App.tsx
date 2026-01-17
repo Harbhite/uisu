@@ -11,6 +11,7 @@ import { lazy, Suspense } from "react";
 
 // Lazy load pages for better performance
 const GovernancePage = lazy(() => import("./pages/GovernancePage"));
+const CommitteeDetailPage = lazy(() => import("./pages/CommitteeDetailPage"));
 const PastLeadersPage = lazy(() => import("./pages/PastLeadersPage"));
 const CurrentLeadersPage = lazy(() => import("./pages/CurrentLeadersPage"));
 const LeaderDetailPage = lazy(() => import("./pages/LeaderDetailPage"));
@@ -62,6 +63,7 @@ const AppRoutes = () => {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<PageWrapper><Index /></PageWrapper>} />
         <Route path="/governance" element={<PageWrapper><GovernancePage /></PageWrapper>} />
+        <Route path="/governance/committee/:id" element={<PageWrapper><CommitteeDetailPage /></PageWrapper>} />
         <Route path="/past-leaders" element={<PageWrapper><PastLeadersPage /></PageWrapper>} />
         <Route path="/current-leaders" element={<PageWrapper><CurrentLeadersPage /></PageWrapper>} />
         <Route path="/current-leaders/:id" element={<PageWrapper><LeaderDetailPage /></PageWrapper>} />

@@ -134,6 +134,9 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
                       <ListItem href="/campus-map" title="Campus Map">
                         Navigate the halls and landmarks.
                       </ListItem>
+                      <ListItem href="/halls" title="Halls of Residence">
+                        The Republics within the University.
+                      </ListItem>
                       <ListItem href="/events" title="Events">
                         Upcoming programs and activities.
                       </ListItem>
