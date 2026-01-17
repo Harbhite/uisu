@@ -1,21 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Landmark, Users, Scale, Gavel, Mic, Book, Coins, Shield, Trophy, Star, ArrowRight, MapPin, Loader2 } from 'lucide-react';
+import { ArrowLeft, Landmark, Users, Scale, Gavel, Mic, Book, Coins, Shield, Trophy, Star, ArrowRight, MapPin, Loader2, Briefcase, FileText, Heart, Globe, Building2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface GovernanceProps {
   onBack: () => void;
-}
-
-interface Hall {
-  id: string;
-  name: string;
-  alias: string | null;
-  motto: string | null;
-  description: string | null;
-  color: string | null;
-  slug: string;
 }
 
 const containerVariants = {
@@ -34,31 +24,7 @@ const itemVariants = {
 };
 
 export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
-  const [activeTab, setActiveTab] = useState<'cec' | 'src' | 'halls'>('cec');
-  const [halls, setHalls] = useState<Hall[]>([]);
-  const [loadingHalls, setLoadingHalls] = useState(false);
-
-  // Fetch halls from database when halls tab is active
-  useEffect(() => {
-    if (activeTab === 'halls') {
-      const fetchHalls = async () => {
-        setLoadingHalls(true);
-        const { data, error } = await supabase
-          .from('halls')
-          .select('id, name, alias, motto, description, color, slug')
-          .order('name');
-        
-        if (error) {
-          console.error('Error fetching halls:', error);
-        } else {
-          setHalls(data || []);
-        }
-        setLoadingHalls(false);
-      };
-
-      fetchHalls();
-    }
-  }, [activeTab]);
+  const [activeTab, setActiveTab] = useState<'cec' | 'src' | 'committees'>('cec');
 
   return (
     <div className="min-h-screen bg-slate-50 pt-32 pb-16">
@@ -103,16 +69,16 @@ export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
         </div>
 
         <div className="flex flex-wrap gap-8 mb-16 border-b border-slate-200">
-            {['cec', 'src', 'halls'].map((tab) => (
+            {['cec', 'src', 'committees'].map((tab) => (
                 <button 
                     key={tab}
-                    onClick={() => setActiveTab(tab as 'cec' | 'src' | 'halls')}
+                    onClick={() => setActiveTab(tab as 'cec' | 'src' | 'committees')}
                     className={`pb-6 text-sm font-bold tracking-[0.2em] uppercase transition-all relative ${activeTab === tab ? 'text-ui-blue' : 'text-slate-400 hover:text-slate-600'}`}
                 >
                     <span className="flex items-center gap-3">
                         {tab === 'cec' && "The Executive"}
                         {tab === 'src' && "The Legislative"}
-                        {tab === 'halls' && "The Republics"}
+                        {tab === 'committees' && "Committees"}
                     </span>
                     {activeTab === tab && (
                         <motion.div 
@@ -175,89 +141,6 @@ export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
                             desc="Organizes sporting activities, the Dean's Cup, and the Inter-Hall games. Promotes physical fitness among Uites."
                         />
                     </div>
-                </motion.div>
-            )}
-
-            {activeTab === 'halls' && (
-                <motion.div
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate="visible"
-                >
-                    {loadingHalls ? (
-                        <div className="flex items-center justify-center py-20">
-                            <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-                        </div>
-                    ) : halls.length === 0 ? (
-                        <div className="text-center py-20 text-slate-400">
-                            No halls found
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {halls.map((hall, index) => (
-                                <Link to={`/governance/hall/${hall.slug}`} key={hall.id}>
-                                    <motion.div
-                                        variants={itemVariants}
-                                        whileHover={{ y: -6, scale: 1.02 }}
-                                        className="relative overflow-hidden group cursor-pointer h-full"
-                                        style={{ 
-                                            backgroundColor: hall.color || '#003366',
-                                        }}
-                                    >
-                                        <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-transparent to-black/30"></div>
-                                        <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-colors duration-700"></div>
-                                        
-                                        <div className="relative z-10 p-8 flex flex-col h-[380px]">
-                                            {/* Header with icon and alias badge */}
-                                            <div className="flex items-center gap-3 mb-6">
-                                                <motion.div 
-                                                    className="p-3 bg-white/10 backdrop-blur-sm border border-white/20"
-                                                    animate={{ scale: [1, 1.03, 1] }}
-                                                    transition={{ duration: 2.5 + index * 0.2, repeat: Infinity, ease: "easeInOut" }}
-                                                >
-                                                    <MapPin size={20} className="text-nobel-gold" />
-                                                </motion.div>
-                                                {hall.alias && (
-                                                    <span className="px-3 py-1.5 bg-nobel-gold/20 text-nobel-gold text-[10px] font-bold uppercase tracking-[0.15em] border border-nobel-gold/30">
-                                                        {hall.alias}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            
-                                            {/* Name */}
-                                            <h3 className="text-3xl md:text-4xl font-serif mb-3 leading-[1.1] text-white">
-                                                {hall.name}
-                                            </h3>
-                                            
-                                            {/* Motto */}
-                                            {hall.motto && (
-                                                <p className="font-serif italic text-white/70 text-base mb-4">"{hall.motto}"</p>
-                                            )}
-                                            
-                                            {/* Description */}
-                                            {hall.description && (
-                                                <p className="text-white/60 leading-relaxed text-sm font-light mb-6 line-clamp-3 flex-grow">
-                                                    {hall.description}
-                                                </p>
-                                            )}
-                                            
-                                            {/* Explore link at bottom */}
-                                            <div className="mt-auto flex items-center gap-3">
-                                                <span className="text-xs font-bold uppercase tracking-[0.15em] text-white group-hover:tracking-[0.2em] transition-all duration-300">
-                                                    Explore Republic
-                                                </span>
-                                                <motion.div 
-                                                    className="w-8 group-hover:w-14 h-0.5 bg-white transition-all duration-500"
-                                                    animate={{ opacity: [0.7, 1, 0.7] }}
-                                                    transition={{ duration: 2, repeat: Infinity }}
-                                                />
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                </Link>
-                            ))}
-                        </div>
-                    )}
                 </motion.div>
             )}
 
@@ -328,11 +211,73 @@ export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
                 </motion.div>
             )}
 
+            {activeTab === 'committees' && (
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                >
+                    <CommitteeCard
+                        title="Student Welfare Board"
+                        icon={<Heart size={24} />}
+                        desc="Oversees student accommodation, pricing regulation, and general welfare conditions on campus."
+                        type="Statutory"
+                    />
+                    <CommitteeCard
+                        title="Disciplinary Committee"
+                        icon={<Scale size={24} />}
+                        desc="Maintains discipline and order among students, hearing cases of misconduct and recommending sanctions."
+                        type="Judicial"
+                    />
+                    <CommitteeCard
+                        title="Sports Council"
+                        icon={<Trophy size={24} />}
+                        desc="Organizes the SU Cup, Inter-Faculty Games, and promotes sporting activities."
+                        type="Social"
+                    />
+                    <CommitteeCard
+                        title="Finance & Budget"
+                        icon={<Coins size={24} />}
+                        desc="Scrutinizes the budget proposals of the Executive Council and monitors spending."
+                        type="Legislative"
+                    />
+                    <CommitteeCard
+                        title="Press & Publicity"
+                        icon={<Globe size={24} />}
+                        desc="Manages the Union's public relations, press releases, and media presence."
+                        type="Executive"
+                    />
+                    <CommitteeCard
+                        title="Academic Committee"
+                        icon={<Briefcase size={24} />}
+                        desc="Liaises with the university management on academic matters, calendars, and library services."
+                        type="Statutory"
+                    />
+                    <CommitteeCard
+                        title="Projects & Capital"
+                        icon={<Building2 size={24} />}
+                        desc="Oversees the construction and maintenance of Union projects and assets."
+                        type="Ad-hoc"
+                    />
+                    <CommitteeCard
+                        title="Health Committee"
+                        icon={<ActivityIcon size={24} />}
+                        desc="Ensures the Jaja Clinic serves students effectively and promotes health awareness."
+                        type="Welfare"
+                    />
+                </motion.div>
+            )}
+
         </div>
       </div>
     </div>
   );
 };
+
+const ActivityIcon = ({ size, className }: { size?: number, className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size || 24} height={size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+);
 
 const RoleCard = ({ title, desc, icon, isDark = false }: { title: string, desc: string, icon: React.ReactNode, isDark?: boolean }) => (
     <motion.div 
@@ -346,5 +291,27 @@ const RoleCard = ({ title, desc, icon, isDark = false }: { title: string, desc: 
         </div>
         <h3 className="font-serif text-3xl mb-4 leading-none">{title}</h3>
         <p className={`text-sm leading-relaxed ${isDark ? "text-slate-400" : "text-slate-500"}`}>{desc}</p>
+    </motion.div>
+);
+
+const CommitteeCard = ({ title, desc, icon, type }: { title: string, desc: string, icon: React.ReactNode, type: string }) => (
+    <motion.div
+        variants={itemVariants}
+        className="bg-white p-8 border border-slate-200 hover:shadow-lg transition-all duration-300 group flex flex-col h-full"
+    >
+        <div className="flex items-center justify-between mb-6">
+            <div className="p-3 bg-slate-50 text-ui-blue group-hover:bg-ui-blue group-hover:text-white transition-colors">
+                {icon}
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 border border-slate-100 px-2 py-1">{type}</span>
+        </div>
+        <h4 className="font-serif text-2xl text-ui-blue mb-3">{title}</h4>
+        <p className="text-sm text-slate-500 font-light leading-relaxed flex-grow">
+            {desc}
+        </p>
+        <div className="mt-6 pt-6 border-t border-slate-100 flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-nobel-gold group-hover:text-ui-blue transition-colors">View Mandate</span>
+            <ArrowRight size={14} className="text-slate-300 group-hover:translate-x-1 transition-transform" />
+        </div>
     </motion.div>
 );
