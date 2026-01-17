@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Menu, LogOut, ChevronDown } from "lucide-react";
+import { X, Menu, LogOut, ChevronDown, Search } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { User } from "@supabase/supabase-js";
 import {
@@ -160,6 +160,15 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
 
             {/* Action Button */}
             <div className="flex items-center gap-4 pl-4 border-l border-white/20">
+               {/* Search Button */}
+               <button 
+                 onClick={() => navigate('/search')}
+                 className="p-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                 aria-label="Search"
+               >
+                 <Search size={18} />
+               </button>
+               
                {user && (
                 <Link to="/admin" className="text-xs font-bold uppercase tracking-widest text-slate-300 hover:text-white transition-colors">
                   Admin

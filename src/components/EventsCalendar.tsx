@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Star, Calendar, Clock, MapPin, ChevronLeft, ChevronRight, Users, Award, FileText, Megaphone, Loader2 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, isToday, parseISO } from 'date-fns';
 import { supabase } from "@/integrations/supabase/client";
+import { EventRSVP } from "@/components/EventRSVP";
 
 interface EventsCalendarProps {
   onBack: () => void;
@@ -282,9 +283,20 @@ export const EventsCalendar: React.FC<EventsCalendarProps> = ({ onBack }) => {
                                     </span>
                                   )}
                                 </div>
+                                </div>
                               </div>
-                            </div>
-                          </motion.div>
+                              
+                              {/* RSVP Section */}
+                              <div className="mt-4 pt-4 border-t border-border">
+                                <EventRSVP
+                                  eventId={event.id}
+                                  eventTitle={event.title}
+                                  eventDate={event.date}
+                                  eventTime={event.time}
+                                  eventLocation={event.location}
+                                />
+                              </div>
+                            </motion.div>
                         );
                       })}
                     </div>

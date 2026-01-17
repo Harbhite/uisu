@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, BookOpen, PenTool, FileText, User, Mic, Book, Coffee, Feather, Newspaper, Quote, Plus, Loader2, Pencil, FileStack, Eye, Search, Clock, X } from 'lucide-react';
+import { ArrowLeft, BookOpen, PenTool, FileText, User, Mic, Book, Coffee, Feather, Newspaper, Quote, Plus, Loader2, Pencil, FileStack, Eye, Search, Clock, X, Heart, TrendingUp } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SEO } from '@/components/SEO';
 import { Json } from '@/integrations/supabase/types';
 import { User as SupabaseUser } from '@supabase/supabase-js';
+import { LikeButton } from '@/components/LikeButton';
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -77,6 +78,8 @@ const InksVaultPage = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [activeTab, setActiveTab] = useState<string>('published');
+  const [sortBy, setSortBy] = useState<'latest' | 'popular'>('latest');
+  const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
 
   const categories = ['All', 'Article', 'Blog', 'Report', 'Essay', 'Poetry', 'Opinion', 'Interview', 'Fiction'];
 
@@ -94,6 +97,19 @@ const InksVaultPage = () => {
 
       if (!publishedError && publishedData) {
         setPieces(publishedData as InksPiece[]);
+        
+        // Fetch like counts for all pieces
+        const pieceIds = publishedData.map(p => p.id);
+        const counts: Record<string, number> = {};
+        
+        for (const pieceId of pieceIds) {
+          const { count } = await supabase
+            .from('ink_likes')
+            .select('*', { count: 'exact', head: true })
+            .eq('piece_id', pieceId);
+          counts[pieceId] = count || 0;
+        }
+        setLikeCounts(counts);
       }
 
       // Fetch user's drafts if logged in
@@ -131,7 +147,15 @@ const InksVaultPage = () => {
     return filtered;
   };
 
-  const filteredPieces = filterPieces(pieces);
+  // Sort pieces
+  const sortPieces = (list: InksPiece[]) => {
+    if (sortBy === 'popular') {
+      return [...list].sort((a, b) => (likeCounts[b.id] || 0) - (likeCounts[a.id] || 0));
+    }
+    return list; // Already sorted by latest from DB
+  };
+
+  const filteredPieces = sortPieces(filterPieces(pieces));
   const filteredDrafts = filterPieces(drafts);
 
   const canEdit = (piece: InksPiece) => {
@@ -164,6 +188,7 @@ const InksVaultPage = () => {
             {piece.view_count} views
           </span>
         )}
+        <LikeButton pieceId={piece.id} initialLikeCount={likeCounts[piece.id] || 0} size="sm" />
       </div>
     );
   };
@@ -492,13 +517,35 @@ const InksVaultPage = () => {
             </Tabs>
           )}
 
-          {/* Category Filters */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-wrap gap-2"
-          >
+          {/* Sort & Category Filters */}
+          <div className="flex flex-wrap items-center gap-4 mb-8">
+            {/* Sort Toggle */}
+            <div className="flex items-center gap-2 mr-4">
+              <button
+                onClick={() => setSortBy('latest')}
+                className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all ${
+                  sortBy === 'latest' ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Clock size={12} className="inline mr-1" /> Latest
+              </button>
+              <button
+                onClick={() => setSortBy('popular')}
+                className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all ${
+                  sortBy === 'popular' ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Heart size={12} className="inline mr-1" /> Most Liked
+              </button>
+            </div>
+
+            {/* Category Filters */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="flex flex-wrap gap-2"
+            >
             {categories.map(cat => (
               <button
                 key={cat}
@@ -512,8 +559,8 @@ const InksVaultPage = () => {
                 {cat}
               </button>
             ))}
-          </motion.div>
-        </div>
+            </motion.div>
+          </div>
 
         {/* Content */}
         {activeTab === 'published' ? (

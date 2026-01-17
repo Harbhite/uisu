@@ -40,6 +40,7 @@ const CampusHealthPage = lazy(() => import("./pages/resources/CampusHealthPage")
 const GPACalculatorPage = lazy(() => import("./pages/resources/GPACalculatorPage"));
 const CalculatorSuitePage = lazy(() => import("./pages/resources/CalculatorSuitePage"));
 const StyleGuidePage = lazy(() => import("./pages/StyleGuidePage"));
+const SearchPage = lazy(() => import("./pages/SearchPage"));
 
 const queryClient = new QueryClient();
 
@@ -94,6 +95,9 @@ const AppRoutes = () => {
 
         {/* Style Guide - only linked from footer */}
         <Route path="/style-guide" element={<PageWrapper><StyleGuidePage /></PageWrapper>} />
+        
+        {/* Global Search */}
+        <Route path="/search" element={<PageWrapper><SearchPage /></PageWrapper>} />
 
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
