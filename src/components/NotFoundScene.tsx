@@ -1,6 +1,6 @@
-import { useRef, useMemo } from 'react'
+import { useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { AsciiRenderer, useTexture, Float, TorusKnot, Stars } from '@react-three/drei'
+import { AsciiRenderer, useTexture, Float } from '@react-three/drei'
 import * as THREE from 'three'
 
 function LogoCube() {
@@ -18,29 +18,8 @@ function LogoCube() {
 
   return (
     <mesh ref={meshRef}>
-      <boxGeometry args={[2.5, 2.5, 2.5]} />
+      <boxGeometry args={[3, 3, 3]} />
       <meshStandardMaterial map={texture} color="white" roughness={0.5} />
-    </mesh>
-  )
-}
-
-function OrbitingRing() {
-  const ref = useRef<THREE.Mesh>(null)
-
-  useFrame((state) => {
-    if (ref.current) {
-      const t = state.clock.getElapsedTime()
-      ref.current.rotation.x = t * 0.5
-      ref.current.rotation.y = t * 0.2
-      // Add a slight wobble
-      ref.current.position.y = Math.sin(t) * 0.5
-    }
-  })
-
-  return (
-    <mesh ref={ref}>
-      <torusKnotGeometry args={[3.5, 0.2, 128, 16]} />
-      <meshStandardMaterial color="#C5A059" emissive="#C5A059" emissiveIntensity={0.5} roughness={0.2} metalness={0.8} />
     </mesh>
   )
 }
@@ -56,22 +35,16 @@ export default function NotFoundScene() {
         <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={5} />
         <pointLight position={[-10, -10, -10]} intensity={5} />
 
-        {/* Floating Container for the Logo */}
+        {/* Floating Container for the Logo - Only the logo as requested */}
         <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
             <LogoCube />
         </Float>
 
-        {/* The "Another Thing" - An orbiting ring representing continuity */}
-        <OrbitingRing />
-
-        {/* Background Stars for depth */}
-        <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-
         {/* The ASCII Effect */}
-        {/* fgColor: Gold, bgColor: Dark Blue/Black mix */}
+        {/* fgColor: Blue (#3B82F6 is Tailwind blue-500, visible on dark), bgColor: Dark */}
         <AsciiRenderer
-          fgColor="#C5A059"
-          bgColor="#001020"
+          fgColor="#3B82F6"
+          bgColor="#000510"
           characters=" .:-+*=%@#"
           invert={false}
           resolution={0.2}
