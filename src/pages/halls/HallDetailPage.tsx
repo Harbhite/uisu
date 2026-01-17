@@ -522,28 +522,28 @@ const HallDetailPage = () => {
               </div>
               
               {galleryImages.length === 0 ? (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {[1, 2].map((i) => (
-                    <div key={i} className="aspect-video bg-slate-200 rounded-lg overflow-hidden relative group">
-                      <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-sm">
+                    <div key={i} className="aspect-[4/3] bg-slate-200 rounded-lg overflow-hidden relative group border border-slate-100">
+                      <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-sm font-medium">
                         No images yet
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {galleryImages.map((img, idx) => (
-                    <div key={idx} className="aspect-video bg-slate-200 rounded-lg overflow-hidden relative group">
-                      <img src={img} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" />
+                    <div key={idx} className="aspect-[4/3] bg-slate-200 rounded-lg overflow-hidden relative group shadow-sm hover:shadow-xl transition-all duration-500 border border-slate-100">
+                      <img src={img} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                       {isEditing && (
                         <Button
                           size="icon"
                           variant="destructive"
-                          className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
                           onClick={() => handleRemoveGalleryImage(idx)}
                         >
-                          <Trash2 size={14} />
+                          <Trash2 size={16} />
                         </Button>
                       )}
                     </div>
