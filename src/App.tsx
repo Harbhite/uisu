@@ -43,6 +43,7 @@ const GPACalculatorPage = lazy(() => import("./pages/resources/GPACalculatorPage
 const CalculatorSuitePage = lazy(() => import("./pages/resources/CalculatorSuitePage"));
 const StyleGuidePage = lazy(() => import("./pages/StyleGuidePage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
+const HistoryPage = lazy(() => import("./pages/HistoryPage"));
 
 const queryClient = new QueryClient();
 
@@ -102,6 +103,9 @@ const AppRoutes = () => {
         
         {/* Global Search */}
         <Route path="/search" element={<PageWrapper><SearchPage /></PageWrapper>} />
+
+        {/* History Page */}
+        <Route path="/history" element={<PageWrapper><HistoryPage /></PageWrapper>} />
 
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
