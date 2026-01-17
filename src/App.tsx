@@ -59,11 +59,11 @@ const AppRoutes = () => {
   const location = useLocation();
 
   return (
-    <AnimatePresence mode="wait">
+    // AnimatePresence removed to fix navigation getting stuck
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<PageWrapper><Index /></PageWrapper>} />
         <Route path="/governance" element={<PageWrapper><GovernancePage /></PageWrapper>} />
-        <Route path="/governance/committee/:id" element={<PageWrapper><CommitteeDetailPage /></PageWrapper>} />
+        <Route path="/committee/:id" element={<PageWrapper><CommitteeDetailPage /></PageWrapper>} />
         <Route path="/past-leaders" element={<PageWrapper><PastLeadersPage /></PageWrapper>} />
         <Route path="/current-leaders" element={<PageWrapper><CurrentLeadersPage /></PageWrapper>} />
         <Route path="/current-leaders/:id" element={<PageWrapper><LeaderDetailPage /></PageWrapper>} />
@@ -106,7 +106,6 @@ const AppRoutes = () => {
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
       </Routes>
-    </AnimatePresence>
   );
 };
 
