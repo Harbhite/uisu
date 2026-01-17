@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Coins, Scale, FileText, Heart, Trophy, Globe, Briefcase, Building2, Users, Calendar, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Coins, Scale, FileText, Heart, Trophy, Globe, Briefcase, Building2, Users, Calendar, CheckCircle2, User, UserCheck } from 'lucide-react';
 
 // Replicating data here for lookup (In a full refactor, this should move to src/lib/data.ts)
 const committeesData = [
@@ -12,13 +12,15 @@ const committeesData = [
         icon: <Coins size={48} />,
         desc: "Scrutinizes the budget proposals of the Executive Council, monitors spending, and ensures financial transparency.",
         type: "Legislative",
+        chairperson: "Senator Chairperson",
+        secretary: "Senator Secretary",
         mandate: [
             "Review and approve the Union's annual budget.",
             "Monitor financial expenditures of the Executive Council.",
             "Ensure adherence to financial bye-laws.",
             "Investigate financial discrepancies."
         ],
-        members: ["Senator Chairperson", "Senator Secretary", "3 Members from SRC"]
+        members: ["3 Members from SRC"]
     },
     {
         title: "Disciplinary Committee",
@@ -26,13 +28,15 @@ const committeesData = [
         icon: <Scale size={48} />,
         desc: "Investigates allegations of misconduct, maintains order, and upholds the constitution and code of conduct.",
         type: "Judicial/Legislative",
+        chairperson: "Legal Advisor",
+        secretary: "Appointed Secretary",
         mandate: [
             "Hear cases of constitutional violations.",
             "Recommend sanctions for misconduct.",
             "Interpret the Union's Code of Conduct.",
             "Ensure fair hearing for all accused students."
         ],
-        members: ["Legal Advisor (Chair)", "4 Members appointed by SRC"]
+        members: ["4 Members appointed by SRC"]
     },
     {
         title: "Audit Committee",
@@ -40,13 +44,15 @@ const committeesData = [
         icon: <FileText size={48} />,
         desc: "Independently reviews financial records and ensures compliance with financial regulations.",
         type: "Legislative",
+        chairperson: "Senator Chairperson",
+        secretary: "Appointed Secretary",
         mandate: [
             "Audit the Union's accounts quarterly.",
             "Verify receipts and payment vouchers.",
             "Report financial anomalies to the House.",
             "Publish audited financial reports."
         ],
-        members: ["Senator Chairperson", "2 Members from SRC"]
+        members: ["2 Members from SRC"]
     },
     // Executive
     {
@@ -55,13 +61,15 @@ const committeesData = [
         icon: <Heart size={48} />,
         desc: "Oversees student accommodation, pricing regulation, and general welfare conditions on campus.",
         type: "Executive",
+        chairperson: "House Secretary",
+        secretary: "Appointed Secretary",
         mandate: [
             "Monitor prices of goods and services on campus.",
             "Liaise with Hall Management on accommodation issues.",
             "Manage the Union's transportation scheme.",
             "Address student complaints regarding welfare."
         ],
-        members: ["House Secretary (Chair)", "Welfare Secretaries of Halls"]
+        members: ["Welfare Secretaries of Halls"]
     },
     {
         title: "Sports Council",
@@ -69,13 +77,15 @@ const committeesData = [
         icon: <Trophy size={48} />,
         desc: "Organizes the SU Cup, Inter-Faculty Games, and promotes sporting activities across the university.",
         type: "Executive",
+        chairperson: "Sports Secretary",
+        secretary: "Appointed Secretary",
         mandate: [
             "Organize the annual Dean's Cup and SU Cup.",
             "Maintain the Union's sports equipment.",
             "Select and train the University's sports team.",
             "Promote physical fitness campaigns."
         ],
-        members: ["Sports Secretary (Chair)", "Sports Secretaries of Halls/Faculties"]
+        members: ["Sports Secretaries of Halls/Faculties"]
     },
     {
         title: "Press & Publicity Committee",
@@ -83,13 +93,15 @@ const committeesData = [
         icon: <Globe size={48} />,
         desc: "Manages the Union's public relations, press releases, social media, and media presence.",
         type: "Executive",
+        chairperson: "Public Relations Officer",
+        secretary: "Appointed Secretary",
         mandate: [
             "Manage the Union's official social media handles.",
             "Draft and publish press releases.",
             "Organize press conferences.",
             "Maintain the Union's website and notice boards."
         ],
-        members: ["PRO (Chair)", "Media Team"]
+        members: ["Media Team"]
     },
     {
         title: "Academic Committee",
@@ -97,13 +109,15 @@ const committeesData = [
         icon: <Briefcase size={48} />,
         desc: "Liaises with the university management on academic matters, calendars, and library services.",
         type: "Executive",
+        chairperson: "Vice President",
+        secretary: "Appointed Secretary",
         mandate: [
             "Represent students in Senate Academic meetings.",
             "Organize academic seminars and tutorials.",
             "Advocate for better library facilities.",
             "Address grading and examination complaints."
         ],
-        members: ["Vice President (Chair)", "Academic Directors of Faculties"]
+        members: ["Academic Directors of Faculties"]
     },
     {
         title: "Projects & Capital Committee",
@@ -111,13 +125,15 @@ const committeesData = [
         icon: <Building2 size={48} />,
         desc: "Oversees the construction, renovation, and maintenance of Union projects and assets.",
         type: "Executive/Ad-hoc",
+        chairperson: "The President",
+        secretary: "The Treasurer",
         mandate: [
             "Supervise ongoing Union construction projects.",
             "Assess the state of Union properties.",
             "Recommend renovation projects.",
             "Ensure value for money in capital expenditures."
         ],
-        members: ["President (Chair)", "Treasurer", "House Secretary"]
+        members: ["House Secretary"]
     },
     {
         title: "Health Committee",
@@ -125,13 +141,15 @@ const committeesData = [
         icon: <ActivityIcon size={48} />,
         desc: "Ensures the Jaja Clinic serves students effectively, organizes health drives, and promotes health awareness.",
         type: "Executive",
+        chairperson: "House Secretary",
+        secretary: "Appointed Secretary",
         mandate: [
             "Monitor service delivery at the University Health Service.",
             "Organize blood donation and health awareness drives.",
             "Manage the Union's emergency health fund.",
             "Liaise with the Director of Health Services."
         ],
-        members: ["House Secretary (Chair)", "Health Representatives"]
+        members: ["Health Representatives"]
     }
 ];
 
@@ -195,6 +213,28 @@ const CommitteeDetailPage = () => {
                         </div>
                     </div>
 
+                    {/* New Leadership Section */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 p-6 bg-slate-50 border border-slate-100 rounded-sm">
+                        <div className="flex items-center gap-4">
+                             <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-slate-200 text-nobel-gold">
+                                 <User size={24} />
+                             </div>
+                             <div>
+                                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">Chairperson</span>
+                                 <h4 className="font-serif text-xl text-ui-blue">{committee.chairperson}</h4>
+                             </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                             <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-slate-200 text-nobel-gold">
+                                 <UserCheck size={24} />
+                             </div>
+                             <div>
+                                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-1">Secretary</span>
+                                 <h4 className="font-serif text-xl text-ui-blue">{committee.secretary}</h4>
+                             </div>
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                         <div>
                             <h3 className="flex items-center gap-3 text-xl font-serif text-ui-blue mb-6 pb-4 border-b border-slate-100">
@@ -214,7 +254,7 @@ const CommitteeDetailPage = () => {
                         <div>
                             <h3 className="flex items-center gap-3 text-xl font-serif text-ui-blue mb-6 pb-4 border-b border-slate-100">
                                 <Users size={20} className="text-nobel-gold" />
-                                Composition
+                                Other Members
                             </h3>
                             <div className="bg-slate-50 p-6 rounded-sm border border-slate-100">
                                 <ul className="space-y-3">

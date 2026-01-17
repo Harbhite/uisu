@@ -49,7 +49,7 @@ const CommitteeCard = ({ title, desc, icon, type }: { title: string, desc: strin
 
     return (
         <Link
-            to={`/governance/committee/${slug}`}
+            to={`/committee/${slug}`}
             className="block h-full"
         >
             <motion.div
@@ -102,7 +102,13 @@ const AccordionSection = ({ title, children, defaultOpen }: { title: string, chi
                         className="overflow-hidden"
                     >
                         <div className="p-6 border-t border-slate-100">
-                            {children}
+                            <motion.div
+                                variants={containerVariants}
+                                initial="hidden"
+                                animate="visible"
+                            >
+                                {children}
+                            </motion.div>
                         </div>
                     </motion.div>
                 )}
