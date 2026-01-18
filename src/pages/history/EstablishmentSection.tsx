@@ -28,6 +28,7 @@ const CrowdStrip = ({ direction = 1, speed = 1 }: { direction?: number, speed?: 
 export const EstablishmentSection: React.FC = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLHeadingElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const crowdRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -53,7 +54,7 @@ export const EstablishmentSection: React.FC = () => {
             }
         });
 
-        // Text reveal
+        // Text reveal for Title
         gsap.from(textRef.current, {
             scale: 0.8,
             opacity: 0,
@@ -63,7 +64,19 @@ export const EstablishmentSection: React.FC = () => {
                 end: "center center",
                 scrub: true
             }
-        })
+        });
+
+        // Content Fade In
+         gsap.from(contentRef.current, {
+            y: 50,
+            opacity: 0,
+            scrollTrigger: {
+                trigger: sectionRef.current,
+                start: "center center",
+                end: "bottom center",
+                scrub: true
+            }
+        });
 
     }, sectionRef);
 
@@ -71,17 +84,26 @@ export const EstablishmentSection: React.FC = () => {
   }, []);
 
   return (
-    <section ref={sectionRef} className="h-[200vh] w-full relative bg-nobel-cream text-ui-dark overflow-hidden flex flex-col justify-end">
+    <section ref={sectionRef} className="h-[250vh] w-full relative bg-nobel-cream text-ui-dark overflow-hidden flex flex-col justify-end">
 
         {/* Pinned Title Container */}
-        <div className="absolute top-0 left-0 w-full h-screen flex flex-col items-center justify-center z-10 pointer-events-none">
+        <div className="absolute top-0 left-0 w-full h-screen flex flex-col items-center justify-center z-10 pointer-events-none px-6">
             <h1 ref={textRef} className="text-[12vw] leading-[0.9] font-serif font-bold text-center text-ui-dark tracking-tighter">
                 ONCE IN A <br />
                 <span className="italic text-nobel-gold">LIFETIME</span>
             </h1>
-            <p className="mt-8 text-xl font-sans max-w-lg text-center opacity-80">
-                From the Ashby Commission to the establishment of the premier university. The struggle for student rights begins here.
-            </p>
+
+            <div ref={contentRef} className="mt-12 max-w-2xl text-center bg-nobel-cream/90 backdrop-blur-sm p-8 rounded-2xl border border-ui-dark/10 shadow-xl pointer-events-auto">
+                <h3 className="text-2xl font-bold mb-4 uppercase tracking-widest text-ui-blue">The Ashby Commission (1959)</h3>
+                <p className="text-lg font-sans leading-relaxed text-ui-dark/80 mb-6">
+                    In May 1959, the Nigerian government appointed the Ashby Commission to survey the needs for post-secondary education.
+                    The report, titled <span className="italic">"Investment in Education"</span>, was the catalyst.
+                </p>
+                <p className="text-lg font-sans leading-relaxed text-ui-dark/80">
+                    It recommended that the University College, Ibadan should immediately seek a charter to become a full independent university.
+                    On <span className="font-bold">December 27, 1962</span>, the transformation was complete. The University of Ibadan was born.
+                </p>
+            </div>
         </div>
 
         {/* Parallax Crowd at Bottom */}
