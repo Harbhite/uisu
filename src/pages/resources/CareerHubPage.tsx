@@ -4,12 +4,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, Search, Briefcase, MapPin, Clock, Building2, 
   Bookmark, BookmarkCheck, ExternalLink, FileText, Users,
-  ChevronDown, Download, CheckCircle2
+  ChevronDown, Download, CheckCircle2, Edit2, Plus, Trash2,
+  Loader2, Save, X
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAdminCheck } from '@/hooks/useAdminCheck';
 
 type JobType = 'all' | 'full-time' | 'part-time' | 'remote' | 'internship';
 
@@ -18,136 +25,16 @@ interface Job {
   title: string;
   company: string;
   location: string;
-  type: 'full-time' | 'part-time' | 'remote' | 'internship';
+  job_type: 'full-time' | 'part-time' | 'remote' | 'internship';
   industry: string;
-  posted: string;
-  description: string;
-  requirements: string[];
-  salary?: string;
+  created_at: string;
+  description: string | null;
+  requirements: string[] | null;
+  salary: string | null;
+  application_url: string | null;
+  deadline: string | null;
+  is_active: boolean;
 }
-
-const jobs: Job[] = [
-  {
-    id: 'campus-rep-mtn',
-    title: 'Campus Brand Ambassador',
-    company: 'MTN Nigeria',
-    location: 'University of Ibadan',
-    type: 'part-time',
-    industry: 'Telecommunications',
-    posted: '2 days ago',
-    description: 'Represent MTN brand on campus, organize activations, and drive student engagement.',
-    requirements: ['Current UI Student', 'Good Communication', '200-400 Level'],
-    salary: '₦30,000/month'
-  },
-  {
-    id: 'tech-intern-andela',
-    title: 'Software Engineering Intern',
-    company: 'Andela',
-    location: 'Lagos / Remote',
-    type: 'internship',
-    industry: 'Technology',
-    posted: '1 week ago',
-    description: 'Join our engineering team to build products used by companies worldwide.',
-    requirements: ['Computer Science Student', 'JavaScript/Python', 'Problem Solving'],
-    salary: '₦150,000/month'
-  },
-  {
-    id: 'research-assist',
-    title: 'Research Assistant',
-    company: 'UI Department of Chemistry',
-    location: 'University of Ibadan',
-    type: 'part-time',
-    industry: 'Research',
-    posted: '3 days ago',
-    description: 'Assist faculty with ongoing research projects and laboratory work.',
-    requirements: ['Chemistry Student', '300+ Level', 'Lab Experience'],
-    salary: '₦25,000/month'
-  },
-  {
-    id: 'content-writer',
-    title: 'Content Writer (Remote)',
-    company: 'TechCabal',
-    location: 'Remote',
-    type: 'remote',
-    industry: 'Media',
-    posted: '5 days ago',
-    description: 'Write engaging articles about technology and startups in Africa.',
-    requirements: ['Excellent Writing', 'Tech Knowledge', 'Self-motivated'],
-    salary: '₦80,000/month'
-  },
-  {
-    id: 'grad-trainee-gtb',
-    title: 'Graduate Trainee Program',
-    company: 'GTBank',
-    location: 'Lagos',
-    type: 'full-time',
-    industry: 'Banking',
-    posted: '1 week ago',
-    description: 'Comprehensive 12-month training program for fresh graduates.',
-    requirements: ['Recent Graduate', 'First Class/2.1', 'Under 26 years'],
-    salary: '₦250,000/month'
-  },
-  {
-    id: 'data-analyst-intern',
-    title: 'Data Analytics Intern',
-    company: 'Flutterwave',
-    location: 'Lagos / Remote',
-    type: 'internship',
-    industry: 'Fintech',
-    posted: '4 days ago',
-    description: 'Work with data team to analyze payment trends and generate insights.',
-    requirements: ['Statistics/Economics', 'Excel/Python', 'Analytical Mind'],
-    salary: '₦120,000/month'
-  },
-  {
-    id: 'library-assist',
-    title: 'Student Library Assistant',
-    company: 'Kenneth Dike Library',
-    location: 'University of Ibadan',
-    type: 'part-time',
-    industry: 'Education',
-    posted: '1 day ago',
-    description: 'Help with library operations, shelving, and assisting other students.',
-    requirements: ['Current UI Student', 'Organized', 'Flexible Schedule'],
-    salary: '₦20,000/month'
-  },
-  {
-    id: 'marketing-intern',
-    title: 'Digital Marketing Intern',
-    company: 'Paystack',
-    location: 'Lagos',
-    type: 'internship',
-    industry: 'Fintech',
-    posted: '6 days ago',
-    description: 'Support marketing campaigns, social media management, and content creation.',
-    requirements: ['Marketing Student', 'Social Media Savvy', 'Creative'],
-    salary: '₦100,000/month'
-  },
-  {
-    id: 'tutor-position',
-    title: 'Academic Tutor',
-    company: 'PrepClass',
-    location: 'Ibadan / Remote',
-    type: 'part-time',
-    industry: 'Education',
-    posted: '2 days ago',
-    description: 'Teach secondary school students in your area of expertise.',
-    requirements: ['300+ Level', 'CGPA 4.0+', 'Teaching Skills'],
-    salary: '₦3,000/hour'
-  },
-  {
-    id: 'ui-ux-intern',
-    title: 'UI/UX Design Intern',
-    company: 'Cowrywise',
-    location: 'Lagos / Remote',
-    type: 'internship',
-    industry: 'Fintech',
-    posted: '1 week ago',
-    description: 'Design user interfaces and experiences for our investment platform.',
-    requirements: ['Design Portfolio', 'Figma', 'User Research'],
-    salary: '₦130,000/month'
-  }
-];
 
 const cvResources = [
   { title: 'ATS-Friendly CV Template', format: 'DOCX', description: 'Clean template that passes applicant tracking systems.' },
@@ -212,13 +99,28 @@ const typeConfig = {
   'internship': { label: 'Internship', color: 'text-nobel-gold bg-amber-50 border-amber-100' }
 };
 
+const formatTimeAgo = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return '1 day ago';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) > 1 ? 's' : ''} ago`;
+  return `${Math.floor(diffDays / 30)} month${Math.floor(diffDays / 30) > 1 ? 's' : ''} ago`;
+};
+
 const JobCard: React.FC<{
   job: Job;
   isBookmarked: boolean;
   onToggleBookmark: () => void;
   index: number;
-}> = ({ job, isBookmarked, onToggleBookmark, index }) => {
-  const config = typeConfig[job.type];
+  isStaff?: boolean;
+  onEdit?: () => void;
+}> = ({ job, isBookmarked, onToggleBookmark, index, isStaff, onEdit }) => {
+  const config = typeConfig[job.job_type];
 
   return (
     <motion.div
@@ -227,8 +129,18 @@ const JobCard: React.FC<{
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ delay: index * 0.05, duration: 0.4 }}
-      className="bg-white border border-slate-100 hover:border-nobel-gold/50 hover:shadow-lg transition-all duration-300 group"
+      className="bg-white border border-slate-100 hover:border-nobel-gold/50 hover:shadow-lg transition-all duration-300 group relative"
     >
+      {isStaff && (
+        <Button
+          size="icon"
+          variant="ghost"
+          className="absolute top-2 right-12 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={onEdit}
+        >
+          <Edit2 size={14} />
+        </Button>
+      )}
       <div className="p-8">
         <div className="flex justify-between items-start mb-4">
           <div className="w-12 h-12 bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
@@ -258,24 +170,26 @@ const JobCard: React.FC<{
         </h3>
         <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">{job.company}</p>
 
-        <p className="text-slate-600 leading-relaxed text-sm font-light mb-4">
+        <p className="text-slate-600 leading-relaxed text-sm font-light mb-4 line-clamp-2">
           {job.description}
         </p>
 
-        <div className="flex flex-wrap gap-2 mb-4">
-          {job.requirements.slice(0, 3).map((req, i) => (
-            <span key={i} className="px-2 py-1 bg-slate-50 text-slate-500 text-[10px] font-bold uppercase tracking-widest border border-slate-100">
-              {req}
-            </span>
-          ))}
-        </div>
+        {job.requirements && job.requirements.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {job.requirements.slice(0, 3).map((req, i) => (
+              <span key={i} className="px-2 py-1 bg-slate-50 text-slate-500 text-[10px] font-bold uppercase tracking-widest border border-slate-100">
+                {req}
+              </span>
+            ))}
+          </div>
+        )}
 
         <div className="flex items-center gap-4 text-xs text-slate-400">
           <span className="flex items-center gap-1">
             <MapPin size={12} /> {job.location}
           </span>
           <span className="flex items-center gap-1">
-            <Clock size={12} /> {job.posted}
+            <Clock size={12} /> {formatTimeAgo(job.created_at)}
           </span>
         </div>
 
@@ -288,35 +202,190 @@ const JobCard: React.FC<{
       </div>
 
       <div className="px-8 py-4 border-t border-slate-100 bg-slate-50">
-        <button className="flex items-center justify-center gap-2 w-full py-3 bg-ui-blue text-white text-[10px] font-bold uppercase tracking-widest hover:bg-nobel-gold transition-colors">
-          Quick Apply <ExternalLink size={12} />
-        </button>
+        {job.application_url ? (
+          <a
+            href={job.application_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full py-3 bg-ui-blue text-white text-[10px] font-bold uppercase tracking-widest hover:bg-nobel-gold transition-colors"
+          >
+            Quick Apply <ExternalLink size={12} />
+          </a>
+        ) : (
+          <button className="flex items-center justify-center gap-2 w-full py-3 bg-ui-blue text-white text-[10px] font-bold uppercase tracking-widest hover:bg-nobel-gold transition-colors">
+            Quick Apply <ExternalLink size={12} />
+          </button>
+        )}
       </div>
     </motion.div>
   );
 };
 
+const emptyJob: Partial<Job> = {
+  title: '',
+  company: '',
+  location: '',
+  job_type: 'full-time',
+  industry: '',
+  description: '',
+  requirements: [],
+  salary: '',
+  application_url: '',
+  is_active: true,
+};
+
 const CareerHubPage = () => {
   const navigate = useNavigate();
+  const { isStaff } = useAdminCheck();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeType, setActiveType] = useState<JobType>('all');
   const [activeTab, setActiveTab] = useState('jobs');
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showJobModal, setShowJobModal] = useState(false);
+  const [editingJob, setEditingJob] = useState<Job | null>(null);
+  const [jobForm, setJobForm] = useState<Partial<Job>>(emptyJob);
+  const [saving, setSaving] = useState(false);
+  const [newRequirement, setNewRequirement] = useState('');
 
   const { bookmarks, toggle, isBookmarked } = useBookmarks('career-hub-bookmarks');
+
+  useEffect(() => {
+    const fetchJobs = async () => {
+      const { data, error } = await supabase
+        .from('job_listings')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching jobs:', error);
+      } else {
+        setJobs(data as Job[]);
+      }
+      setLoading(false);
+    };
+
+    fetchJobs();
+  }, []);
 
   const handleBookmark = (id: string) => {
     toggle(id);
     toast.success(isBookmarked(id) ? 'Removed from saved' : 'Job saved!');
   };
 
+  const handleOpenJobModal = (job?: Job) => {
+    if (job) {
+      setEditingJob(job);
+      setJobForm(job);
+    } else {
+      setEditingJob(null);
+      setJobForm(emptyJob);
+    }
+    setShowJobModal(true);
+  };
+
+  const handleAddRequirement = () => {
+    if (!newRequirement.trim()) return;
+    const current = jobForm.requirements || [];
+    setJobForm({ ...jobForm, requirements: [...current, newRequirement.trim()] });
+    setNewRequirement('');
+  };
+
+  const handleRemoveRequirement = (index: number) => {
+    const current = jobForm.requirements || [];
+    setJobForm({ ...jobForm, requirements: current.filter((_, i) => i !== index) });
+  };
+
+  const handleSaveJob = async () => {
+    if (!jobForm.title || !jobForm.company || !jobForm.location || !jobForm.industry) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      if (editingJob) {
+        const { error } = await supabase
+          .from('job_listings')
+          .update({
+            title: jobForm.title,
+            company: jobForm.company,
+            location: jobForm.location,
+            job_type: jobForm.job_type,
+            industry: jobForm.industry,
+            description: jobForm.description,
+            requirements: jobForm.requirements,
+            salary: jobForm.salary,
+            application_url: jobForm.application_url,
+            is_active: jobForm.is_active,
+          })
+          .eq('id', editingJob.id);
+
+        if (error) throw error;
+
+        setJobs(jobs.map(j => j.id === editingJob.id ? { ...j, ...jobForm } as Job : j));
+        toast.success('Job listing updated');
+      } else {
+        const { data, error } = await supabase
+          .from('job_listings')
+          .insert({
+            title: jobForm.title,
+            company: jobForm.company,
+            location: jobForm.location,
+            job_type: jobForm.job_type,
+            industry: jobForm.industry,
+            description: jobForm.description,
+            requirements: jobForm.requirements,
+            salary: jobForm.salary,
+            application_url: jobForm.application_url,
+            is_active: true,
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        setJobs([data as Job, ...jobs]);
+        toast.success('Job listing created');
+      }
+
+      setShowJobModal(false);
+    } catch (error) {
+      console.error('Save error:', error);
+      toast.error('Failed to save job listing');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteJob = async (jobId: string) => {
+    if (!confirm('Delete this job listing?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('job_listings')
+        .delete()
+        .eq('id', jobId);
+
+      if (error) throw error;
+
+      setJobs(jobs.filter(j => j.id !== jobId));
+      toast.success('Job listing deleted');
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error('Failed to delete job listing');
+    }
+  };
+
   const filteredJobs = useMemo(() => {
     return jobs.filter(job => {
       const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            job.company.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesType = activeType === 'all' || job.type === activeType;
+      const matchesType = activeType === 'all' || job.job_type === activeType;
       return matchesSearch && matchesType;
     });
-  }, [searchTerm, activeType]);
+  }, [jobs, searchTerm, activeType]);
 
   const types: { value: JobType; label: string }[] = [
     { value: 'all', label: 'All' },
@@ -397,15 +466,23 @@ const CareerHubPage = () => {
 
           <TabsContent value="jobs" className="mt-0">
             <div className="mb-12 space-y-6 pb-8 border-b border-slate-200">
-              <div className="relative max-w-xl">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
-                <input
-                  type="text"
-                  placeholder="Search jobs or companies..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 focus:border-nobel-gold focus:outline-none text-lg font-serif transition-colors"
-                />
+              <div className="flex flex-col md:flex-row gap-4 md:items-center justify-between">
+                <div className="relative max-w-xl flex-1">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
+                  <input
+                    type="text"
+                    placeholder="Search jobs or companies..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 focus:border-nobel-gold focus:outline-none text-lg font-serif transition-colors"
+                  />
+                </div>
+                {isStaff && (
+                  <Button onClick={() => handleOpenJobModal()} className="gap-2">
+                    <Plus size={16} />
+                    Add Job
+                  </Button>
+                )}
               </div>
 
               <div className="flex flex-wrap gap-2">
@@ -425,21 +502,29 @@ const CareerHubPage = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <AnimatePresence mode="popLayout">
-                {filteredJobs.map((job, index) => (
-                  <JobCard
-                    key={job.id}
-                    job={job}
-                    isBookmarked={isBookmarked(job.id)}
-                    onToggleBookmark={() => handleBookmark(job.id)}
-                    index={index}
-                  />
-                ))}
-              </AnimatePresence>
-            </div>
+            {loading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <AnimatePresence mode="popLayout">
+                  {filteredJobs.map((job, index) => (
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      isBookmarked={isBookmarked(job.id)}
+                      onToggleBookmark={() => handleBookmark(job.id)}
+                      index={index}
+                      isStaff={isStaff}
+                      onEdit={() => handleOpenJobModal(job)}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
 
-            {filteredJobs.length === 0 && (
+            {!loading && filteredJobs.length === 0 && (
               <div className="text-center py-24">
                 <Briefcase className="mx-auto text-slate-200 mb-6" size={64} />
                 <h3 className="font-serif text-2xl text-slate-400 mb-2">No jobs found</h3>
@@ -545,6 +630,130 @@ const CareerHubPage = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Job Edit/Create Modal */}
+      <Dialog open={showJobModal} onOpenChange={setShowJobModal}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingJob ? 'Edit Job Listing' : 'Add Job Listing'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs uppercase tracking-wider text-slate-500 mb-1 block">Job Title *</label>
+                <Input
+                  value={jobForm.title || ''}
+                  onChange={(e) => setJobForm({ ...jobForm, title: e.target.value })}
+                  placeholder="e.g. Software Engineer"
+                />
+              </div>
+              <div>
+                <label className="text-xs uppercase tracking-wider text-slate-500 mb-1 block">Company *</label>
+                <Input
+                  value={jobForm.company || ''}
+                  onChange={(e) => setJobForm({ ...jobForm, company: e.target.value })}
+                  placeholder="e.g. MTN Nigeria"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs uppercase tracking-wider text-slate-500 mb-1 block">Location *</label>
+                <Input
+                  value={jobForm.location || ''}
+                  onChange={(e) => setJobForm({ ...jobForm, location: e.target.value })}
+                  placeholder="e.g. Lagos / Remote"
+                />
+              </div>
+              <div>
+                <label className="text-xs uppercase tracking-wider text-slate-500 mb-1 block">Industry *</label>
+                <Input
+                  value={jobForm.industry || ''}
+                  onChange={(e) => setJobForm({ ...jobForm, industry: e.target.value })}
+                  placeholder="e.g. Technology"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs uppercase tracking-wider text-slate-500 mb-1 block">Job Type</label>
+                <select
+                  value={jobForm.job_type || 'full-time'}
+                  onChange={(e) => setJobForm({ ...jobForm, job_type: e.target.value as Job['job_type'] })}
+                  className="w-full border border-slate-200 rounded px-3 py-2"
+                >
+                  <option value="full-time">Full-time</option>
+                  <option value="part-time">Part-time</option>
+                  <option value="remote">Remote</option>
+                  <option value="internship">Internship</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs uppercase tracking-wider text-slate-500 mb-1 block">Salary</label>
+                <Input
+                  value={jobForm.salary || ''}
+                  onChange={(e) => setJobForm({ ...jobForm, salary: e.target.value })}
+                  placeholder="e.g. ₦150,000/month"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs uppercase tracking-wider text-slate-500 mb-1 block">Description</label>
+              <Textarea
+                value={jobForm.description || ''}
+                onChange={(e) => setJobForm({ ...jobForm, description: e.target.value })}
+                placeholder="Job description..."
+                rows={3}
+              />
+            </div>
+            <div>
+              <label className="text-xs uppercase tracking-wider text-slate-500 mb-1 block">Application URL</label>
+              <Input
+                value={jobForm.application_url || ''}
+                onChange={(e) => setJobForm({ ...jobForm, application_url: e.target.value })}
+                placeholder="https://..."
+              />
+            </div>
+            <div>
+              <label className="text-xs uppercase tracking-wider text-slate-500 mb-1 block">Requirements</label>
+              <div className="space-y-2">
+                {(jobForm.requirements || []).map((req, i) => (
+                  <div key={i} className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded">
+                    <span className="flex-1 text-sm">{req}</span>
+                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleRemoveRequirement(i)}>
+                      <Trash2 size={12} className="text-red-500" />
+                    </Button>
+                  </div>
+                ))}
+                <div className="flex gap-2">
+                  <Input
+                    value={newRequirement}
+                    onChange={(e) => setNewRequirement(e.target.value)}
+                    placeholder="Add requirement..."
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddRequirement()}
+                  />
+                  <Button size="sm" onClick={handleAddRequirement}>
+                    <Plus size={14} />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            {editingJob && (
+              <Button variant="destructive" onClick={() => { handleDeleteJob(editingJob.id); setShowJobModal(false); }}>
+                <Trash2 size={14} className="mr-2" />
+                Delete
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => setShowJobModal(false)}>Cancel</Button>
+            <Button onClick={handleSaveJob} disabled={saving}>
+              {saving ? <Loader2 size={14} className="animate-spin mr-2" /> : <Save size={14} className="mr-2" />}
+              {editingJob ? 'Update' : 'Create'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -28,7 +28,9 @@ import {
   Home,
   Users,
   Layers,
-  ExternalLink
+  ExternalLink,
+  Camera,
+  Loader2
 } from 'lucide-react';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { SEO } from '@/components/SEO';
@@ -95,6 +97,8 @@ const ProfilePage = () => {
     website: ''
   });
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const isOwnProfile = user?.id === id;
 
@@ -152,6 +156,59 @@ const ProfilePage = () => {
 
     fetchProfile();
   }, [id]);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image must be less than 2MB');
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+      // Upload to avatars bucket
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      const newAvatarUrl = urlData.publicUrl;
+
+      // Update profile with new avatar URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: newAvatarUrl })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      setProfile(prev => prev ? { ...prev, avatar_url: newAvatarUrl } : null);
+      toast.success('Profile picture updated!');
+    } catch (error) {
+      console.error('Avatar upload error:', error);
+      toast.error('Failed to upload profile picture');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!user || !isOwnProfile) return;
@@ -278,18 +335,44 @@ const ProfilePage = () => {
 
         <main className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
-            {/* Main Profile Card - Inspired by reference */}
+            {/* Main Profile Card */}
             <Card className="rounded-none border-border bg-gradient-to-br from-primary/5 via-card to-accent/5 overflow-hidden mb-8">
               {/* Top Section with gradient overlay */}
               <div className="relative bg-gradient-to-r from-primary/10 to-accent/10 p-6 md:p-8">
                 <div className="flex flex-col md:flex-row items-start gap-6">
-                  {/* Avatar */}
-                  <Avatar className="w-20 h-20 md:w-24 md:h-24 rounded-none border-2 border-border shadow-lg">
-                    <AvatarImage src={profile.avatar_url || undefined} alt={profile.full_name || 'User'} />
-                    <AvatarFallback className="rounded-none bg-primary text-primary-foreground text-2xl font-bold">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
+                  {/* Avatar with Upload Overlay */}
+                  <div className="relative group">
+                    <Avatar className="w-20 h-20 md:w-24 md:h-24 rounded-none border-2 border-border shadow-lg">
+                      <AvatarImage src={profile.avatar_url || undefined} alt={profile.full_name || 'User'} />
+                      <AvatarFallback className="rounded-none bg-primary text-primary-foreground text-2xl font-bold">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    {/* Camera overlay for own profile */}
+                    {isOwnProfile && (
+                      <>
+                        <button
+                          onClick={() => avatarInputRef.current?.click()}
+                          disabled={uploadingAvatar}
+                          className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                        >
+                          {uploadingAvatar ? (
+                            <Loader2 className="w-6 h-6 text-white animate-spin" />
+                          ) : (
+                            <Camera className="w-6 h-6 text-white" />
+                          )}
+                        </button>
+                        <input
+                          ref={avatarInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleAvatarUpload}
+                        />
+                      </>
+                    )}
+                  </div>
 
                   {/* Name and Badge */}
                   <div className="flex-1">
@@ -307,7 +390,7 @@ const ProfilePage = () => {
                     </p>
                   </div>
 
-                  {/* Social Links - Top Right */}
+                  {/* Social Links */}
                   {profile.socials && Object.values(profile.socials).some(Boolean) && (
                     <div className="flex gap-2">
                       {profile.socials.twitter && (

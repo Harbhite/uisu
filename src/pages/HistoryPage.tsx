@@ -2,7 +2,7 @@ import { Suspense, useEffect, useRef } from 'react';
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 // Components
 import { ThreeHero } from "@/components/history/ThreeHero";
