@@ -5,102 +5,81 @@ import { SEO } from "@/components/SEO";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 // Components
-import { ThreeHero } from "@/components/history/ThreeHero";
+import { HistoryScene } from "@/components/history/HistoryScene";
 import { GlobalOrigins } from "@/components/history/GlobalOrigins";
 import { AfricanContext } from "@/components/history/AfricanContext";
 import { NigerianEvolution } from "@/components/history/NigerianEvolution";
 import { UISUEras } from "@/components/history/UISUEras";
-
-import anime from 'animejs';
+import { DecryptionText } from "@/components/history/DecryptionText";
+import { ArrowDown } from 'lucide-react';
 
 const HistoryPage = () => {
-  const pathRef = useRef<SVGPathElement>(null);
-
-  useEffect(() => {
-    // Global Scroll Progress Line
-    if (pathRef.current) {
-        const path = pathRef.current;
-        const pathLength = anime.setDashoffset(path);
-        path.setAttribute('stroke-dashoffset', pathLength.toString());
-
-        const handleScroll = () => {
-            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-            const scrollPos = window.scrollY;
-            const progress = Math.min(Math.max(scrollPos / docHeight, 0), 1);
-
-            // Draw the line based on scroll
-            path.style.strokeDashoffset = (pathLength - (pathLength * progress)).toString();
-        };
-
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }
-  }, []);
-
   return (
-    <div className="bg-ui-dark min-h-screen text-slate-100 font-sans selection:bg-nobel-gold selection:text-ui-blue w-full overflow-x-hidden">
+    <div className="bg-black min-h-screen text-slate-100 font-sans selection:bg-nobel-gold selection:text-black w-full overflow-x-hidden">
       <SEO
-        title="History of Unionism"
+        title="The Chronicle | UISU"
         description="A journey through time: The evolution of student activism from Bologna to Ibadan."
         image="/screenshots/history.png"
       />
 
       <Navbar isMenuOpen={false} setIsMenuOpen={() => {}} user={null} handleLogout={() => {}} />
 
-      {/* Global Fixed Background Path */}
-      <div className="fixed inset-0 pointer-events-none z-0 opacity-20 hidden lg:block">
-        <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
-           <path
-             ref={pathRef}
-             d="M 50 0 C 50 10, 40 20, 40 30 S 60 40, 60 50 S 50 60, 50 70 S 40 80, 40 90 S 50 100, 50 100"
-             fill="none"
-             stroke="#C5A059"
-             strokeWidth="0.5"
-             vectorEffect="non-scaling-stroke"
-           />
-        </svg>
+      {/* GLOBAL 3D SCENE BACKGROUND */}
+      <div className="fixed inset-0 z-0">
+         <Canvas gl={{ antialias: false, stencil: false, depth: true }} dpr={[1, 1.5]}>
+            <Suspense fallback={null}>
+                <HistoryScene />
+            </Suspense>
+         </Canvas>
       </div>
 
-      <main className="relative">
-        {/* 1. Hero with Three.js */}
-        <div className="relative h-screen w-full overflow-hidden">
-             <div className="absolute inset-0 z-0">
-                <Suspense fallback={<div className="w-full h-full bg-black"></div>}>
-                    <ThreeHero />
-                </Suspense>
-             </div>
-             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center pointer-events-none">
-                <h1 className="text-6xl md:text-9xl font-bold font-serif text-white mix-blend-difference tracking-tighter">
-                    THE CHRONICLE
-                </h1>
-                <p className="mt-6 text-xl text-nobel-gold/80 uppercase tracking-[0.5em]">
-                    Of Student Unionism
-                </p>
-             </div>
+      <Loader />
+
+      {/* Global Noise Overlay */}
+      <div className="fixed inset-0 z-50 pointer-events-none opacity-[0.03] mix-blend-overlay" style={{ backgroundImage: `url('/noise.svg')` }}></div>
+
+      <main className="relative z-10 pointer-events-none">
+        {/* Pointer events allow scroll but clicks need to pass through to interactive elements if defined.
+            We need pointer-events-auto on the actual content sections. */}
+
+        {/* HERO */}
+        <div className="h-screen w-full flex flex-col items-center justify-center text-center relative pointer-events-auto">
+            <div className="mb-4 text-nobel-gold/80 tracking-[0.5em] text-xs uppercase backdrop-blur-sm bg-black/30 px-4 py-2 rounded-full border border-white/10">
+                The Archive
+            </div>
+            <h1 className="text-7xl md:text-9xl font-bold font-serif text-white tracking-tighter mb-8 mix-blend-overlay">
+                <DecryptionText text="CHRONICLE" revealSpeed={150} />
+            </h1>
+            <p className="max-w-md mx-auto text-slate-400 leading-relaxed mb-12 backdrop-blur-sm p-4 rounded-xl">
+                Trace the lineage of resistance. From the stone halls of Bologna to the Aluta trenches of Ibadan.
+            </p>
+            <div className="animate-bounce">
+                <ArrowDown className="text-nobel-gold opacity-50" />
+            </div>
         </div>
 
-        {/* 2. Global Origins (Anime.js) */}
-        <div className="relative z-10 bg-gradient-to-b from-transparent to-ui-dark">
+        {/* 1. Global Origins */}
+        <div className="relative pointer-events-auto">
             <GlobalOrigins />
         </div>
 
-        {/* 3. African Context (GSAP Horizontal) */}
-        <div className="relative z-10">
+        {/* 2. African Context */}
+        <div className="relative pointer-events-auto">
             <AfricanContext />
         </div>
 
-        {/* 4. Nigerian Evolution (Framer Motion) */}
-        <div className="relative z-10">
+        {/* 3. Nigerian Evolution */}
+        <div className="relative pointer-events-auto">
             <NigerianEvolution />
         </div>
 
-        {/* 5. UI/UISU Eras (Mixed Parallax) */}
-        <div className="relative z-10">
+        {/* 4. UI/UISU Eras */}
+        <div className="relative pointer-events-auto">
             <UISUEras />
         </div>
 
         {/* Footer Area */}
-        <div className="py-32 bg-black text-center relative z-10">
+        <div className="py-32 bg-black/80 backdrop-blur-xl text-center relative z-10 pointer-events-auto border-t border-white/10">
             <h2 className="text-4xl font-serif text-slate-500 mb-8">History is still being written.</h2>
             <div className="w-px h-24 bg-gradient-to-b from-nobel-gold to-transparent mx-auto"></div>
         </div>

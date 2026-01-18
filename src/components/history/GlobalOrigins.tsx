@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import anime from 'animejs';
 import { Globe } from 'lucide-react';
+import { DecryptionText } from './DecryptionText';
 
 export const GlobalOrigins = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -10,15 +11,6 @@ export const GlobalOrigins = () => {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            anime({
-              targets: '.global-title .letter',
-              translateY: [-50, 0],
-              opacity: [0, 1],
-              delay: anime.stagger(50, { start: 500 }),
-              easing: 'easeOutExpo',
-              duration: 1200
-            });
-
             anime({
                 targets: '.bologna-card',
                 translateX: [-100, 0],
@@ -50,12 +42,8 @@ export const GlobalOrigins = () => {
       </div>
 
       <div className="container mx-auto relative z-10">
-        <h2 className="global-title text-6xl md:text-8xl font-serif font-bold mb-16 text-slate-100">
-          {title.split('').map((char, i) => (
-            <span key={i} className="letter inline-block whitespace-pre">
-              {char}
-            </span>
-          ))}
+        <h2 className="text-6xl md:text-8xl font-serif font-bold mb-16 text-slate-100">
+          <DecryptionText text={title} />
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
