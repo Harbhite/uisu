@@ -501,16 +501,16 @@ const HallDetailPage = () => {
               </motion.div>
             )}
 
-            {/* Gallery */}
+            {/* Gallery - Enhanced Bento Grid */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="bg-white p-6 shadow-xl border border-slate-200"
+              className="bg-white p-8 shadow-xl border border-slate-200"
             >
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3 text-slate-400 font-bold uppercase text-xs tracking-widest">
-                  <ImageIcon size={16} /> Gallery
+                  <ImageIcon size={16} /> Hall Gallery
                 </div>
                 {isEditing && (
                   <Button size="sm" variant="outline" onClick={() => galleryImageRef.current?.click()} disabled={uploadingGallery}>
@@ -522,31 +522,46 @@ const HallDetailPage = () => {
               </div>
               
               {galleryImages.length === 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {[1, 2].map((i) => (
-                    <div key={i} className="aspect-[4/3] bg-slate-200 rounded-lg overflow-hidden relative group border border-slate-100">
-                      <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-sm font-medium">
-                        No images yet
-                      </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div 
+                      key={i} 
+                      className={`bg-slate-100 rounded-lg overflow-hidden relative border border-slate-200 flex items-center justify-center text-slate-300 ${
+                        i === 1 ? 'col-span-2 row-span-2 aspect-square' : 'aspect-[4/3]'
+                      }`}
+                    >
+                      <ImageIcon size={i === 1 ? 48 : 24} />
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 auto-rows-[200px]">
                   {galleryImages.map((img, idx) => (
-                    <div key={idx} className="aspect-[4/3] bg-slate-200 rounded-lg overflow-hidden relative group shadow-sm hover:shadow-xl transition-all duration-500 border border-slate-100">
-                      <img src={img} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <motion.div 
+                      key={idx} 
+                      className={`bg-slate-200 rounded-lg overflow-hidden relative group shadow-sm cursor-pointer border border-slate-100 ${
+                        idx === 0 ? 'col-span-2 row-span-2' : ''
+                      }`}
+                      whileHover={{ scale: 1.02, zIndex: 10 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <img 
+                        src={img} 
+                        alt={`Gallery ${idx + 1}`} 
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
                       {isEditing && (
                         <Button
                           size="icon"
                           variant="destructive"
                           className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                          onClick={() => handleRemoveGalleryImage(idx)}
+                          onClick={(e) => { e.stopPropagation(); handleRemoveGalleryImage(idx); }}
                         >
                           <Trash2 size={16} />
                         </Button>
                       )}
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               )}
