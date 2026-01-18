@@ -1,20 +1,20 @@
 import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { Canvas } from '@react-three/fiber';
-import { Float, TorusKnot, MeshDistortMaterial } from '@react-three/drei';
 import { DecryptionText } from './DecryptionText';
 
-const Artifact3D = () => {
+const ArtifactVisual = () => {
     return (
-        <Canvas>
-            <ambientLight intensity={0.5} />
-            <pointLight position={[10, 10, 10]} />
-            <Float speed={4} rotationIntensity={1} floatIntensity={2}>
-                <TorusKnot args={[1, 0.3, 100, 16]}>
-                    <MeshDistortMaterial color="#C5A059" speed={2} distort={0.4} roughness={0.2} />
-                </TorusKnot>
-            </Float>
-        </Canvas>
+        <div className="w-full h-full flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-black/20 to-nobel-gold/5">
+             <div className="relative w-48 h-48 animate-[spin_20s_linear_infinite]">
+                <div className="absolute inset-0 border border-nobel-gold/20 rounded-full animate-[spin_5s_linear_infinite_reverse]"></div>
+                <div className="absolute inset-8 border border-nobel-gold/40 rounded-full rotate-45"></div>
+                <div className="absolute inset-16 border border-nobel-gold/60 rounded-full animate-pulse"></div>
+                <svg className="absolute inset-0 w-full h-full text-nobel-gold/30" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="0.5">
+                    <circle cx="50" cy="50" r="48" strokeDasharray="4 4" />
+                </svg>
+             </div>
+             <div className="absolute inset-0 bg-nobel-gold/5 blur-3xl rounded-full scale-50 pointer-events-none"></div>
+        </div>
     )
 }
 
@@ -38,12 +38,11 @@ const EraSection = ({ year, title, children, align = 'left' }: { year: string, t
                 </motion.div>
             </div>
             <div className="flex-1 w-full h-80 bg-white/5 rounded-3xl overflow-hidden border border-white/10 relative">
-                 {/* 3D Artifact embedded in each section */}
                  <div className="absolute inset-0">
-                    <Artifact3D />
+                    <ArtifactVisual />
                  </div>
                  <div className="absolute bottom-4 left-6 text-xs text-white/30 uppercase tracking-widest">
-                    Artifact: The Aluta Knot
+                    Artifact: The Aluta Knot (Simulation)
                  </div>
             </div>
         </div>
@@ -62,7 +61,7 @@ export const UISUEras = () => {
     return (
         <section ref={containerRef} className="min-h-screen py-24 px-6 relative overflow-hidden">
             {/* Parallax Background Title */}
-            <motion.div style={{ y }} className="absolute top-20 right-10 text-[20vw] font-bold text-black/10 whitespace-nowrap pointer-events-none select-none">
+            <motion.div style={{ y }} className="absolute top-20 right-10 text-[20vw] font-bold text-black/50 md:text-black/10 whitespace-nowrap pointer-events-none select-none mix-blend-overlay">
                 UI STUDENTS' UNION
             </motion.div>
 
