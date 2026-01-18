@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
 import { VisionSection } from './history/VisionSection';
-import { NarrativeSection } from './history/NarrativeSection';
+import { TimelineJourney } from './history/TimelineJourney';
 import { EstablishmentSection } from './history/EstablishmentSection';
+import { LegacyGallery } from './history/LegacyGallery';
 import { EvolutionCarousel } from './history/EvolutionCarousel';
 import { SEO } from '@/components/SEO';
 import Lenis from 'lenis';
@@ -45,8 +46,9 @@ const HistoryPage: React.FC = () => {
         description="The evolution of student unionism from global origins to the University of Ibadan."
       />
       <VisionSection />
-      <NarrativeSection />
+      <TimelineJourney />
       <EstablishmentSection />
+      <LegacyGallery />
       <EvolutionCarousel />
     </div>
   );
