@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Loader2, Star, Shield } from 'lucide-react';
+import { ArrowLeft, MapPin, Loader2, Star, Shield, GraduationCap, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { SEO } from '@/components/SEO';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Hall {
   id: string;
@@ -13,6 +14,9 @@ interface Hall {
   description: string | null;
   color: string | null;
   slug: string;
+  hall_type: string | null;
+  capacity: number | null;
+  established_year: number | null;
 }
 
 const containerVariants = {
@@ -30,17 +34,96 @@ const itemVariants = {
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
 };
 
+const HallCard = ({ hall, index }: { hall: Hall; index: number }) => (
+  <Link to={`/governance/hall/${hall.slug}`}>
+    <motion.div
+      variants={itemVariants}
+      whileHover={{ y: -6, scale: 1.02 }}
+      className="relative overflow-hidden group cursor-pointer h-full shadow-lg hover:shadow-2xl transition-all duration-500"
+      style={{
+        backgroundColor: hall.color || '#003366',
+      }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-transparent to-black/30"></div>
+      <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-colors duration-700"></div>
+
+      <div className="relative z-10 p-8 flex flex-col h-[420px]">
+        {/* Header with icon and alias badge */}
+        <div className="flex items-center gap-3 mb-6">
+          <motion.div
+            className="p-3 bg-white/10 backdrop-blur-sm border border-white/20"
+            animate={{ scale: [1, 1.03, 1] }}
+            transition={{ duration: 2.5 + index * 0.2, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <MapPin size={20} className="text-nobel-gold" />
+          </motion.div>
+          {hall.alias && (
+            <span className="px-3 py-1.5 bg-nobel-gold/20 text-nobel-gold text-[10px] font-bold uppercase tracking-[0.15em] border border-nobel-gold/30">
+              {hall.alias}
+            </span>
+          )}
+          {hall.hall_type && (
+            <span className="px-2 py-1 bg-white/10 text-white/70 text-[9px] font-bold uppercase tracking-wider">
+              {hall.hall_type}
+            </span>
+          )}
+        </div>
+
+        {/* Name */}
+        <h3 className="text-3xl md:text-4xl font-serif mb-3 leading-[1.1] text-white">
+          {hall.name}
+        </h3>
+
+        {/* Motto */}
+        {hall.motto && (
+          <p className="font-serif italic text-white/70 text-base mb-4">"{hall.motto}"</p>
+        )}
+
+        {/* Description */}
+        {hall.description && (
+          <p className="text-white/60 leading-relaxed text-sm font-light mb-6 line-clamp-3 flex-grow">
+            {hall.description}
+          </p>
+        )}
+
+        {/* Stats */}
+        <div className="flex gap-4 mb-4 text-white/50 text-xs">
+          {hall.established_year && (
+            <span>Est. {hall.established_year}</span>
+          )}
+          {hall.capacity && (
+            <span>~{hall.capacity} students</span>
+          )}
+        </div>
+
+        {/* Explore link at bottom */}
+        <div className="mt-auto flex items-center gap-3 pt-6 border-t border-white/10">
+          <span className="text-xs font-bold uppercase tracking-[0.15em] text-white group-hover:tracking-[0.2em] transition-all duration-300">
+            Enter Territory
+          </span>
+          <motion.div
+            className="w-8 group-hover:w-14 h-0.5 bg-white transition-all duration-500"
+            animate={{ opacity: [0.7, 1, 0.7] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+        </div>
+      </div>
+    </motion.div>
+  </Link>
+);
+
 const HallsPage = () => {
   const navigate = useNavigate();
   const [halls, setHalls] = useState<Hall[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('undergraduate');
 
   useEffect(() => {
     const fetchHalls = async () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('halls')
-        .select('id, name, alias, motto, description, color, slug')
+        .select('id, name, alias, motto, description, color, slug, hall_type, capacity, established_year')
         .order('name');
 
       if (error) {
@@ -53,6 +136,9 @@ const HallsPage = () => {
 
     fetchHalls();
   }, []);
+
+  const undergraduateHalls = halls.filter(h => h.hall_type !== 'Postgraduate');
+  const postgraduateHalls = halls.filter(h => h.hall_type === 'Postgraduate');
 
   return (
     <div className="min-h-screen bg-slate-50 pt-32 pb-16">
@@ -100,86 +186,75 @@ const HallsPage = () => {
              </motion.p>
         </div>
 
-        <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-        >
-            {loading ? (
+        {/* Tabs for Undergraduate and Postgraduate */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-12">
+          <TabsList className="bg-white border border-slate-200 p-1 h-auto rounded-none w-full max-w-md">
+            <TabsTrigger 
+              value="undergraduate" 
+              className="flex-1 py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white rounded-none gap-2"
+            >
+              <Users size={14} />
+              Undergraduate ({undergraduateHalls.length})
+            </TabsTrigger>
+            <TabsTrigger 
+              value="postgraduate" 
+              className="flex-1 py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white rounded-none gap-2"
+            >
+              <GraduationCap size={14} />
+              Postgraduate ({postgraduateHalls.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="undergraduate" className="mt-8">
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              {loading ? (
                 <div className="flex items-center justify-center py-20">
-                    <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+                  <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
                 </div>
-            ) : halls.length === 0 ? (
+              ) : undergraduateHalls.length === 0 ? (
                 <div className="text-center py-20 text-slate-400">
-                    No halls found
+                  No undergraduate halls found
                 </div>
-            ) : (
+              ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {halls.map((hall, index) => (
-                        <Link to={`/governance/hall/${hall.slug}`} key={hall.id}>
-                            <motion.div
-                                variants={itemVariants}
-                                whileHover={{ y: -6, scale: 1.02 }}
-                                className="relative overflow-hidden group cursor-pointer h-full shadow-lg hover:shadow-2xl transition-all duration-500"
-                                style={{
-                                    backgroundColor: hall.color || '#003366',
-                                }}
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-transparent to-black/30"></div>
-                                <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-colors duration-700"></div>
-
-                                <div className="relative z-10 p-8 flex flex-col h-[420px]">
-                                    {/* Header with icon and alias badge */}
-                                    <div className="flex items-center gap-3 mb-6">
-                                        <motion.div
-                                            className="p-3 bg-white/10 backdrop-blur-sm border border-white/20"
-                                            animate={{ scale: [1, 1.03, 1] }}
-                                            transition={{ duration: 2.5 + index * 0.2, repeat: Infinity, ease: "easeInOut" }}
-                                        >
-                                            <MapPin size={20} className="text-nobel-gold" />
-                                        </motion.div>
-                                        {hall.alias && (
-                                            <span className="px-3 py-1.5 bg-nobel-gold/20 text-nobel-gold text-[10px] font-bold uppercase tracking-[0.15em] border border-nobel-gold/30">
-                                                {hall.alias}
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    {/* Name */}
-                                    <h3 className="text-3xl md:text-4xl font-serif mb-3 leading-[1.1] text-white">
-                                        {hall.name}
-                                    </h3>
-
-                                    {/* Motto */}
-                                    {hall.motto && (
-                                        <p className="font-serif italic text-white/70 text-base mb-4">"{hall.motto}"</p>
-                                    )}
-
-                                    {/* Description */}
-                                    {hall.description && (
-                                        <p className="text-white/60 leading-relaxed text-sm font-light mb-6 line-clamp-3 flex-grow">
-                                            {hall.description}
-                                        </p>
-                                    )}
-
-                                    {/* Explore link at bottom */}
-                                    <div className="mt-auto flex items-center gap-3 pt-6 border-t border-white/10">
-                                        <span className="text-xs font-bold uppercase tracking-[0.15em] text-white group-hover:tracking-[0.2em] transition-all duration-300">
-                                            Enter Territory
-                                        </span>
-                                        <motion.div
-                                            className="w-8 group-hover:w-14 h-0.5 bg-white transition-all duration-500"
-                                            animate={{ opacity: [0.7, 1, 0.7] }}
-                                            transition={{ duration: 2, repeat: Infinity }}
-                                        />
-                                    </div>
-                                </div>
-                            </motion.div>
-                        </Link>
-                    ))}
+                  {undergraduateHalls.map((hall, index) => (
+                    <HallCard key={hall.id} hall={hall} index={index} />
+                  ))}
                 </div>
-            )}
-        </motion.div>
+              )}
+            </motion.div>
+          </TabsContent>
+
+          <TabsContent value="postgraduate" className="mt-8">
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              {loading ? (
+                <div className="flex items-center justify-center py-20">
+                  <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+                </div>
+              ) : postgraduateHalls.length === 0 ? (
+                <div className="text-center py-20">
+                  <GraduationCap className="w-16 h-16 mx-auto text-slate-200 mb-4" />
+                  <h3 className="font-serif text-2xl text-slate-400 mb-2">Coming Soon</h3>
+                  <p className="text-slate-300">Postgraduate halls will be added shortly.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {postgraduateHalls.map((hall, index) => (
+                    <HallCard key={hall.id} hall={hall} index={index} />
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

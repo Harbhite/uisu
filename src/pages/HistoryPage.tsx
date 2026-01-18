@@ -2,8 +2,7 @@ import { Suspense, useEffect, useRef } from 'react';
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
-import { Canvas } from '@react-three/fiber';
-import { Loader } from '@react-three/drei';
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 // Components
 import { HistoryScene } from "@/components/history/HistoryScene";
