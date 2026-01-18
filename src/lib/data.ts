@@ -421,3 +421,218 @@ export const resourceCategories: ResourceCategory[] = [
     path: '/resources/calculator-suite'
   }
 ];
+
+export interface ConstitutionSection {
+  id: string;
+  title?: string;
+  content: string;
+  subSections?: string[];
+}
+
+export interface ConstitutionArticle {
+  id: string;
+  title: string;
+  sections: ConstitutionSection[];
+}
+
+export const constitutionData: ConstitutionArticle[] = [
+  {
+    id: "preamble",
+    title: "Preamble",
+    sections: [
+      {
+        id: "preamble-1",
+        content: "WE THE STUDENTS of the University of Ibadan, actively conscious of our rights, duties, and responsibilities as citizens of Nigeria and students of this premier university; DETERMINED to promote the welfare of our members, foster academic excellence, and defend the rights of the students; DO HEREBY ENACT, ADOPT AND GIVE TO OURSELVES this Constitution."
+      }
+    ]
+  },
+  {
+    id: "article-1",
+    title: "Article I: Supremacy of the Constitution",
+    sections: [
+      {
+        id: "sec-1-1",
+        content: "This Constitution shall be supreme and its provisions shall have binding force on all authorities and persons in the Union."
+      },
+      {
+        id: "sec-1-2",
+        content: "If any other law or directive of any organ of the Union is inconsistent with the provisions of this Constitution, this Constitution shall prevail, and that other law shall to the extent of the inconsistency be void."
+      }
+    ]
+  },
+  {
+    id: "article-2",
+    title: "Article II: Aims and Objectives",
+    sections: [
+      {
+        id: "sec-2-1",
+        title: "Fundamental Objectives",
+        content: "The Union shall be a democratic, independent, and non-partisan organization committed to:",
+        subSections: [
+          "Promoting the social, intellectual, and cultural heritage of the students.",
+          "Defending the rights and privileges of students.",
+          "Fostering unity and cooperation among students.",
+          "Maintaining good relations with the University authorities and external bodies."
+        ]
+      }
+    ]
+  },
+  {
+    id: "article-3",
+    title: "Article III: Membership",
+    sections: [
+      {
+        id: "sec-3-1",
+        content: "Membership of the Union shall be open to all matriculated students of the University of Ibadan upon payment of the prescribed Union dues."
+      },
+      {
+        id: "sec-3-2",
+        content: "Honorary membership may be conferred on distinguished persons who have contributed significantly to the welfare of the Union, subject to the approval of the Student Representative Council (SRC)."
+      }
+    ]
+  },
+  {
+    id: "article-4",
+    title: "Article IV: Rights and Duties of Members",
+    sections: [
+      {
+        id: "sec-4-1",
+        title: "Rights",
+        content: "Every member shall have the right to:",
+        subSections: [
+          "Vote and be voted for in Union elections, subject to constitutional qualifications.",
+          "Participate in the activities of the Union.",
+          "Use the facilities of the Union.",
+          "Freedom of expression, assembly, and association within the Union."
+        ]
+      },
+      {
+        id: "sec-4-2",
+        title: "Duties",
+        content: "Every member shall have the duty to:",
+        subSections: [
+          "Uphold and defend this Constitution.",
+          "Pay Union dues as and when due.",
+          "Protect the property of the Union.",
+          "Refrain from acts capable of bringing the Union into disrepute."
+        ]
+      }
+    ]
+  },
+  {
+    id: "article-5",
+    title: "Article V: The Legislative Council",
+    sections: [
+      {
+        id: "sec-5-1",
+        content: "There shall be a Student Representative Council (SRC) which shall be the supreme legislative and policy-making body of the Union."
+      },
+      {
+        id: "sec-5-2",
+        content: "The SRC shall consist of elected representatives from each Hall of Residence and Faculty."
+      }
+    ]
+  },
+  {
+    id: "article-6",
+    title: "Article VI: The Executive Council",
+    sections: [
+      {
+        id: "sec-6-1",
+        content: "There shall be an Executive Council charged with the day-to-day administration of the Union."
+      },
+      {
+        id: "sec-6-2",
+        content: "The Executive Council shall consist of the President, Vice President, General Secretary, Assistant General Secretary, Treasurer, House Secretary, Public Relations Officer, and Sports Secretary."
+      }
+    ]
+  },
+  {
+    id: "article-7",
+    title: "Article VII: The Judicial Council",
+    sections: [
+      {
+        id: "sec-7-1",
+        content: "There shall be a Judicial Council vested with the judicial powers of the Union."
+      },
+      {
+        id: "sec-7-2",
+        content: "The Judicial Council shall interpret this Constitution and adjudicate on disputes arising from it."
+      }
+    ]
+  },
+  {
+    id: "article-8",
+    title: "Article VIII: Elections",
+    sections: [
+      {
+        id: "sec-8-1",
+        content: "There shall be an Electoral Commission independent of the Executive and Legislative arms, charged with conducting free and fair elections."
+      },
+      {
+        id: "sec-8-2",
+        content: "Elections into the Executive Council and SRC shall be held annually in the second semester."
+      }
+    ]
+  },
+  {
+    id: "article-9",
+    title: "Article IX: Finance",
+    sections: [
+      {
+        id: "sec-9-1",
+        content: "The funds of the Union shall consist of dues, donations, levies, and proceeds from Union activities."
+      },
+      {
+        id: "sec-9-2",
+        content: "No expenditure shall be incurred without the approval of the SRC."
+      }
+    ]
+  },
+  {
+    id: "article-10",
+    title: "Article X: Tenure of Office",
+    sections: [
+      {
+        id: "sec-10-1",
+        content: "The tenure of all elected officers shall be one academic session."
+      },
+      {
+        id: "sec-10-2",
+        content: "No officer shall hold the same office for more than one term."
+      }
+    ]
+  }
+];
+
+export interface Amendment {
+  id: string;
+  date: string;
+  articleRef: string;
+  description: string;
+  status: 'Ratified' | 'Pending' | 'Rejected';
+}
+
+export const amendmentsData: Amendment[] = [
+  {
+    id: "AMDT-2023-01",
+    date: "Oct 12, 2023",
+    articleRef: "Article IX (Finance)",
+    description: "Introduction of electronic payment systems for Union dues to ensure transparency.",
+    status: "Ratified"
+  },
+  {
+    id: "AMDT-2024-02",
+    date: "Feb 05, 2024",
+    articleRef: "Article VIII (Elections)",
+    description: "Proposal to adopt full e-voting for all Faculty elections.",
+    status: "Pending"
+  },
+  {
+    id: "AMDT-2022-05",
+    date: "Nov 20, 2022",
+    articleRef: "Article III (Membership)",
+    description: "Motion to include Distance Learning Centre (DLC) students as full members.",
+    status: "Rejected"
+  }
+];

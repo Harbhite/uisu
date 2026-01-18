@@ -93,6 +93,9 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
                       <ListItem href="/governance" title="Governance">
                         The constitution and legal framework.
                       </ListItem>
+                      <ListItem href="/constitution" title="Constitution">
+                        The supreme law of the Union.
+                      </ListItem>
                       <ListItem href="/past-leaders" title="Past Leaders">
                         Archive of former student leaders.
                       </ListItem>

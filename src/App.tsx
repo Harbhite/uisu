@@ -44,6 +44,7 @@ const CalculatorSuitePage = lazy(() => import("./pages/resources/CalculatorSuite
 const StyleGuidePage = lazy(() => import("./pages/StyleGuidePage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 const HistoryPage = lazy(() => import("./pages/HistoryPage"));
+const ConstitutionPage = lazy(() => import("./pages/ConstitutionPage"));
 
 const queryClient = new QueryClient();
 
@@ -106,6 +107,9 @@ const AppRoutes = () => {
 
         {/* History Page */}
         <Route path="/history" element={<PageWrapper><HistoryPage /></PageWrapper>} />
+
+        {/* Constitution Page */}
+        <Route path="/constitution" element={<PageWrapper><ConstitutionPage /></PageWrapper>} />
 
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
