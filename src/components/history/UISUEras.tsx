@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Canvas } from '@react-three/fiber';
 import { Float, TorusKnot, MeshDistortMaterial } from '@react-three/drei';
+import { DecryptionText } from './DecryptionText';
 
 const Artifact3D = () => {
     return (
@@ -28,7 +29,9 @@ const EraSection = ({ year, title, children, align = 'left' }: { year: string, t
                     transition={{ duration: 0.8 }}
                 >
                     <h3 className="text-8xl font-bold text-white/5 mb-[-2rem] relative z-0">{year}</h3>
-                    <h4 className="text-4xl font-serif font-bold text-nobel-gold relative z-10 mb-6">{title}</h4>
+                    <h4 className="text-4xl font-serif font-bold text-nobel-gold relative z-10 mb-6">
+                        <DecryptionText text={title} />
+                    </h4>
                     <div className="text-slate-300 text-lg leading-relaxed space-y-4">
                         {children}
                     </div>
@@ -57,7 +60,7 @@ export const UISUEras = () => {
     const y = useTransform(scrollYProgress, [0, 1], [0, -200]);
 
     return (
-        <section ref={containerRef} className="min-h-screen py-24 px-6 relative bg-ui-blue overflow-hidden">
+        <section ref={containerRef} className="min-h-screen py-24 px-6 relative overflow-hidden">
             {/* Parallax Background Title */}
             <motion.div style={{ y }} className="absolute top-20 right-10 text-[20vw] font-bold text-black/10 whitespace-nowrap pointer-events-none select-none">
                 UI STUDENTS' UNION

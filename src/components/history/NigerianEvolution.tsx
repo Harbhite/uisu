@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Mic, AlertTriangle, Users } from 'lucide-react';
+import { DecryptionText } from './DecryptionText';
 
 const events = [
   {
@@ -45,7 +46,7 @@ export const NigerianEvolution = () => {
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
   return (
-    <section className="min-h-screen py-24 px-6 relative bg-ui-dark">
+    <section className="min-h-screen py-24 px-6 relative">
       <div className="container mx-auto">
         <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -53,7 +54,9 @@ export const NigerianEvolution = () => {
             viewport={{ once: true }}
             className="text-center mb-16"
         >
-            <h2 className="text-5xl font-serif font-bold text-white mb-4">Guardians of the Republic</h2>
+            <h2 className="text-5xl font-serif font-bold text-white mb-4">
+                <DecryptionText text="Guardians of the Republic" />
+            </h2>
             <p className="text-slate-400">Tap a card to explore the milestones of Nigerian Student Unionism.</p>
         </motion.div>
 

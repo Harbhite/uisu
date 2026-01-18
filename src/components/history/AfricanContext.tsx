@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { DecryptionText } from './DecryptionText';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -33,15 +34,17 @@ export const AfricanContext = () => {
   }, []);
 
   return (
-    <section ref={containerRef} className="h-screen overflow-hidden bg-gradient-to-br from-black to-ui-dark relative">
-       <div className="absolute top-10 left-10 z-10">
-            <h2 className="text-4xl font-serif text-nobel-gold">The African Awakening</h2>
+    <section ref={containerRef} className="h-screen overflow-hidden relative pointer-events-none">
+       <div className="absolute top-10 left-10 z-10 pointer-events-auto">
+            <h2 className="text-4xl font-serif text-nobel-gold">
+                <DecryptionText text="The African Awakening" />
+            </h2>
             <p className="text-sm text-slate-400">Scroll to explore &rarr;</p>
        </div>
 
-       <div ref={sliderRef} className="flex h-full w-[400vw]">
+       <div ref={sliderRef} className="flex h-full w-[400vw] pointer-events-auto">
           {/* Panel 1: WASU */}
-          <div className="panel w-screen h-full flex flex-col justify-center items-center p-12 border-r border-white/10 relative">
+          <div className="panel w-screen h-full flex flex-col justify-center items-center p-12 border-r border-white/10 relative backdrop-blur-sm">
              <div className="max-w-4xl text-center">
                 <h3 className="text-9xl font-bold text-white/5 absolute top-1/4 left-1/2 -translate-x-1/2">WASU</h3>
                 <h4 className="text-6xl font-bold text-white mb-6 relative z-10">1925</h4>
@@ -53,7 +56,7 @@ export const AfricanContext = () => {
           </div>
 
           {/* Panel 2: Anti-Colonialism */}
-          <div className="panel w-screen h-full flex flex-col justify-center items-center p-12 border-r border-white/10 bg-ui-blue/10">
+          <div className="panel w-screen h-full flex flex-col justify-center items-center p-12 border-r border-white/10 backdrop-blur-sm">
              <div className="grid grid-cols-2 gap-12 max-w-6xl items-center">
                 <div className="space-y-6">
                     <h3 className="text-5xl font-serif text-nobel-gold">The Vanguard</h3>
@@ -68,7 +71,7 @@ export const AfricanContext = () => {
           </div>
 
           {/* Panel 3: NUNS */}
-          <div className="panel w-screen h-full flex flex-col justify-center items-center p-12 border-r border-white/10">
+          <div className="panel w-screen h-full flex flex-col justify-center items-center p-12 border-r border-white/10 backdrop-blur-sm">
              <div className="text-center">
                  <h3 className="text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-white mb-8">NUNS</h3>
                  <p className="text-3xl text-white font-light">1956: National Union of Nigerian Students</p>
@@ -79,7 +82,7 @@ export const AfricanContext = () => {
           </div>
 
           {/* Panel 4: Soweto */}
-          <div className="panel w-screen h-full flex flex-col justify-center items-center p-12 bg-red-900/20">
+          <div className="panel w-screen h-full flex flex-col justify-center items-center p-12 backdrop-blur-sm">
              <h3 className="text-9xl font-bold text-red-500/20 absolute">1976</h3>
              <div className="relative z-10 text-center max-w-4xl">
                  <h4 className="text-6xl font-bold text-white mb-8">Soweto Uprising</h4>
