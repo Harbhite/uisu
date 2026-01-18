@@ -1,13 +1,23 @@
 import React, { useState, useEffect } from 'react';
+import { motion, useScroll, useSpring } from 'framer-motion';
 import { SEO } from '@/components/SEO';
 import { constitutionData, amendmentsData } from '@/lib/data';
-import { Search, Gavel, Scale, Printer, ChevronRight, Check, ShieldAlert, History, Link as LinkIcon } from 'lucide-react';
+import { Search, Gavel, Scale, Printer, ChevronRight, Check, ShieldAlert, History, Link as LinkIcon, Type, Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
 const ConstitutionPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSection, setActiveSection] = useState(constitutionData[0]?.id || '');
+  const [fontSize, setFontSize] = useState(100); // Percentage
+
+  // Progress Bar
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
 
   // Filter articles based on search
   const filteredArticles = constitutionData.filter(article => {
@@ -67,11 +77,24 @@ const ConstitutionPage: React.FC = () => {
     }
   };
 
+  const adjustFontSize = (increment: boolean) => {
+    setFontSize(prev => {
+      const newSize = increment ? prev + 10 : prev - 10;
+      return Math.min(Math.max(newSize, 80), 150); // Limit between 80% and 150%
+    });
+  };
+
   return (
     <div className="min-h-screen bg-nobel-cream selection:bg-nobel-gold selection:text-ui-blue print:bg-white">
       <SEO
         title="The Constitution | UISU Archive"
         description="The Supreme Constitution of the University of Ibadan Students' Union. Digital Legislative Registry."
+      />
+
+      {/* Reading Progress Bar */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-1 bg-nobel-gold z-50 origin-left print:hidden"
+        style={{ scaleX }}
       />
 
       {/* --- SIDEBAR NAVIGATION (Desktop) --- */}
@@ -119,7 +142,31 @@ const ConstitutionPage: React.FC = () => {
           )}
         </nav>
 
-        <div className="px-8 mt-4 pt-4 border-t border-slate-100">
+        {/* Font Controls */}
+        <div className="px-8 py-4 border-t border-slate-100 flex items-center justify-between gap-2">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Text Size</span>
+            <div className="flex items-center gap-1 bg-slate-50 rounded-sm border border-slate-200 p-1">
+                <button
+                  onClick={() => adjustFontSize(false)}
+                  className="p-1 hover:bg-white hover:shadow-sm rounded-sm transition-all"
+                  disabled={fontSize <= 80}
+                  aria-label="Decrease font size"
+                >
+                    <Minus size={12} className={fontSize <= 80 ? "text-slate-300" : "text-slate-600"}/>
+                </button>
+                <span className="text-[10px] font-mono w-8 text-center">{fontSize}%</span>
+                <button
+                  onClick={() => adjustFontSize(true)}
+                  className="p-1 hover:bg-white hover:shadow-sm rounded-sm transition-all"
+                  disabled={fontSize >= 150}
+                  aria-label="Increase font size"
+                >
+                    <Plus size={12} className={fontSize >= 150 ? "text-slate-300" : "text-slate-600"}/>
+                </button>
+            </div>
+        </div>
+
+        <div className="px-8 mt-2 pt-2 border-t border-slate-100">
            <Button onClick={handlePrint} variant="outline" className="w-full gap-2 text-xs font-bold uppercase tracking-widest border-slate-300 hover:border-ui-blue hover:text-ui-blue">
             <Printer size={14}/> Print PDF
           </Button>
@@ -154,7 +201,10 @@ const ConstitutionPage: React.FC = () => {
         </div>
 
         {/* Content Container */}
-        <div className="px-6 md:px-12 lg:px-20 py-16 max-w-5xl mx-auto">
+        <div
+            className="px-6 md:px-12 lg:px-20 py-16 max-w-5xl mx-auto transition-all duration-300"
+            style={{ fontSize: `${fontSize}%` }}
+        >
 
           {/* Mobile Search (Visible only on mobile) */}
           <div className="xl:hidden mb-12 print:hidden">
@@ -206,10 +256,11 @@ const ConstitutionPage: React.FC = () => {
                         </p>
 
                         {section.subSections && (
-                          <ul className="list-[square] pl-6 space-y-2 text-slate-600 print:text-black print:text-sm">
+                          <ul className="pl-6 space-y-4 text-slate-600 print:text-black print:text-sm">
                             {section.subSections.map((sub, idx) => (
-                              <li key={idx} className="marker:text-nobel-gold pl-2">
-                                {sub}
+                              <li key={idx} className="flex gap-4">
+                                <span className="block w-2 h-2 mt-2 rounded-full bg-nobel-gold flex-shrink-0" />
+                                <span className="leading-relaxed">{sub}</span>
                               </li>
                             ))}
                           </ul>
