@@ -55,7 +55,7 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
     <>
       {/* --- DESKTOP NAVBAR --- */}
       <nav className="hidden md:block fixed top-0 left-0 w-full z-50 bg-ui-dark/95 backdrop-blur-lg border-b border-white/10 shadow-lg transition-all duration-300 no-print">
-        <div className="container mx-auto px-6 h-20 flex items-center justify-between">
+        <div className="container mx-auto px-6 h-20 flex items-center gap-8">
 
           {/* Logo Section */}
           <Link to="/" className="flex items-center gap-3 group">
@@ -67,8 +67,7 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="flex items-center gap-6">
-            <NavigationMenu>
+          <NavigationMenu>
               <NavigationMenuList>
 
                 <NavigationMenuItem>
@@ -165,7 +164,7 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
             </NavigationMenu>
 
             {/* Action Button */}
-            <div className="flex items-center gap-4 pl-4 border-l border-white/20">
+            <div className="flex items-center gap-4 pl-4 border-l border-white/20 ml-auto">
                {/* Search Button */}
                <button 
                  onClick={() => navigate('/search')}
@@ -195,7 +194,6 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
                   </motion.button>
               )}
             </div>
-          </div>
         </div>
       </nav>
 
