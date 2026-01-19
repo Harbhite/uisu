@@ -30,7 +30,7 @@ export const Menu = ({ isMenuOpen, setIsMenuOpen, navLinks }: MenuProps) => {
                 <X size={24} />
              </button>
 
-             <div className="flex flex-col gap-2 text-left overflow-y-auto max-h-[70vh] w-full px-6 no-scrollbar">
+             <div className="flex flex-col gap-1 text-left overflow-y-auto max-h-[70vh] w-full px-6 no-scrollbar">
                 {navLinks.map((link, index) => (
                     <motion.div
                         key={link.name}

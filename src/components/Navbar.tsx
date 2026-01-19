@@ -55,7 +55,7 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
     <>
       {/* --- DESKTOP NAVBAR --- */}
       <nav className="hidden md:block fixed top-0 left-0 w-full z-50 bg-ui-dark/95 backdrop-blur-lg border-b border-white/10 shadow-lg transition-all duration-300 no-print">
-        <div className="container mx-auto px-6 h-20 flex items-center gap-8">
+        <div className="container mx-auto px-6 h-20 flex items-center gap-2">
 
           {/* Logo Section */}
           <Link to="/" className="flex items-center gap-3 group">
@@ -68,10 +68,10 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
 
           {/* Desktop Navigation */}
           <NavigationMenu>
-              <NavigationMenuList>
+              <NavigationMenuList className="space-x-0">
 
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-white/90 hover:text-nobel-gold hover:bg-white/10 focus:bg-white/10 focus:text-white">The Union</NavigationMenuTrigger>
+                  <NavigationMenuTrigger className="bg-transparent text-white/90 hover:text-nobel-gold hover:bg-white/10 focus:bg-white/10 focus:text-white px-2">The Union</NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
                       <li className="row-span-3">
@@ -107,14 +107,14 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
 
                 <NavigationMenuItem>
                   <Link to="/current-leaders">
-                      <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "bg-transparent text-white/90 hover:text-nobel-gold hover:bg-white/10 focus:bg-white/10 focus:text-white cursor-pointer")}>
+                      <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "bg-transparent text-white/90 hover:text-nobel-gold hover:bg-white/10 focus:bg-white/10 focus:text-white cursor-pointer px-2")}>
                           Leadership
                       </NavigationMenuLink>
                   </Link>
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-white/90 hover:text-nobel-gold hover:bg-white/10 focus:bg-white/10 focus:text-white">Resources</NavigationMenuTrigger>
+                  <NavigationMenuTrigger className="bg-transparent text-white/90 hover:text-nobel-gold hover:bg-white/10 focus:bg-white/10 focus:text-white px-2">Resources</NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
                       {resourceCategories.map((resource) => (
@@ -127,7 +127,7 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-white/90 hover:text-nobel-gold hover:bg-white/10 focus:bg-white/10 focus:text-white">Community</NavigationMenuTrigger>
+                  <NavigationMenuTrigger className="bg-transparent text-white/90 hover:text-nobel-gold hover:bg-white/10 focus:bg-white/10 focus:text-white px-2">Community</NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
                       <ListItem href="/communities" title="Communities">
@@ -147,7 +147,7 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-white/90 hover:text-nobel-gold hover:bg-white/10 focus:bg-white/10 focus:text-white">Editorial</NavigationMenuTrigger>
+                  <NavigationMenuTrigger className="bg-transparent text-white/90 hover:text-nobel-gold hover:bg-white/10 focus:bg-white/10 focus:text-white px-2">Editorial</NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
                       <ListItem href="/inks-vault" title="Inks Vault">
