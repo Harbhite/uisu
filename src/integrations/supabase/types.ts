@@ -220,6 +220,57 @@ export type Database = {
         }
         Relationships: []
       }
+      committees: {
+        Row: {
+          chairperson: string | null
+          created_at: string
+          description: string | null
+          icon_name: string | null
+          id: string
+          is_active: boolean | null
+          mandate: string[] | null
+          meeting_schedule: string | null
+          members: string[] | null
+          secretary: string | null
+          slug: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          chairperson?: string | null
+          created_at?: string
+          description?: string | null
+          icon_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          mandate?: string[] | null
+          meeting_schedule?: string | null
+          members?: string[] | null
+          secretary?: string | null
+          slug: string
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          chairperson?: string | null
+          created_at?: string
+          description?: string | null
+          icon_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          mandate?: string[] | null
+          meeting_schedule?: string | null
+          members?: string[] | null
+          secretary?: string | null
+          slug?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           created_at: string | null
