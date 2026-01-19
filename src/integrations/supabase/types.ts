@@ -271,6 +271,51 @@ export type Database = {
         }
         Relationships: []
       }
+      cv_templates: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          download_count: number | null
+          file_url: string | null
+          format: string
+          id: string
+          is_active: boolean | null
+          is_approved: boolean | null
+          title: string
+          updated_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          download_count?: number | null
+          file_url?: string | null
+          format: string
+          id?: string
+          is_active?: boolean | null
+          is_approved?: boolean | null
+          title: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          download_count?: number | null
+          file_url?: string | null
+          format?: string
+          id?: string
+          is_active?: boolean | null
+          is_approved?: boolean | null
+          title?: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           created_at: string | null
@@ -614,10 +659,12 @@ export type Database = {
           id: string
           industry: string
           is_active: boolean | null
+          is_approved: boolean | null
           job_type: string
           location: string
           requirements: string[] | null
           salary: string | null
+          submitted_by: string | null
           title: string
           updated_at: string | null
         }
@@ -630,10 +677,12 @@ export type Database = {
           id?: string
           industry: string
           is_active?: boolean | null
+          is_approved?: boolean | null
           job_type: string
           location: string
           requirements?: string[] | null
           salary?: string | null
+          submitted_by?: string | null
           title: string
           updated_at?: string | null
         }
@@ -646,10 +695,12 @@ export type Database = {
           id?: string
           industry?: string
           is_active?: boolean | null
+          is_approved?: boolean | null
           job_type?: string
           location?: string
           requirements?: string[] | null
           salary?: string | null
+          submitted_by?: string | null
           title?: string
           updated_at?: string | null
         }
@@ -857,6 +908,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      scholarships: {
+        Row: {
+          amount: string
+          application_url: string | null
+          category: string
+          created_at: string | null
+          created_by: string | null
+          deadline: string
+          description: string | null
+          eligibility: string[] | null
+          id: string
+          is_active: boolean | null
+          provider: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount: string
+          application_url?: string | null
+          category: string
+          created_at?: string | null
+          created_by?: string | null
+          deadline: string
+          description?: string | null
+          eligibility?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          provider: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: string
+          application_url?: string | null
+          category?: string
+          created_at?: string | null
+          created_by?: string | null
+          deadline?: string
+          description?: string | null
+          eligibility?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          provider?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
