@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { motion, useSpring, useTransform, useMotionValue } from 'framer-motion';
-import { useDrag } from '@use-gesture/react';
+import { motion, useSpring, useMotionValue } from 'framer-motion';
 import { useHistoryStore } from './store';
 import { ChevronRight, Landmark, Shield, Gavel, Scale, Scroll, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -24,29 +23,31 @@ export const EvolutionCarousel: React.FC = () => {
   const rotation = useMotionValue(0);
   const springRotation = useSpring(rotation, { damping: 20, stiffness: 100 });
 
-  const bind = useDrag(({ offset: [x], active, movement: [mx], direction: [dx], velocity: [vx] }) => {
-    setIsDragging(active);
+  // Using a ref-based approach for gesture handling
+  const handlePointerDown = (e: React.PointerEvent) => {
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
 
-    // Calculate rotation based on drag
-    // This is simplified; usually we map x pixels to degrees
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!(e.target as HTMLElement).hasPointerCapture(e.pointerId)) return;
+    setIsDragging(true);
     const currentRotation = -activeEraIndex * ITEM_ANGLE;
-    const dragOffset = mx / 2; // sensitivity
+    const dragOffset = e.movementX / 2;
+    rotation.set(currentRotation + dragOffset);
+  };
 
-    if (active) {
-        rotation.set(currentRotation + dragOffset);
-    } else {
-        // Snap to nearest
-        const finalRotation = currentRotation + dragOffset + (vx * dx * 50); // Momentum
-        const snapIndex = Math.round(-finalRotation / ITEM_ANGLE);
-
-        // Clamp/Wrap index? Let's clamp for history (linear time) or wrap for cyclical
-        // History is linear usually, but layout is circular. Let's wrap.
-        const normalizedIndex = ((snapIndex % eras.length) + eras.length) % eras.length;
-
-        setActiveEraIndex(normalizedIndex);
-        rotation.set(-normalizedIndex * ITEM_ANGLE); // Snap
-    }
-  });
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (!(e.target as HTMLElement).hasPointerCapture(e.pointerId)) return;
+    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    setIsDragging(false);
+    
+    // Snap to nearest era
+    const currentValue = rotation.get();
+    const snapIndex = Math.round(-currentValue / ITEM_ANGLE);
+    const normalizedIndex = ((snapIndex % eras.length) + eras.length) % eras.length;
+    setActiveEraIndex(normalizedIndex);
+    rotation.set(-normalizedIndex * ITEM_ANGLE);
+  };
 
   // Update rotation when store changes (e.g. if controlled externally)
   React.useEffect(() => {
@@ -69,14 +70,11 @@ export const EvolutionCarousel: React.FC = () => {
       </div>
 
       {/* The Wheel */}
-      {/* We shift it up so the bottom half is visible, like the reference?
-          The reference (opl-master-1) has the TOP half visible.
-          "Turn insurance spend..." text is below the wheel? No, inside.
-          Let's replicate: Large circle at top, cards at bottom.
-      */}
       <div
         className="absolute top-[-50vh] left-1/2 -translate-x-1/2 w-[150vh] h-[150vh] rounded-full border-[2rem] border-ui-blue/20 cursor-grab active:cursor-grabbing touch-none"
-        {...bind()}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
         style={{ touchAction: 'none' }}
       >
         <motion.div
