@@ -20,7 +20,7 @@ export const Menu = ({ isMenuOpen, setIsMenuOpen, navLinks }: MenuProps) => {
           className="fixed inset-0 top-0 z-[60] bg-ui-blue text-white flex overflow-hidden"
         >
           {/* Left Side: Navigation Links */}
-          <div className="flex-1 flex flex-col justify-center items-center h-full relative z-10">
+          <div className="flex-1 flex flex-col justify-center items-start h-full relative z-10">
 
              {/* Close Button */}
              <button
@@ -30,7 +30,7 @@ export const Menu = ({ isMenuOpen, setIsMenuOpen, navLinks }: MenuProps) => {
                 <X size={24} />
              </button>
 
-             <div className="flex flex-col gap-2 text-center overflow-y-auto max-h-[70vh] w-full px-6 no-scrollbar">
+             <div className="flex flex-col gap-2 text-left overflow-y-auto max-h-[70vh] w-full px-6 no-scrollbar">
                 {navLinks.map((link, index) => (
                     <motion.div
                         key={link.name}
@@ -54,7 +54,7 @@ export const Menu = ({ isMenuOpen, setIsMenuOpen, navLinks }: MenuProps) => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                className="mt-8 text-center text-xs tracking-widest text-slate-400"
+                className="mt-8 text-left text-xs tracking-widest text-slate-400 px-6 w-full"
              >
                 <p>University of Ibadan</p>
                 <p className="mt-1">archive@uisu.org</p>
