@@ -5,19 +5,11 @@ import {
   ArrowLeft, Search, GraduationCap, Calendar, 
   Bookmark, BookmarkCheck, Share2, ExternalLink,
   Clock, CheckCircle2, XCircle, AlertCircle,
-  Award, Globe, Building2, X, ArrowRight, Plus, Pencil, Trash2
+  Award, Globe, Building2, X, ArrowRight
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { useAdminCheck } from '@/hooks/useAdminCheck';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 type ScholarshipCategory = 'all' | 'local' | 'international' | 'corporate';
 type ApplicationStatus = 'not_started' | 'in_progress' | 'submitted' | 'accepted' | 'rejected';
@@ -31,8 +23,121 @@ interface Scholarship {
   category: 'local' | 'international' | 'corporate';
   eligibility: string[];
   description: string;
-  application_url: string;
+  applicationUrl: string;
 }
+
+const scholarships: Scholarship[] = [
+  {
+    id: 'mtn-foundation',
+    title: 'MTN Foundation Scholarship',
+    provider: 'MTN Nigeria',
+    amount: '₦200,000',
+    deadline: '2026-06-30',
+    category: 'corporate',
+    eligibility: ['Nigerian Student', 'CGPA 3.5+', '200-400 Level'],
+    description: 'Annual scholarship for outstanding students in Nigerian universities. Covers tuition and provides monthly stipend for academic materials.',
+    applicationUrl: '#'
+  },
+  {
+    id: 'nnpc-total',
+    title: 'NNPC/Total National Merit Scholarship',
+    provider: 'NNPC & Total Energies',
+    amount: '₦150,000',
+    deadline: '2026-05-15',
+    category: 'corporate',
+    eligibility: ['Nigerian Citizen', 'CGPA 3.0+', 'Science/Engineering'],
+    description: 'Merit-based scholarship for students in science and engineering disciplines. Includes internship opportunities.',
+    applicationUrl: '#'
+  },
+  {
+    id: 'agbami-medical',
+    title: 'Agbami Medical & Engineering Scholarship',
+    provider: 'Agbami Partners',
+    amount: '₦500,000',
+    deadline: '2026-04-30',
+    category: 'corporate',
+    eligibility: ['Medical/Engineering Student', 'CGPA 3.5+', '300+ Level'],
+    description: 'Premium scholarship for medical and engineering students with exceptional academic records.',
+    applicationUrl: '#'
+  },
+  {
+    id: 'shell-nigeria',
+    title: 'Shell Nigeria Scholarship',
+    provider: 'Shell Petroleum',
+    amount: '₦400,000',
+    deadline: '2026-07-31',
+    category: 'corporate',
+    eligibility: ['Nigerian Student', 'CGPA 3.5+', 'STEM Fields'],
+    description: 'Comprehensive scholarship covering tuition, accommodation, and professional development programs.',
+    applicationUrl: '#'
+  },
+  {
+    id: 'ui-endowment',
+    title: 'UI Endowment Fund Scholarship',
+    provider: 'University of Ibadan',
+    amount: '₦100,000',
+    deadline: '2026-03-15',
+    category: 'local',
+    eligibility: ['UI Student', 'CGPA 4.0+', 'Financial Need'],
+    description: 'Internal scholarship for outstanding UI students demonstrating financial need and academic excellence.',
+    applicationUrl: '#'
+  },
+  {
+    id: 'chevron-undergrad',
+    title: 'Chevron Undergraduate Scholarship',
+    provider: 'Chevron Nigeria',
+    amount: '₦300,000',
+    deadline: '2026-06-15',
+    category: 'corporate',
+    eligibility: ['Nigerian Student', 'CGPA 3.5+', '200-400 Level'],
+    description: 'Annual scholarship supporting Nigerian undergraduates with academic excellence.',
+    applicationUrl: '#'
+  },
+  {
+    id: 'bilateral-education',
+    title: 'Bilateral Education Agreement (BEA)',
+    provider: 'Federal Government of Nigeria',
+    amount: 'Full Tuition + Stipend',
+    deadline: '2026-02-28',
+    category: 'international',
+    eligibility: ['Nigerian Citizen', 'CGPA 3.5+', 'Postgraduate'],
+    description: 'Government-sponsored international scholarship for postgraduate studies in partner countries.',
+    applicationUrl: '#'
+  },
+  {
+    id: 'mastercard-foundation',
+    title: 'Mastercard Foundation Scholars Program',
+    provider: 'Mastercard Foundation',
+    amount: 'Full Scholarship',
+    deadline: '2026-08-31',
+    category: 'international',
+    eligibility: ['African Student', 'Academic Excellence', 'Leadership Potential'],
+    description: 'Comprehensive scholarship covering tuition, accommodation, travel, and leadership development.',
+    applicationUrl: '#'
+  },
+  {
+    id: 'oyo-state',
+    title: 'Oyo State Bursary Award',
+    provider: 'Oyo State Government',
+    amount: '₦50,000',
+    deadline: '2026-09-30',
+    category: 'local',
+    eligibility: ['Oyo State Indigene', 'UI Student', 'Good Standing'],
+    description: 'Annual bursary for indigenes of Oyo State studying at University of Ibadan.',
+    applicationUrl: '#'
+  },
+  {
+    id: 'first-bank-endowment',
+    title: 'First Bank Endowment Scholarship',
+    provider: 'First Bank of Nigeria',
+    amount: '₦250,000',
+    deadline: '2026-05-31',
+    category: 'corporate',
+    eligibility: ['Nigerian Student', 'CGPA 3.5+', 'Business/Economics'],
+    description: 'Scholarship for students in business and economics programs with strong academic performance.',
+    applicationUrl: '#'
+  }
+];
 
 const useBookmarks = (key: string) => {
   const [bookmarks, setBookmarks] = useState<string[]>(() => {
@@ -117,12 +222,9 @@ const ScholarshipCard: React.FC<{
   isBookmarked: boolean;
   onToggleBookmark: () => void;
   onShare: () => void;
-  onEdit?: () => void;
-  onDelete?: () => void;
   status: ApplicationStatus;
   index: number;
-  isStaff?: boolean;
-}> = ({ scholarship, isBookmarked, onToggleBookmark, onShare, onEdit, onDelete, status, index, isStaff }) => {
+}> = ({ scholarship, isBookmarked, onToggleBookmark, onShare, status, index }) => {
   const deadlineInfo = getDeadlineStatus(scholarship.deadline);
   const daysRemaining = getDaysRemaining(scholarship.deadline);
 
@@ -150,22 +252,6 @@ const ScholarshipCard: React.FC<{
             <CategoryIcon size={20} />
           </div>
           <div className="flex items-center gap-1">
-            {isStaff && (
-              <>
-                <button
-                  onClick={onEdit}
-                  className="p-2 text-slate-300 hover:text-ui-blue transition-colors"
-                >
-                  <Pencil size={16} />
-                </button>
-                <button
-                  onClick={onDelete}
-                  className="p-2 text-slate-300 hover:text-red-500 transition-colors"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </>
-            )}
             <button
               onClick={onToggleBookmark}
               className={`p-2 transition-colors ${
@@ -225,7 +311,7 @@ const ScholarshipCard: React.FC<{
       <div className="px-8 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
         <StatusBadge status={status} />
         <a 
-          href={scholarship.application_url}
+          href={scholarship.applicationUrl}
           className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-ui-blue hover:text-nobel-gold transition-colors group/link"
         >
           Apply Now 
@@ -315,17 +401,6 @@ const TrackerSidebar: React.FC<{
   );
 };
 
-interface ScholarshipFormData {
-  title: string;
-  provider: string;
-  amount: string;
-  deadline: string;
-  category: 'local' | 'international' | 'corporate';
-  eligibility: string;
-  description: string;
-  application_url: string;
-}
-
 const ScholarshipPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -333,57 +408,9 @@ const ScholarshipPage = () => {
   const [activeCategory, setActiveCategory] = useState<ScholarshipCategory>('all');
   const [deadlineFilter, setDeadlineFilter] = useState<string>('all');
   const [trackerOpen, setTrackerOpen] = useState(false);
-  const [scholarships, setScholarships] = useState<Scholarship[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingScholarship, setEditingScholarship] = useState<Scholarship | null>(null);
-  const [formData, setFormData] = useState<ScholarshipFormData>({
-    title: '',
-    provider: '',
-    amount: '',
-    deadline: '',
-    category: 'corporate',
-    eligibility: '',
-    description: '',
-    application_url: ''
-  });
 
-  const { isStaff } = useAdminCheck();
   const { bookmarks, toggle, isBookmarked } = useBookmarks('scholarship-bookmarks');
   const { getStatus, setStatus } = useApplicationStatus();
-
-  const fetchScholarships = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('scholarships')
-        .select('*')
-        .eq('is_active', true)
-        .order('deadline', { ascending: true });
-
-      if (error) throw error;
-
-      setScholarships(data?.map(s => ({
-        id: s.id,
-        title: s.title,
-        provider: s.provider,
-        amount: s.amount,
-        deadline: s.deadline,
-        category: s.category as 'local' | 'international' | 'corporate',
-        eligibility: s.eligibility || [],
-        description: s.description || '',
-        application_url: s.application_url || '#'
-      })) || []);
-    } catch (error) {
-      console.error('Error fetching scholarships:', error);
-      toast.error('Failed to load scholarships');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchScholarships();
-  }, []);
 
   useEffect(() => {
     const id = searchParams.get('id');
@@ -395,7 +422,7 @@ const ScholarshipPage = () => {
         });
       }
     }
-  }, [searchParams, scholarships]);
+  }, [searchParams]);
 
   const handleShare = (scholarship: Scholarship) => {
     const url = `${window.location.origin}/resources/scholarships?id=${scholarship.id}`;
@@ -406,110 +433,6 @@ const ScholarshipPage = () => {
   const handleBookmark = (id: string) => {
     toggle(id);
     toast.success(isBookmarked(id) ? 'Removed from tracker' : 'Added to tracker');
-  };
-
-  const openCreateModal = () => {
-    setEditingScholarship(null);
-    setFormData({
-      title: '',
-      provider: '',
-      amount: '',
-      deadline: '',
-      category: 'corporate',
-      eligibility: '',
-      description: '',
-      application_url: ''
-    });
-    setModalOpen(true);
-  };
-
-  const openEditModal = (scholarship: Scholarship) => {
-    setEditingScholarship(scholarship);
-    setFormData({
-      title: scholarship.title,
-      provider: scholarship.provider,
-      amount: scholarship.amount,
-      deadline: scholarship.deadline,
-      category: scholarship.category,
-      eligibility: scholarship.eligibility.join(', '),
-      description: scholarship.description,
-      application_url: scholarship.application_url
-    });
-    setModalOpen(true);
-  };
-
-  const handleSubmit = async () => {
-    if (!formData.title || !formData.provider || !formData.amount || !formData.deadline) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    const eligibilityArray = formData.eligibility
-      .split(',')
-      .map(e => e.trim())
-      .filter(e => e.length > 0);
-
-    try {
-      if (editingScholarship) {
-        const { error } = await supabase
-          .from('scholarships')
-          .update({
-            title: formData.title,
-            provider: formData.provider,
-            amount: formData.amount,
-            deadline: formData.deadline,
-            category: formData.category,
-            eligibility: eligibilityArray,
-            description: formData.description,
-            application_url: formData.application_url,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', editingScholarship.id);
-
-        if (error) throw error;
-        toast.success('Scholarship updated successfully');
-      } else {
-        const { error } = await supabase
-          .from('scholarships')
-          .insert({
-            title: formData.title,
-            provider: formData.provider,
-            amount: formData.amount,
-            deadline: formData.deadline,
-            category: formData.category,
-            eligibility: eligibilityArray,
-            description: formData.description,
-            application_url: formData.application_url
-          });
-
-        if (error) throw error;
-        toast.success('Scholarship created successfully');
-      }
-
-      setModalOpen(false);
-      fetchScholarships();
-    } catch (error: any) {
-      console.error('Error saving scholarship:', error);
-      toast.error(error.message || 'Failed to save scholarship');
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this scholarship?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('scholarships')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      toast.success('Scholarship deleted successfully');
-      fetchScholarships();
-    } catch (error: any) {
-      console.error('Error deleting scholarship:', error);
-      toast.error(error.message || 'Failed to delete scholarship');
-    }
   };
 
   const filteredScholarships = useMemo(() => {
@@ -528,7 +451,7 @@ const ScholarshipPage = () => {
 
       return matchesSearch && matchesCategory && matchesDeadline;
     });
-  }, [searchTerm, activeCategory, deadlineFilter, scholarships]);
+  }, [searchTerm, activeCategory, deadlineFilter]);
 
   const stats = [
     { label: 'Scholarships', value: `${scholarships.length}+` },
@@ -543,14 +466,6 @@ const ScholarshipPage = () => {
     { value: 'international', label: 'International' },
     { value: 'corporate', label: 'Corporate' }
   ];
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-slate-50 pt-32 pb-20">
@@ -574,18 +489,10 @@ const ScholarshipPage = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-between mb-4"
+            className="flex items-center gap-4 mb-4"
           >
-            <div className="flex items-center gap-4">
-              <GraduationCap className="text-nobel-gold w-6 h-6" />
-              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-slate-400">Funding Opportunities</span>
-            </div>
-            {isStaff && (
-              <Button onClick={openCreateModal} className="gap-2">
-                <Plus size={16} />
-                Add Scholarship
-              </Button>
-            )}
+            <GraduationCap className="text-nobel-gold w-6 h-6" />
+            <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-slate-400">Funding Opportunities</span>
           </motion.div>
 
           <motion.h1
@@ -683,11 +590,8 @@ const ScholarshipPage = () => {
                 isBookmarked={isBookmarked(scholarship.id)}
                 onToggleBookmark={() => handleBookmark(scholarship.id)}
                 onShare={() => handleShare(scholarship)}
-                onEdit={() => openEditModal(scholarship)}
-                onDelete={() => handleDelete(scholarship.id)}
                 status={getStatus(scholarship.id)}
                 index={index}
-                isStaff={isStaff}
               />
             ))}
           </AnimatePresence>
@@ -714,105 +618,6 @@ const ScholarshipPage = () => {
         isOpen={trackerOpen}
         onClose={() => setTrackerOpen(false)}
       />
-
-      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="font-serif text-2xl">
-              {editingScholarship ? 'Edit Scholarship' : 'Add New Scholarship'}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 mt-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Title *</Label>
-                <Input
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Scholarship title"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Provider *</Label>
-                <Input
-                  value={formData.provider}
-                  onChange={(e) => setFormData({ ...formData, provider: e.target.value })}
-                  placeholder="Organization name"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>Amount *</Label>
-                <Input
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  placeholder="₦200,000"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Deadline *</Label>
-                <Input
-                  type="date"
-                  value={formData.deadline}
-                  onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Category</Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value: 'local' | 'international' | 'corporate') => 
-                    setFormData({ ...formData, category: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="local">Local</SelectItem>
-                    <SelectItem value="international">International</SelectItem>
-                    <SelectItem value="corporate">Corporate</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Eligibility (comma-separated)</Label>
-              <Input
-                value={formData.eligibility}
-                onChange={(e) => setFormData({ ...formData, eligibility: e.target.value })}
-                placeholder="Nigerian Student, CGPA 3.5+, 200-400 Level"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Description</Label>
-              <Textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Scholarship description..."
-                rows={3}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Application URL</Label>
-              <Input
-                value={formData.application_url}
-                onChange={(e) => setFormData({ ...formData, application_url: e.target.value })}
-                placeholder="https://..."
-              />
-            </div>
-            <div className="flex justify-end gap-3 pt-4">
-              <Button variant="outline" onClick={() => setModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleSubmit}>
-                {editingScholarship ? 'Update' : 'Create'}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

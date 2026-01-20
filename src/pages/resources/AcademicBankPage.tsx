@@ -26,8 +26,8 @@ interface AuditLog {
   action: string;
   table_name: string;
   record_id: string | null;
-  old_data: any;
-  new_data: any;
+  old_data: Record<string, unknown> | null;
+  new_data: Record<string, unknown> | null;
   created_at: string;
   user_id: string | null;
   user_email?: string;
@@ -160,7 +160,7 @@ const AcademicBankPage = () => {
 
       // Fetch user emails for the logs
       const userIds = [...new Set((data || []).map(log => log.user_id).filter(Boolean))];
-      let userEmailMap: Record<string, string> = {};
+      const userEmailMap: Record<string, string> = {};
       
       if (userIds.length > 0) {
         const { data: profiles } = await supabase
@@ -478,9 +478,10 @@ const AcademicBankPage = () => {
       setUploadQueue(prev => prev.map(i => i.id === item.id ? { ...i, status: 'success', progress: 100 } : i));
       setResources(prev => [...prev, data as AcademicResource]);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Upload error:', error);
-      setUploadQueue(prev => prev.map(i => i.id === item.id ? { ...i, status: 'error', progress: 0, error: error.message || 'Failed' } : i));
+      const errorMessage = error instanceof Error ? error.message : 'Failed';
+      setUploadQueue(prev => prev.map(i => i.id === item.id ? { ...i, status: 'error', progress: 0, error: errorMessage } : i));
     }
   };
 
@@ -1074,6 +1075,7 @@ const AcademicBankPage = () => {
                     handleFolderUpload(e);
                     setShowUploadModal(false);
                   }}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   {...{ webkitdirectory: '', directory: '' } as any}
                   multiple
                 />

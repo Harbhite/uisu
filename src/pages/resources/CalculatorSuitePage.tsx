@@ -225,7 +225,7 @@ const PercentageCalculator = () => {
   return (
     <div className="bg-white border border-slate-200 p-6 max-w-md mx-auto">
       <div className="space-y-4">
-        <Select value={mode} onValueChange={(v: any) => setMode(v)}>
+        <Select value={mode} onValueChange={(v) => setMode(v as 'of' | 'increase' | 'decrease' | 'what')}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>

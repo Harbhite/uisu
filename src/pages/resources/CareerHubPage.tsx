@@ -3,24 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, Search, Briefcase, MapPin, Clock, Building2, 
-  Bookmark, BookmarkCheck, ExternalLink, FileText, Users,
-  ChevronDown, Download, CheckCircle2, Plus, Pencil, Trash2, Upload, Eye, EyeOff, Sparkles
+  Bookmark, BookmarkCheck, ExternalLink, FileText,
+  Download, CheckCircle2
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { useAdminCheck } from '@/hooks/useAdminCheck';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import CVBuilder from '@/components/CVBuilder';
+import { CVBuilder } from '@/components/CVBuilder';
 
 type JobType = 'all' | 'full-time' | 'part-time' | 'remote' | 'internship';
 
@@ -29,28 +19,143 @@ interface Job {
   title: string;
   company: string;
   location: string;
-  job_type: 'full-time' | 'part-time' | 'remote' | 'internship';
+  type: 'full-time' | 'part-time' | 'remote' | 'internship';
   industry: string;
-  created_at: string;
+  posted: string;
   description: string;
   requirements: string[];
   salary?: string;
-  application_url?: string;
-  deadline?: string;
-  is_approved: boolean;
-  submitted_by?: string;
 }
 
-interface CVTemplate {
-  id: string;
-  title: string;
-  description: string;
-  file_url: string;
-  format: string;
-  download_count: number;
-  is_approved: boolean;
-  uploaded_by?: string;
-}
+const jobs: Job[] = [
+  {
+    id: 'campus-rep-mtn',
+    title: 'Campus Brand Ambassador',
+    company: 'MTN Nigeria',
+    location: 'University of Ibadan',
+    type: 'part-time',
+    industry: 'Telecommunications',
+    posted: '2 days ago',
+    description: 'Represent MTN brand on campus, organize activations, and drive student engagement.',
+    requirements: ['Current UI Student', 'Good Communication', '200-400 Level'],
+    salary: '₦30,000/month'
+  },
+  {
+    id: 'tech-intern-andela',
+    title: 'Software Engineering Intern',
+    company: 'Andela',
+    location: 'Lagos / Remote',
+    type: 'internship',
+    industry: 'Technology',
+    posted: '1 week ago',
+    description: 'Join our engineering team to build products used by companies worldwide.',
+    requirements: ['Computer Science Student', 'JavaScript/Python', 'Problem Solving'],
+    salary: '₦150,000/month'
+  },
+  {
+    id: 'research-assist',
+    title: 'Research Assistant',
+    company: 'UI Department of Chemistry',
+    location: 'University of Ibadan',
+    type: 'part-time',
+    industry: 'Research',
+    posted: '3 days ago',
+    description: 'Assist faculty with ongoing research projects and laboratory work.',
+    requirements: ['Chemistry Student', '300+ Level', 'Lab Experience'],
+    salary: '₦25,000/month'
+  },
+  {
+    id: 'content-writer',
+    title: 'Content Writer (Remote)',
+    company: 'TechCabal',
+    location: 'Remote',
+    type: 'remote',
+    industry: 'Media',
+    posted: '5 days ago',
+    description: 'Write engaging articles about technology and startups in Africa.',
+    requirements: ['Excellent Writing', 'Tech Knowledge', 'Self-motivated'],
+    salary: '₦80,000/month'
+  },
+  {
+    id: 'grad-trainee-gtb',
+    title: 'Graduate Trainee Program',
+    company: 'GTBank',
+    location: 'Lagos',
+    type: 'full-time',
+    industry: 'Banking',
+    posted: '1 week ago',
+    description: 'Comprehensive 12-month training program for fresh graduates.',
+    requirements: ['Recent Graduate', 'First Class/2.1', 'Under 26 years'],
+    salary: '₦250,000/month'
+  },
+  {
+    id: 'data-analyst-intern',
+    title: 'Data Analytics Intern',
+    company: 'Flutterwave',
+    location: 'Lagos / Remote',
+    type: 'internship',
+    industry: 'Fintech',
+    posted: '4 days ago',
+    description: 'Work with data team to analyze payment trends and generate insights.',
+    requirements: ['Statistics/Economics', 'Excel/Python', 'Analytical Mind'],
+    salary: '₦120,000/month'
+  },
+  {
+    id: 'library-assist',
+    title: 'Student Library Assistant',
+    company: 'Kenneth Dike Library',
+    location: 'University of Ibadan',
+    type: 'part-time',
+    industry: 'Education',
+    posted: '1 day ago',
+    description: 'Help with library operations, shelving, and assisting other students.',
+    requirements: ['Current UI Student', 'Organized', 'Flexible Schedule'],
+    salary: '₦20,000/month'
+  },
+  {
+    id: 'marketing-intern',
+    title: 'Digital Marketing Intern',
+    company: 'Paystack',
+    location: 'Lagos',
+    type: 'internship',
+    industry: 'Fintech',
+    posted: '6 days ago',
+    description: 'Support marketing campaigns, social media management, and content creation.',
+    requirements: ['Marketing Student', 'Social Media Savvy', 'Creative'],
+    salary: '₦100,000/month'
+  },
+  {
+    id: 'tutor-position',
+    title: 'Academic Tutor',
+    company: 'PrepClass',
+    location: 'Ibadan / Remote',
+    type: 'part-time',
+    industry: 'Education',
+    posted: '2 days ago',
+    description: 'Teach secondary school students in your area of expertise.',
+    requirements: ['300+ Level', 'CGPA 4.0+', 'Teaching Skills'],
+    salary: '₦3,000/hour'
+  },
+  {
+    id: 'ui-ux-intern',
+    title: 'UI/UX Design Intern',
+    company: 'Cowrywise',
+    location: 'Lagos / Remote',
+    type: 'internship',
+    industry: 'Fintech',
+    posted: '1 week ago',
+    description: 'Design user interfaces and experiences for our investment platform.',
+    requirements: ['Design Portfolio', 'Figma', 'User Research'],
+    salary: '₦130,000/month'
+  }
+];
+
+const cvResources = [
+  { title: 'ATS-Friendly CV Template', format: 'DOCX', description: 'Clean template that passes applicant tracking systems.' },
+  { title: 'Nigerian Graduate CV Guide', format: 'PDF', description: 'How to write a CV for the Nigerian job market.' },
+  { title: 'Cover Letter Templates', format: 'DOCX', description: 'Professional cover letter templates for various industries.' },
+  { title: 'LinkedIn Profile Optimization', format: 'PDF', description: 'Tips to make your LinkedIn profile stand out.' }
+];
 
 const interviewTips = [
   {
@@ -112,25 +217,9 @@ const JobCard: React.FC<{
   job: Job;
   isBookmarked: boolean;
   onToggleBookmark: () => void;
-  onEdit?: () => void;
-  onDelete?: () => void;
-  onApprove?: () => void;
   index: number;
-  isStaff?: boolean;
-  showApprovalStatus?: boolean;
-}> = ({ job, isBookmarked, onToggleBookmark, onEdit, onDelete, onApprove, index, isStaff, showApprovalStatus }) => {
-  const config = typeConfig[job.job_type];
-
-  const timeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-    return `${Math.floor(diffDays / 30)} months ago`;
-  };
+}> = ({ job, isBookmarked, onToggleBookmark, index }) => {
+  const config = typeConfig[job.type];
 
   return (
     <motion.div
@@ -139,57 +228,23 @@ const JobCard: React.FC<{
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ delay: index * 0.05, duration: 0.4 }}
-      className={`bg-white border hover:border-nobel-gold/50 hover:shadow-lg transition-all duration-300 group ${
-        !job.is_approved ? 'border-amber-200 bg-amber-50/30' : 'border-slate-100'
-      }`}
+      className="bg-white border border-slate-100 hover:border-nobel-gold/50 hover:shadow-lg transition-all duration-300 group"
     >
-      <div className="p-4 md:p-8">
+      <div className="p-6 md:p-8">
         <div className="flex justify-between items-start mb-4">
           <div className="w-12 h-12 bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
             <Building2 size={20} />
           </div>
-          <div className="flex items-center gap-1">
-            {showApprovalStatus && !job.is_approved && (
-              <Badge variant="outline" className="text-amber-600 border-amber-300 text-[9px]">
-                Pending
-              </Badge>
-            )}
-            {isStaff && (
-              <>
-                {!job.is_approved && onApprove && (
-                  <button
-                    onClick={onApprove}
-                    className="p-2 text-slate-300 hover:text-green-500 transition-colors"
-                    title="Approve"
-                  >
-                    <CheckCircle2 size={16} />
-                  </button>
-                )}
-                <button
-                  onClick={onEdit}
-                  className="p-2 text-slate-300 hover:text-ui-blue transition-colors"
-                >
-                  <Pencil size={16} />
-                </button>
-                <button
-                  onClick={onDelete}
-                  className="p-2 text-slate-300 hover:text-red-500 transition-colors"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </>
-            )}
-            <button
-              onClick={onToggleBookmark}
-              className={`p-2 transition-colors ${
-                isBookmarked 
-                  ? 'text-nobel-gold' 
-                  : 'text-slate-300 hover:text-slate-600'
-              }`}
-            >
-              {isBookmarked ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
-            </button>
-          </div>
+          <button
+            onClick={onToggleBookmark}
+            className={`p-2 transition-colors ${
+              isBookmarked
+                ? 'text-nobel-gold'
+                : 'text-slate-300 hover:text-slate-600'
+            }`}
+          >
+            {isBookmarked ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
+          </button>
         </div>
 
         <div className="flex items-center gap-2 mb-3">
@@ -221,7 +276,7 @@ const JobCard: React.FC<{
             <MapPin size={12} /> {job.location}
           </span>
           <span className="flex items-center gap-1">
-            <Clock size={12} /> {timeAgo(job.created_at)}
+            <Clock size={12} /> {job.posted}
           </span>
         </div>
 
@@ -233,376 +288,36 @@ const JobCard: React.FC<{
         )}
       </div>
 
-      <div className="px-8 py-4 border-t border-slate-100 bg-slate-50">
-        <a 
-          href={job.application_url || '#'}
-          className="flex items-center justify-center gap-2 w-full py-3 bg-ui-blue text-white text-[10px] font-bold uppercase tracking-widest hover:bg-nobel-gold transition-colors"
-        >
+      <div className="px-6 md:px-8 py-4 border-t border-slate-100 bg-slate-50">
+        <button className="flex items-center justify-center gap-2 w-full py-3 bg-ui-blue text-white text-[10px] font-bold uppercase tracking-widest hover:bg-nobel-gold transition-colors">
           Quick Apply <ExternalLink size={12} />
-        </a>
+        </button>
       </div>
     </motion.div>
   );
 };
-
-interface JobFormData {
-  title: string;
-  company: string;
-  location: string;
-  job_type: 'full-time' | 'part-time' | 'remote' | 'internship';
-  industry: string;
-  description: string;
-  requirements: string;
-  salary: string;
-  application_url: string;
-  deadline: string;
-}
-
-interface CVFormData {
-  title: string;
-  description: string;
-  format: string;
-  file: File | null;
-}
 
 const CareerHubPage = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeType, setActiveType] = useState<JobType>('all');
   const [activeTab, setActiveTab] = useState('jobs');
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [cvTemplates, setCVTemplates] = useState<CVTemplate[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [jobModalOpen, setJobModalOpen] = useState(false);
-  const [cvModalOpen, setCVModalOpen] = useState(false);
-  const [cvBuilderOpen, setCVBuilderOpen] = useState(false);
-  const [editingJob, setEditingJob] = useState<Job | null>(null);
-  const [showPending, setShowPending] = useState(false);
-  const [uploading, setUploading] = useState(false);
 
-  const [jobFormData, setJobFormData] = useState<JobFormData>({
-    title: '',
-    company: '',
-    location: '',
-    job_type: 'full-time',
-    industry: '',
-    description: '',
-    requirements: '',
-    salary: '',
-    application_url: '',
-    deadline: ''
-  });
-
-  const [cvFormData, setCVFormData] = useState<CVFormData>({
-    title: '',
-    description: '',
-    format: 'PDF',
-    file: null
-  });
-
-  const { user, isStaff } = useAdminCheck();
   const { bookmarks, toggle, isBookmarked } = useBookmarks('career-hub-bookmarks');
-
-  const fetchJobs = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('job_listings')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      setJobs(data?.map(j => ({
-        id: j.id,
-        title: j.title,
-        company: j.company,
-        location: j.location,
-        job_type: j.job_type as 'full-time' | 'part-time' | 'remote' | 'internship',
-        industry: j.industry,
-        created_at: j.created_at || new Date().toISOString(),
-        description: j.description || '',
-        requirements: j.requirements || [],
-        salary: j.salary || undefined,
-        application_url: j.application_url || undefined,
-        deadline: j.deadline || undefined,
-        is_approved: j.is_approved ?? true,
-        submitted_by: j.submitted_by || undefined
-      })) || []);
-    } catch (error) {
-      console.error('Error fetching jobs:', error);
-      toast.error('Failed to load job listings');
-    }
-  };
-
-  const fetchCVTemplates = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('cv_templates')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      setCVTemplates(data?.map(cv => ({
-        id: cv.id,
-        title: cv.title,
-        description: cv.description || '',
-        file_url: cv.file_url || '',
-        format: cv.format,
-        download_count: cv.download_count || 0,
-        is_approved: cv.is_approved ?? false,
-        uploaded_by: cv.uploaded_by || undefined
-      })) || []);
-    } catch (error) {
-      console.error('Error fetching CV templates:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchJobs();
-    fetchCVTemplates();
-  }, []);
 
   const handleBookmark = (id: string) => {
     toggle(id);
     toast.success(isBookmarked(id) ? 'Removed from saved' : 'Job saved!');
   };
 
-  const openCreateJobModal = () => {
-    setEditingJob(null);
-    setJobFormData({
-      title: '',
-      company: '',
-      location: '',
-      job_type: 'full-time',
-      industry: '',
-      description: '',
-      requirements: '',
-      salary: '',
-      application_url: '',
-      deadline: ''
-    });
-    setJobModalOpen(true);
-  };
-
-  const openEditJobModal = (job: Job) => {
-    setEditingJob(job);
-    setJobFormData({
-      title: job.title,
-      company: job.company,
-      location: job.location,
-      job_type: job.job_type,
-      industry: job.industry,
-      description: job.description,
-      requirements: job.requirements.join(', '),
-      salary: job.salary || '',
-      application_url: job.application_url || '',
-      deadline: job.deadline || ''
-    });
-    setJobModalOpen(true);
-  };
-
-  const handleJobSubmit = async () => {
-    if (!jobFormData.title || !jobFormData.company || !jobFormData.location || !jobFormData.industry) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    const requirementsArray = jobFormData.requirements
-      .split(',')
-      .map(r => r.trim())
-      .filter(r => r.length > 0);
-
-    try {
-      if (editingJob) {
-        const { error } = await supabase
-          .from('job_listings')
-          .update({
-            title: jobFormData.title,
-            company: jobFormData.company,
-            location: jobFormData.location,
-            job_type: jobFormData.job_type,
-            industry: jobFormData.industry,
-            description: jobFormData.description,
-            requirements: requirementsArray,
-            salary: jobFormData.salary || null,
-            application_url: jobFormData.application_url || null,
-            deadline: jobFormData.deadline || null,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', editingJob.id);
-
-        if (error) throw error;
-        toast.success('Job updated successfully');
-      } else {
-        const isUserSubmission = !isStaff;
-        const { error } = await supabase
-          .from('job_listings')
-          .insert({
-            title: jobFormData.title,
-            company: jobFormData.company,
-            location: jobFormData.location,
-            job_type: jobFormData.job_type,
-            industry: jobFormData.industry,
-            description: jobFormData.description,
-            requirements: requirementsArray,
-            salary: jobFormData.salary || null,
-            application_url: jobFormData.application_url || null,
-            deadline: jobFormData.deadline || null,
-            submitted_by: user?.id,
-            is_approved: isStaff // Auto-approve if staff, else pending
-          });
-
-        if (error) throw error;
-        toast.success(isStaff ? 'Job created successfully' : 'Job submitted for review!');
-      }
-
-      setJobModalOpen(false);
-      fetchJobs();
-    } catch (error: any) {
-      console.error('Error saving job:', error);
-      toast.error(error.message || 'Failed to save job');
-    }
-  };
-
-  const handleDeleteJob = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this job listing?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('job_listings')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      toast.success('Job deleted successfully');
-      fetchJobs();
-    } catch (error: any) {
-      console.error('Error deleting job:', error);
-      toast.error(error.message || 'Failed to delete job');
-    }
-  };
-
-  const handleApproveJob = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('job_listings')
-        .update({ is_approved: true, updated_at: new Date().toISOString() })
-        .eq('id', id);
-
-      if (error) throw error;
-      toast.success('Job approved successfully');
-      fetchJobs();
-    } catch (error: any) {
-      console.error('Error approving job:', error);
-      toast.error(error.message || 'Failed to approve job');
-    }
-  };
-
-  const handleCVUpload = async () => {
-    if (!cvFormData.title || !cvFormData.file) {
-      toast.error('Please provide a title and file');
-      return;
-    }
-
-    if (!user) {
-      toast.error('Please login to upload CV templates');
-      return;
-    }
-
-    setUploading(true);
-
-    try {
-      const fileExt = cvFormData.file.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('cv-templates')
-        .upload(fileName, cvFormData.file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('cv-templates')
-        .getPublicUrl(fileName);
-
-      const { error } = await supabase
-        .from('cv_templates')
-        .insert({
-          title: cvFormData.title,
-          description: cvFormData.description,
-          file_url: publicUrl,
-          format: fileExt?.toUpperCase() || cvFormData.format,
-          uploaded_by: user.id,
-          is_approved: isStaff
-        });
-
-      if (error) throw error;
-
-      toast.success(isStaff ? 'CV template uploaded!' : 'CV template submitted for review!');
-      setCVModalOpen(false);
-      setCVFormData({ title: '', description: '', format: 'PDF', file: null });
-      fetchCVTemplates();
-    } catch (error: any) {
-      console.error('Error uploading CV:', error);
-      toast.error(error.message || 'Failed to upload CV template');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleApproveCVTemplate = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('cv_templates')
-        .update({ is_approved: true, updated_at: new Date().toISOString() })
-        .eq('id', id);
-
-      if (error) throw error;
-      toast.success('CV template approved');
-      fetchCVTemplates();
-    } catch (error: any) {
-      console.error('Error approving CV:', error);
-      toast.error(error.message || 'Failed to approve');
-    }
-  };
-
-  const handleDeleteCVTemplate = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this CV template?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('cv_templates')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      toast.success('CV template deleted');
-      fetchCVTemplates();
-    } catch (error: any) {
-      console.error('Error deleting CV:', error);
-      toast.error(error.message || 'Failed to delete');
-    }
-  };
-
   const filteredJobs = useMemo(() => {
     return jobs.filter(job => {
       const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            job.company.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesType = activeType === 'all' || job.job_type === activeType;
-      const matchesApproval = showPending ? true : job.is_approved;
-      return matchesSearch && matchesType && matchesApproval;
+      const matchesType = activeType === 'all' || job.type === activeType;
+      return matchesSearch && matchesType;
     });
-  }, [searchTerm, activeType, jobs, showPending]);
-
-  const visibleCVTemplates = useMemo(() => {
-    if (isStaff) return cvTemplates;
-    return cvTemplates.filter(cv => cv.is_approved || cv.uploaded_by === user?.id);
-  }, [cvTemplates, isStaff, user]);
+  }, [searchTerm, activeType]);
 
   const types: { value: JobType; label: string }[] = [
     { value: 'all', label: 'All' },
@@ -611,14 +326,6 @@ const CareerHubPage = () => {
     { value: 'full-time', label: 'Full-time' },
     { value: 'remote', label: 'Remote' }
   ];
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-slate-50 pt-24 md:pt-32 pb-20">
@@ -642,31 +349,10 @@ const CareerHubPage = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-between mb-4"
+            className="flex items-center gap-4 mb-4"
           >
-            <div className="flex items-center gap-4">
-              <Briefcase className="text-nobel-gold w-6 h-6" />
-              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-slate-400">Employment</span>
-            </div>
-            <div className="flex items-center gap-2">
-              {isStaff && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowPending(!showPending)}
-                  className="gap-2"
-                >
-                  {showPending ? <EyeOff size={14} /> : <Eye size={14} />}
-                  {showPending ? 'Hide Pending' : 'Show Pending'}
-                </Button>
-              )}
-              {user && (
-                <Button onClick={openCreateJobModal} className="gap-2">
-                  <Plus size={16} />
-                  {isStaff ? 'Add Job' : 'Submit Job'}
-                </Button>
-              )}
-            </div>
+            <Briefcase className="text-nobel-gold w-6 h-6" />
+            <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-slate-400">Employment</span>
           </motion.div>
 
           <motion.h1
@@ -754,12 +440,7 @@ const CareerHubPage = () => {
                     job={job}
                     isBookmarked={isBookmarked(job.id)}
                     onToggleBookmark={() => handleBookmark(job.id)}
-                    onEdit={() => openEditJobModal(job)}
-                    onDelete={() => handleDeleteJob(job.id)}
-                    onApprove={() => handleApproveJob(job.id)}
                     index={index}
-                    isStaff={isStaff}
-                    showApprovalStatus={showPending || job.submitted_by === user?.id}
                   />
                 ))}
               </AnimatePresence>
@@ -784,102 +465,38 @@ const CareerHubPage = () => {
 
           <TabsContent value="cv-resources" className="mt-0">
             <div className="max-w-4xl">
-              <div className="mb-8 md:mb-12 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h2 className="font-serif text-2xl md:text-3xl text-ui-blue mb-2 md:mb-4">CV Resources & <span className="italic text-slate-300">Templates</span></h2>
-                  <p className="text-slate-500 font-light text-sm md:text-base">Download professional templates and guides to create a standout application.</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button onClick={() => setCVBuilderOpen(true)} className="gap-2 bg-nobel-gold hover:bg-nobel-gold/90">
-                    <Sparkles size={16} />
-                    <span className="hidden sm:inline">Build CV</span>
-                    <span className="sm:hidden">Build</span>
-                  </Button>
-                  {user && (
-                    <Button onClick={() => setCVModalOpen(true)} variant="outline" className="gap-2">
-                      <Upload size={16} />
-                      <span className="hidden sm:inline">Upload Template</span>
-                      <span className="sm:hidden">Upload</span>
-                    </Button>
-                  )}
-                </div>
+              <div className="mb-12">
+                <h2 className="font-serif text-3xl text-ui-blue mb-4">CV Resources & <span className="italic text-slate-300">Templates</span></h2>
+                <p className="text-slate-500 font-light">Download professional templates and guides to create a standout application.</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {visibleCVTemplates.map((cv, i) => (
+                {cvResources.map((resource, i) => (
                   <motion.div
-                    key={cv.id}
+                    key={i}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.1 }}
-                    className={`bg-white border p-8 hover:border-nobel-gold/50 hover:shadow-lg transition-all group ${
-                      !cv.is_approved ? 'border-amber-200 bg-amber-50/30' : 'border-slate-100'
-                    }`}
+                    className="bg-white border border-slate-100 p-8 hover:border-nobel-gold/50 hover:shadow-lg transition-all group"
                   >
-                    <div className="flex items-start justify-between gap-4 mb-4">
-                      <div className="flex items-start gap-4 flex-1">
-                        <div className="w-12 h-12 bg-slate-50 border border-slate-100 flex items-center justify-center text-ui-blue shrink-0">
-                          <FileText size={20} />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[9px] font-bold uppercase tracking-widest text-nobel-gold">{cv.format}</span>
-                            {!cv.is_approved && (
-                              <Badge variant="outline" className="text-amber-600 border-amber-300 text-[9px]">
-                                Pending
-                              </Badge>
-                            )}
-                          </div>
-                          <h3 className="font-serif text-xl text-ui-blue group-hover:text-nobel-gold transition-colors">
-                            {cv.title}
-                          </h3>
-                        </div>
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="w-12 h-12 bg-slate-50 border border-slate-100 flex items-center justify-center text-ui-blue">
+                        <FileText size={20} />
                       </div>
-                      {isStaff && (
-                        <div className="flex items-center gap-1">
-                          {!cv.is_approved && (
-                            <button
-                              onClick={() => handleApproveCVTemplate(cv.id)}
-                              className="p-2 text-slate-300 hover:text-green-500 transition-colors"
-                            >
-                              <CheckCircle2 size={16} />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleDeleteCVTemplate(cv.id)}
-                            className="p-2 text-slate-300 hover:text-red-500 transition-colors"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      )}
+                      <div className="flex-1">
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-nobel-gold">{resource.format}</span>
+                        <h3 className="font-serif text-xl text-ui-blue group-hover:text-nobel-gold transition-colors">
+                          {resource.title}
+                        </h3>
+                      </div>
                     </div>
-                    <p className="text-slate-600 font-light text-sm mb-6">{cv.description}</p>
-                    <a 
-                      href={cv.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-ui-blue hover:text-nobel-gold transition-colors"
-                    >
-                      <Download size={14} /> Download ({cv.download_count})
-                    </a>
+                    <p className="text-slate-600 font-light text-sm mb-6">{resource.description}</p>
+                    <button className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-ui-blue hover:text-nobel-gold transition-colors">
+                      <Download size={14} /> Download
+                    </button>
                   </motion.div>
                 ))}
               </div>
-
-              {visibleCVTemplates.length === 0 && (
-                <div className="text-center py-16 bg-white border border-slate-100">
-                  <FileText className="mx-auto text-slate-200 mb-6" size={48} />
-                  <h3 className="font-serif text-xl text-slate-400 mb-2">No CV templates yet</h3>
-                  <p className="text-slate-300 mb-4">Be the first to upload a template!</p>
-                  {user && (
-                    <Button onClick={() => setCVModalOpen(true)}>
-                      <Upload size={16} className="mr-2" />
-                      Upload Template
-                    </Button>
-                  )}
-                </div>
-              )}
 
               <div className="mt-12 bg-ui-blue text-white p-8 md:p-12">
                 <h3 className="font-serif text-2xl mb-4">ATS Tips</h3>
@@ -943,183 +560,6 @@ const CareerHubPage = () => {
           </TabsContent>
         </Tabs>
       </div>
-
-      {/* Job Modal */}
-      <Dialog open={jobModalOpen} onOpenChange={setJobModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="font-serif text-2xl">
-              {editingJob ? 'Edit Job Listing' : (isStaff ? 'Add New Job' : 'Submit Job Listing')}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 mt-4">
-            {!isStaff && !editingJob && (
-              <div className="bg-amber-50 border border-amber-200 rounded-md p-4 text-amber-800 text-sm">
-                Your job submission will be reviewed by staff before being published.
-              </div>
-            )}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Job Title *</Label>
-                <Input
-                  value={jobFormData.title}
-                  onChange={(e) => setJobFormData({ ...jobFormData, title: e.target.value })}
-                  placeholder="Software Engineer"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Company *</Label>
-                <Input
-                  value={jobFormData.company}
-                  onChange={(e) => setJobFormData({ ...jobFormData, company: e.target.value })}
-                  placeholder="Company name"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>Location *</Label>
-                <Input
-                  value={jobFormData.location}
-                  onChange={(e) => setJobFormData({ ...jobFormData, location: e.target.value })}
-                  placeholder="Lagos / Remote"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Job Type</Label>
-                <Select
-                  value={jobFormData.job_type}
-                  onValueChange={(value: 'full-time' | 'part-time' | 'remote' | 'internship') => 
-                    setJobFormData({ ...jobFormData, job_type: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="full-time">Full-time</SelectItem>
-                    <SelectItem value="part-time">Part-time</SelectItem>
-                    <SelectItem value="remote">Remote</SelectItem>
-                    <SelectItem value="internship">Internship</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Industry *</Label>
-                <Input
-                  value={jobFormData.industry}
-                  onChange={(e) => setJobFormData({ ...jobFormData, industry: e.target.value })}
-                  placeholder="Technology"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Description</Label>
-              <Textarea
-                value={jobFormData.description}
-                onChange={(e) => setJobFormData({ ...jobFormData, description: e.target.value })}
-                placeholder="Job description..."
-                rows={3}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Requirements (comma-separated)</Label>
-              <Input
-                value={jobFormData.requirements}
-                onChange={(e) => setJobFormData({ ...jobFormData, requirements: e.target.value })}
-                placeholder="3+ years experience, JavaScript, React"
-              />
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>Salary</Label>
-                <Input
-                  value={jobFormData.salary}
-                  onChange={(e) => setJobFormData({ ...jobFormData, salary: e.target.value })}
-                  placeholder="₦150,000/month"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Application URL</Label>
-                <Input
-                  value={jobFormData.application_url}
-                  onChange={(e) => setJobFormData({ ...jobFormData, application_url: e.target.value })}
-                  placeholder="https://..."
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Deadline</Label>
-                <Input
-                  type="date"
-                  value={jobFormData.deadline}
-                  onChange={(e) => setJobFormData({ ...jobFormData, deadline: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-3 pt-4">
-              <Button variant="outline" onClick={() => setJobModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleJobSubmit}>
-                {editingJob ? 'Update' : (isStaff ? 'Create' : 'Submit')}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* CV Upload Modal */}
-      <Dialog open={cvModalOpen} onOpenChange={setCVModalOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="font-serif text-2xl">Upload CV Template</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 mt-4">
-            {!isStaff && (
-              <div className="bg-amber-50 border border-amber-200 rounded-md p-4 text-amber-800 text-sm">
-                Your template will be reviewed before being published.
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label>Title *</Label>
-              <Input
-                value={cvFormData.title}
-                onChange={(e) => setCVFormData({ ...cvFormData, title: e.target.value })}
-                placeholder="ATS-Friendly CV Template"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Description</Label>
-              <Textarea
-                value={cvFormData.description}
-                onChange={(e) => setCVFormData({ ...cvFormData, description: e.target.value })}
-                placeholder="Brief description of this template..."
-                rows={2}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>File *</Label>
-              <Input
-                type="file"
-                accept=".pdf,.doc,.docx"
-                onChange={(e) => setCVFormData({ ...cvFormData, file: e.target.files?.[0] || null })}
-              />
-              <p className="text-xs text-slate-400">Accepted formats: PDF, DOC, DOCX</p>
-            </div>
-            <div className="flex justify-end gap-3 pt-4">
-              <Button variant="outline" onClick={() => setCVModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleCVUpload} disabled={uploading}>
-                {uploading ? 'Uploading...' : 'Upload'}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* CV Builder */}
-      <CVBuilder isOpen={cvBuilderOpen} onClose={() => setCVBuilderOpen(false)} />
     </div>
   );
 };

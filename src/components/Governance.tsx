@@ -1,11 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Landmark, Users, Scale, Gavel, Mic, Book, Coins, Shield, Trophy, Star, ArrowRight, Settings, Plus, Loader2, Briefcase, FileText, Heart, Globe, Building2, ChevronDown } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAdminCheck } from '@/hooks/useAdminCheck';
-import { CommitteeManagement } from './CommitteeManagement';
-import { Button } from '@/components/ui/button';
+import { ArrowLeft, Landmark, Users, Scale, Gavel, Mic, Book, Coins, Shield, Trophy, Star, ArrowRight, MapPin, Loader2, Briefcase, FileText, Heart, Globe, Building2, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface GovernanceProps {
   onBack: () => void;
@@ -185,51 +181,6 @@ const executiveCommittees = [
 
 export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
   const [activeTab, setActiveTab] = useState<'cec' | 'src' | 'committees'>('cec');
-  const [committeeManagementOpen, setCommitteeManagementOpen] = useState(false);
-  const [dbCommittees, setDbCommittees] = useState<any[]>([]);
-  const [loadingCommittees, setLoadingCommittees] = useState(true);
-  const { isStaff } = useAdminCheck();
-
-  useEffect(() => {
-    fetchCommittees();
-  }, []);
-
-  const fetchCommittees = async () => {
-    setLoadingCommittees(true);
-    const { data, error } = await supabase
-      .from('committees')
-      .select('*')
-      .eq('is_active', true)
-      .order('title');
-    
-    if (!error && data) {
-      setDbCommittees(data);
-    }
-    setLoadingCommittees(false);
-  };
-
-  const getIconComponent = (iconName: string | null) => {
-    const icons: Record<string, React.ReactNode> = {
-      'Coins': <Coins size={24} />,
-      'Scale': <Scale size={24} />,
-      'FileText': <FileText size={24} />,
-      'Heart': <Heart size={24} />,
-      'Trophy': <Trophy size={24} />,
-      'Globe': <Globe size={24} />,
-      'Briefcase': <Briefcase size={24} />,
-      'Building2': <Building2 size={24} />,
-      'Users': <Users size={24} />,
-    };
-    return icons[iconName || ''] || <Users size={24} />;
-  };
-
-  // Filter database committees by type
-  const dbLegislativeCommittees = dbCommittees.filter(c => 
-    ['Standing', 'Judicial'].includes(c.type)
-  );
-  const dbExecutiveCommittees = dbCommittees.filter(c => 
-    ['Statutory', 'Executive', 'Ad-hoc', 'Social', 'Welfare'].includes(c.type)
-  );
 
   return (
     <div className="min-h-screen bg-slate-50 pt-32 pb-16">
@@ -423,72 +374,26 @@ export const GovernancePage: React.FC<GovernanceProps> = ({ onBack }) => {
                     animate="visible"
                     className="max-w-5xl mx-auto space-y-6"
                 >
-                   {isStaff && (
-                     <div className="flex justify-end mb-4">
-                       <Button onClick={() => setCommitteeManagementOpen(true)} variant="outline">
-                         <Settings className="mr-2" size={16} /> Manage Committees
-                       </Button>
-                     </div>
-                   )}
+                   <AccordionSection title="Legislative Committees" defaultOpen={true}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {legislativeCommittees.map((committee, index) => (
+                                <CommitteeCard key={index} {...committee} />
+                            ))}
+                        </div>
+                   </AccordionSection>
 
-                   {loadingCommittees ? (
-                     <div className="flex items-center justify-center py-16">
-                       <Loader2 className="animate-spin text-slate-400" size={32} />
-                     </div>
-                   ) : (
-                     <>
-                       <AccordionSection title="Legislative Committees" defaultOpen={true}>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {dbLegislativeCommittees.length > 0 ? (
-                                  dbLegislativeCommittees.map((committee) => (
-                                    <CommitteeCard 
-                                      key={committee.id} 
-                                      title={committee.title}
-                                      desc={committee.description || ''}
-                                      icon={getIconComponent(committee.icon_name)}
-                                      type={committee.type}
-                                    />
-                                  ))
-                                ) : (
-                                  legislativeCommittees.map((committee, index) => (
-                                    <CommitteeCard key={index} {...committee} />
-                                  ))
-                                )}
-                            </div>
-                       </AccordionSection>
-
-                       <AccordionSection title="Executive Committees" defaultOpen={false}>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {dbExecutiveCommittees.length > 0 ? (
-                                  dbExecutiveCommittees.map((committee) => (
-                                    <CommitteeCard 
-                                      key={committee.id}
-                                      title={committee.title}
-                                      desc={committee.description || ''}
-                                      icon={getIconComponent(committee.icon_name)}
-                                      type={committee.type}
-                                    />
-                                  ))
-                                ) : (
-                                  executiveCommittees.map((committee, index) => (
-                                    <CommitteeCard key={index} {...committee} />
-                                  ))
-                                )}
-                            </div>
-                       </AccordionSection>
-                     </>
-                   )}
+                   <AccordionSection title="Executive Committees" defaultOpen={false}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {executiveCommittees.map((committee, index) => (
+                                <CommitteeCard key={index} {...committee} />
+                            ))}
+                        </div>
+                   </AccordionSection>
                 </motion.div>
             )}
 
         </div>
       </div>
-
-      <CommitteeManagement 
-        isOpen={committeeManagementOpen}
-        onClose={() => setCommitteeManagementOpen(false)}
-        onUpdate={fetchCommittees}
-      />
     </div>
   );
 };

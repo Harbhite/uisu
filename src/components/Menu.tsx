@@ -41,7 +41,7 @@ export const Menu = ({ isMenuOpen, setIsMenuOpen, navLinks }: MenuProps) => {
                         <Link
                         to={link.href}
                         onClick={() => setIsMenuOpen(false)}
-                        className="font-serif text-base md:text-lg tracking-[0.1em] hover:text-nobel-gold transition-colors block capitalize"
+                        className="font-serif text-base md:text-lg uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors block"
                         >
                         {link.name}
                         </Link>

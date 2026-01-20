@@ -288,13 +288,12 @@ const Index = () => {
 
   const navLinks = [
     { name: "Governance", href: "/governance" },
-    { name: "Constitution", href: "/constitution" },
     { name: "Leaders", href: "/current-leaders" },
-    { name: "Past leaders", href: "/past-leaders" },
+    { name: "Past Leaders", href: "/past-leaders" },
     { name: "Documents", href: "/documents" },
-    { name: "Inks vault", href: "/inks-vault" },
-    { name: "Campus map", href: "/campus-map" },
-    { name: "Halls of residence", href: "/halls" },
+    { name: "Inks Vault", href: "/inks-vault" },
+    { name: "Campus Map", href: "/campus-map" },
+    { name: "Halls of Residence", href: "/halls" },
     { name: "Communities", href: "/communities" },
     { name: "Events", href: "/events" },
     { name: "Announcements", href: "/announcements" },

@@ -45,7 +45,6 @@ const StyleGuidePage = lazy(() => import("./pages/StyleGuidePage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 const HistoryPage = lazy(() => import("./pages/HistoryPage"));
 const ConstitutionPage = lazy(() => import("./pages/ConstitutionPage"));
-const ProfileCardPage = lazy(() => import("./pages/ProfileCardPage"));
 
 const queryClient = new QueryClient();
 
@@ -111,9 +110,6 @@ const AppRoutes = () => {
 
         {/* Constitution Page */}
         <Route path="/constitution" element={<PageWrapper><ConstitutionPage /></PageWrapper>} />
-
-        {/* Profile Card Showcase */}
-        <Route path="/profile-card" element={<PageWrapper><ProfileCardPage /></PageWrapper>} />
 
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />

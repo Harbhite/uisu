@@ -51,7 +51,7 @@ const CodeBlock = ({ code }: { code: string }) => {
   );
 };
 
-const SectionHeader = ({ id, icon: Icon, title, subtitle }: { id: string; icon: any; title: string; subtitle: string }) => (
+const SectionHeader = ({ id, icon: Icon, title, subtitle }: { id: string; icon: React.ElementType; title: string; subtitle: string }) => (
   <div id={id} className="pt-32 mb-12 border-b border-slate-200 pb-6 scroll-mt-32 break-inside-avoid-page">
     <div className="flex items-center gap-4 text-primary mb-2">
       <Icon size={24} />
@@ -586,6 +586,7 @@ const data = [
                       contentStyle={{ background: '#003366', border: 'none', color: '#C5A059', fontSize: 12 }}
                       labelStyle={{ color: '#fff', fontWeight: 'bold' }}
                     />
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     <Bar dataKey="v" fill="#003366" cursor="pointer" onClick={(data: any) => alert(`Year: ${data.n}, Value: ${data.v}`)} />
                   </BarChart>
                 </ResponsiveContainer>
