@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, Search, Briefcase, MapPin, Clock, Building2, 
-  Bookmark, BookmarkCheck, ExternalLink, FileText, Users,
-  ChevronDown, Download, CheckCircle2
+  Bookmark, BookmarkCheck, ExternalLink, FileText,
+  Download, CheckCircle2
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
+import { CVBuilder } from '@/components/CVBuilder';
 
 type JobType = 'all' | 'full-time' | 'part-time' | 'remote' | 'internship';
 
@@ -229,7 +230,7 @@ const JobCard: React.FC<{
       transition={{ delay: index * 0.05, duration: 0.4 }}
       className="bg-white border border-slate-100 hover:border-nobel-gold/50 hover:shadow-lg transition-all duration-300 group"
     >
-      <div className="p-8">
+      <div className="p-6 md:p-8">
         <div className="flex justify-between items-start mb-4">
           <div className="w-12 h-12 bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
             <Building2 size={20} />
@@ -253,12 +254,12 @@ const JobCard: React.FC<{
           <span className="text-[10px] text-slate-400">{job.industry}</span>
         </div>
 
-        <h3 className="font-serif text-xl text-ui-blue group-hover:text-nobel-gold transition-colors mb-1">
+        <h3 className="font-serif text-xl text-ui-blue group-hover:text-nobel-gold transition-colors mb-1 line-clamp-2">
           {job.title}
         </h3>
         <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">{job.company}</p>
 
-        <p className="text-slate-600 leading-relaxed text-sm font-light mb-4">
+        <p className="text-slate-600 leading-relaxed text-sm font-light mb-4 line-clamp-3">
           {job.description}
         </p>
 
@@ -287,7 +288,7 @@ const JobCard: React.FC<{
         )}
       </div>
 
-      <div className="px-8 py-4 border-t border-slate-100 bg-slate-50">
+      <div className="px-6 md:px-8 py-4 border-t border-slate-100 bg-slate-50">
         <button className="flex items-center justify-center gap-2 w-full py-3 bg-ui-blue text-white text-[10px] font-bold uppercase tracking-widest hover:bg-nobel-gold transition-colors">
           Quick Apply <ExternalLink size={12} />
         </button>
@@ -327,16 +328,16 @@ const CareerHubPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-32 pb-20">
+    <div className="min-h-screen bg-slate-50 pt-24 md:pt-32 pb-20">
       <SEO 
         title="Career Hub - Resources" 
         description="Find jobs, internships, and career resources for UI students." 
       />
 
-      <div className="container mx-auto px-6">
+      <div className="container mx-auto px-4 md:px-6">
         <button
           onClick={() => navigate('/resources')}
-          className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors mb-12"
+          className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors mb-8 md:mb-12"
         >
           <div className="p-2 border border-slate-200 group-hover:border-nobel-gold transition-colors">
             <ArrowLeft size={14} />
@@ -344,7 +345,7 @@ const CareerHubPage = () => {
           <span>Resources</span>
         </button>
 
-        <div className="mb-16">
+        <div className="mb-12 md:mb-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -358,7 +359,7 @@ const CareerHubPage = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="font-serif text-5xl md:text-7xl text-ui-blue mb-6"
+            className="font-serif text-4xl md:text-5xl lg:text-7xl text-ui-blue mb-6"
           >
             Career <span className="italic text-slate-300">Hub</span>
           </motion.h1>
@@ -367,14 +368,14 @@ const CareerHubPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-xl text-slate-500 font-light max-w-2xl leading-relaxed"
+            className="text-lg md:text-xl text-slate-500 font-light max-w-2xl leading-relaxed"
           >
             Discover opportunities tailored for students and fresh graduates. Jobs, internships, CV resources, and interview preparation.
           </motion.p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full max-w-2xl bg-white border border-slate-200 p-1 h-auto mb-12 rounded-none">
+          <TabsList className="w-full max-w-full md:max-w-3xl bg-white border border-slate-200 p-1 h-auto mb-12 rounded-none flex flex-col sm:flex-row">
             <TabsTrigger 
               value="jobs" 
               className="flex-1 py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white rounded-none"
@@ -382,16 +383,22 @@ const CareerHubPage = () => {
               Jobs & Internships
             </TabsTrigger>
             <TabsTrigger 
-              value="cv" 
+              value="cv-builder"
               className="flex-1 py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white rounded-none"
             >
-              CV Resources
+              CV Builder <span className="ml-1 text-[8px] bg-nobel-gold px-1 text-white">AI</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="cv-resources"
+              className="flex-1 py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white rounded-none"
+            >
+              Downloads
             </TabsTrigger>
             <TabsTrigger 
               value="interview" 
               className="flex-1 py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white rounded-none"
             >
-              Interview Tips
+              Interviews
             </TabsTrigger>
           </TabsList>
 
@@ -404,7 +411,7 @@ const CareerHubPage = () => {
                   placeholder="Search jobs or companies..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 focus:border-nobel-gold focus:outline-none text-lg font-serif transition-colors"
+                  className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 focus:border-nobel-gold focus:outline-none text-base md:text-lg font-serif transition-colors"
                 />
               </div>
 
@@ -448,7 +455,15 @@ const CareerHubPage = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="cv" className="mt-0">
+          <TabsContent value="cv-builder" className="mt-0">
+             <div className="mb-8">
+                <h2 className="font-serif text-3xl text-ui-blue mb-2">AI CV <span className="italic text-slate-300">Builder</span></h2>
+                <p className="text-slate-500 font-light">Create a professional resume with AI assistance. Edit, preview, and print.</p>
+             </div>
+             <CVBuilder />
+          </TabsContent>
+
+          <TabsContent value="cv-resources" className="mt-0">
             <div className="max-w-4xl">
               <div className="mb-12">
                 <h2 className="font-serif text-3xl text-ui-blue mb-4">CV Resources & <span className="italic text-slate-300">Templates</span></h2>
