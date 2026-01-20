@@ -5,13 +5,14 @@ import { Users, GraduationCap, HandMetal, Library, BookOpen } from 'lucide-react
 
 gsap.registerPlugin(ScrollTrigger);
 
-const CrowdStrip = ({ direction = 1, speed = 1 }: { direction?: number, speed?: number }) => {
+const CrowdStrip = () => {
     // Generate a "crowd" of icons
     const icons = [Users, GraduationCap, HandMetal, Library, BookOpen];
-    const crowd = Array.from({ length: 30 }).map((_, i) => {
+
+    const renderIcons = (prefix: string) => Array.from({ length: 30 }).map((_, i) => {
         const Icon = icons[i % icons.length];
         return (
-            <div key={i} className="flex flex-col items-center justify-end px-2 transform hover:-translate-y-2 transition-transform duration-300">
+            <div key={`${prefix}-${i}`} className="flex flex-col items-center justify-end px-2 transform hover:-translate-y-2 transition-transform duration-300">
                 <Icon size={40 + Math.random() * 20} className="text-ui-dark opacity-80" strokeWidth={1} />
             </div>
         )
@@ -19,8 +20,8 @@ const CrowdStrip = ({ direction = 1, speed = 1 }: { direction?: number, speed?: 
 
     return (
         <div className="flex flex-row flex-nowrap w-[200vw] overflow-hidden py-4 border-b border-ui-dark/10">
-            {crowd}
-            {crowd} {/* Repeat for density */}
+            {renderIcons('set-a')}
+            {renderIcons('set-b')}
         </div>
     )
 }
@@ -42,16 +43,23 @@ export const EstablishmentSection: React.FC = () => {
             scrub: true,
         });
 
-        // Parallax/Movement for crowd
-        gsap.to(crowdRef.current, {
-            xPercent: -50,
+        // Parallax/Movement for crowd layers independently
+        gsap.to(".crowd-layer-1", {
+            xPercent: -10, // Slowest
             ease: "none",
-            scrollTrigger: {
-                trigger: sectionRef.current,
-                start: "top bottom",
-                end: "bottom top",
-                scrub: 1
-            }
+            scrollTrigger: { trigger: sectionRef.current, start: "top bottom", end: "bottom top", scrub: 1 }
+        });
+
+        gsap.to(".crowd-layer-2", {
+            xPercent: -20, // Medium
+            ease: "none",
+            scrollTrigger: { trigger: sectionRef.current, start: "top bottom", end: "bottom top", scrub: 1 }
+        });
+
+        gsap.to(".crowd-layer-3", {
+            xPercent: -40, // Fastest
+            ease: "none",
+            scrollTrigger: { trigger: sectionRef.current, start: "top bottom", end: "bottom top", scrub: 1 }
         });
 
         // Text reveal for Title
@@ -107,11 +115,11 @@ export const EstablishmentSection: React.FC = () => {
         </div>
 
         {/* Parallax Crowd at Bottom */}
-        <div ref={crowdRef} className="w-[400vw] flex flex-col justify-end pb-0 opacity-90 grayscale hover:grayscale-0 transition-all duration-700">
+        <div ref={crowdRef} className="w-[150vw] flex flex-col justify-end pb-0 opacity-90 grayscale hover:grayscale-0 transition-all duration-700">
             {/* Multiple rows to simulate depth */}
-            <div className="translate-x-[10vw] opacity-50 scale-90"><CrowdStrip speed={0.5} /></div>
-            <div className="-translate-x-[20vw] opacity-70 scale-95 z-10"><CrowdStrip speed={0.8} /></div>
-            <div className="translate-x-[5vw] z-20"><CrowdStrip speed={1.2} /></div>
+            <div className="crowd-layer-1 translate-x-[10vw] opacity-50 scale-90"><CrowdStrip /></div>
+            <div className="crowd-layer-2 -translate-x-[5vw] opacity-70 scale-95 z-10"><CrowdStrip /></div>
+            <div className="crowd-layer-3 translate-x-[0vw] z-20"><CrowdStrip /></div>
         </div>
     </section>
   );
