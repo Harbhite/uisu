@@ -669,7 +669,7 @@ const CareerHubPage = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full max-w-2xl bg-white border border-slate-200 p-1 h-auto mb-12 rounded-none">
+          <TabsList className="w-full max-w-2xl bg-white border border-slate-200 p-1 h-auto mb-12 rounded-none flex flex-col sm:flex-row">
             <TabsTrigger 
               value="jobs" 
               className="flex-1 py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white rounded-none"
