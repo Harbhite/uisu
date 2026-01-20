@@ -82,7 +82,12 @@ const templates: Template[] = [
   { id: 'minimal', name: 'Minimal', preview: '◻️', description: 'Clean and simple with lots of whitespace', color: '#374151' },
   { id: 'professional', name: 'Professional', preview: '💼', description: 'Corporate style with structured layout', color: '#0f766e' },
   { id: 'creative', name: 'Creative', preview: '🎨', description: 'Bold design for creative fields', color: '#dc2626' },
-  { id: 'executive', name: 'Executive', preview: '👔', description: 'Premium layout for senior positions', color: '#7c3aed' }
+  { id: 'executive', name: 'Executive', preview: '👔', description: 'Premium layout for senior positions', color: '#7c3aed' },
+  { id: 'tech', name: 'Tech', preview: '💻', description: 'Modern monospaced look for developers', color: '#10b981' },
+  { id: 'scholar', name: 'Scholar', preview: '🎓', description: 'Academic focus with serif typography', color: '#8b5cf6' },
+  { id: 'compact', name: 'Compact', preview: '📱', description: 'Single page optimized layout', color: '#f59e0b' },
+  { id: 'bold', name: 'Bold', preview: '🦁', description: 'Strong headers and high contrast', color: '#111827' },
+  { id: 'grid', name: 'Grid', preview: '📰', description: 'Organized two-column structure', color: '#0ea5e9' }
 ];
 
 const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
@@ -191,13 +196,20 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
     const printContent = printRef.current;
     if (!printContent) return;
 
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      toast.error('Please allow popups to print CV');
-      return;
-    }
+    // Use an iframe for printing to avoid popup blockers and ensure styles
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
 
-    printWindow.document.write(`
+    const doc = iframe.contentWindow?.document;
+    if (!doc) return;
+
+    doc.write(`
       <!DOCTYPE html>
       <html>
         <head>
@@ -214,12 +226,27 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
         </body>
       </html>
     `);
-    printWindow.document.close();
-    setTimeout(() => {
-      printWindow.print();
-      printWindow.close();
-    }, 250);
-    toast.success('Opening print dialog...');
+    doc.close();
+
+    // Wait for content to load then print
+    iframe.onload = () => {
+      setTimeout(() => {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+        // Remove iframe after printing (with a small delay to ensure print dialog triggers)
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, 1000);
+      }, 500);
+    };
+
+    // Fallback if onload doesn't trigger (e.g. cached/fast load)
+    if (iframe.contentWindow?.document.readyState === 'complete') {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+    }
+
+    toast.success('Preparing document...');
   };
 
   const renderTemplate = () => {
@@ -562,6 +589,285 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                 <div>
                   <h2 style="font-size: 12px; color: ${color}; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 14px; text-align: center;">── Expertise ──</h2>
                   <p style="font-size: 12px; color: #555; text-align: center; line-height: 1.8;">${skills.join(' • ')}</p>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `,
+      tech: `
+        <div style="font-family: 'Courier New', monospace; max-width: 800px; margin: 0 auto; color: #333;">
+          <div style="border-bottom: 2px solid ${color}; padding-bottom: 20px; margin-bottom: 30px;">
+            <h1 style="font-size: 32px; color: ${color}; margin-bottom: 10px;">&lt;${personalInfo.fullName || 'Dev_Name'} /&gt;</h1>
+            <div style="font-size: 12px;">
+              ${[personalInfo.email, personalInfo.phone, personalInfo.location, personalInfo.github].filter(Boolean).map(item => `[ "${item}" ]`).join(' ')}
+            </div>
+          </div>
+
+          ${personalInfo.summary ? `
+            <div style="margin-bottom: 30px;">
+              <h3 style="font-size: 16px; color: ${color}; font-weight: bold; margin-bottom: 10px;">// ABOUT_ME</h3>
+              <p style="font-size: 12px; line-height: 1.6;">${personalInfo.summary}</p>
+            </div>
+          ` : ''}
+
+          ${skills.length > 0 ? `
+            <div style="margin-bottom: 30px;">
+              <h3 style="font-size: 16px; color: ${color}; font-weight: bold; margin-bottom: 10px;">// TECH_STACK</h3>
+              <div style="font-size: 12px; line-height: 1.8;">
+                const skills = [ ${skills.map(s => `"${s}"`).join(', ')} ];
+              </div>
+            </div>
+          ` : ''}
+
+          ${experience.length > 0 ? `
+            <div style="margin-bottom: 30px;">
+              <h3 style="font-size: 16px; color: ${color}; font-weight: bold; margin-bottom: 15px;">// EXPERIENCE_LOG</h3>
+              ${experience.map(exp => `
+                <div style="margin-bottom: 20px; padding-left: 15px; border-left: 2px solid #eee;">
+                  <div style="font-weight: bold; font-size: 14px;">${exp.position} @ ${exp.company}</div>
+                  <div style="font-size: 11px; color: #666; margin-bottom: 5px;">${exp.startDate} -> ${exp.current ? 'Present' : exp.endDate}</div>
+                  ${exp.description ? `<div style="font-size: 12px; line-height: 1.5;">${exp.description}</div>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+
+          ${education.length > 0 ? `
+            <div>
+              <h3 style="font-size: 16px; color: ${color}; font-weight: bold; margin-bottom: 15px;">// EDUCATION_DATA</h3>
+              ${education.map(edu => `
+                <div style="margin-bottom: 10px;">
+                  <div style="font-weight: bold; font-size: 13px;">${edu.degree}</div>
+                  <div style="font-size: 11px;">${edu.institution} (${edu.startYear}-${edu.endYear})</div>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+        </div>
+      `,
+      scholar: `
+        <div style="font-family: Georgia, serif; max-width: 800px; margin: 0 auto; line-height: 1.6;">
+          <div style="text-align: center; margin-bottom: 40px;">
+            <h1 style="font-size: 30px; font-weight: normal; margin-bottom: 10px; color: ${color};">${personalInfo.fullName || 'Your Name'}</h1>
+            <div style="font-size: 12px; font-style: italic; color: #555;">
+              ${[personalInfo.email, personalInfo.phone, personalInfo.location].filter(Boolean).join(' • ')}
+            </div>
+          </div>
+
+          ${education.length > 0 ? `
+            <div style="margin-bottom: 30px;">
+              <h3 style="font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 15px; color: ${color};">Education</h3>
+              ${education.map(edu => `
+                <div style="margin-bottom: 12px;">
+                  <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 13px;">
+                    <span>${edu.institution}</span>
+                    <span>${edu.endYear}</span>
+                  </div>
+                  <div style="font-size: 13px; font-style: italic;">${edu.degree}${edu.field ? `, ${edu.field}` : ''}</div>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+
+          ${experience.length > 0 ? `
+            <div style="margin-bottom: 30px;">
+              <h3 style="font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 15px; color: ${color};">Professional History</h3>
+              ${experience.map(exp => `
+                <div style="margin-bottom: 20px;">
+                  <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 13px;">
+                    <span>${exp.company}</span>
+                    <span>${exp.startDate} – ${exp.current ? 'Present' : exp.endDate}</span>
+                  </div>
+                  <div style="font-size: 13px; font-style: italic; margin-bottom: 5px;">${exp.position}</div>
+                  ${exp.description ? `<div style="font-size: 12px; text-align: justify;">${exp.description}</div>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+
+          ${certifications.length > 0 ? `
+            <div style="margin-bottom: 30px;">
+              <h3 style="font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 15px; color: ${color};">Credentials</h3>
+              ${certifications.map(cert => `
+                <div style="font-size: 12px; margin-bottom: 5px;">
+                  <strong>${cert.name}</strong>, ${cert.issuer} (${cert.year})
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+
+          ${skills.length > 0 ? `
+            <div>
+              <h3 style="font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 15px; color: ${color};">Competencies</h3>
+              <div style="font-size: 12px;">${skills.join('; ')}</div>
+            </div>
+          ` : ''}
+        </div>
+      `,
+      compact: `
+        <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; display: grid; grid-template-columns: 200px 1fr; gap: 20px;">
+          <div style="background: #f5f5f5; padding: 20px; font-size: 11px;">
+            <h1 style="font-size: 20px; color: ${color}; margin-bottom: 20px; line-height: 1.2;">${personalInfo.fullName || 'Name'}</h1>
+
+            <div style="margin-bottom: 20px;">
+              <strong style="display: block; margin-bottom: 5px;">CONTACT</strong>
+              <div style="margin-bottom: 3px;">${personalInfo.email}</div>
+              <div style="margin-bottom: 3px;">${personalInfo.phone}</div>
+              <div>${personalInfo.location}</div>
+            </div>
+
+            ${skills.length > 0 ? `
+              <div style="margin-bottom: 20px;">
+                <strong style="display: block; margin-bottom: 8px;">SKILLS</strong>
+                ${skills.map(s => `<div style="margin-bottom: 4px;">• ${s}</div>`).join('')}
+              </div>
+            ` : ''}
+
+            ${education.length > 0 ? `
+              <div>
+                <strong style="display: block; margin-bottom: 8px;">EDUCATION</strong>
+                ${education.map(edu => `
+                  <div style="margin-bottom: 10px;">
+                    <div>${edu.degree}</div>
+                    <div style="color: #666;">${edu.institution}</div>
+                    <div style="color: #999;">${edu.endYear}</div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+          </div>
+
+          <div style="padding: 20px 0;">
+            ${personalInfo.summary ? `
+              <div style="margin-bottom: 25px; font-size: 12px; line-height: 1.5;">
+                <strong style="font-size: 14px; color: ${color}; display: block; margin-bottom: 8px; border-bottom: 2px solid ${color}; padding-bottom: 3px;">PROFILE</strong>
+                ${personalInfo.summary}
+              </div>
+            ` : ''}
+
+            ${experience.length > 0 ? `
+              <div>
+                <strong style="font-size: 14px; color: ${color}; display: block; margin-bottom: 15px; border-bottom: 2px solid ${color}; padding-bottom: 3px;">EXPERIENCE</strong>
+                ${experience.map(exp => `
+                  <div style="margin-bottom: 20px;">
+                    <div style="font-weight: bold; font-size: 13px;">${exp.position}</div>
+                    <div style="font-size: 11px; color: ${color}; margin-bottom: 5px;">${exp.company} | ${exp.startDate} - ${exp.current ? 'Present' : exp.endDate}</div>
+                    ${exp.description ? `<div style="font-size: 12px; line-height: 1.5;">${exp.description}</div>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `,
+      bold: `
+        <div style="font-family: 'Impact', sans-serif; max-width: 800px; margin: 0 auto;">
+          <div style="background: ${color}; color: white; padding: 40px; text-transform: uppercase;">
+            <h1 style="font-size: 48px; margin: 0; letter-spacing: 2px; line-height: 1;">${personalInfo.fullName?.split(' ')[0] || 'FIRST'}</h1>
+            <h1 style="font-size: 48px; margin: 0; opacity: 0.8; letter-spacing: 2px; line-height: 1;">${personalInfo.fullName?.split(' ').slice(1).join(' ') || 'LAST'}</h1>
+          </div>
+
+          <div style="padding: 30px 40px; font-family: 'Arial', sans-serif;">
+            <div style="display: flex; gap: 30px; margin-bottom: 40px; font-size: 12px; font-weight: bold; border-bottom: 4px solid #000; padding-bottom: 20px;">
+              ${[personalInfo.email, personalInfo.phone, personalInfo.location].filter(Boolean).map(item => `<span>${item}</span>`).join('')}
+            </div>
+
+            ${personalInfo.summary ? `
+              <div style="margin-bottom: 40px;">
+                <p style="font-size: 18px; font-weight: bold; line-height: 1.4;">${personalInfo.summary}</p>
+              </div>
+            ` : ''}
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+              <div>
+                <h3 style="background: #000; color: white; display: inline-block; padding: 5px 10px; margin-bottom: 20px; font-size: 14px;">EXPERIENCE</h3>
+                ${experience.map(exp => `
+                  <div style="margin-bottom: 20px;">
+                    <div style="font-weight: 900; font-size: 14px;">${exp.position}</div>
+                    <div style="font-size: 12px; margin-bottom: 5px; opacity: 0.7;">${exp.company}</div>
+                    ${exp.description ? `<div style="font-size: 12px; line-height: 1.4;">${exp.description}</div>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+
+              <div>
+                ${education.length > 0 ? `
+                  <div style="margin-bottom: 30px;">
+                    <h3 style="background: #000; color: white; display: inline-block; padding: 5px 10px; margin-bottom: 20px; font-size: 14px;">EDUCATION</h3>
+                    ${education.map(edu => `
+                      <div style="margin-bottom: 15px;">
+                        <div style="font-weight: 900; font-size: 14px;">${edu.degree}</div>
+                        <div style="font-size: 12px;">${edu.institution}</div>
+                      </div>
+                    `).join('')}
+                  </div>
+                ` : ''}
+
+                ${skills.length > 0 ? `
+                  <div>
+                    <h3 style="background: #000; color: white; display: inline-block; padding: 5px 10px; margin-bottom: 20px; font-size: 14px;">SKILLS</h3>
+                    <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                      ${skills.map(s => `<span style="border: 2px solid #000; padding: 2px 6px; font-size: 11px; font-weight: bold;">${s}</span>`).join('')}
+                    </div>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      `,
+      grid: `
+        <div style="font-family: 'Verdana', sans-serif; max-width: 800px; margin: 0 auto; border-top: 10px solid ${color};">
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 40px; padding: 40px;">
+            <div>
+              <h1 style="font-size: 36px; margin-bottom: 5px; color: #333;">${personalInfo.fullName || 'Name'}</h1>
+              <p style="color: ${color}; font-size: 14px; margin-bottom: 30px;">${personalInfo.summary || 'Professional Title'}</p>
+
+              ${experience.length > 0 ? `
+                <div style="margin-bottom: 30px;">
+                  <h3 style="color: ${color}; font-size: 12px; letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase;">Work Experience</h3>
+                  ${experience.map(exp => `
+                    <div style="margin-bottom: 20px;">
+                      <div style="font-weight: bold; font-size: 13px; color: #000;">${exp.position}</div>
+                      <div style="font-size: 11px; color: #666; margin-bottom: 6px;">${exp.company} | ${exp.startDate}-${exp.current ? 'Present' : exp.endDate}</div>
+                      ${exp.description ? `<div style="font-size: 12px; color: #444; line-height: 1.6;">${exp.description}</div>` : ''}
+                    </div>
+                  `).join('')}
+                </div>
+              ` : ''}
+            </div>
+
+            <div style="text-align: right;">
+              <div style="margin-bottom: 30px;">
+                <h3 style="color: ${color}; font-size: 12px; letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase;">Contact</h3>
+                <div style="font-size: 11px; color: #444; line-height: 1.8;">
+                  <div>${personalInfo.email}</div>
+                  <div>${personalInfo.phone}</div>
+                  <div>${personalInfo.location}</div>
+                  ${personalInfo.website ? `<div>${personalInfo.website}</div>` : ''}
+                </div>
+              </div>
+
+              ${education.length > 0 ? `
+                <div style="margin-bottom: 30px;">
+                  <h3 style="color: ${color}; font-size: 12px; letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase;">Education</h3>
+                  ${education.map(edu => `
+                    <div style="margin-bottom: 15px;">
+                      <div style="font-weight: bold; font-size: 12px;">${edu.degree}</div>
+                      <div style="font-size: 11px; color: #666;">${edu.institution}</div>
+                      <div style="font-size: 11px; color: #999;">${edu.endYear}</div>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : ''}
+
+              ${skills.length > 0 ? `
+                <div>
+                  <h3 style="color: ${color}; font-size: 12px; letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase;">Skills</h3>
+                  <div style="font-size: 11px; color: #444;">
+                    ${skills.map(s => `<div style="margin-bottom: 4px;">${s}</div>`).join('')}
+                  </div>
                 </div>
               ` : ''}
             </div>
