@@ -18,16 +18,6 @@ interface CVData {
     email: string;
     phone: string;
     location: string;
-    linkedin: string;
-    website: string;
-  };
-  summary: string;
-  experience: Experience[];
-  education: Education[];
-  skills: string[];
-}
-
-const initialData: CVData = {
     website?: string;
     linkedin?: string;
     github?: string;
