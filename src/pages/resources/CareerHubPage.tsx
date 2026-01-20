@@ -263,7 +263,6 @@ const CareerHubPage = () => {
   const [loading, setLoading] = useState(true);
   const [jobModalOpen, setJobModalOpen] = useState(false);
   const [cvModalOpen, setCVModalOpen] = useState(false);
-  const [cvBuilderOpen, setCVBuilderOpen] = useState(false);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [showPending, setShowPending] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -682,6 +681,12 @@ const CareerHubPage = () => {
             >
               CV Resources
             </TabsTrigger>
+            <TabsTrigger
+              value="builder"
+              className="flex-1 py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white rounded-none"
+            >
+              CV Builder
+            </TabsTrigger>
             <TabsTrigger 
               value="interview" 
               className="flex-1 py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white rounded-none"
@@ -740,7 +745,7 @@ const CareerHubPage = () => {
                   <p className="text-slate-500 font-light text-sm md:text-base">Download professional templates and guides to create a standout application.</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button onClick={() => setCVBuilderOpen(true)} className="gap-2 bg-nobel-gold hover:bg-nobel-gold/90 rounded-none">
+                  <Button onClick={() => setActiveTab('builder')} className="gap-2 bg-nobel-gold hover:bg-nobel-gold/90 rounded-none">
                     <Sparkles size={16} />
                     <span className="hidden sm:inline">Build CV</span>
                     <span className="sm:hidden">Build</span>
@@ -851,6 +856,10 @@ const CareerHubPage = () => {
                 </div>
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="builder" className="mt-0">
+            <CVBuilder />
           </TabsContent>
 
           <TabsContent value="interview" className="mt-0">
@@ -1061,8 +1070,6 @@ const CareerHubPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* CV Builder */}
-      <CVBuilder isOpen={cvBuilderOpen} onClose={() => setCVBuilderOpen(false)} />
     </div>
   );
 };
