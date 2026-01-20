@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, Search, Briefcase, MapPin, Clock, Building2, 
   Bookmark, BookmarkCheck, ExternalLink, FileText, Users,
-  ChevronDown, Download, CheckCircle2, Plus, Pencil, Trash2, Upload, Eye, EyeOff
+  ChevronDown, Download, CheckCircle2, Plus, Pencil, Trash2, Upload, Eye, EyeOff, Sparkles
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import CVBuilder from '@/components/CVBuilder';
 
 type JobType = 'all' | 'full-time' | 'part-time' | 'remote' | 'internship';
 
@@ -142,7 +143,7 @@ const JobCard: React.FC<{
         !job.is_approved ? 'border-amber-200 bg-amber-50/30' : 'border-slate-100'
       }`}
     >
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <div className="flex justify-between items-start mb-4">
           <div className="w-12 h-12 bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
             <Building2 size={20} />
@@ -274,6 +275,7 @@ const CareerHubPage = () => {
   const [loading, setLoading] = useState(true);
   const [jobModalOpen, setJobModalOpen] = useState(false);
   const [cvModalOpen, setCVModalOpen] = useState(false);
+  const [cvBuilderOpen, setCVBuilderOpen] = useState(false);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [showPending, setShowPending] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -768,17 +770,25 @@ const CareerHubPage = () => {
 
           <TabsContent value="cv" className="mt-0">
             <div className="max-w-4xl">
-              <div className="mb-12 flex items-center justify-between">
+              <div className="mb-8 md:mb-12 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h2 className="font-serif text-3xl text-ui-blue mb-4">CV Resources & <span className="italic text-slate-300">Templates</span></h2>
-                  <p className="text-slate-500 font-light">Download professional templates and guides to create a standout application.</p>
+                  <h2 className="font-serif text-2xl md:text-3xl text-ui-blue mb-2 md:mb-4">CV Resources & <span className="italic text-slate-300">Templates</span></h2>
+                  <p className="text-slate-500 font-light text-sm md:text-base">Download professional templates and guides to create a standout application.</p>
                 </div>
-                {user && (
-                  <Button onClick={() => setCVModalOpen(true)} className="gap-2">
-                    <Upload size={16} />
-                    Upload Template
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={() => setCVBuilderOpen(true)} className="gap-2 bg-nobel-gold hover:bg-nobel-gold/90">
+                    <Sparkles size={16} />
+                    <span className="hidden sm:inline">Build CV</span>
+                    <span className="sm:hidden">Build</span>
                   </Button>
-                )}
+                  {user && (
+                    <Button onClick={() => setCVModalOpen(true)} variant="outline" className="gap-2">
+                      <Upload size={16} />
+                      <span className="hidden sm:inline">Upload Template</span>
+                      <span className="sm:hidden">Upload</span>
+                    </Button>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1093,6 +1103,9 @@ const CareerHubPage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* CV Builder */}
+      <CVBuilder isOpen={cvBuilderOpen} onClose={() => setCVBuilderOpen(false)} />
     </div>
   );
 };

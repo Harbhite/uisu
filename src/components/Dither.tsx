@@ -119,19 +119,17 @@ const WaveMesh = ({
   useFrame((state) => {
     if (!meshRef.current) return;
 
+    const material = meshRef.current.material as THREE.ShaderMaterial;
+    if (!material || !material.uniforms) return;
+
     // Update time
     if (!disableAnimation) {
-      meshRef.current.material.uniforms.uTime.value = state.clock.getElapsedTime();
+      material.uniforms.uTime.value = state.clock.getElapsedTime();
     }
 
     // Update mouse
     if (enableMouseInteraction) {
-      // Smoothly interpolate mouse
-       const targetX = (pointer.x * viewport.width) / 2;
-       const targetY = (pointer.y * viewport.height) / 2;
-       // We'll just pass normalized pointer and handle scale in shader or here
-       // Passing normalized pointer (-1 to 1)
-       meshRef.current.material.uniforms.uMouse.value.set(pointer.x, pointer.y);
+      material.uniforms.uMouse.value.set(pointer.x, pointer.y);
     }
   });
 
