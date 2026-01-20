@@ -22,14 +22,12 @@ import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import CVBuilder from '@/components/CVBuilder';
 
-type JobType = 'all' | 'full-time' | 'part-time' | 'remote' | 'internship';
-
 interface Job {
   id: string;
   title: string;
   company: string;
   location: string;
-  job_type: 'full-time' | 'part-time' | 'remote' | 'internship';
+  job_type: 'internship';
   industry: string;
   created_at: string;
   description: string;
@@ -101,14 +99,7 @@ const useBookmarks = (key: string) => {
   return { bookmarks, toggle, isBookmarked };
 };
 
-const typeConfig = {
-  'full-time': { label: 'Full-time', color: 'text-emerald-700 bg-emerald-50 border-emerald-100' },
-  'part-time': { label: 'Part-time', color: 'text-ui-blue bg-blue-50 border-blue-100' },
-  'remote': { label: 'Remote', color: 'text-purple-700 bg-purple-50 border-purple-100' },
-  'internship': { label: 'Internship', color: 'text-nobel-gold bg-amber-50 border-amber-100' }
-};
-
-const JobCard: React.FC<{
+const InternshipCard: React.FC<{
   job: Job;
   isBookmarked: boolean;
   onToggleBookmark: () => void;
@@ -119,8 +110,6 @@ const JobCard: React.FC<{
   isStaff?: boolean;
   showApprovalStatus?: boolean;
 }> = ({ job, isBookmarked, onToggleBookmark, onEdit, onDelete, onApprove, index, isStaff, showApprovalStatus }) => {
-  const config = typeConfig[job.job_type];
-
   const timeAgo = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -139,18 +128,18 @@ const JobCard: React.FC<{
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ delay: index * 0.05, duration: 0.4 }}
-      className={`bg-white border hover:border-nobel-gold/50 hover:shadow-lg transition-all duration-300 group ${
-        !job.is_approved ? 'border-amber-200 bg-amber-50/30' : 'border-slate-100'
+      className={`bg-white border rounded-none transition-all duration-300 group ${
+        !job.is_approved ? 'border-amber-200 bg-amber-50/30' : 'border-slate-200 hover:border-nobel-gold hover:shadow-sm'
       }`}
     >
-      <div className="p-4 md:p-8">
+      <div className="p-4 md:p-6 lg:p-8">
         <div className="flex justify-between items-start mb-4">
-          <div className="w-12 h-12 bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
+          <div className="w-10 h-10 md:w-12 md:h-12 bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 rounded-none">
             <Building2 size={20} />
           </div>
           <div className="flex items-center gap-1">
             {showApprovalStatus && !job.is_approved && (
-              <Badge variant="outline" className="text-amber-600 border-amber-300 text-[9px]">
+              <Badge variant="outline" className="text-amber-600 border-amber-300 text-[9px] rounded-none">
                 Pending
               </Badge>
             )}
@@ -193,24 +182,24 @@ const JobCard: React.FC<{
         </div>
 
         <div className="flex items-center gap-2 mb-3">
-          <span className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest border ${config.color}`}>
-            {config.label}
+          <span className="px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest border text-nobel-gold bg-amber-50 border-amber-100 rounded-none">
+            Internship
           </span>
           <span className="text-[10px] text-slate-400">{job.industry}</span>
         </div>
 
-        <h3 className="font-serif text-xl text-ui-blue group-hover:text-nobel-gold transition-colors mb-1">
+        <h3 className="font-serif text-lg md:text-xl text-ui-blue group-hover:text-nobel-gold transition-colors mb-1">
           {job.title}
         </h3>
         <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">{job.company}</p>
 
-        <p className="text-slate-600 leading-relaxed text-sm font-light mb-4">
+        <p className="text-slate-600 leading-relaxed text-sm font-light mb-4 line-clamp-3">
           {job.description}
         </p>
 
         <div className="flex flex-wrap gap-2 mb-4">
           {job.requirements.slice(0, 3).map((req, i) => (
-            <span key={i} className="px-2 py-1 bg-slate-50 text-slate-500 text-[10px] font-bold uppercase tracking-widest border border-slate-100">
+            <span key={i} className="px-2 py-1 bg-slate-50 text-slate-500 text-[10px] font-bold uppercase tracking-widest border border-slate-100 rounded-none">
               {req}
             </span>
           ))}
@@ -233,10 +222,10 @@ const JobCard: React.FC<{
         )}
       </div>
 
-      <div className="px-8 py-4 border-t border-slate-100 bg-slate-50">
+      <div className="px-4 py-3 md:px-8 md:py-4 border-t border-slate-100 bg-slate-50/50">
         <a 
           href={job.application_url || '#'}
-          className="flex items-center justify-center gap-2 w-full py-3 bg-ui-blue text-white text-[10px] font-bold uppercase tracking-widest hover:bg-nobel-gold transition-colors"
+          className="flex items-center justify-center gap-2 w-full py-3 bg-ui-blue text-white text-[10px] font-bold uppercase tracking-widest hover:bg-nobel-gold transition-colors rounded-none"
         >
           Quick Apply <ExternalLink size={12} />
         </a>
@@ -249,7 +238,7 @@ interface JobFormData {
   title: string;
   company: string;
   location: string;
-  job_type: 'full-time' | 'part-time' | 'remote' | 'internship';
+  job_type: 'internship';
   industry: string;
   description: string;
   requirements: string;
@@ -268,7 +257,6 @@ interface CVFormData {
 const CareerHubPage = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeType, setActiveType] = useState<JobType>('all');
   const [activeTab, setActiveTab] = useState('jobs');
   const [jobs, setJobs] = useState<Job[]>([]);
   const [cvTemplates, setCVTemplates] = useState<CVTemplate[]>([]);
@@ -284,7 +272,7 @@ const CareerHubPage = () => {
     title: '',
     company: '',
     location: '',
-    job_type: 'full-time',
+    job_type: 'internship',
     industry: '',
     description: '',
     requirements: '',
@@ -309,6 +297,7 @@ const CareerHubPage = () => {
         .from('job_listings')
         .select('*')
         .eq('is_active', true)
+        .eq('job_type', 'internship')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -318,7 +307,7 @@ const CareerHubPage = () => {
         title: j.title,
         company: j.company,
         location: j.location,
-        job_type: j.job_type as 'full-time' | 'part-time' | 'remote' | 'internship',
+        job_type: 'internship',
         industry: j.industry,
         created_at: j.created_at || new Date().toISOString(),
         description: j.description || '',
@@ -378,7 +367,7 @@ const CareerHubPage = () => {
       title: '',
       company: '',
       location: '',
-      job_type: 'full-time',
+      job_type: 'internship',
       industry: '',
       description: '',
       requirements: '',
@@ -395,7 +384,7 @@ const CareerHubPage = () => {
       title: job.title,
       company: job.company,
       location: job.location,
-      job_type: job.job_type,
+      job_type: 'internship',
       industry: job.industry,
       description: job.description,
       requirements: job.requirements.join(', '),
@@ -593,24 +582,15 @@ const CareerHubPage = () => {
     return jobs.filter(job => {
       const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            job.company.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesType = activeType === 'all' || job.job_type === activeType;
       const matchesApproval = showPending ? true : job.is_approved;
-      return matchesSearch && matchesType && matchesApproval;
+      return matchesSearch && matchesApproval;
     });
-  }, [searchTerm, activeType, jobs, showPending]);
+  }, [searchTerm, jobs, showPending]);
 
   const visibleCVTemplates = useMemo(() => {
     if (isStaff) return cvTemplates;
     return cvTemplates.filter(cv => cv.is_approved || cv.uploaded_by === user?.id);
   }, [cvTemplates, isStaff, user]);
-
-  const types: { value: JobType; label: string }[] = [
-    { value: 'all', label: 'All' },
-    { value: 'internship', label: 'Internships' },
-    { value: 'part-time', label: 'Part-time' },
-    { value: 'full-time', label: 'Full-time' },
-    { value: 'remote', label: 'Remote' }
-  ];
 
   if (loading) {
     return (
@@ -646,7 +626,7 @@ const CareerHubPage = () => {
           >
             <div className="flex items-center gap-4">
               <Briefcase className="text-nobel-gold w-6 h-6" />
-              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-slate-400">Employment</span>
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-slate-400">Opportunities</span>
             </div>
             <div className="flex items-center gap-2">
               {isStaff && (
@@ -654,16 +634,16 @@ const CareerHubPage = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => setShowPending(!showPending)}
-                  className="gap-2"
+                  className="gap-2 rounded-none"
                 >
                   {showPending ? <EyeOff size={14} /> : <Eye size={14} />}
                   {showPending ? 'Hide Pending' : 'Show Pending'}
                 </Button>
               )}
               {user && (
-                <Button onClick={openCreateJobModal} className="gap-2">
+                <Button onClick={openCreateJobModal} className="gap-2 rounded-none">
                   <Plus size={16} />
-                  {isStaff ? 'Add Job' : 'Submit Job'}
+                  {isStaff ? 'Add Internship' : 'Submit Internship'}
                 </Button>
               )}
             </div>
@@ -675,7 +655,7 @@ const CareerHubPage = () => {
             transition={{ delay: 0.1 }}
             className="font-serif text-5xl md:text-7xl text-ui-blue mb-6"
           >
-            Career <span className="italic text-slate-300">Hub</span>
+            Internship <span className="italic text-slate-300">Hub</span>
           </motion.h1>
 
           <motion.p
@@ -684,7 +664,7 @@ const CareerHubPage = () => {
             transition={{ delay: 0.2 }}
             className="text-xl text-slate-500 font-light max-w-2xl leading-relaxed"
           >
-            Discover opportunities tailored for students and fresh graduates. Jobs, internships, CV resources, and interview preparation.
+            Discover internships tailored for students. CV resources, and interview preparation.
           </motion.p>
         </div>
 
@@ -694,7 +674,7 @@ const CareerHubPage = () => {
               value="jobs" 
               className="flex-1 py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white rounded-none"
             >
-              Jobs & Internships
+              Internships
             </TabsTrigger>
             <TabsTrigger 
               value="cv" 
@@ -716,34 +696,18 @@ const CareerHubPage = () => {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
                 <input
                   type="text"
-                  placeholder="Search jobs or companies..."
+                  placeholder="Search internships or companies..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 focus:border-nobel-gold focus:outline-none text-lg font-serif transition-colors"
+                  className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 focus:border-nobel-gold focus:outline-none text-lg font-serif transition-colors rounded-none"
                 />
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {types.map((type) => (
-                  <button
-                    key={type.value}
-                    onClick={() => setActiveType(type.value)}
-                    className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all ${
-                      activeType === type.value
-                        ? 'bg-ui-blue text-white'
-                        : 'bg-white text-slate-500 border border-slate-200 hover:border-ui-blue'
-                    }`}
-                  >
-                    {type.label}
-                  </button>
-                ))}
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <AnimatePresence mode="popLayout">
                 {filteredJobs.map((job, index) => (
-                  <JobCard
+                  <InternshipCard
                     key={job.id}
                     job={job}
                     isBookmarked={isBookmarked(job.id)}
@@ -762,8 +726,8 @@ const CareerHubPage = () => {
             {filteredJobs.length === 0 && (
               <div className="text-center py-24">
                 <Briefcase className="mx-auto text-slate-200 mb-6" size={64} />
-                <h3 className="font-serif text-2xl text-slate-400 mb-2">No jobs found</h3>
-                <p className="text-slate-300">Try adjusting your search or filters</p>
+                <h3 className="font-serif text-2xl text-slate-400 mb-2">No internships found</h3>
+                <p className="text-slate-300">Try adjusting your search</p>
               </div>
             )}
           </TabsContent>
@@ -776,13 +740,13 @@ const CareerHubPage = () => {
                   <p className="text-slate-500 font-light text-sm md:text-base">Download professional templates and guides to create a standout application.</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button onClick={() => setCVBuilderOpen(true)} className="gap-2 bg-nobel-gold hover:bg-nobel-gold/90">
+                  <Button onClick={() => setCVBuilderOpen(true)} className="gap-2 bg-nobel-gold hover:bg-nobel-gold/90 rounded-none">
                     <Sparkles size={16} />
                     <span className="hidden sm:inline">Build CV</span>
                     <span className="sm:hidden">Build</span>
                   </Button>
                   {user && (
-                    <Button onClick={() => setCVModalOpen(true)} variant="outline" className="gap-2">
+                    <Button onClick={() => setCVModalOpen(true)} variant="outline" className="gap-2 rounded-none">
                       <Upload size={16} />
                       <span className="hidden sm:inline">Upload Template</span>
                       <span className="sm:hidden">Upload</span>
@@ -798,20 +762,20 @@ const CareerHubPage = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.1 }}
-                    className={`bg-white border p-8 hover:border-nobel-gold/50 hover:shadow-lg transition-all group ${
-                      !cv.is_approved ? 'border-amber-200 bg-amber-50/30' : 'border-slate-100'
+                    className={`bg-white border p-8 hover:border-nobel-gold transition-all group rounded-none ${
+                      !cv.is_approved ? 'border-amber-200 bg-amber-50/30' : 'border-slate-200'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-4 mb-4">
                       <div className="flex items-start gap-4 flex-1">
-                        <div className="w-12 h-12 bg-slate-50 border border-slate-100 flex items-center justify-center text-ui-blue shrink-0">
+                        <div className="w-12 h-12 bg-slate-50 border border-slate-100 flex items-center justify-center text-ui-blue shrink-0 rounded-none">
                           <FileText size={20} />
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <span className="text-[9px] font-bold uppercase tracking-widest text-nobel-gold">{cv.format}</span>
                             {!cv.is_approved && (
-                              <Badge variant="outline" className="text-amber-600 border-amber-300 text-[9px]">
+                              <Badge variant="outline" className="text-amber-600 border-amber-300 text-[9px] rounded-none">
                                 Pending
                               </Badge>
                             )}
@@ -854,12 +818,12 @@ const CareerHubPage = () => {
               </div>
 
               {visibleCVTemplates.length === 0 && (
-                <div className="text-center py-16 bg-white border border-slate-100">
+                <div className="text-center py-16 bg-white border border-slate-200 rounded-none">
                   <FileText className="mx-auto text-slate-200 mb-6" size={48} />
                   <h3 className="font-serif text-xl text-slate-400 mb-2">No CV templates yet</h3>
                   <p className="text-slate-300 mb-4">Be the first to upload a template!</p>
                   {user && (
-                    <Button onClick={() => setCVModalOpen(true)}>
+                    <Button onClick={() => setCVModalOpen(true)} className="rounded-none">
                       <Upload size={16} className="mr-2" />
                       Upload Template
                     </Button>
@@ -867,7 +831,7 @@ const CareerHubPage = () => {
                 </div>
               )}
 
-              <div className="mt-12 bg-ui-blue text-white p-8 md:p-12">
+              <div className="mt-12 bg-ui-blue text-white p-8 md:p-12 rounded-none">
                 <h3 className="font-serif text-2xl mb-4">ATS Tips</h3>
                 <p className="text-white/70 font-light mb-6">Applicant Tracking Systems scan your CV before a human sees it. Here's how to pass:</p>
                 <div className="grid md:grid-cols-2 gap-4">
@@ -932,25 +896,26 @@ const CareerHubPage = () => {
 
       {/* Job Modal */}
       <Dialog open={jobModalOpen} onOpenChange={setJobModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-none">
           <DialogHeader>
             <DialogTitle className="font-serif text-2xl">
-              {editingJob ? 'Edit Job Listing' : (isStaff ? 'Add New Job' : 'Submit Job Listing')}
+              {editingJob ? 'Edit Internship' : (isStaff ? 'Add New Internship' : 'Submit Internship')}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-4">
             {!isStaff && !editingJob && (
-              <div className="bg-amber-50 border border-amber-200 rounded-md p-4 text-amber-800 text-sm">
-                Your job submission will be reviewed by staff before being published.
+              <div className="bg-amber-50 border border-amber-200 p-4 text-amber-800 text-sm rounded-none">
+                Your internship submission will be reviewed by staff before being published.
               </div>
             )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Job Title *</Label>
+                <Label>Role Title *</Label>
                 <Input
                   value={jobFormData.title}
                   onChange={(e) => setJobFormData({ ...jobFormData, title: e.target.value })}
-                  placeholder="Software Engineer"
+                  placeholder="Software Intern"
+                  className="rounded-none"
                 />
               </div>
               <div className="space-y-2">
@@ -959,36 +924,19 @@ const CareerHubPage = () => {
                   value={jobFormData.company}
                   onChange={(e) => setJobFormData({ ...jobFormData, company: e.target.value })}
                   placeholder="Company name"
+                  className="rounded-none"
                 />
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Location *</Label>
                 <Input
                   value={jobFormData.location}
                   onChange={(e) => setJobFormData({ ...jobFormData, location: e.target.value })}
                   placeholder="Lagos / Remote"
+                  className="rounded-none"
                 />
-              </div>
-              <div className="space-y-2">
-                <Label>Job Type</Label>
-                <Select
-                  value={jobFormData.job_type}
-                  onValueChange={(value: 'full-time' | 'part-time' | 'remote' | 'internship') => 
-                    setJobFormData({ ...jobFormData, job_type: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="full-time">Full-time</SelectItem>
-                    <SelectItem value="part-time">Part-time</SelectItem>
-                    <SelectItem value="remote">Remote</SelectItem>
-                    <SelectItem value="internship">Internship</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
               <div className="space-y-2">
                 <Label>Industry *</Label>
@@ -996,6 +944,7 @@ const CareerHubPage = () => {
                   value={jobFormData.industry}
                   onChange={(e) => setJobFormData({ ...jobFormData, industry: e.target.value })}
                   placeholder="Technology"
+                  className="rounded-none"
                 />
               </div>
             </div>
@@ -1004,8 +953,9 @@ const CareerHubPage = () => {
               <Textarea
                 value={jobFormData.description}
                 onChange={(e) => setJobFormData({ ...jobFormData, description: e.target.value })}
-                placeholder="Job description..."
+                placeholder="Internship description..."
                 rows={3}
+                className="rounded-none"
               />
             </div>
             <div className="space-y-2">
@@ -1014,6 +964,7 @@ const CareerHubPage = () => {
                 value={jobFormData.requirements}
                 onChange={(e) => setJobFormData({ ...jobFormData, requirements: e.target.value })}
                 placeholder="3+ years experience, JavaScript, React"
+                className="rounded-none"
               />
             </div>
             <div className="grid grid-cols-3 gap-4">
@@ -1023,6 +974,7 @@ const CareerHubPage = () => {
                   value={jobFormData.salary}
                   onChange={(e) => setJobFormData({ ...jobFormData, salary: e.target.value })}
                   placeholder="₦150,000/month"
+                  className="rounded-none"
                 />
               </div>
               <div className="space-y-2">
@@ -1031,6 +983,7 @@ const CareerHubPage = () => {
                   value={jobFormData.application_url}
                   onChange={(e) => setJobFormData({ ...jobFormData, application_url: e.target.value })}
                   placeholder="https://..."
+                  className="rounded-none"
                 />
               </div>
               <div className="space-y-2">
@@ -1039,14 +992,15 @@ const CareerHubPage = () => {
                   type="date"
                   value={jobFormData.deadline}
                   onChange={(e) => setJobFormData({ ...jobFormData, deadline: e.target.value })}
+                  className="rounded-none"
                 />
               </div>
             </div>
             <div className="flex justify-end gap-3 pt-4">
-              <Button variant="outline" onClick={() => setJobModalOpen(false)}>
+              <Button variant="outline" onClick={() => setJobModalOpen(false)} className="rounded-none">
                 Cancel
               </Button>
-              <Button onClick={handleJobSubmit}>
+              <Button onClick={handleJobSubmit} className="rounded-none">
                 {editingJob ? 'Update' : (isStaff ? 'Create' : 'Submit')}
               </Button>
             </div>
@@ -1056,13 +1010,13 @@ const CareerHubPage = () => {
 
       {/* CV Upload Modal */}
       <Dialog open={cvModalOpen} onOpenChange={setCVModalOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md rounded-none">
           <DialogHeader>
             <DialogTitle className="font-serif text-2xl">Upload CV Template</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-4">
             {!isStaff && (
-              <div className="bg-amber-50 border border-amber-200 rounded-md p-4 text-amber-800 text-sm">
+              <div className="bg-amber-50 border border-amber-200 p-4 text-amber-800 text-sm rounded-none">
                 Your template will be reviewed before being published.
               </div>
             )}
@@ -1072,6 +1026,7 @@ const CareerHubPage = () => {
                 value={cvFormData.title}
                 onChange={(e) => setCVFormData({ ...cvFormData, title: e.target.value })}
                 placeholder="ATS-Friendly CV Template"
+                className="rounded-none"
               />
             </div>
             <div className="space-y-2">
@@ -1081,6 +1036,7 @@ const CareerHubPage = () => {
                 onChange={(e) => setCVFormData({ ...cvFormData, description: e.target.value })}
                 placeholder="Brief description of this template..."
                 rows={2}
+                className="rounded-none"
               />
             </div>
             <div className="space-y-2">
@@ -1089,14 +1045,15 @@ const CareerHubPage = () => {
                 type="file"
                 accept=".pdf,.doc,.docx"
                 onChange={(e) => setCVFormData({ ...cvFormData, file: e.target.files?.[0] || null })}
+                className="rounded-none"
               />
               <p className="text-xs text-slate-400">Accepted formats: PDF, DOC, DOCX</p>
             </div>
             <div className="flex justify-end gap-3 pt-4">
-              <Button variant="outline" onClick={() => setCVModalOpen(false)}>
+              <Button variant="outline" onClick={() => setCVModalOpen(false)} className="rounded-none">
                 Cancel
               </Button>
-              <Button onClick={handleCVUpload} disabled={uploading}>
+              <Button onClick={handleCVUpload} disabled={uploading} className="rounded-none">
                 {uploading ? 'Uploading...' : 'Upload'}
               </Button>
             </div>

@@ -575,38 +575,42 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden p-0">
-        <div className="flex flex-col h-[90vh]">
+      <DialogContent className="max-w-6xl h-[100vh] md:h-[95vh] overflow-hidden p-0 rounded-none">
+        <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="px-6 py-4 border-b flex items-center justify-between bg-gradient-to-r from-ui-blue to-ui-blue/90">
-            <div className="flex items-center gap-3 text-white">
-              <Sparkles size={24} />
+          <div className="px-4 md:px-6 py-3 md:py-4 border-b flex items-center justify-between bg-gradient-to-r from-ui-blue to-ui-blue/90">
+            <div className="flex items-center gap-2 md:gap-3 text-white">
+              <Sparkles size={20} className="md:w-6 md:h-6" />
               <div>
-                <h2 className="font-serif text-xl">CV Builder</h2>
-                <p className="text-xs opacity-75">Create your professional CV in minutes</p>
+                <h2 className="font-serif text-lg md:text-xl">CV Builder</h2>
+                <p className="text-[10px] md:text-xs opacity-75 hidden md:block">Create your professional CV in minutes</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 md:gap-2">
               {step !== 'template' && (
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={() => setStep(step === 'preview' ? 'edit' : 'template')}
-                  className="text-white hover:bg-white/20"
+                  className="text-white hover:bg-white/20 h-8 px-2 md:h-9 md:px-4 rounded-none"
                 >
-                  <ChevronLeft size={16} className="mr-1" /> Back
+                  <ChevronLeft size={16} className="md:mr-1" /> <span className="hidden md:inline">Back</span>
                 </Button>
               )}
               {step === 'edit' && (
-                <Button size="sm" onClick={() => setStep('preview')} className="bg-white text-ui-blue hover:bg-white/90">
-                  <Eye size={16} className="mr-1" /> Preview
+                <Button size="sm" onClick={() => setStep('preview')} className="bg-white text-ui-blue hover:bg-white/90 h-8 px-2 md:h-9 md:px-4 rounded-none">
+                  <Eye size={16} className="md:mr-1" /> <span className="hidden md:inline">Preview</span>
                 </Button>
               )}
               {step === 'preview' && (
-                <Button size="sm" onClick={handlePrint} className="bg-nobel-gold hover:bg-nobel-gold/90 text-white">
-                  <Download size={16} className="mr-1" /> Download PDF
+                <Button size="sm" onClick={handlePrint} className="bg-nobel-gold hover:bg-nobel-gold/90 text-white h-8 px-2 md:h-9 md:px-4 rounded-none">
+                  <Download size={16} className="md:mr-1" /> <span className="hidden md:inline">Download</span>
                 </Button>
               )}
+              <Button variant="ghost" size="sm" onClick={onClose} className="text-white hover:bg-white/20 h-8 w-8 p-0 rounded-none md:hidden">
+                <span className="sr-only">Close</span>
+                &times;
+              </Button>
             </div>
           </div>
 
@@ -619,45 +623,45 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  className="h-full overflow-y-auto p-6"
+                  className="h-full overflow-y-auto p-4 md:p-6"
                 >
-                  <h3 className="font-serif text-2xl mb-2">Choose a template</h3>
-                  <p className="text-slate-500 mb-6">Select a design that matches your industry and style</p>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <h3 className="font-serif text-xl md:text-2xl mb-2">Choose a template</h3>
+                  <p className="text-slate-500 mb-6 text-sm md:text-base">Select a design that matches your industry and style</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pb-20 md:pb-0">
                     {templates.map(template => (
                       <motion.div
                         key={template.id}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => setSelectedTemplate(template)}
-                        className={`cursor-pointer border-2 rounded-lg p-6 transition-all ${
+                        className={`cursor-pointer border-2 p-4 md:p-6 transition-all rounded-none ${
                           selectedTemplate.id === template.id 
                             ? 'border-ui-blue bg-ui-blue/5' 
                             : 'border-slate-200 hover:border-slate-300'
                         }`}
                       >
                         <div 
-                          className="w-full h-32 rounded mb-4 flex items-center justify-center text-5xl"
+                          className="w-full h-24 md:h-32 mb-4 flex items-center justify-center text-4xl md:text-5xl rounded-none"
                           style={{ background: `${template.color}15` }}
                         >
                           {template.preview}
                         </div>
                         <div className="flex items-center justify-between">
                           <div>
-                            <h4 className="font-bold text-slate-800">{template.name}</h4>
-                            <p className="text-xs text-slate-500">{template.description}</p>
+                            <h4 className="font-bold text-slate-800 text-sm md:text-base">{template.name}</h4>
+                            <p className="text-[10px] md:text-xs text-slate-500">{template.description}</p>
                           </div>
                           {selectedTemplate.id === template.id && (
-                            <div className="w-6 h-6 rounded-full bg-ui-blue flex items-center justify-center">
-                              <Check size={14} className="text-white" />
+                            <div className="w-5 h-5 md:w-6 md:h-6 bg-ui-blue flex items-center justify-center rounded-none">
+                              <Check size={12} className="text-white" />
                             </div>
                           )}
                         </div>
                       </motion.div>
                     ))}
                   </div>
-                  <div className="mt-6 flex justify-end">
-                    <Button onClick={() => setStep('edit')} className="bg-ui-blue hover:bg-ui-blue/90">
+                  <div className="fixed bottom-0 left-0 w-full p-4 bg-white border-t md:relative md:bg-transparent md:border-0 md:p-0 md:mt-6 flex justify-end">
+                    <Button onClick={() => setStep('edit')} className="bg-ui-blue hover:bg-ui-blue/90 rounded-none w-full md:w-auto">
                       Continue <ChevronRight size={16} className="ml-1" />
                     </Button>
                   </div>
@@ -670,10 +674,10 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  className="h-full flex"
+                  className="h-full flex flex-col md:flex-row"
                 >
                   {/* Sidebar */}
-                  <div className="w-48 border-r bg-slate-50 p-4 flex flex-col gap-2">
+                  <div className="w-full md:w-48 border-b md:border-b-0 md:border-r bg-slate-50 p-2 md:p-4 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-visible shrink-0">
                     {[
                       { id: 'personal', label: 'Personal Info', icon: User },
                       { id: 'education', label: 'Education', icon: GraduationCap },
@@ -683,30 +687,32 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                       <button
                         key={section.id}
                         onClick={() => setActiveSection(section.id as typeof activeSection)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-sm transition-all ${
+                        className={`flex items-center gap-2 md:gap-3 px-3 py-2 md:py-2.5 text-left text-xs md:text-sm transition-all whitespace-nowrap rounded-none ${
                           activeSection === section.id
                             ? 'bg-ui-blue text-white'
                             : 'text-slate-600 hover:bg-slate-100'
                         }`}
                       >
-                        <section.icon size={16} />
-                        {section.label}
+                        <section.icon size={14} className="md:w-4 md:h-4" />
+                        <span className="md:hidden">{section.label.split(' ')[0]}</span>
+                        <span className="hidden md:inline">{section.label}</span>
                       </button>
                     ))}
                   </div>
 
                   {/* Form */}
-                  <div className="flex-1 overflow-y-auto p-6">
+                  <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-20 md:pb-6">
                     {activeSection === 'personal' && (
                       <div className="space-y-4 max-w-xl">
                         <h3 className="font-serif text-xl mb-4">Personal Information</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="col-span-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="md:col-span-2">
                             <Label>Full Name *</Label>
                             <Input
                               value={cvData.personalInfo.fullName}
                               onChange={e => setCVData(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, fullName: e.target.value } }))}
                               placeholder="John Doe"
+                              className="rounded-none"
                             />
                           </div>
                           <div>
@@ -716,6 +722,7 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                               value={cvData.personalInfo.email}
                               onChange={e => setCVData(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, email: e.target.value } }))}
                               placeholder="john@email.com"
+                              className="rounded-none"
                             />
                           </div>
                           <div>
@@ -724,14 +731,16 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                               value={cvData.personalInfo.phone}
                               onChange={e => setCVData(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, phone: e.target.value } }))}
                               placeholder="+234 xxx xxx xxxx"
+                              className="rounded-none"
                             />
                           </div>
-                          <div className="col-span-2">
+                          <div className="md:col-span-2">
                             <Label>Location</Label>
                             <Input
                               value={cvData.personalInfo.location}
                               onChange={e => setCVData(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, location: e.target.value } }))}
                               placeholder="Lagos, Nigeria"
+                              className="rounded-none"
                             />
                           </div>
                           <div>
@@ -740,6 +749,7 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                               value={cvData.personalInfo.linkedin}
                               onChange={e => setCVData(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, linkedin: e.target.value } }))}
                               placeholder="linkedin.com/in/johndoe"
+                              className="rounded-none"
                             />
                           </div>
                           <div>
@@ -748,15 +758,17 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                               value={cvData.personalInfo.github}
                               onChange={e => setCVData(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, github: e.target.value } }))}
                               placeholder="github.com/johndoe"
+                              className="rounded-none"
                             />
                           </div>
-                          <div className="col-span-2">
+                          <div className="md:col-span-2">
                             <Label>Professional Summary</Label>
                             <Textarea
                               value={cvData.personalInfo.summary}
                               onChange={e => setCVData(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, summary: e.target.value } }))}
                               placeholder="Brief overview of your professional background and career objectives..."
                               rows={4}
+                              className="rounded-none"
                             />
                           </div>
                         </div>
@@ -767,17 +779,17 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                       <div className="space-y-4 max-w-xl">
                         <div className="flex items-center justify-between mb-4">
                           <h3 className="font-serif text-xl">Education</h3>
-                          <Button size="sm" variant="outline" onClick={addEducation}>
+                          <Button size="sm" variant="outline" onClick={addEducation} className="rounded-none">
                             <Plus size={14} className="mr-1" /> Add
                           </Button>
                         </div>
                         {cvData.education.length === 0 && (
-                          <p className="text-slate-400 text-sm py-8 text-center border border-dashed rounded-lg">
+                          <p className="text-slate-400 text-sm py-8 text-center border border-dashed rounded-none">
                             No education added yet. Click "Add" to get started.
                           </p>
                         )}
                         {cvData.education.map((edu, idx) => (
-                          <div key={edu.id} className="border rounded-lg p-4 relative">
+                          <div key={edu.id} className="border p-4 relative rounded-none">
                             <button
                               onClick={() => removeEducation(edu.id)}
                               className="absolute top-2 right-2 text-slate-300 hover:text-red-500"
@@ -791,7 +803,7 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                                   value={edu.institution}
                                   onChange={e => updateEducation(edu.id, 'institution', e.target.value)}
                                   placeholder="University of Ibadan"
-                                  className="h-9"
+                                  className="h-9 rounded-none"
                                 />
                               </div>
                               <div>
@@ -800,7 +812,7 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                                   value={edu.degree}
                                   onChange={e => updateEducation(edu.id, 'degree', e.target.value)}
                                   placeholder="Bachelor's"
-                                  className="h-9"
+                                  className="h-9 rounded-none"
                                 />
                               </div>
                               <div>
@@ -809,7 +821,7 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                                   value={edu.field}
                                   onChange={e => updateEducation(edu.id, 'field', e.target.value)}
                                   placeholder="Computer Science"
-                                  className="h-9"
+                                  className="h-9 rounded-none"
                                 />
                               </div>
                               <div>
@@ -818,7 +830,7 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                                   value={edu.startYear}
                                   onChange={e => updateEducation(edu.id, 'startYear', e.target.value)}
                                   placeholder="2020"
-                                  className="h-9"
+                                  className="h-9 rounded-none"
                                 />
                               </div>
                               <div>
@@ -827,7 +839,7 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                                   value={edu.endYear}
                                   onChange={e => updateEducation(edu.id, 'endYear', e.target.value)}
                                   placeholder="2024"
-                                  className="h-9"
+                                  className="h-9 rounded-none"
                                 />
                               </div>
                             </div>
@@ -840,17 +852,17 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                       <div className="space-y-4 max-w-xl">
                         <div className="flex items-center justify-between mb-4">
                           <h3 className="font-serif text-xl">Work Experience</h3>
-                          <Button size="sm" variant="outline" onClick={addExperience}>
+                          <Button size="sm" variant="outline" onClick={addExperience} className="rounded-none">
                             <Plus size={14} className="mr-1" /> Add
                           </Button>
                         </div>
                         {cvData.experience.length === 0 && (
-                          <p className="text-slate-400 text-sm py-8 text-center border border-dashed rounded-lg">
+                          <p className="text-slate-400 text-sm py-8 text-center border border-dashed rounded-none">
                             No experience added yet. Click "Add" to get started.
                           </p>
                         )}
                         {cvData.experience.map((exp) => (
-                          <div key={exp.id} className="border rounded-lg p-4 relative">
+                          <div key={exp.id} className="border p-4 relative rounded-none">
                             <button
                               onClick={() => removeExperience(exp.id)}
                               className="absolute top-2 right-2 text-slate-300 hover:text-red-500"
@@ -864,7 +876,7 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                                   value={exp.position}
                                   onChange={e => updateExperience(exp.id, 'position', e.target.value)}
                                   placeholder="Software Engineer"
-                                  className="h-9"
+                                  className="h-9 rounded-none"
                                 />
                               </div>
                               <div>
@@ -873,7 +885,7 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                                   value={exp.company}
                                   onChange={e => updateExperience(exp.id, 'company', e.target.value)}
                                   placeholder="Tech Corp"
-                                  className="h-9"
+                                  className="h-9 rounded-none"
                                 />
                               </div>
                               <div>
@@ -882,7 +894,7 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                                   value={exp.startDate}
                                   onChange={e => updateExperience(exp.id, 'startDate', e.target.value)}
                                   placeholder="Jan 2022"
-                                  className="h-9"
+                                  className="h-9 rounded-none"
                                 />
                               </div>
                               <div>
@@ -892,7 +904,7 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                                   onChange={e => updateExperience(exp.id, 'endDate', e.target.value)}
                                   placeholder="Present"
                                   disabled={exp.current}
-                                  className="h-9"
+                                  className="h-9 rounded-none"
                                 />
                               </div>
                               <div className="col-span-2">
@@ -902,6 +914,7 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                                   onChange={e => updateExperience(exp.id, 'description', e.target.value)}
                                   placeholder="Key responsibilities and achievements..."
                                   rows={2}
+                                  className="rounded-none"
                                 />
                               </div>
                             </div>
@@ -920,15 +933,15 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                               onChange={e => setSkillInput(e.target.value)}
                               onKeyPress={e => e.key === 'Enter' && addSkill()}
                               placeholder="Add a skill..."
-                              className="flex-1"
+                              className="flex-1 rounded-none"
                             />
-                            <Button onClick={addSkill} size="sm">Add</Button>
+                            <Button onClick={addSkill} size="sm" className="rounded-none">Add</Button>
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {cvData.skills.map(skill => (
                               <span
                                 key={skill}
-                                className="px-3 py-1.5 bg-ui-blue/10 text-ui-blue text-sm rounded-full flex items-center gap-2"
+                                className="px-3 py-1.5 bg-ui-blue/10 text-ui-blue text-sm rounded-none flex items-center gap-2"
                               >
                                 {skill}
                                 <button onClick={() => removeSkill(skill)} className="hover:text-red-500">
@@ -942,12 +955,12 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                         <div>
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="font-serif text-xl">Certifications</h3>
-                            <Button size="sm" variant="outline" onClick={addCertification}>
+                            <Button size="sm" variant="outline" onClick={addCertification} className="rounded-none">
                               <Plus size={14} className="mr-1" /> Add
                             </Button>
                           </div>
                           {cvData.certifications.map(cert => (
-                            <div key={cert.id} className="border rounded-lg p-4 relative mb-3">
+                            <div key={cert.id} className="border p-4 relative mb-3 rounded-none">
                               <button
                                 onClick={() => removeCertification(cert.id)}
                                 className="absolute top-2 right-2 text-slate-300 hover:text-red-500"
@@ -961,7 +974,7 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                                     value={cert.name}
                                     onChange={e => updateCertification(cert.id, 'name', e.target.value)}
                                     placeholder="AWS Certified"
-                                    className="h-9"
+                                    className="h-9 rounded-none"
                                   />
                                 </div>
                                 <div>
@@ -970,7 +983,7 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                                     value={cert.year}
                                     onChange={e => updateCertification(cert.id, 'year', e.target.value)}
                                     placeholder="2023"
-                                    className="h-9"
+                                    className="h-9 rounded-none"
                                   />
                                 </div>
                                 <div className="col-span-3">
@@ -979,7 +992,7 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                                     value={cert.issuer}
                                     onChange={e => updateCertification(cert.id, 'issuer', e.target.value)}
                                     placeholder="Amazon Web Services"
-                                    className="h-9"
+                                    className="h-9 rounded-none"
                                   />
                                 </div>
                               </div>
@@ -1006,7 +1019,7 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                         Preview your CV. Click "Download PDF" to save.
                       </p>
                       <span 
-                        className="px-3 py-1 text-xs rounded-full"
+                        className="px-3 py-1 text-xs rounded-none"
                         style={{ background: `${selectedTemplate.color}20`, color: selectedTemplate.color }}
                       >
                         {selectedTemplate.name} Template
