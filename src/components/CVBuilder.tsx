@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
 interface CVData {
@@ -90,7 +89,7 @@ const templates: Template[] = [
   { id: 'grid', name: 'Grid', preview: '📰', description: 'Organized two-column structure', color: '#0ea5e9' }
 ];
 
-const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+const CVBuilder: React.FC = () => {
   const [step, setStep] = useState<'template' | 'edit' | 'preview'>('template');
   const [selectedTemplate, setSelectedTemplate] = useState<Template>(templates[0]);
   const [cvData, setCVData] = useState<CVData>(defaultCVData);
@@ -880,134 +879,129 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl h-[100vh] md:h-[95vh] overflow-hidden p-0 rounded-none">
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="px-4 md:px-6 py-3 md:py-4 border-b flex items-center justify-between bg-gradient-to-r from-ui-blue to-ui-blue/90">
-            <div className="flex items-center gap-2 md:gap-3 text-white">
-              <Sparkles size={20} className="md:w-6 md:h-6" />
-              <div>
-                <h2 className="font-serif text-lg md:text-xl">CV Builder</h2>
-                <p className="text-[10px] md:text-xs opacity-75 hidden md:block">Create your professional CV in minutes</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1 md:gap-2">
-              {step !== 'template' && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setStep(step === 'preview' ? 'edit' : 'template')}
-                  className="text-white hover:bg-white/20 h-8 px-2 md:h-9 md:px-4 rounded-none"
-                >
-                  <ChevronLeft size={16} className="md:mr-1" /> <span className="hidden md:inline">Back</span>
-                </Button>
-              )}
-              {step === 'edit' && (
-                <Button size="sm" onClick={() => setStep('preview')} className="bg-white text-ui-blue hover:bg-white/90 h-8 px-2 md:h-9 md:px-4 rounded-none">
-                  <Eye size={16} className="md:mr-1" /> <span className="hidden md:inline">Preview</span>
-                </Button>
-              )}
-              {step === 'preview' && (
-                <Button size="sm" onClick={handlePrint} className="bg-nobel-gold hover:bg-nobel-gold/90 text-white h-8 px-2 md:h-9 md:px-4 rounded-none">
-                  <Download size={16} className="md:mr-1" /> <span className="hidden md:inline">Download</span>
-                </Button>
-              )}
-              <Button variant="ghost" size="sm" onClick={onClose} className="text-white hover:bg-white/20 h-8 w-8 p-0 rounded-none md:hidden">
-                <span className="sr-only">Close</span>
-                &times;
-              </Button>
+    <div className="w-full bg-white border rounded-none shadow-sm">
+      <div className="flex flex-col min-h-[600px]">
+        {/* Header */}
+        <div className="px-4 md:px-6 py-3 md:py-4 border-b flex items-center justify-between bg-gradient-to-r from-ui-blue to-ui-blue/90">
+          <div className="flex items-center gap-2 md:gap-3 text-white">
+            <Sparkles size={20} className="md:w-6 md:h-6" />
+            <div>
+              <h2 className="font-serif text-lg md:text-xl">CV Builder</h2>
+              <p className="text-[10px] md:text-xs opacity-75 hidden md:block">Create your professional CV in minutes</p>
             </div>
           </div>
+          <div className="flex items-center gap-1 md:gap-2">
+            {step !== 'template' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setStep(step === 'preview' ? 'edit' : 'template')}
+                className="text-white hover:bg-white/20 h-8 px-2 md:h-9 md:px-4 rounded-none"
+              >
+                <ChevronLeft size={16} className="md:mr-1" /> <span className="hidden md:inline">Back</span>
+              </Button>
+            )}
+            {step === 'edit' && (
+              <Button size="sm" onClick={() => setStep('preview')} className="bg-white text-ui-blue hover:bg-white/90 h-8 px-2 md:h-9 md:px-4 rounded-none">
+                <Eye size={16} className="md:mr-1" /> <span className="hidden md:inline">Preview</span>
+              </Button>
+            )}
+            {step === 'preview' && (
+              <Button size="sm" onClick={handlePrint} className="bg-nobel-gold hover:bg-nobel-gold/90 text-white h-8 px-2 md:h-9 md:px-4 rounded-none">
+                <Download size={16} className="md:mr-1" /> <span className="hidden md:inline">Download</span>
+              </Button>
+            )}
+          </div>
+        </div>
 
-          {/* Content */}
-          <div className="flex-1 overflow-hidden">
-            <AnimatePresence mode="wait">
-              {step === 'template' && (
-                <motion.div
-                  key="template"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  className="h-full overflow-y-auto p-4 md:p-6"
-                >
-                  <h3 className="font-serif text-xl md:text-2xl mb-2">Choose a template</h3>
-                  <p className="text-slate-500 mb-6 text-sm md:text-base">Select a design that matches your industry and style</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pb-20 md:pb-0">
-                    {templates.map(template => (
-                      <motion.div
-                        key={template.id}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => setSelectedTemplate(template)}
-                        className={`cursor-pointer border-2 p-4 md:p-6 transition-all rounded-none ${
-                          selectedTemplate.id === template.id 
-                            ? 'border-ui-blue bg-ui-blue/5' 
-                            : 'border-slate-200 hover:border-slate-300'
-                        }`}
+        {/* Content */}
+        <div className="flex-1">
+          <AnimatePresence mode="wait">
+            {step === 'template' && (
+              <motion.div
+                key="template"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="p-4 md:p-6"
+              >
+                <h3 className="font-serif text-xl md:text-2xl mb-2">Choose a template</h3>
+                <p className="text-slate-500 mb-6 text-sm md:text-base">Select a design that matches your industry and style</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pb-20 md:pb-0">
+                  {templates.map(template => (
+                    <motion.div
+                      key={template.id}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setSelectedTemplate(template)}
+                      className={`cursor-pointer border-2 p-4 md:p-6 transition-all rounded-none ${
+                        selectedTemplate.id === template.id
+                          ? 'border-ui-blue bg-ui-blue/5'
+                          : 'border-slate-200 hover:border-slate-300'
+                      }`}
+                    >
+                      <div
+                        className="w-full h-24 md:h-32 mb-4 flex items-center justify-center text-4xl md:text-5xl rounded-none"
+                        style={{ background: `${template.color}15` }}
                       >
-                        <div 
-                          className="w-full h-24 md:h-32 mb-4 flex items-center justify-center text-4xl md:text-5xl rounded-none"
-                          style={{ background: `${template.color}15` }}
-                        >
-                          {template.preview}
+                        {template.preview}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-bold text-slate-800 text-sm md:text-base">{template.name}</h4>
+                          <p className="text-[10px] md:text-xs text-slate-500">{template.description}</p>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h4 className="font-bold text-slate-800 text-sm md:text-base">{template.name}</h4>
-                            <p className="text-[10px] md:text-xs text-slate-500">{template.description}</p>
+                        {selectedTemplate.id === template.id && (
+                          <div className="w-5 h-5 md:w-6 md:h-6 bg-ui-blue flex items-center justify-center rounded-none">
+                            <Check size={12} className="text-white" />
                           </div>
-                          {selectedTemplate.id === template.id && (
-                            <div className="w-5 h-5 md:w-6 md:h-6 bg-ui-blue flex items-center justify-center rounded-none">
-                              <Check size={12} className="text-white" />
-                            </div>
-                          )}
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                  <div className="fixed bottom-0 left-0 w-full p-4 bg-white border-t md:relative md:bg-transparent md:border-0 md:p-0 md:mt-6 flex justify-end">
-                    <Button onClick={() => setStep('edit')} className="bg-ui-blue hover:bg-ui-blue/90 rounded-none w-full md:w-auto">
-                      Continue <ChevronRight size={16} className="ml-1" />
-                    </Button>
-                  </div>
-                </motion.div>
-              )}
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+                <div className="mt-6 flex justify-end">
+                  <Button onClick={() => setStep('edit')} className="bg-ui-blue hover:bg-ui-blue/90 rounded-none w-full md:w-auto">
+                    Continue <ChevronRight size={16} className="ml-1" />
+                  </Button>
+                </div>
+              </motion.div>
+            )}
 
-              {step === 'edit' && (
-                <motion.div
-                  key="edit"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  className="h-full flex flex-col md:flex-row"
-                >
-                  {/* Sidebar */}
-                  <div className="w-full md:w-48 border-b md:border-b-0 md:border-r bg-slate-50 p-2 md:p-4 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-visible shrink-0">
-                    {[
-                      { id: 'personal', label: 'Personal Info', icon: User },
-                      { id: 'education', label: 'Education', icon: GraduationCap },
-                      { id: 'experience', label: 'Experience', icon: Briefcase },
-                      { id: 'skills', label: 'Skills & Certs', icon: Award }
-                    ].map(section => (
-                      <button
-                        key={section.id}
-                        onClick={() => setActiveSection(section.id as typeof activeSection)}
-                        className={`flex items-center gap-2 md:gap-3 px-3 py-2 md:py-2.5 text-left text-xs md:text-sm transition-all whitespace-nowrap rounded-none ${
-                          activeSection === section.id
-                            ? 'bg-ui-blue text-white'
-                            : 'text-slate-600 hover:bg-slate-100'
-                        }`}
-                      >
-                        <section.icon size={14} className="md:w-4 md:h-4" />
-                        <span className="md:hidden">{section.label.split(' ')[0]}</span>
-                        <span className="hidden md:inline">{section.label}</span>
-                      </button>
-                    ))}
-                  </div>
+            {step === 'edit' && (
+              <motion.div
+                key="edit"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="flex flex-col md:flex-row items-start"
+              >
+                {/* Sidebar */}
+                <div className="w-full md:w-48 border-b md:border-b-0 md:border-r bg-slate-50 p-2 md:p-4 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-visible shrink-0 md:sticky md:top-0">
+                  {[
+                    { id: 'personal', label: 'Personal Info', icon: User },
+                    { id: 'education', label: 'Education', icon: GraduationCap },
+                    { id: 'experience', label: 'Experience', icon: Briefcase },
+                    { id: 'skills', label: 'Skills & Certs', icon: Award }
+                  ].map(section => (
+                    <button
+                      key={section.id}
+                      onClick={() => setActiveSection(section.id as typeof activeSection)}
+                      className={`flex items-center gap-2 md:gap-3 px-3 py-2 md:py-2.5 text-left text-xs md:text-sm transition-all whitespace-nowrap rounded-none ${
+                        activeSection === section.id
+                          ? 'bg-ui-blue text-white'
+                          : 'text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      <section.icon size={14} className="md:w-4 md:h-4" />
+                      <span className="md:hidden">{section.label.split(' ')[0]}</span>
+                      <span className="hidden md:inline">{section.label}</span>
+                    </button>
+                  ))}
+                </div>
 
-                  {/* Form */}
-                  <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-20 md:pb-6">
+                {/* Form */}
+                <div className="flex-1 p-4 md:p-6 w-full">
                     {activeSection === 'personal' && (
                       <div className="space-y-4 max-w-xl">
                         <h3 className="font-serif text-xl mb-4">Personal Information</h3>
@@ -1317,7 +1311,7 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  className="h-full overflow-y-auto p-6 bg-slate-100"
+                  className="p-6 bg-slate-100 min-h-screen"
                 >
                   <div className="max-w-4xl mx-auto">
                     <div className="mb-4 flex items-center justify-between">
@@ -1342,8 +1336,7 @@ const CVBuilder: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
             </AnimatePresence>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
   );
 };
 
