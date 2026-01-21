@@ -6,13 +6,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { 
   ArrowLeft, Star, Plus, Trash2, Edit2, Calendar, FileText, 
   Megaphone, X, Upload, Loader2, Check, Users, Award, ShieldAlert,
-  ArrowUpDown, History, Search, Download, Filter, Eye, Mail, BookOpen
+  ArrowUpDown, History, Search, Download, Filter, Eye, Mail, BookOpen, Inbox
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { z } from "zod";
 import AuditLogDetailsModal from "@/components/AuditLogDetailsModal";
 import InviteStaffModal from "@/components/InviteStaffModal";
+import PendingSubmissions from "@/components/PendingSubmissions";
 import { inksPieces } from "@/lib/data";
 import { SEO } from "@/components/SEO";
 
@@ -68,7 +69,7 @@ const administrationSchema = z.object({
   })).optional(),
 });
 
-type TabType = "events" | "announcements" | "documents" | "clubs" | "administrations" | "admins" | "audit" | "publications";
+type TabType = "events" | "announcements" | "documents" | "clubs" | "administrations" | "admins" | "audit" | "publications" | "submissions";
 
 interface AuditLog {
   id: string;
@@ -714,7 +715,8 @@ const AdminDashboard = () => {
         administrations: "administrations",
         publications: "inks_pieces",
         admins: "user_roles",
-        audit: "audit_logs"
+        audit: "audit_logs",
+        submissions: "job_listings"
       };
       
       const tableName = tableMap[activeTab];
@@ -758,6 +760,7 @@ const AdminDashboard = () => {
     { id: "documents" as TabType, label: "Documents", icon: FileText },
     { id: "clubs" as TabType, label: "Clubs", icon: Users },
     { id: "administrations" as TabType, label: "Leaders", icon: Award },
+    { id: "submissions" as TabType, label: "Submissions", icon: Inbox },
     ...(isAdmin ? [
       { id: "admins" as TabType, label: "Staff", icon: ShieldAlert },
       { id: "audit" as TabType, label: "Audit Log", icon: History },
@@ -1107,6 +1110,8 @@ const AdminDashboard = () => {
           </div>
         ) : (
           <div className="space-y-4">
+            {activeTab === "submissions" && <PendingSubmissions />}
+            
             {activeTab === "publications" && publications.map((pub) => (
               <motion.div
                 key={pub.id}
