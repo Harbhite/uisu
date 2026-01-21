@@ -21,6 +21,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import CVBuilder from '@/components/CVBuilder';
+import CoverLetterBuilder from '@/components/CoverLetterBuilder';
 
 interface Job {
   id: string;
