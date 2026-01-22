@@ -622,28 +622,29 @@ const CareerHubPage = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-between mb-4"
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4"
           >
             <div className="flex items-center gap-4">
               <Briefcase className="text-nobel-gold w-6 h-6" />
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-slate-400">Opportunities</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {isStaff && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setShowPending(!showPending)}
-                  className="gap-2 rounded-none"
+                  className="gap-2 rounded-none text-xs"
                 >
                   {showPending ? <EyeOff size={14} /> : <Eye size={14} />}
-                  {showPending ? 'Hide Pending' : 'Show Pending'}
+                  <span className="hidden xs:inline">{showPending ? 'Hide Pending' : 'Show Pending'}</span>
                 </Button>
               )}
               {user && (
-                <Button onClick={openCreateJobModal} className="gap-2 rounded-none">
+                <Button onClick={openCreateJobModal} className="gap-2 rounded-none text-xs">
                   <Plus size={16} />
-                  {isStaff ? 'Add Internship' : 'Submit Internship'}
+                  <span className="hidden xs:inline">{isStaff ? 'Add Internship' : 'Submit Internship'}</span>
+                  <span className="xs:hidden">Add</span>
                 </Button>
               )}
             </div>
@@ -669,28 +670,34 @@ const CareerHubPage = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full max-w-2xl bg-white border border-slate-200 p-1 h-auto mb-12 rounded-none flex flex-col sm:flex-row">
+          <TabsList className="w-full max-w-3xl bg-white border border-slate-200 p-1 h-auto mb-12 rounded-none grid grid-cols-2 sm:grid-cols-5 gap-1">
             <TabsTrigger 
               value="jobs" 
-              className="flex-1 py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white rounded-none"
+              className="py-2.5 sm:py-3 text-[10px] sm:text-xs font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white rounded-none"
             >
               Internships
             </TabsTrigger>
             <TabsTrigger 
               value="cv" 
-              className="flex-1 py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white rounded-none"
+              className="py-2.5 sm:py-3 text-[10px] sm:text-xs font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white rounded-none"
             >
               CV Resources
             </TabsTrigger>
             <TabsTrigger
               value="builder"
-              className="flex-1 py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white rounded-none"
+              className="py-2.5 sm:py-3 text-[10px] sm:text-xs font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white rounded-none"
             >
               CV Builder
             </TabsTrigger>
+            <TabsTrigger
+              value="cover-letter"
+              className="py-2.5 sm:py-3 text-[10px] sm:text-xs font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white rounded-none"
+            >
+              Cover Letter
+            </TabsTrigger>
             <TabsTrigger 
               value="interview" 
-              className="flex-1 py-3 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white rounded-none"
+              className="col-span-2 sm:col-span-1 py-2.5 sm:py-3 text-[10px] sm:text-xs font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white rounded-none"
             >
               Interview Tips
             </TabsTrigger>
@@ -861,6 +868,10 @@ const CareerHubPage = () => {
 
           <TabsContent value="builder" className="mt-0">
             <CVBuilder />
+          </TabsContent>
+
+          <TabsContent value="cover-letter" className="mt-0">
+            <CoverLetterBuilder />
           </TabsContent>
 
           <TabsContent value="interview" className="mt-0">

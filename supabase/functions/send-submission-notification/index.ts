@@ -1,6 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +14,7 @@ const corsHeaders = {
 interface SubmissionNotificationRequest {
   type: "internship_approved" | "internship_rejected" | "cv_approved" | "cv_rejected";
   email: string;
+  userId?: string;
   recipientName?: string;
   itemTitle: string;
   companyName?: string; // For internships
@@ -25,12 +29,45 @@ const handler = async (req: Request): Promise<Response> => {
     const { 
       type, 
       email, 
+      userId,
       recipientName,
       itemTitle,
       companyName
     }: SubmissionNotificationRequest = await req.json();
 
     console.log(`Processing ${type} notification for ${email}`);
+
+    // Check user's email preferences if userId is provided
+    if (userId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('email_notifications')
+        .eq('id', userId)
+        .single();
+
+      if (profile?.email_notifications) {
+        const prefs = profile.email_notifications as { submission_approved?: boolean; submission_rejected?: boolean };
+        const isApproval = type.includes('approved');
+        const isRejection = type.includes('rejected');
+        
+        if (isApproval && prefs.submission_approved === false) {
+          console.log('User has opted out of approval notifications');
+          return new Response(JSON.stringify({ success: true, skipped: true, reason: 'User opted out' }), {
+            status: 200,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          });
+        }
+        
+        if (isRejection && prefs.submission_rejected === false) {
+          console.log('User has opted out of rejection notifications');
+          return new Response(JSON.stringify({ success: true, skipped: true, reason: 'User opted out' }), {
+            status: 200,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          });
+        }
+      }
+    }
 
     let subject: string;
     let html: string;

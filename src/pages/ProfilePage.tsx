@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -28,7 +29,8 @@ import {
   Home,
   Users,
   Layers,
-  ExternalLink
+  ExternalLink,
+  Bell
 } from 'lucide-react';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { SEO } from '@/components/SEO';
@@ -92,7 +94,9 @@ const ProfilePage = () => {
     twitter: '',
     linkedin: '',
     instagram: '',
-    website: ''
+    website: '',
+    email_submission_approved: true,
+    email_submission_rejected: true
   });
   const [saving, setSaving] = useState(false);
 
@@ -118,6 +122,7 @@ const ProfilePage = () => {
             ...typedProfile,
             socials
           });
+          const emailNotifications = (profileData as any).email_notifications || { submission_approved: true, submission_rejected: true };
           setEditForm({
             full_name: typedProfile.full_name || '',
             bio: typedProfile.bio || '',
@@ -129,7 +134,9 @@ const ProfilePage = () => {
             twitter: socials?.twitter || '',
             linkedin: socials?.linkedin || '',
             instagram: socials?.instagram || '',
-            website: socials?.website || ''
+            website: socials?.website || '',
+            email_submission_approved: emailNotifications.submission_approved ?? true,
+            email_submission_rejected: emailNotifications.submission_rejected ?? true
           });
         }
 
@@ -178,8 +185,12 @@ const ProfilePage = () => {
             linkedin: editForm.linkedin,
             instagram: editForm.instagram,
             website: editForm.website
+          },
+          email_notifications: {
+            submission_approved: editForm.email_submission_approved,
+            submission_rejected: editForm.email_submission_rejected
           }
-        })
+        } as any)
         .eq('id', user.id);
 
       if (error) throw error;
@@ -489,6 +500,33 @@ const ProfilePage = () => {
                             onChange={(e) => setEditForm(prev => ({ ...prev, website: e.target.value }))}
                             placeholder="https://yourwebsite.com"
                             className="rounded-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Email Notification Preferences */}
+                    <div className="border-t border-border pt-6">
+                      <h3 className="text-sm font-semibold mb-4">Email Notifications</h3>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium">Submission Approved</p>
+                            <p className="text-xs text-muted-foreground">Receive email when your submissions are approved</p>
+                          </div>
+                          <Switch
+                            checked={editForm.email_submission_approved}
+                            onCheckedChange={(checked) => setEditForm(prev => ({ ...prev, email_submission_approved: checked }))}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium">Submission Rejected</p>
+                            <p className="text-xs text-muted-foreground">Receive email when your submissions are rejected</p>
+                          </div>
+                          <Switch
+                            checked={editForm.email_submission_rejected}
+                            onCheckedChange={(checked) => setEditForm(prev => ({ ...prev, email_submission_rejected: checked }))}
                           />
                         </div>
                       </div>
