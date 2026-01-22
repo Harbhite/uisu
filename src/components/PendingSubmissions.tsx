@@ -140,15 +140,57 @@ const PendingSubmissions: React.FC = () => {
     fetchPendingItems();
   }, []);
 
+  const sendNotificationEmail = async (
+    type: 'internship_approved' | 'internship_rejected' | 'cv_approved' | 'cv_rejected',
+    email: string,
+    recipientName: string | null,
+    itemTitle: string,
+    companyName?: string
+  ) => {
+    try {
+      const response = await supabase.functions.invoke('send-submission-notification', {
+        body: {
+          type,
+          email,
+          recipientName,
+          itemTitle,
+          companyName
+        }
+      });
+      
+      if (response.error) {
+        console.error('Failed to send notification email:', response.error);
+      } else {
+        console.log('Notification email sent successfully');
+      }
+    } catch (error) {
+      console.error('Error sending notification email:', error);
+    }
+  };
+
   const handleApproveJob = async (id: string) => {
     setProcessing(id);
     try {
+      const job = pendingJobs.find(j => j.id === id);
+      
       const { error } = await supabase
         .from('job_listings')
         .update({ is_approved: true, updated_at: new Date().toISOString() })
         .eq('id', id);
 
       if (error) throw error;
+      
+      // Send notification email
+      if (job?.submitter?.email) {
+        sendNotificationEmail(
+          'internship_approved',
+          job.submitter.email,
+          job.submitter.full_name,
+          job.title,
+          job.company
+        );
+      }
+      
       toast.success('Job listing approved');
       fetchPendingItems();
     } catch (error: any) {
@@ -163,12 +205,26 @@ const PendingSubmissions: React.FC = () => {
     
     setProcessing(id);
     try {
+      const job = pendingJobs.find(j => j.id === id);
+      
       const { error } = await supabase
         .from('job_listings')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
+      
+      // Send notification email
+      if (job?.submitter?.email) {
+        sendNotificationEmail(
+          'internship_rejected',
+          job.submitter.email,
+          job.submitter.full_name,
+          job.title,
+          job.company
+        );
+      }
+      
       toast.success('Job listing rejected');
       fetchPendingItems();
     } catch (error: any) {
@@ -181,12 +237,25 @@ const PendingSubmissions: React.FC = () => {
   const handleApproveCV = async (id: string) => {
     setProcessing(id);
     try {
+      const cv = pendingCVs.find(c => c.id === id);
+      
       const { error } = await supabase
         .from('cv_templates')
         .update({ is_approved: true, updated_at: new Date().toISOString() })
         .eq('id', id);
 
       if (error) throw error;
+      
+      // Send notification email
+      if (cv?.uploader?.email) {
+        sendNotificationEmail(
+          'cv_approved',
+          cv.uploader.email,
+          cv.uploader.full_name,
+          cv.title
+        );
+      }
+      
       toast.success('CV template approved');
       fetchPendingItems();
     } catch (error: any) {
@@ -201,12 +270,25 @@ const PendingSubmissions: React.FC = () => {
     
     setProcessing(id);
     try {
+      const cv = pendingCVs.find(c => c.id === id);
+      
       const { error } = await supabase
         .from('cv_templates')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
+      
+      // Send notification email
+      if (cv?.uploader?.email) {
+        sendNotificationEmail(
+          'cv_rejected',
+          cv.uploader.email,
+          cv.uploader.full_name,
+          cv.title
+        );
+      }
+      
       toast.success('CV template rejected');
       fetchPendingItems();
     } catch (error: any) {
