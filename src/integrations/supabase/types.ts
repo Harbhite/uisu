@@ -765,6 +765,7 @@ export type Database = {
           created_at: string | null
           department: string | null
           email: string | null
+          email_notifications: Json | null
           faculty: string | null
           full_name: string | null
           hall_of_residence: string | null
@@ -780,6 +781,7 @@ export type Database = {
           created_at?: string | null
           department?: string | null
           email?: string | null
+          email_notifications?: Json | null
           faculty?: string | null
           full_name?: string | null
           hall_of_residence?: string | null
@@ -795,6 +797,7 @@ export type Database = {
           created_at?: string | null
           department?: string | null
           email?: string | null
+          email_notifications?: Json | null
           faculty?: string | null
           full_name?: string | null
           hall_of_residence?: string | null

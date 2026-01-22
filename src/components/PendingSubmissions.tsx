@@ -143,6 +143,7 @@ const PendingSubmissions: React.FC = () => {
   const sendNotificationEmail = async (
     type: 'internship_approved' | 'internship_rejected' | 'cv_approved' | 'cv_rejected',
     email: string,
+    userId: string | undefined,
     recipientName: string | null,
     itemTitle: string,
     companyName?: string
@@ -152,6 +153,7 @@ const PendingSubmissions: React.FC = () => {
         body: {
           type,
           email,
+          userId,
           recipientName,
           itemTitle,
           companyName
@@ -185,6 +187,7 @@ const PendingSubmissions: React.FC = () => {
         sendNotificationEmail(
           'internship_approved',
           job.submitter.email,
+          job.submitted_by,
           job.submitter.full_name,
           job.title,
           job.company
@@ -219,6 +222,7 @@ const PendingSubmissions: React.FC = () => {
         sendNotificationEmail(
           'internship_rejected',
           job.submitter.email,
+          job.submitted_by,
           job.submitter.full_name,
           job.title,
           job.company
@@ -251,6 +255,7 @@ const PendingSubmissions: React.FC = () => {
         sendNotificationEmail(
           'cv_approved',
           cv.uploader.email,
+          cv.uploaded_by,
           cv.uploader.full_name,
           cv.title
         );
@@ -284,6 +289,7 @@ const PendingSubmissions: React.FC = () => {
         sendNotificationEmail(
           'cv_rejected',
           cv.uploader.email,
+          cv.uploaded_by,
           cv.uploader.full_name,
           cv.title
         );
