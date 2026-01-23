@@ -1,7 +1,8 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { SEO } from "@/components/SEO";
-import { Home, Archive, Users, Calendar, HelpCircle, X, ArrowUpRight } from "lucide-react";
+import { Home, Archive, Users, Calendar, HelpCircle, X, ArrowUpRight, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import uisuLogoColored from "@/assets/uisu-logo-colored.png";
 
@@ -26,6 +27,9 @@ const NotFound = () => {
   // Typewriter effect state
   const [displayedTitle, setDisplayedTitle] = useState("");
   const fullTitle = "Oopsie, Page not found";
+  
+  // Mini search state
+  const [searchQuery, setSearchQuery] = useState("");
 
   const cardColors = [
     { bg: 'bg-primary', text: 'text-primary-foreground', glow: 'shadow-primary/40' },
@@ -170,6 +174,13 @@ const NotFound = () => {
     scrollerRef.current.scrollLeft = scrollLeft - walk;
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground overflow-hidden relative">
       <SEO title="Page Not Found - UISU" description="The page you are looking for does not exist." />
@@ -237,9 +248,23 @@ const NotFound = () => {
       <div className="max-w-[1600px] mx-auto px-[4vw] py-8 w-full h-full flex flex-col justify-between flex-1 animate-fade-in relative z-10">
         {/* Header */}
         <header className="pt-4 relative">
-          <Link to="/" className="block w-12 h-12 mb-8">
-            <img src={uisuLogoColored} alt="UISU Logo" className="w-full h-full object-contain" />
-          </Link>
+          <div className="flex items-start justify-between gap-4 mb-8">
+            <Link to="/" className="block w-12 h-12">
+              <img src={uisuLogoColored} alt="UISU Logo" className="w-full h-full object-contain" />
+            </Link>
+            
+            {/* Mini Search Bar */}
+            <form onSubmit={handleSearch} className="relative w-48 sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <Input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 pr-3 py-2 h-10 bg-background/80 backdrop-blur-sm border-border text-sm placeholder:text-muted-foreground focus-visible:ring-primary"
+              />
+            </form>
+          </div>
           
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-left font-normal mb-4 tracking-tight text-primary">
             {displayedTitle}
