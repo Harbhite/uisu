@@ -140,10 +140,43 @@ const NotFound = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-background text-foreground overflow-hidden relative">
       <SEO title="Page Not Found - UISU" description="The page you are looking for does not exist." />
+      
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] opacity-[0.07]"
+          style={{
+            background: 'radial-gradient(ellipse at center, #C5A059 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, white 0%, transparent 40%), radial-gradient(ellipse at 20% 80%, #C5A059 0%, transparent 45%)',
+          }}
+          animate={{
+            rotate: [0, 360],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            rotate: { duration: 60, repeat: Infinity, ease: "linear" },
+            scale: { duration: 20, repeat: Infinity, ease: "easeInOut" },
+          }}
+        />
+        <motion.div
+          className="absolute top-0 left-0 w-full h-full opacity-[0.04]"
+          style={{
+            background: 'linear-gradient(135deg, transparent 0%, #C5A059 25%, transparent 50%, white 75%, transparent 100%)',
+            backgroundSize: '400% 400%',
+          }}
+          animate={{
+            backgroundPosition: ['0% 0%', '100% 100%', '0% 0%'],
+          }}
+          transition={{
+            duration: 15,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      </div>
 
-      <div className="max-w-[1600px] mx-auto px-[4vw] py-8 w-full h-full flex flex-col justify-between flex-1 animate-fade-in">
+      <div className="max-w-[1600px] mx-auto px-[4vw] py-8 w-full h-full flex flex-col justify-between flex-1 animate-fade-in relative z-10">
         {/* Header */}
         <header className="pt-4 relative">
           <Link to="/" className="block w-10 h-10 mb-8">
