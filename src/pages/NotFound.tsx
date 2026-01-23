@@ -22,6 +22,15 @@ const NotFound = () => {
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
 
+  const cardColors = [
+    { bg: 'bg-primary', text: 'text-primary-foreground', border: 'border-primary/30' },
+    { bg: 'bg-[#C5A059]', text: 'text-white', border: 'border-[#C5A059]/30' },
+    { bg: 'bg-[#1E293B]', text: 'text-white', border: 'border-[#1E293B]/30' },
+    { bg: 'bg-[#F9F8F4]', text: 'text-[#1E293B]', border: 'border-[#1E293B]/20' },
+    { bg: 'bg-primary', text: 'text-primary-foreground', border: 'border-primary/30' },
+    { bg: 'bg-[#C5A059]', text: 'text-white', border: 'border-[#C5A059]/30' },
+  ];
+
   const cardData: CardData[] = [
     {
       title: "The Archive",
@@ -60,14 +69,16 @@ const NotFound = () => {
     }
   ];
 
-  const phaseList = [
-    "1. THE ARCHIVE",
-    "2. LEADERSHIP",
-    "3. EVENTS",
-    "4. 404 / PAGE NOT FOUND",
-    "5. HOMEPAGE",
-    "6. COMMUNITIES"
-  ];
+  // Generate floating particles
+  const particles = Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    size: Math.random() * 4 + 2,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    duration: Math.random() * 20 + 15,
+    delay: Math.random() * 5,
+    color: i % 2 === 0 ? '#C5A059' : 'white',
+  }));
 
   useEffect(() => {
     console.error(
@@ -174,6 +185,33 @@ const NotFound = () => {
             ease: "easeInOut",
           }}
         />
+        
+        {/* Floating particles */}
+        {particles.map((particle) => (
+          <motion.div
+            key={particle.id}
+            className="absolute rounded-full"
+            style={{
+              width: particle.size,
+              height: particle.size,
+              left: `${particle.x}%`,
+              top: `${particle.y}%`,
+              backgroundColor: particle.color,
+              opacity: 0.3,
+            }}
+            animate={{
+              y: [0, -100, 0],
+              x: [0, Math.random() * 50 - 25, 0],
+              opacity: [0.1, 0.4, 0.1],
+            }}
+            transition={{
+              duration: particle.duration,
+              delay: particle.delay,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+        ))}
       </div>
 
       <div className="max-w-[1600px] mx-auto px-[4vw] py-8 w-full h-full flex flex-col justify-between flex-1 animate-fade-in relative z-10">
@@ -212,71 +250,67 @@ const NotFound = () => {
               <motion.article
                 key={index}
                 onClick={() => handleCardClick(index)}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ 
+                  duration: 0.5, 
+                  delay: index * 0.1,
+                  ease: "easeOut"
+                }}
                 whileHover={{ 
                   y: -8,
                   rotateX: 5,
                   rotateY: -5,
+                  scale: 1.02,
                   transition: { duration: 0.3, ease: "easeOut" }
                 }}
                 style={{ transformStyle: "preserve-3d", perspective: 1000 }}
-                className={`timeline-card min-w-[240px] sm:min-w-[280px] w-[20vw] max-w-[350px] aspect-square p-6 flex flex-col justify-between cursor-pointer transition-colors duration-300 snap-center border
-                  ${activeIndex === index 
-                    ? 'bg-primary/10 border-primary/20' 
-                    : 'bg-muted border-transparent'
-                  }`}
+                className={`timeline-card min-w-[240px] sm:min-w-[280px] w-[20vw] max-w-[350px] aspect-square p-6 flex flex-col justify-between cursor-pointer snap-center border rounded-lg shadow-lg
+                  ${cardColors[index].bg} ${cardColors[index].text} ${cardColors[index].border}`}
               >
-                <span className="text-sm font-medium opacity-60">
+                <motion.span 
+                  className="text-sm font-medium opacity-70"
+                  animate={{ opacity: [0.5, 0.8, 0.5] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                >
                   {String(index + 1).padStart(2, '0')}
-                </span>
+                </motion.span>
                 
                 <motion.div 
-                  className={`self-center transition-opacity duration-500 ${activeIndex === index ? 'opacity-100' : 'opacity-80'}`}
-                  whileHover={{ scale: 1.1, rotate: 3 }}
-                  transition={{ duration: 0.3 }}
+                  className="self-center"
+                  animate={{ 
+                    y: [0, -5, 0],
+                    rotate: [0, 2, -2, 0],
+                  }}
+                  transition={{ 
+                    duration: 4 + index * 0.5, 
+                    repeat: Infinity, 
+                    ease: "easeInOut",
+                    delay: index * 0.2
+                  }}
                 >
                   {card.icon}
                 </motion.div>
                 
                 <div className="flex justify-between items-end">
-                  <span className="text-lg font-medium text-foreground">
+                  <span className="text-lg font-medium">
                     {card.title}
                   </span>
-                  <span className="text-lg">
-                    {card.link ? (
-                      <span className="text-primary">↗</span>
-                    ) : (
-                      <span className="text-primary">→</span>
-                    )}
-                  </span>
+                  <motion.span 
+                    className="text-lg"
+                    animate={{ x: [0, 3, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    {card.link ? '↗' : '→'}
+                  </motion.span>
                 </div>
               </motion.article>
             ))}
           </div>
         </section>
 
-        {/* Bottom Details */}
-        <section className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-4 lg:gap-16 mt-auto pb-24">
-          <ul className="hidden lg:block text-xs leading-loose text-muted-foreground font-medium tracking-wide uppercase">
-            {phaseList.map((phase, index) => (
-              <li 
-                key={index}
-                className={activeIndex === index ? 'text-foreground font-bold' : ''}
-              >
-                {phase}
-              </li>
-            ))}
-          </ul>
-
-          <div className="max-w-xl">
-            <p 
-              className={`text-sm sm:text-base leading-relaxed text-muted-foreground transition-all duration-400 ${
-                isTextVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
-              }`}
-            >
-              {descText}
-            </p>
-          </div>
-        </section>
+        {/* Spacer for floating action bar */}
+        <div className="pb-24" />
 
         {/* Floating Action Bar */}
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-background/90 backdrop-blur-md py-2 pl-6 pr-2 rounded-full shadow-xl flex items-center gap-4 border border-border z-50">
