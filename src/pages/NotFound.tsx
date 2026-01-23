@@ -317,7 +317,7 @@ const NotFound = () => {
                   y: 4,
                   transition: { duration: 0.15, ease: "easeOut" }
                 }}
-                className={`timeline-card min-w-[240px] sm:min-w-[280px] w-[20vw] max-w-[350px] aspect-square p-6 flex flex-col justify-between cursor-pointer snap-center border rounded-none
+                className={`timeline-card min-w-[312px] sm:min-w-[364px] lg:min-w-[448px] w-[26vw] lg:w-[32vw] max-w-[560px] aspect-square p-6 flex flex-col justify-between cursor-pointer snap-center border rounded-none
                   transition-shadow duration-300
                   ${cardColors[index].bg} ${cardColors[index].text}
                   ${activeIndex === index ? `shadow-[0_0_30px_-5px] ${cardColors[index].glow}` : 'shadow-lg hover:shadow-[0_0_25px_-5px] hover:' + cardColors[index].glow}`}
@@ -367,8 +367,8 @@ const NotFound = () => {
         <div className="pb-24" />
 
         {/* Floating Action Bar */}
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-background/90 backdrop-blur-md py-2 pl-6 pr-2 rounded-full shadow-xl flex items-center gap-4 border border-border z-50">
-          <span className="text-sm font-medium hidden sm:inline text-muted-foreground">Lost? Let's get you back.</span>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] sm:w-auto bg-background/90 backdrop-blur-md py-2 px-4 sm:pl-6 sm:pr-2 rounded-full shadow-xl flex items-center justify-between sm:justify-start gap-2 sm:gap-4 border border-border z-50">
+          <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">Lost? Let's get you back.</span>
           <Link 
             to="/" 
             className="bg-primary text-primary-foreground px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 hover:bg-primary/90 inline-flex items-center gap-2"
