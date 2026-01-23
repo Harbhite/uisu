@@ -2,7 +2,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { SEO } from "@/components/SEO";
 import { Home, Archive, Users, Calendar, HelpCircle, X, ArrowUpRight } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import uisuLogoColored from "@/assets/uisu-logo-colored.png";
 
 interface CardData {
   title: string;
@@ -21,14 +22,18 @@ const NotFound = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+  
+  // Typewriter effect state
+  const [displayedTitle, setDisplayedTitle] = useState("");
+  const fullTitle = "Oopsie, Page not found";
 
   const cardColors = [
-    { bg: 'bg-primary', text: 'text-primary-foreground', border: 'border-primary/30' },
-    { bg: 'bg-[#C5A059]', text: 'text-white', border: 'border-[#C5A059]/30' },
-    { bg: 'bg-[#1E293B]', text: 'text-white', border: 'border-[#1E293B]/30' },
-    { bg: 'bg-[#F9F8F4]', text: 'text-[#1E293B]', border: 'border-[#1E293B]/20' },
-    { bg: 'bg-primary', text: 'text-primary-foreground', border: 'border-primary/30' },
-    { bg: 'bg-[#C5A059]', text: 'text-white', border: 'border-[#C5A059]/30' },
+    { bg: 'bg-primary', text: 'text-primary-foreground', glow: 'shadow-primary/40' },
+    { bg: 'bg-[#C5A059]', text: 'text-white', glow: 'shadow-[#C5A059]/40' },
+    { bg: 'bg-[#1E293B]', text: 'text-white', glow: 'shadow-[#1E293B]/40' },
+    { bg: 'bg-[#F9F8F4]', text: 'text-[#1E293B]', glow: 'shadow-[#1E293B]/30' },
+    { bg: 'bg-primary', text: 'text-primary-foreground', glow: 'shadow-primary/40' },
+    { bg: 'bg-[#C5A059]', text: 'text-white', glow: 'shadow-[#C5A059]/40' },
   ];
 
   const cardData: CardData[] = [
@@ -89,6 +94,21 @@ const NotFound = () => {
 
   useEffect(() => {
     setDescText(cardData[activeIndex].text);
+  }, []);
+
+  // Typewriter effect
+  useEffect(() => {
+    let currentIndex = 0;
+    const interval = setInterval(() => {
+      if (currentIndex <= fullTitle.length) {
+        setDisplayedTitle(fullTitle.slice(0, currentIndex));
+        currentIndex++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 80);
+
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -217,12 +237,17 @@ const NotFound = () => {
       <div className="max-w-[1600px] mx-auto px-[4vw] py-8 w-full h-full flex flex-col justify-between flex-1 animate-fade-in relative z-10">
         {/* Header */}
         <header className="pt-4 relative">
-          <Link to="/" className="block w-10 h-10 mb-8">
-            <img src="/uisu-logo.png" alt="UISU Logo" className="w-full h-full object-contain" />
+          <Link to="/" className="block w-12 h-12 mb-8">
+            <img src={uisuLogoColored} alt="UISU Logo" className="w-full h-full object-contain" />
           </Link>
           
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-left font-normal mb-4 tracking-tight text-primary">
-            Timeline Interruption
+            {displayedTitle}
+            <motion.span
+              className="inline-block w-[3px] h-[1em] bg-primary ml-1 align-middle"
+              animate={{ opacity: [1, 0, 1] }}
+              transition={{ duration: 1, repeat: Infinity, ease: "stepStart" }}
+            />
           </h1>
           
           <p className="text-left text-muted-foreground max-w-2xl mb-6 text-sm sm:text-base leading-relaxed">
@@ -250,23 +275,27 @@ const NotFound = () => {
               <motion.article
                 key={index}
                 onClick={() => handleCardClick(index)}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 20, scale: 0.95, rotate: -2 }}
+                animate={{ 
+                  opacity: 1, 
+                  y: 0, 
+                  scale: 1, 
+                  rotate: 0,
+                }}
                 transition={{ 
                   duration: 0.5, 
                   delay: index * 0.1,
                   ease: "easeOut"
                 }}
-                whileHover={{ 
-                  y: -8,
-                  rotateX: 5,
-                  rotateY: -5,
-                  scale: 1.02,
-                  transition: { duration: 0.3, ease: "easeOut" }
+                whileTap={{ 
+                  scale: 0.95,
+                  y: 4,
+                  transition: { duration: 0.15, ease: "easeOut" }
                 }}
-                style={{ transformStyle: "preserve-3d", perspective: 1000 }}
-                className={`timeline-card min-w-[240px] sm:min-w-[280px] w-[20vw] max-w-[350px] aspect-square p-6 flex flex-col justify-between cursor-pointer snap-center border rounded-lg shadow-lg
-                  ${cardColors[index].bg} ${cardColors[index].text} ${cardColors[index].border}`}
+                className={`timeline-card min-w-[240px] sm:min-w-[280px] w-[20vw] max-w-[350px] aspect-square p-6 flex flex-col justify-between cursor-pointer snap-center border rounded-none
+                  transition-shadow duration-300
+                  ${cardColors[index].bg} ${cardColors[index].text}
+                  ${activeIndex === index ? `shadow-[0_0_30px_-5px] ${cardColors[index].glow}` : 'shadow-lg hover:shadow-[0_0_25px_-5px] hover:' + cardColors[index].glow}`}
               >
                 <motion.span 
                   className="text-sm font-medium opacity-70"
