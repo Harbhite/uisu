@@ -1,11 +1,72 @@
-import { Link, useLocation } from "react-router-dom";
-import { useEffect } from "react";
-import { ArrowLeft, Home } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
 import { SEO } from "@/components/SEO";
-import Dither from "@/components/Dither";
+import { Home, Archive, Users, Calendar, HelpCircle, X } from "lucide-react";
+
+interface CardData {
+  title: string;
+  text: string;
+  icon: React.ReactNode;
+  link?: string;
+}
 
 const NotFound = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [activeIndex, setActiveIndex] = useState(3);
+  const [descText, setDescText] = useState("");
+  const [isTextVisible, setIsTextVisible] = useState(true);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const cardData: CardData[] = [
+    {
+      title: "The Archive",
+      text: "Access official documents, past resolutions, and constitutional records from the Students' Union archives.",
+      icon: <Archive className="w-12 h-12" />,
+      link: "/documents"
+    },
+    {
+      title: "Leadership",
+      text: "Explore the current Student Union executives and representatives serving the University of Ibadan community.",
+      icon: <Users className="w-12 h-12" />,
+      link: "/current-leaders"
+    },
+    {
+      title: "Events",
+      text: "Stay updated with upcoming campus events, meetings, and activities organized by the Students' Union.",
+      icon: <Calendar className="w-12 h-12" />,
+      link: "/events"
+    },
+    {
+      title: "The Void",
+      text: "The page you're looking for has been moved, removed, or never existed. Navigate using the cards to find your way back.",
+      icon: <X className="w-12 h-12" />,
+    },
+    {
+      title: "Homepage",
+      text: "Return to the main portal of the University of Ibadan Students' Union website.",
+      icon: <Home className="w-12 h-12" />,
+      link: "/"
+    },
+    {
+      title: "Communities",
+      text: "Discover student organizations, clubs, and societies within the University of Ibadan.",
+      icon: <HelpCircle className="w-12 h-12" />,
+      link: "/communities"
+    }
+  ];
+
+  const phaseList = [
+    "1. THE ARCHIVE",
+    "2. LEADERSHIP",
+    "3. EVENTS",
+    "4. 404 / PAGE NOT FOUND",
+    "5. HOMEPAGE",
+    "6. COMMUNITIES"
+  ];
 
   useEffect(() => {
     console.error(
@@ -14,61 +75,181 @@ const NotFound = () => {
     );
   }, [location.pathname]);
 
+  useEffect(() => {
+    setDescText(cardData[activeIndex].text);
+  }, []);
+
+  useEffect(() => {
+    // Center the 404 card on load
+    if (scrollerRef.current) {
+      const cards = scrollerRef.current.querySelectorAll('.timeline-card');
+      const activeCard = cards[3] as HTMLElement;
+      if (activeCard) {
+        setTimeout(() => {
+          const scrollPos = activeCard.offsetLeft - (scrollerRef.current!.offsetWidth / 2) + (activeCard.offsetWidth / 2);
+          scrollerRef.current?.scrollTo({ left: scrollPos, behavior: 'smooth' });
+        }, 300);
+      }
+    }
+  }, []);
+
+  const selectPhase = (index: number) => {
+    setActiveIndex(index);
+    setIsTextVisible(false);
+    
+    setTimeout(() => {
+      setDescText(cardData[index].text);
+      setIsTextVisible(true);
+    }, 300);
+
+    // Center card in view
+    if (scrollerRef.current) {
+      const cards = scrollerRef.current.querySelectorAll('.timeline-card');
+      const card = cards[index] as HTMLElement;
+      if (card) {
+        const scrollPos = card.offsetLeft - (scrollerRef.current.offsetWidth / 2) + (card.offsetWidth / 2);
+        scrollerRef.current.scrollTo({ left: scrollPos, behavior: 'smooth' });
+      }
+    }
+  };
+
+  const handleCardClick = (index: number) => {
+    selectPhase(index);
+    const link = cardData[index].link;
+    if (link) {
+      setTimeout(() => navigate(link), 400);
+    }
+  };
+
+  // Drag to scroll handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollerRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - scrollerRef.current.offsetLeft);
+    setScrollLeft(scrollerRef.current.scrollLeft);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollerRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollerRef.current.offsetLeft;
+    const walk = (x - startX) * 2;
+    scrollerRef.current.scrollLeft = scrollLeft - walk;
+  };
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-ui-dark text-foreground relative overflow-hidden">
-      <SEO title="Page Not Found" description="The page you are looking for does not exist." />
+    <div className="min-h-screen flex flex-col bg-background text-foreground overflow-hidden">
+      <SEO title="Page Not Found - UISU" description="The page you are looking for does not exist." />
 
-      {/* Dither Animation Background */}
-      <div className="absolute inset-0 z-0">
-        <Dither
-          waveColor={[0.0, 0.2, 0.4]} // UI Blue adapted for shader
-          disableAnimation={false}
-          enableMouseInteraction
-          mouseRadius={0.3}
-          colorNum={4}
-          waveAmplitude={0.3}
-          waveFrequency={3}
-          waveSpeed={0.05}
-        />
-      </div>
+      <div className="max-w-[1600px] mx-auto px-[4vw] py-8 w-full h-full flex flex-col justify-between flex-1 animate-fade-in">
+        {/* Header */}
+        <header className="pt-4 relative">
+          <Link to="/" className="block w-10 h-10 mb-8">
+            <img src="/uisu-logo.png" alt="UISU Logo" className="w-full h-full object-contain" />
+          </Link>
+          
+          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-center font-normal mb-4 tracking-tight text-primary">
+            Timeline Interruption
+          </h1>
+          
+          <p className="text-center text-muted-foreground max-w-2xl mx-auto mb-6 text-sm sm:text-base leading-relaxed">
+            The page you're looking for has been moved, removed, or never existed in this timeline. 
+            Use the navigation below to return to a stable section of the site.
+          </p>
+          
+          <div className="hidden sm:flex justify-between border-t border-border pt-4 mb-8 text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+            <span>Navigation Options</span>
+            <span>Current Status: 404</span>
+          </div>
+        </header>
 
-      {/* Content Overlay */}
-      <div className="text-center max-w-lg relative z-10 backdrop-blur-md bg-ui-dark/40 p-10 rounded-3xl border border-white/10 shadow-2xl">
-        <div className="mb-6">
-            <h1 className="text-9xl font-serif text-white/90 font-bold tracking-tighter drop-shadow-xl select-none">
-              404
-            </h1>
-        </div>
-
-        <h2 className="text-3xl font-serif text-nobel-gold font-bold mb-4 drop-shadow-lg tracking-wide">
-          Lost in the Ether
-        </h2>
-
-        <p className="text-gray-200 mb-8 font-medium text-lg leading-relaxed drop-shadow-sm">
-            The page you are looking for has been moved, removed, or never existed.
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link
-                to="/"
-                className="group relative inline-flex items-center justify-center gap-2 px-8 py-3 bg-ui-blue text-white rounded-full font-bold uppercase tracking-widest text-xs overflow-hidden transition-all hover:bg-nobel-gold hover:text-ui-blue shadow-lg border border-white/20"
-            >
-                <span className="relative z-10 flex items-center gap-2">
-                   <Home size={16} /> Return Home
+        {/* Timeline Scroller */}
+        <section className="flex-grow flex items-center relative">
+          <div 
+            ref={scrollerRef}
+            className="flex gap-4 sm:gap-6 overflow-x-auto pb-8 snap-x snap-mandatory no-scrollbar w-full cursor-grab"
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onMouseMove={handleMouseMove}
+          >
+            {cardData.map((card, index) => (
+              <article
+                key={index}
+                onClick={() => handleCardClick(index)}
+                className={`timeline-card min-w-[240px] sm:min-w-[280px] w-[20vw] max-w-[350px] aspect-square p-6 flex flex-col justify-between cursor-pointer transition-all duration-400 snap-center border
+                  ${activeIndex === index 
+                    ? 'bg-primary/10 border-primary/20' 
+                    : 'bg-muted border-transparent hover:-translate-y-1 hover:shadow-lg'
+                  }`}
+              >
+                <span className="text-sm font-medium opacity-60">
+                  {String(index + 1).padStart(2, '0')}
                 </span>
-            </Link>
-             <button
-                onClick={() => window.history.back()}
-                className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white/5 text-white rounded-full font-bold uppercase tracking-widest text-xs hover:bg-white/10 transition-colors backdrop-blur-md border border-white/10"
-            >
-                <ArrowLeft size={16} /> Go Back
-            </button>
-        </div>
-      </div>
+                
+                <div className={`self-center transition-transform duration-500 ${activeIndex === index ? 'scale-110 rotate-3 opacity-100' : 'opacity-80'}`}>
+                  {card.icon}
+                </div>
+                
+                <div className="flex justify-between items-end">
+                  <span className="text-lg font-medium text-foreground">
+                    {card.title}
+                  </span>
+                  <span className={`text-lg transition-transform duration-300 ${card.link ? 'group-hover:rotate-0 -rotate-45' : ''}`}>
+                    {card.link ? (
+                      <span className="text-primary">↗</span>
+                    ) : (
+                      <span className="text-primary">→</span>
+                    )}
+                  </span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
 
-      {/* Decorative footer text */}
-      <div className="absolute bottom-6 text-white/20 text-xs font-mono uppercase tracking-[0.2em] z-10">
-        University of Ibadan Students' Union
+        {/* Bottom Details */}
+        <section className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-4 lg:gap-16 mt-auto pb-24">
+          <ul className="hidden lg:block text-xs leading-loose text-muted-foreground font-medium tracking-wide uppercase">
+            {phaseList.map((phase, index) => (
+              <li 
+                key={index}
+                className={activeIndex === index ? 'text-foreground font-bold' : ''}
+              >
+                {phase}
+              </li>
+            ))}
+          </ul>
+
+          <div className="max-w-xl">
+            <p 
+              className={`text-sm sm:text-base leading-relaxed text-muted-foreground transition-all duration-400 ${
+                isTextVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+              }`}
+            >
+              {descText}
+            </p>
+          </div>
+        </section>
+
+        {/* Floating Action Bar */}
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-background/90 backdrop-blur-md py-2 pl-6 pr-2 rounded-full shadow-xl flex items-center gap-4 border border-border z-50">
+          <span className="text-sm font-medium hidden sm:inline">Lost? Let's get you back.</span>
+          <Link 
+            to="/" 
+            className="bg-primary text-primary-foreground px-5 py-2.5 rounded-full text-sm font-medium hover:scale-105 transition-transform inline-flex items-center gap-2"
+          >
+            Return Home
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="7" y1="17" x2="17" y2="7" />
+              <polyline points="7 7 17 7 17 17" />
+            </svg>
+          </Link>
+        </div>
       </div>
     </div>
   );
