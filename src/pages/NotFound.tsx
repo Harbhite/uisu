@@ -1,8 +1,9 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { SEO } from "@/components/SEO";
-import { Home, Archive, Users, Calendar, HelpCircle, X, ArrowUpRight } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Home, Archive, Users, Calendar, HelpCircle, X, ArrowUpRight, Search } from "lucide-react";
+import { motion } from "framer-motion";
+import { Input } from "@/components/ui/input";
 import uisuLogoColored from "@/assets/uisu-logo-colored.png";
 
 interface CardData {
@@ -237,11 +238,33 @@ const NotFound = () => {
       <div className="max-w-[1600px] mx-auto px-[4vw] py-8 w-full h-full flex flex-col justify-between flex-1 animate-fade-in relative z-10">
         {/* Header */}
         <header className="pt-4 relative">
-          <Link to="/" className="block w-12 h-12 mb-8">
-            <img src={uisuLogoColored} alt="UISU Logo" className="w-full h-full object-contain" />
-          </Link>
+          <div className="flex justify-between items-start mb-8">
+            <Link to="/" className="block w-12 h-12">
+              <img src={uisuLogoColored} alt="UISU Logo" className="w-full h-full object-contain" />
+            </Link>
+            
+            {/* Mini Search Bar */}
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                const query = formData.get('search') as string;
+                if (query?.trim()) {
+                  navigate(`/search?q=${encodeURIComponent(query.trim())}`);
+                }
+              }}
+              className="relative w-48"
+            >
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                name="search"
+                placeholder="Search..."
+                className="pl-9 pr-3 py-2 h-9 text-sm rounded-none border-border bg-background/80 backdrop-blur-sm"
+              />
+            </form>
+          </div>
           
-          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-left font-normal mb-4 tracking-tight text-primary">
+          <h1 className="font-serif text-4xl text-left font-normal mb-4 tracking-tight text-primary">
             {displayedTitle}
             <motion.span
               className="inline-block w-[3px] h-[1em] bg-primary ml-1 align-middle"
@@ -250,12 +273,12 @@ const NotFound = () => {
             />
           </h1>
           
-          <p className="text-left text-muted-foreground max-w-2xl mb-6 text-sm sm:text-base leading-relaxed">
+          <p className="text-left text-muted-foreground max-w-2xl mb-6 text-sm leading-relaxed">
             The page you're looking for has been moved, removed, or never existed in this timeline. 
             Use the navigation below to return to a stable section of the site.
           </p>
           
-          <div className="hidden sm:flex justify-between border-t border-border pt-4 mb-8 text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+          <div className="flex justify-between border-t border-border pt-4 mb-8 text-xs uppercase tracking-widest text-muted-foreground font-semibold">
             <span>Navigation Options</span>
             <span>Current Status: 404</span>
           </div>
@@ -292,7 +315,7 @@ const NotFound = () => {
                   y: 4,
                   transition: { duration: 0.15, ease: "easeOut" }
                 }}
-                className={`timeline-card min-w-[240px] sm:min-w-[280px] w-[20vw] max-w-[350px] aspect-square p-6 flex flex-col justify-between cursor-pointer snap-center border rounded-none
+                className={`timeline-card min-w-[200px] w-[200px] aspect-square p-6 flex flex-col justify-between cursor-pointer snap-center border rounded-none
                   transition-shadow duration-300
                   ${cardColors[index].bg} ${cardColors[index].text}
                   ${activeIndex === index ? `shadow-[0_0_30px_-5px] ${cardColors[index].glow}` : 'shadow-lg hover:shadow-[0_0_25px_-5px] hover:' + cardColors[index].glow}`}
@@ -343,7 +366,7 @@ const NotFound = () => {
 
         {/* Floating Action Bar */}
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-background/90 backdrop-blur-md py-2 pl-6 pr-2 rounded-full shadow-xl flex items-center gap-4 border border-border z-50">
-          <span className="text-sm font-medium hidden sm:inline text-muted-foreground">Lost? Let's get you back.</span>
+          <span className="text-sm font-medium text-muted-foreground">Lost? Let's get you back.</span>
           <Link 
             to="/" 
             className="bg-primary text-primary-foreground px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 hover:bg-primary/90 inline-flex items-center gap-2"
