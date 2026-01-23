@@ -1,7 +1,8 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { SEO } from "@/components/SEO";
-import { Home, Archive, Users, Calendar, HelpCircle, X } from "lucide-react";
+import { Home, Archive, Users, Calendar, HelpCircle, X, ArrowUpRight } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface CardData {
   title: string;
@@ -80,7 +81,6 @@ const NotFound = () => {
   }, []);
 
   useEffect(() => {
-    // Center the 404 card on load
     if (scrollerRef.current) {
       const cards = scrollerRef.current.querySelectorAll('.timeline-card');
       const activeCard = cards[3] as HTMLElement;
@@ -102,7 +102,6 @@ const NotFound = () => {
       setIsTextVisible(true);
     }, 300);
 
-    // Center card in view
     if (scrollerRef.current) {
       const cards = scrollerRef.current.querySelectorAll('.timeline-card');
       const card = cards[index] as HTMLElement;
@@ -121,7 +120,6 @@ const NotFound = () => {
     }
   };
 
-  // Drag to scroll handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!scrollerRef.current) return;
     setIsDragging(true);
@@ -152,11 +150,11 @@ const NotFound = () => {
             <img src="/uisu-logo.png" alt="UISU Logo" className="w-full h-full object-contain" />
           </Link>
           
-          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-center font-normal mb-4 tracking-tight text-primary">
+          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-left font-normal mb-4 tracking-tight text-primary">
             Timeline Interruption
           </h1>
           
-          <p className="text-center text-muted-foreground max-w-2xl mx-auto mb-6 text-sm sm:text-base leading-relaxed">
+          <p className="text-left text-muted-foreground max-w-2xl mb-6 text-sm sm:text-base leading-relaxed">
             The page you're looking for has been moved, removed, or never existed in this timeline. 
             Use the navigation below to return to a stable section of the site.
           </p>
@@ -178,28 +176,39 @@ const NotFound = () => {
             onMouseMove={handleMouseMove}
           >
             {cardData.map((card, index) => (
-              <article
+              <motion.article
                 key={index}
                 onClick={() => handleCardClick(index)}
-                className={`timeline-card min-w-[240px] sm:min-w-[280px] w-[20vw] max-w-[350px] aspect-square p-6 flex flex-col justify-between cursor-pointer transition-all duration-400 snap-center border
+                whileHover={{ 
+                  y: -8,
+                  rotateX: 5,
+                  rotateY: -5,
+                  transition: { duration: 0.3, ease: "easeOut" }
+                }}
+                style={{ transformStyle: "preserve-3d", perspective: 1000 }}
+                className={`timeline-card min-w-[240px] sm:min-w-[280px] w-[20vw] max-w-[350px] aspect-square p-6 flex flex-col justify-between cursor-pointer transition-colors duration-300 snap-center border
                   ${activeIndex === index 
                     ? 'bg-primary/10 border-primary/20' 
-                    : 'bg-muted border-transparent hover:-translate-y-1 hover:shadow-lg'
+                    : 'bg-muted border-transparent'
                   }`}
               >
                 <span className="text-sm font-medium opacity-60">
                   {String(index + 1).padStart(2, '0')}
                 </span>
                 
-                <div className={`self-center transition-transform duration-500 ${activeIndex === index ? 'scale-110 rotate-3 opacity-100' : 'opacity-80'}`}>
+                <motion.div 
+                  className={`self-center transition-opacity duration-500 ${activeIndex === index ? 'opacity-100' : 'opacity-80'}`}
+                  whileHover={{ scale: 1.1, rotate: 3 }}
+                  transition={{ duration: 0.3 }}
+                >
                   {card.icon}
-                </div>
+                </motion.div>
                 
                 <div className="flex justify-between items-end">
                   <span className="text-lg font-medium text-foreground">
                     {card.title}
                   </span>
-                  <span className={`text-lg transition-transform duration-300 ${card.link ? 'group-hover:rotate-0 -rotate-45' : ''}`}>
+                  <span className="text-lg">
                     {card.link ? (
                       <span className="text-primary">↗</span>
                     ) : (
@@ -207,7 +216,7 @@ const NotFound = () => {
                     )}
                   </span>
                 </div>
-              </article>
+              </motion.article>
             ))}
           </div>
         </section>
@@ -238,16 +247,13 @@ const NotFound = () => {
 
         {/* Floating Action Bar */}
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-background/90 backdrop-blur-md py-2 pl-6 pr-2 rounded-full shadow-xl flex items-center gap-4 border border-border z-50">
-          <span className="text-sm font-medium hidden sm:inline">Lost? Let's get you back.</span>
+          <span className="text-sm font-medium hidden sm:inline text-muted-foreground">Lost? Let's get you back.</span>
           <Link 
             to="/" 
-            className="bg-primary text-primary-foreground px-5 py-2.5 rounded-full text-sm font-medium hover:scale-105 transition-transform inline-flex items-center gap-2"
+            className="bg-primary text-primary-foreground px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 hover:bg-primary/90 inline-flex items-center gap-2"
           >
             Return Home
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="7" y1="17" x2="17" y2="7" />
-              <polyline points="7 7 17 7 17 17" />
-            </svg>
+            <ArrowUpRight className="w-4 h-4" />
           </Link>
         </div>
       </div>
