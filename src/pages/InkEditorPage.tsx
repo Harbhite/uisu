@@ -1,11 +1,10 @@
-import React, { useState, useEffect, lazy, Suspense, useCallback, useRef } from 'react';
+import React, { useState, useEffect, lazy, Suspense, useCallback, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, Eye, EyeOff, Trash2, ImagePlus, X, BookOpen, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Eye, Trash2, ImagePlus, X, BookOpen, ChevronDown, Clock, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +12,8 @@ import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { OutputData } from '@editorjs/editorjs';
 import { Json } from '@/integrations/supabase/types';
 import { SEO } from '@/components/SEO';
+import { useAutosave, calculateWordCount, calculateReadingTime } from '@/hooks/useAutosave';
+import { InkPreviewModal } from '@/components/InkPreviewModal';
 
 const EditorJSComponent = lazy(() => import('@/components/EditorJS'));
 
@@ -47,6 +48,17 @@ const emptyContent: OutputData = {
   version: '2.28.0'
 };
 
+const defaultFormData: FormData = {
+  type: 'Blog',
+  title: '',
+  author_name: '',
+  author_role: '',
+  summary: '',
+  tags: '',
+  is_published: false,
+  cover_image: null
+};
+
 const InkEditorPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -54,20 +66,76 @@ const InkEditorPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [user, setUser] = useState<any>(null);
   const [editorContent, setEditorContent] = useState<OutputData>(emptyContent);
   const [editorKey, setEditorKey] = useState(0);
+  const [pieceId, setPieceId] = useState<string | null>(id || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [formData, setFormData] = useState<FormData>({
-    type: 'Blog',
-    title: '',
-    author_name: '',
-    author_role: '',
-    summary: '',
-    tags: '',
-    is_published: false,
-    cover_image: null
+  const [formData, setFormData] = useState<FormData>(defaultFormData);
+
+  // Word count and reading time
+  const wordCount = useMemo(() => calculateWordCount(editorContent), [editorContent]);
+  const readingTime = useMemo(() => calculateReadingTime(wordCount), [wordCount]);
+
+  // Autosave functionality
+  const autosaveData = useMemo(() => ({
+    formData,
+    editorContent,
+    pieceId,
+    userId: user?.id
+  }), [formData, editorContent, pieceId, user?.id]);
+
+  const handleAutosave = useCallback(async (data: typeof autosaveData) => {
+    if (!data.userId || !data.formData.title.trim()) return;
+    
+    try {
+      const tagsArray = data.formData.tags
+        .split(',')
+        .map(t => t.trim())
+        .filter(t => t.length > 0);
+
+      const payload = {
+        type: data.formData.type,
+        title: data.formData.title,
+        author_name: data.formData.author_name,
+        author_role: data.formData.author_role || null,
+        summary: data.formData.summary || null,
+        content: data.editorContent as unknown as Json,
+        tags: tagsArray,
+        is_published: data.formData.is_published,
+        user_id: data.userId,
+        cover_image: data.formData.cover_image
+      };
+
+      if (data.pieceId) {
+        await supabase
+          .from('ink_pieces')
+          .update(payload)
+          .eq('id', data.pieceId);
+      } else {
+        const { data: newPiece } = await supabase
+          .from('ink_pieces')
+          .insert(payload)
+          .select('id')
+          .single();
+        
+        if (newPiece) {
+          setPieceId(newPiece.id);
+          window.history.replaceState(null, '', `/inks-vault/edit/${newPiece.id}`);
+        }
+      }
+    } catch (error) {
+      console.error('Autosave failed:', error);
+    }
+  }, []);
+
+  const { lastSaved, isSaving: isAutosaving } = useAutosave({
+    data: autosaveData,
+    onSave: handleAutosave,
+    interval: 30000,
+    enabled: !!user && formData.title.trim().length > 0
   });
 
   // Non-mod piece types
@@ -284,6 +352,14 @@ const InkEditorPage: React.FC = () => {
         description="Write and publish your content to the Inks Vault."
         image={id ? '/screenshots/ink-editor-edit.png' : '/screenshots/ink-editor-new.png'}
       />
+
+      {/* Preview Modal */}
+      <InkPreviewModal
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        formData={formData}
+        content={editorContent}
+      />
       
       {/* Sticky Header Bar */}
       <div className="fixed top-16 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border">
@@ -306,9 +382,38 @@ const InkEditorPage: React.FC = () => {
                   {formData.is_published ? 'Published' : 'Draft'}
                 </span>
               </div>
+              {/* Autosave status */}
+              <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground">
+                {isAutosaving ? (
+                  <><Loader2 size={12} className="animate-spin" /> Saving...</>
+                ) : lastSaved ? (
+                  <><Clock size={12} /> Saved {lastSaved.toLocaleTimeString()}</>
+                ) : null}
+              </div>
             </div>
             
             <div className="flex items-center gap-2">
+              {/* Word count & reading time */}
+              <div className="hidden md:flex items-center gap-3 mr-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <FileText size={12} /> {wordCount} words
+                </span>
+                <span className="flex items-center gap-1">
+                  <Clock size={12} /> {readingTime} min read
+                </span>
+              </div>
+              
+              {/* Preview button */}
+              <Button 
+                onClick={() => setShowPreview(true)} 
+                variant="outline" 
+                size="sm"
+                className="text-muted-foreground"
+              >
+                <Eye size={14} className="mr-2" />
+                Preview
+              </Button>
+              
               <Button 
                 onClick={() => handleSave(false)} 
                 disabled={saving} 
@@ -325,17 +430,7 @@ const InkEditorPage: React.FC = () => {
                 size="sm" 
                 className="bg-accent hover:bg-accent/90 text-primary"
               >
-                {formData.is_published ? (
-                  <>
-                    <Eye size={14} className="mr-2" />
-                    Update
-                  </>
-                ) : (
-                  <>
-                    <Eye size={14} className="mr-2" />
-                    Publish
-                  </>
-                )}
+                {formData.is_published ? 'Update' : 'Publish'}
               </Button>
             </div>
           </div>
@@ -516,20 +611,33 @@ const InkEditorPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Bottom Actions */}
-          {id && (
-            <div className="mt-6 flex justify-end">
+          {/* Bottom Stats Bar */}
+          <div className="mt-6 flex items-center justify-between">
+            <div className="flex md:hidden items-center gap-4 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <FileText size={12} /> {wordCount} words
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock size={12} /> {readingTime} min
+              </span>
+              {isAutosaving ? (
+                <span className="flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Saving...</span>
+              ) : lastSaved ? (
+                <span className="flex items-center gap-1"><Clock size={12} /> Saved</span>
+              ) : null}
+            </div>
+            {id && (
               <Button
                 onClick={handleDelete}
                 variant="ghost"
                 size="sm"
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 ml-auto"
               >
                 <Trash2 size={14} className="mr-2" />
                 Delete Piece
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>
