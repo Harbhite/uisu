@@ -8,8 +8,8 @@ const AnnouncementsPage = () => {
   return (
     <>
       <SEO
-        title="Announcements"
-        description="Stay informed with the latest news, updates, and official announcements from the University of Ibadan Students' Union."
+        title="Official Announcements | UISU News & Updates"
+        description="Get the latest official news from UI Students' Union: policy updates, election notices, academic calendar changes, and important campus announcements. Stay informed, Uite."
         image="/screenshots/announcements.png"
       />
       <AnnouncementsComponent onBack={() => navigate("/")} />

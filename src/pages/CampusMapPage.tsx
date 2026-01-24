@@ -26,8 +26,8 @@ const CampusMapPage = () => {
   return (
     <div className="min-h-screen bg-slate-50">
       <SEO
-        title="Campus Map"
-        description="Interactive map of the University of Ibadan. Explore halls of residence and key locations."
+        title="Campus Map | UI Halls of Residence & Locations"
+        description="Interactive map of University of Ibadan campus. Navigate 12+ halls of residence (Kuti, Tedder, Queen's), academic buildings, and landmarks. Find your way around Nigeria's premier university."
         image="/screenshots/campus-map.png"
       />
       

@@ -8,8 +8,8 @@ const DocumentsPage = () => {
   return (
     <>
       <SEO
-        title="Documents Library"
-        description="Access constitutions, manifestos, speeches, and historical records of the University of Ibadan Students' Union."
+        title="Documents Library | UISU Constitution & Historical Records"
+        description="Access the complete archive of UI Students' Union documents: constitutions, manifestos, election results, speeches, and policy papers from 1948 to present. Download PDFs free."
         image="/screenshots/documents.png"
       />
       <DocumentLibraryContent onBack={() => navigate("/")} />

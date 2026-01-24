@@ -8,8 +8,8 @@ const EventsPage = () => {
   return (
     <>
       <SEO
-        title="Events"
-        description="Stay updated with the latest union activities, academic calendar, and campus events."
+        title="Events Calendar | UISU Activities & Campus Happenings"
+        description="Discover upcoming UI Students' Union events, academic calendar dates, cultural activities, and campus happenings. RSVP to lectures, concerts, and student-led initiatives at Ibadan."
         image="/screenshots/events.png"
       />
       <EventsCalendar onBack={() => navigate("/")} />

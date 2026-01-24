@@ -1,11 +1,41 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Facebook, Twitter, Instagram, Linkedin, Send } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { resourceCategories } from "@/lib/data";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Footer = () => {
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+
+    setIsLoading(true);
+    try {
+      const response = await supabase.functions.invoke('subscribe-newsletter', {
+        body: { email, source: 'footer' }
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to subscribe');
+      }
+
+      toast.success(response.data?.message || "Successfully subscribed!");
+      setEmail("");
+    } catch (error: any) {
+      console.error('Newsletter subscription error:', error);
+      toast.error(error.message || "Failed to subscribe. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <footer className="px-0 pb-0 md:px-4 md:pb-4 bg-slate-50 pt-10 no-print">
       <div className="bg-ui-blue text-white rounded-none md:rounded-[2.5rem] p-8 md:p-16 shadow-lg border border-ui-blue/10">
@@ -76,16 +106,23 @@ export const Footer = () => {
                 </p>
             </div>
 
-            <div className="flex gap-2">
+            <form onSubmit={handleSubscribe} className="flex gap-2">
                 <Input
                     type="email"
                     placeholder="Email Address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
                     className="rounded-full bg-white/10 border-white/10 text-white placeholder:text-slate-400 h-12 px-6 focus-visible:ring-nobel-gold"
                 />
-                <Button className="rounded-full h-12 px-8 bg-nobel-gold hover:bg-white hover:text-ui-blue text-ui-blue font-bold tracking-wide transition-colors">
-                    Submit
+                <Button 
+                  type="submit"
+                  disabled={isLoading}
+                  className="rounded-full h-12 px-8 bg-nobel-gold hover:bg-white hover:text-ui-blue text-ui-blue font-bold tracking-wide transition-colors disabled:opacity-70"
+                >
+                    {isLoading ? "..." : "Submit"}
                 </Button>
-            </div>
+            </form>
           </div>
 
         </div>
