@@ -1,6 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, Eye, EyeOff, Trash2, ImagePlus, X } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Eye, EyeOff, Trash2, ImagePlus, X, BookOpen, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -278,186 +278,230 @@ const InkEditorPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-24 pb-16">
+    <div className="min-h-screen bg-muted/30">
       <SEO
         title={id ? 'Edit Piece' : 'New Piece'}
         description="Write and publish your content to the Inks Vault."
         image={id ? '/screenshots/ink-editor-edit.png' : '/screenshots/ink-editor-new.png'}
       />
-      <div className="container mx-auto px-4 max-w-5xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <button
-            onClick={() => navigate('/inks-vault')}
-            className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-accent transition-colors"
-          >
-            <div className="p-2 border border-border group-hover:border-accent transition-colors">
-              <ArrowLeft size={14} />
+      
+      {/* Sticky Header Bar */}
+      <div className="fixed top-16 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="flex items-center justify-between h-14">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate('/inks-vault')}
+                className="p-2 hover:bg-muted rounded-lg transition-colors"
+              >
+                <ArrowLeft size={18} />
+              </button>
+              <div className="h-6 w-px bg-border" />
+              <div className="flex items-center gap-2">
+                <div 
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: formData.is_published ? '#22c55e' : '#f59e0b' }}
+                />
+                <span className="text-xs font-medium text-muted-foreground">
+                  {formData.is_published ? 'Published' : 'Draft'}
+                </span>
+              </div>
             </div>
-            <span>Back to Vault</span>
-          </button>
-
-          <div className="flex items-center gap-3">
-            <Button onClick={() => handleSave(false)} disabled={saving} variant="outline" size="sm" className="border-border">
-              {saving ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Save size={14} className="mr-2" />}
-              Save Draft
-            </Button>
-            <Button onClick={() => handleSave(true)} disabled={saving} size="sm" className="bg-accent hover:bg-accent/90 text-primary">
-              {saving ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Eye size={14} className="mr-2" />}
-              Publish
-            </Button>
+            
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={() => handleSave(false)} 
+                disabled={saving} 
+                variant="ghost" 
+                size="sm"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                {saving ? <Loader2 size={14} className="mr-2 animate-spin" /> : <Save size={14} className="mr-2" />}
+                Save
+              </Button>
+              <Button 
+                onClick={() => handleSave(true)} 
+                disabled={saving} 
+                size="sm" 
+                className="bg-accent hover:bg-accent/90 text-primary"
+              >
+                {formData.is_published ? (
+                  <>
+                    <Eye size={14} className="mr-2" />
+                    Update
+                  </>
+                ) : (
+                  <>
+                    <Eye size={14} className="mr-2" />
+                    Publish
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Main Editor Container - Sharp corners */}
-        <div className="bg-card border border-border overflow-hidden">
-          {/* Title Bar */}
-          <div className="border-b border-border bg-muted px-8 py-4">
-            <div className="flex items-center gap-4">
-              <div className="w-3 h-3 bg-accent"></div>
-              <h1 className="text-sm font-bold uppercase tracking-[0.15em] text-foreground">
-                {id ? 'Edit Piece' : 'New Piece'}
-              </h1>
-            </div>
-          </div>
-
-          <div className="p-8">
-            {/* Meta Row */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-              <div>
-                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.15em] mb-2 block">Type</Label>
-                <Select 
-                  value={formData.type} 
-                  onValueChange={(v) => setFormData({ ...formData, type: v as PieceType })}
-                >
-                  <SelectTrigger className="bg-muted border-border">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableTypes.map(type => (
-                      <SelectItem key={type} value={type}>
-                        {type} {type === 'Report' && '(Staff)'}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.15em] mb-2 block">Author</Label>
-                <Input
-                  value={formData.author_name}
-                  onChange={(e) => setFormData({ ...formData, author_name: e.target.value })}
-                  placeholder="Your name"
-                  className="bg-muted border-border"
-                />
-              </div>
-
-              <div>
-                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.15em] mb-2 block">Role/Title</Label>
-                <Input
-                  value={formData.author_role}
-                  onChange={(e) => setFormData({ ...formData, author_role: e.target.value })}
-                  placeholder="e.g., Student, Writer"
-                  className="bg-muted border-border"
-                />
-              </div>
-
-              <div>
-                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.15em] mb-2 block">Tags</Label>
-                <Input
-                  value={formData.tags}
-                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                  placeholder="Culture, Sports..."
-                  className="bg-muted border-border"
-                />
-              </div>
-            </div>
-
-            {/* Cover Image Upload */}
-            <div className="mb-8">
-              <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.15em] mb-3 block">Cover Image</Label>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleCoverImageUpload}
-                accept="image/*"
-                className="hidden"
-              />
-              {formData.cover_image ? (
-                <div className="relative group overflow-hidden bg-muted h-48 w-full max-w-md border border-border">
-                  <img 
-                    src={formData.cover_image} 
-                    alt="Cover" 
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-primary/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploadingImage}
+      <div className="pt-32 pb-16">
+        <div className="container mx-auto px-4 max-w-4xl">
+          
+          {/* Meta Panel - Collapsible */}
+          <div className="mb-8 bg-card border border-border rounded-xl overflow-hidden">
+            <details className="group" open>
+              <summary className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-muted/50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent">
+                    <BookOpen size={16} />
+                  </div>
+                  <span className="text-sm font-medium">Piece Settings</span>
+                </div>
+                <ChevronDown size={16} className="text-muted-foreground group-open:rotate-180 transition-transform" />
+              </summary>
+              
+              <div className="px-6 pb-6 space-y-6 border-t border-border pt-6">
+                {/* Type & Author Row */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground mb-2 block">Type</Label>
+                    <Select 
+                      value={formData.type} 
+                      onValueChange={(v) => setFormData({ ...formData, type: v as PieceType })}
                     >
-                      {uploadingImage ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />}
-                      <span className="ml-2">Change</span>
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={removeCoverImage}
-                    >
-                      <X size={14} />
-                      <span className="ml-2">Remove</span>
-                    </Button>
+                      <SelectTrigger className="bg-muted/50 border-border h-10">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card border-border">
+                        {availableTypes.map(type => (
+                          <SelectItem key={type} value={type}>
+                            {type} {type === 'Report' && '(Staff)'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground mb-2 block">Author</Label>
+                    <Input
+                      value={formData.author_name}
+                      onChange={(e) => setFormData({ ...formData, author_name: e.target.value })}
+                      placeholder="Your name"
+                      className="bg-muted/50 border-border h-10"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground mb-2 block">Role/Title</Label>
+                    <Input
+                      value={formData.author_role}
+                      onChange={(e) => setFormData({ ...formData, author_role: e.target.value })}
+                      placeholder="e.g., Writer, Student"
+                      className="bg-muted/50 border-border h-10"
+                    />
                   </div>
                 </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingImage}
-                  className="w-full max-w-md h-32 border-2 border-dashed border-border hover:border-accent hover:bg-muted transition-all flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-accent"
-                >
-                  {uploadingImage ? (
-                    <Loader2 size={24} className="animate-spin" />
-                  ) : (
-                    <>
-                      <ImagePlus size={24} />
-                      <span className="text-sm font-medium">Add Cover Image</span>
-                      <span className="text-xs">Recommended: 1200x630px</span>
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
 
-            {/* Title Input */}
-            <div className="mb-6">
+                {/* Tags */}
+                <div>
+                  <Label className="text-xs font-medium text-muted-foreground mb-2 block">Tags</Label>
+                  <Input
+                    value={formData.tags}
+                    onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                    placeholder="Culture, Sports, Opinion... (comma separated)"
+                    className="bg-muted/50 border-border h-10"
+                  />
+                </div>
+
+                {/* Cover Image */}
+                <div>
+                  <Label className="text-xs font-medium text-muted-foreground mb-2 block">Cover Image</Label>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleCoverImageUpload}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  {formData.cover_image ? (
+                    <div className="relative group overflow-hidden rounded-xl h-40 w-full max-w-lg border border-border">
+                      <img 
+                        src={formData.cover_image} 
+                        alt="Cover" 
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-primary/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={uploadingImage}
+                        >
+                          {uploadingImage ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />}
+                          <span className="ml-2">Change</span>
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={removeCoverImage}
+                        >
+                          <X size={14} />
+                          <span className="ml-2">Remove</span>
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingImage}
+                      className="w-full max-w-lg h-28 border-2 border-dashed border-border hover:border-accent rounded-xl hover:bg-accent/5 transition-all flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-accent"
+                    >
+                      {uploadingImage ? (
+                        <Loader2 size={20} className="animate-spin" />
+                      ) : (
+                        <>
+                          <ImagePlus size={20} />
+                          <span className="text-xs font-medium">Add Cover Image (1200×630 recommended)</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </details>
+          </div>
+
+          {/* Main Writing Area */}
+          <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+            {/* Title */}
+            <div className="px-8 pt-10">
               <Input
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="Untitled"
-                className="text-3xl md:text-4xl font-serif border-0 border-b border-border bg-transparent px-0 py-4 focus-visible:ring-0 focus-visible:border-accent placeholder:text-muted-foreground/30"
+                className="text-4xl md:text-5xl font-serif border-0 bg-transparent px-0 py-2 h-auto focus-visible:ring-0 placeholder:text-muted-foreground/30 leading-tight"
               />
             </div>
 
             {/* Summary */}
-            <div className="mb-8">
+            <div className="px-8 py-4">
               <Textarea
                 value={formData.summary}
                 onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
-                placeholder="Write a brief summary that will appear in cards..."
+                placeholder="Write a brief summary that will appear in previews..."
                 rows={2}
-                className="bg-muted border-border resize-none text-muted-foreground"
+                className="bg-transparent border-0 resize-none text-muted-foreground focus-visible:ring-0 text-lg font-light leading-relaxed px-0"
               />
             </div>
 
+            <div className="h-px bg-border mx-8" />
+
             {/* Editor */}
-            <div className="mb-8">
+            <div className="px-4 py-8">
               <Suspense fallback={
-                <div className="min-h-[400px] bg-muted flex items-center justify-center border border-border">
+                <div className="min-h-[500px] flex items-center justify-center">
                   <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
                 </div>
               }>
@@ -470,41 +514,22 @@ const InkEditorPage: React.FC = () => {
                 />
               </Suspense>
             </div>
-
-            {/* Footer Controls */}
-            <div className="flex items-center justify-between pt-6 border-t border-border">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-3 px-4 py-2 bg-muted">
-                  {formData.is_published ? (
-                    <Eye className="text-green-600" size={18} />
-                  ) : (
-                    <EyeOff className="text-muted-foreground" size={18} />
-                  )}
-                  <div>
-                    <p className="text-sm font-medium text-foreground">
-                      {formData.is_published ? 'Published' : 'Draft'}
-                    </p>
-                  </div>
-                  <Switch
-                    checked={formData.is_published}
-                    onCheckedChange={(checked) => setFormData({ ...formData, is_published: checked })}
-                  />
-                </div>
-              </div>
-
-              {id && (
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
-                  onClick={handleDelete}
-                  className="gap-2"
-                >
-                  <Trash2 size={14} />
-                  Delete
-                </Button>
-              )}
-            </div>
           </div>
+
+          {/* Bottom Actions */}
+          {id && (
+            <div className="mt-6 flex justify-end">
+              <Button
+                onClick={handleDelete}
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 size={14} className="mr-2" />
+                Delete Piece
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>
