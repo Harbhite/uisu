@@ -22,10 +22,11 @@ export const Menu = ({ isMenuOpen, setIsMenuOpen, navLinks }: MenuProps) => {
           {/* Left Side: Navigation Links */}
           <div className="flex-1 flex flex-col justify-center items-start h-full relative z-10">
 
-             {/* Close Button */}
+             {/* Close Button - positioned top-right for better mobile thumb accessibility */}
              <button
                 onClick={() => setIsMenuOpen(false)}
-                className="absolute top-6 left-6 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
+                className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
+                aria-label="Close menu"
              >
                 <X size={24} />
              </button>
