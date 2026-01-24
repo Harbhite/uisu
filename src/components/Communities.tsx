@@ -463,71 +463,160 @@ export const CommunitiesPage: React.FC<CommunitiesProps> = ({ onBack, onClubSele
                         <Loader2 className="w-8 h-8 animate-spin text-nobel-gold" />
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <AnimatePresence mode="popLayout">
-                            {filteredClubs.map((club) => (
+                            {filteredClubs.map((club, index) => (
                                 <motion.div
                                     layout
                                     key={club.id}
-                                    initial={{ opacity: 0, scale: 0.95 }}
-                                    animate={{ opacity: 1, scale: 1 }}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.95 }}
+                                    transition={{ delay: index * 0.05 }}
                                     onClick={() => onClubSelect(club.id)}
-                                    className="bg-card rounded-xl border border-border hover:border-nobel-gold hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col justify-between min-h-[320px] overflow-hidden"
+                                    className="group relative cursor-pointer"
                                 >
-                                    {/* Header image if available */}
-                                    {club.headerImageUrl && (
-                                        <div className="h-32 w-full overflow-hidden">
-                                            <img 
-                                                src={club.headerImageUrl} 
-                                                alt={`${club.name} banner`}
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                            />
-                                        </div>
-                                    )}
-                                    
-                                    <div className={`p-8 flex-1 flex flex-col ${club.headerImageUrl ? 'pt-4' : ''}`}>
-                                        <div>
-                                            <div className="flex justify-between items-start mb-6">
-                                                {club.imageUrl ? (
-                                                    <div className={`w-14 h-14 rounded-lg overflow-hidden bg-muted ${club.headerImageUrl ? '-mt-10 border-4 border-card shadow-lg' : ''}`}>
-                                                        <img 
-                                                            src={club.imageUrl} 
-                                                            alt={`${club.name} logo`}
-                                                            className="w-full h-full object-cover"
-                                                        />
-                                                    </div>
-                                                ) : (
-                                                    <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-ui-blue group-hover:bg-ui-blue group-hover:text-white transition-colors">
-                                                        {getIconComponent(club.iconName)}
-                                                    </div>
-                                                )}
-                                                <div className="px-2 py-1 bg-muted text-muted-foreground text-[10px] font-bold uppercase tracking-widest rounded border border-border">
-                                                    {club.category}
+                                    {/* Card with glass morphism effect */}
+                                    <div className="relative h-[380px] overflow-hidden rounded-2xl border border-border bg-card transition-all duration-500 hover:border-transparent hover:shadow-2xl hover:shadow-primary/10">
+                                        {/* Gradient overlay on hover */}
+                                        <div 
+                                            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0"
+                                            style={{ 
+                                                background: `linear-gradient(135deg, ${club.color}15 0%, transparent 50%)` 
+                                            }}
+                                        />
+                                        
+                                        {/* Top accent bar */}
+                                        <div 
+                                            className="absolute top-0 left-0 right-0 h-1 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"
+                                            style={{ backgroundColor: club.color }}
+                                        />
+
+                                        {/* Header Section */}
+                                        <div className="relative h-28 overflow-hidden">
+                                            {club.headerImageUrl ? (
+                                                <>
+                                                    <img 
+                                                        src={club.headerImageUrl} 
+                                                        alt={`${club.name} banner`}
+                                                        className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                                                    />
+                                                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card" />
+                                                </>
+                                            ) : (
+                                                <div 
+                                                    className="absolute inset-0"
+                                                    style={{ 
+                                                        background: `linear-gradient(135deg, ${club.color}30 0%, ${club.color}10 100%)` 
+                                                    }}
+                                                >
+                                                    <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-30" />
+                                                    <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-card to-transparent" />
                                                 </div>
+                                            )}
+                                            
+                                            {/* Category badge */}
+                                            <div className="absolute top-4 right-4">
+                                                <span 
+                                                    className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-full backdrop-blur-md border"
+                                                    style={{ 
+                                                        backgroundColor: `${club.color}20`,
+                                                        borderColor: `${club.color}40`,
+                                                        color: club.color
+                                                    }}
+                                                >
+                                                    {club.category}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Logo positioned over the header */}
+                                        <div className="relative z-10 -mt-10 ml-6">
+                                            {club.imageUrl ? (
+                                                <div 
+                                                    className="w-16 h-16 rounded-xl overflow-hidden border-4 border-card shadow-lg transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300"
+                                                    style={{ boxShadow: `0 8px 32px ${club.color}30` }}
+                                                >
+                                                    <img 
+                                                        src={club.imageUrl} 
+                                                        alt={`${club.name} logo`}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div 
+                                                    className="w-16 h-16 rounded-xl flex items-center justify-center border-4 border-card shadow-lg transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300"
+                                                    style={{ 
+                                                        backgroundColor: `${club.color}15`,
+                                                        color: club.color,
+                                                        boxShadow: `0 8px 32px ${club.color}30`
+                                                    }}
+                                                >
+                                                    {getIconComponent(club.iconName, 28)}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Content */}
+                                        <div className="px-6 pt-4 pb-6 flex flex-col h-[calc(100%-7rem-2.5rem)]">
+                                            <div className="flex-1">
+                                                {club.acronym && (
+                                                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                                                        {club.acronym}
+                                                    </span>
+                                                )}
+                                                <h3 
+                                                    className="font-serif text-xl leading-tight mb-3 transition-colors duration-300 line-clamp-2"
+                                                    style={{ color: 'var(--foreground)' }}
+                                                >
+                                                    <span className="group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r transition-all duration-300"
+                                                          style={{ 
+                                                              '--tw-gradient-from': club.color,
+                                                              '--tw-gradient-to': 'var(--accent)'
+                                                          } as React.CSSProperties}>
+                                                        {club.name}
+                                                    </span>
+                                                </h3>
+                                                
+                                                <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 font-light">
+                                                    {club.description}
+                                                </p>
                                             </div>
 
-                                            <h3 className="font-serif text-2xl text-ui-blue mb-2 group-hover:text-nobel-gold transition-colors leading-tight">
-                                                {club.name}
-                                            </h3>
-                                            {club.acronym && <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">{club.acronym}</div>}
-                                            
-                                            <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 font-light">
-                                                {club.description}
-                                            </p>
+                                            {/* Footer */}
+                                            <div className="mt-auto pt-4 flex items-center justify-between border-t border-border/50">
+                                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                    <Calendar size={12} style={{ color: club.color }} />
+                                                    <span>Est. {club.founded}</span>
+                                                </div>
+                                                
+                                                <div 
+                                                    className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-300"
+                                                    style={{ color: club.color }}
+                                                >
+                                                    <span>Explore</span>
+                                                    <ArrowRight size={14} />
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-
-                                    <div className="mt-6 pt-6 border-t border-border flex justify-between items-center">
-                                        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                                            <Calendar size={12} /> Est. {club.founded}
-                                        </div>
-                                        <ArrowRight size={16} className="text-muted group-hover:text-nobel-gold group-hover:translate-x-1 transition-all" />
                                     </div>
                                 </motion.div>
                             ))}
                         </AnimatePresence>
                     </div>
+                )}
+
+                {/* Empty State */}
+                {!loading && filteredClubs.length === 0 && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="text-center py-20"
+                    >
+                        <Users className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+                        <h3 className="font-serif text-2xl text-muted-foreground mb-2">No clubs found</h3>
+                        <p className="text-muted-foreground/60">Try adjusting your search or filter criteria</p>
+                    </motion.div>
                 )}
             </div>
         </div>
