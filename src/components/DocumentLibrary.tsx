@@ -1034,62 +1034,122 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                 )}
             </AnimatePresence>
 
-            {/* PDF Preview Modal */}
+            {/* PDF Preview Modal - Enhanced */}
             <AnimatePresence>
                 {previewDoc && previewDoc.file_url && (
                     <motion.div 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/90 backdrop-blur-sm"
+                        className="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-4 bg-foreground/90 backdrop-blur-sm"
                         onClick={() => setPreviewDoc(null)}
                     >
                         <motion.div 
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="bg-background w-full max-w-5xl h-[85vh] shadow-2xl overflow-hidden flex flex-col"
+                            className="bg-background w-full max-w-6xl h-[90vh] shadow-2xl overflow-hidden flex flex-col"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="flex justify-between items-center p-4 border-b border-border">
-                                <div className="flex-1">
-                                    <h3 className="font-serif text-xl text-ui-blue truncate">{previewDoc.title}</h3>
+                            {/* Header with document info */}
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-3 md:p-4 border-b border-border gap-3">
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        {getFileExtensionIcon(previewDoc.file_url)}
+                                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                                            {getFileExtension(previewDoc.file_url)}
+                                        </span>
+                                    </div>
+                                    <h3 className="font-serif text-lg md:text-xl text-ui-blue truncate">{previewDoc.title}</h3>
                                     <p className="text-xs text-muted-foreground uppercase tracking-widest">
-                                        {previewDoc.type} • {previewDoc.year}
+                                        {previewDoc.type} • {previewDoc.year} • {previewDoc.size}
                                     </p>
                                 </div>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2 md:gap-3 w-full md:w-auto flex-wrap md:flex-nowrap">
+                                    {/* Navigation hint */}
+                                    <div className="hidden lg:flex items-center gap-2 px-3 py-2 bg-muted/50 rounded text-xs text-muted-foreground">
+                                        <span>Use scroll or PDF controls to navigate pages</span>
+                                    </div>
                                     <a 
                                         href={previewDoc.file_url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-ui-blue hover:text-white text-foreground text-xs font-bold uppercase tracking-widest transition-all rounded"
+                                        className="flex items-center gap-2 px-3 md:px-4 py-2 bg-muted hover:bg-ui-blue hover:text-white text-foreground text-xs font-bold uppercase tracking-widest transition-all rounded"
                                     >
-                                        <ExternalLink size={14} /> Open
+                                        <ExternalLink size={14} /> 
+                                        <span className="hidden sm:inline">Open</span>
                                     </a>
                                     <a 
                                         href={previewDoc.file_url}
                                         download
-                                        className="flex items-center gap-2 px-4 py-2 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest hover:bg-nobel-gold hover:text-foreground transition-all rounded"
+                                        className="flex items-center gap-2 px-3 md:px-4 py-2 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest hover:bg-nobel-gold hover:text-foreground transition-all rounded"
                                     >
-                                        <Download size={14} /> Download
+                                        <Download size={14} /> 
+                                        <span className="hidden sm:inline">Download</span>
                                     </a>
                                     <button 
                                         onClick={() => setPreviewDoc(null)} 
-                                        className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                                        className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors ml-auto md:ml-0"
                                     >
                                         <X size={24} />
                                     </button>
                                 </div>
                             </div>
                             
-                            <div className="flex-1 bg-muted">
-                                <iframe 
-                                    src={`${previewDoc.file_url}#toolbar=1&navpanes=0`}
-                                    className="w-full h-full border-0"
-                                    title={`Preview of ${previewDoc.title}`}
-                                />
+                            {/* Document Preview Area */}
+                            <div className="flex-1 bg-muted relative overflow-hidden">
+                                {previewDoc.file_url.toLowerCase().endsWith('.pdf') ? (
+                                    // PDF Preview with embedded viewer
+                                    <iframe 
+                                        src={`${previewDoc.file_url}#toolbar=1&navpanes=1&scrollbar=1&view=FitH`}
+                                        className="w-full h-full border-0"
+                                        title={`Preview of ${previewDoc.title}`}
+                                    />
+                                ) : previewDoc.file_url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                                    // Image Preview
+                                    <div className="w-full h-full flex items-center justify-center p-8">
+                                        <img 
+                                            src={previewDoc.file_url} 
+                                            alt={previewDoc.title}
+                                            className="max-w-full max-h-full object-contain"
+                                        />
+                                    </div>
+                                ) : (
+                                    // Other file types - show download prompt
+                                    <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center">
+                                        <div className="w-24 h-24 rounded-full bg-ui-blue/10 flex items-center justify-center mb-6">
+                                            {getFileExtensionIcon(previewDoc.file_url) || <FileText className="w-12 h-12 text-ui-blue" />}
+                                        </div>
+                                        <h4 className="font-serif text-2xl text-foreground mb-2">Preview Not Available</h4>
+                                        <p className="text-muted-foreground mb-6 max-w-md">
+                                            This file type cannot be previewed in the browser. Please download the file to view its contents.
+                                        </p>
+                                        <a 
+                                            href={previewDoc.file_url}
+                                            download
+                                            className="flex items-center gap-2 px-6 py-3 bg-ui-blue text-white text-sm font-bold uppercase tracking-widest hover:bg-nobel-gold hover:text-foreground transition-all rounded"
+                                        >
+                                            <Download size={16} /> Download {getFileExtension(previewDoc.file_url)} File
+                                        </a>
+                                    </div>
+                                )}
                             </div>
+
+                            {/* Footer with document details */}
+                            {previewDoc.description && (
+                                <div className="p-4 border-t border-border bg-card">
+                                    <p className="text-sm text-muted-foreground line-clamp-2">{previewDoc.description}</p>
+                                    {previewDoc.tags && previewDoc.tags.length > 0 && (
+                                        <div className="flex flex-wrap gap-2 mt-3">
+                                            {previewDoc.tags.map(tag => (
+                                                <span key={tag} className="px-2 py-1 text-xs font-medium bg-muted text-muted-foreground rounded-full">
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </motion.div>
                     </motion.div>
                 )}
