@@ -174,15 +174,20 @@ export type Database = {
           color: string | null
           created_at: string | null
           description: string | null
+          email: string | null
           founded: string | null
           header_image_url: string | null
           icon_name: string | null
           id: string
           image_url: string | null
+          meeting_location: string | null
+          meeting_schedule: string | null
           motto: string | null
           name: string
           president: string | null
+          social_links: Json | null
           updated_at: string | null
+          website: string | null
         }
         Insert: {
           acronym?: string | null
@@ -191,15 +196,20 @@ export type Database = {
           color?: string | null
           created_at?: string | null
           description?: string | null
+          email?: string | null
           founded?: string | null
           header_image_url?: string | null
           icon_name?: string | null
           id?: string
           image_url?: string | null
+          meeting_location?: string | null
+          meeting_schedule?: string | null
           motto?: string | null
           name: string
           president?: string | null
+          social_links?: Json | null
           updated_at?: string | null
+          website?: string | null
         }
         Update: {
           acronym?: string | null
@@ -208,15 +218,20 @@ export type Database = {
           color?: string | null
           created_at?: string | null
           description?: string | null
+          email?: string | null
           founded?: string | null
           header_image_url?: string | null
           icon_name?: string | null
           id?: string
           image_url?: string | null
+          meeting_location?: string | null
+          meeting_schedule?: string | null
           motto?: string | null
           name?: string
           president?: string | null
+          social_links?: Json | null
           updated_at?: string | null
+          website?: string | null
         }
         Relationships: []
       }
