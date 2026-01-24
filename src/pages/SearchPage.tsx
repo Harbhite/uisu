@@ -26,6 +26,19 @@ const SearchPage = () => {
   const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  
+  // Popular search suggestions based on common queries
+  const popularSearches = [
+    'SUG President',
+    'Constitution',
+    'Elections',
+    'NUESA',
+    'Senate',
+    'Budget Report',
+    'MCAN',
+    'Hall of Residence'
+  ];
   
   const [results, setResults] = useState<{
     leaders: SearchResult[];
@@ -201,18 +214,56 @@ const SearchPage = () => {
               type="text"
               placeholder="Search leaders, documents, events, inks, communities..."
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setShowSuggestions(!e.target.value);
+              }}
+              onFocus={() => !query && setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               className="pl-12 pr-12 py-6 text-lg rounded-none border-border focus:border-accent"
               autoFocus
             />
             {query && (
               <button
-                onClick={() => setQuery('')}
+                onClick={() => {
+                  setQuery('');
+                  setShowSuggestions(true);
+                }}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 <X size={20} />
               </button>
             )}
+            
+            {/* Search Suggestions Dropdown */}
+            <AnimatePresence>
+              {showSuggestions && !query && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute top-full left-0 right-0 bg-card border border-border border-t-0 shadow-lg z-50"
+                >
+                  <div className="p-4">
+                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Popular Searches</p>
+                    <div className="flex flex-wrap gap-2">
+                      {popularSearches.map((suggestion) => (
+                        <button
+                          key={suggestion}
+                          onClick={() => {
+                            setQuery(suggestion);
+                            setShowSuggestions(false);
+                          }}
+                          className="px-3 py-1.5 bg-muted text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 

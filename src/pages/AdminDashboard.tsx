@@ -69,7 +69,7 @@ const administrationSchema = z.object({
   })).optional(),
 });
 
-type TabType = "events" | "announcements" | "documents" | "clubs" | "administrations" | "admins" | "audit" | "publications" | "submissions";
+type TabType = "events" | "announcements" | "documents" | "clubs" | "administrations" | "admins" | "audit" | "publications" | "submissions" | "newsletter";
 
 interface AuditLog {
   id: string;
@@ -170,6 +170,7 @@ const AdminDashboard = () => {
   const [publications, setPublications] = useState<any[]>([]);
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [newsletterSubscribers, setNewsletterSubscribers] = useState<any[]>([]);
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [newUserRole, setNewUserRole] = useState<"admin" | "moderator">("moderator");
   
@@ -341,6 +342,13 @@ const AdminDashboard = () => {
           })
         );
         setAuditLogs(logsWithProfiles);
+      } else if (activeTab === "newsletter") {
+        const { data, error } = await supabase
+          .from("newsletter_subscribers")
+          .select("*")
+          .order("subscribed_at", { ascending: false });
+        if (error) throw error;
+        setNewsletterSubscribers(data || []);
       }
     } catch (error: any) {
       toast({
@@ -716,7 +724,8 @@ const AdminDashboard = () => {
         publications: "inks_pieces",
         admins: "user_roles",
         audit: "audit_logs",
-        submissions: "job_listings"
+        submissions: "job_listings",
+        newsletter: "newsletter_subscribers"
       };
       
       const tableName = tableMap[activeTab];
@@ -762,6 +771,7 @@ const AdminDashboard = () => {
     { id: "administrations" as TabType, label: "Leaders", icon: Award },
     { id: "submissions" as TabType, label: "Submissions", icon: Inbox },
     ...(isAdmin ? [
+      { id: "newsletter" as TabType, label: "Newsletter", icon: Mail },
       { id: "admins" as TabType, label: "Staff", icon: ShieldAlert },
       { id: "audit" as TabType, label: "Audit Log", icon: History },
     ] : []),
@@ -1349,6 +1359,101 @@ const AdminDashboard = () => {
                 </div>
               </motion.div>
             ))}
+
+            {/* Newsletter Subscribers Tab */}
+            {activeTab === "newsletter" && (
+              <div className="space-y-6">
+                {/* Header with Export */}
+                <div className="bg-card border border-border p-6">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                      <h3 className="font-serif text-lg text-foreground">Newsletter Subscribers</h3>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {newsletterSubscribers.filter(s => s.is_active).length} active subscribers, {newsletterSubscribers.filter(s => !s.is_active).length} unsubscribed
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const csvContent = [
+                          ["Email", "Status", "Subscribed At"].join(","),
+                          ...newsletterSubscribers.map(s => [
+                            s.email,
+                            s.is_active ? "Active" : "Unsubscribed",
+                            new Date(s.subscribed_at).toLocaleDateString()
+                          ].join(","))
+                        ].join("\n");
+                        const blob = new Blob([csvContent], { type: "text/csv" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `newsletter-subscribers-${new Date().toISOString().split("T")[0]}.csv`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        toast({ title: "Exported", description: `Exported ${newsletterSubscribers.length} subscribers to CSV.` });
+                      }}
+                      disabled={newsletterSubscribers.length === 0}
+                      className="flex items-center gap-2 px-4 py-2 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest hover:bg-nobel-gold hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Download size={14} />
+                      Export CSV
+                    </button>
+                  </div>
+                </div>
+
+                {/* Subscribers List */}
+                {newsletterSubscribers.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Mail className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                    <p>No newsletter subscribers yet.</p>
+                  </div>
+                ) : (
+                  <div className="bg-card border border-border overflow-hidden">
+                    <table className="w-full">
+                      <thead className="bg-muted/50">
+                        <tr>
+                          <th className="text-left px-6 py-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">Email</th>
+                          <th className="text-left px-6 py-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">Status</th>
+                          <th className="text-left px-6 py-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">Subscribed</th>
+                          <th className="text-right px-6 py-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {newsletterSubscribers.map((subscriber) => (
+                          <tr key={subscriber.id} className="hover:bg-muted/30 transition-colors">
+                            <td className="px-6 py-4">
+                              <span className="text-sm text-foreground">{subscriber.email}</span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${
+                                subscriber.is_active 
+                                  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" 
+                                  : "bg-muted text-muted-foreground"
+                              }`}>
+                                {subscriber.is_active ? "Active" : "Unsubscribed"}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(subscriber.subscribed_at).toLocaleDateString()}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <button
+                                onClick={() => handleDelete(subscriber.id)}
+                                className="p-2 text-muted-foreground hover:text-destructive transition-colors"
+                                title="Delete subscriber"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Admin Users Tab */}
             {activeTab === "admins" && (
