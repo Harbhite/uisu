@@ -19,8 +19,8 @@ const CommunitiesPage = () => {
   return (
     <>
       <SEO
-        title="Communities"
-        description="Discover the vibrant student organizations, clubs, and societies on campus."
+        title="Student Clubs & Societies | UI Campus Communities"
+        description="Explore 50+ student organizations at University of Ibadan: departmental associations, religious groups, press clubs, and cultural societies. Find your community and join student life."
         image="/screenshots/communities.png"
       />
       <CommunitiesContent

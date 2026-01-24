@@ -103,15 +103,33 @@ const ParallaxCard = ({ title, subtitle, icon: Icon, color, href, progress, inde
 };
 
 const ContactForm = () => {
-  const [formState, setFormState] = useState<'idle' | 'submitting' | 'success'>('idle');
+  const [formState, setFormState] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormState('submitting');
-    setTimeout(() => {
+    setErrorMessage('');
+
+    try {
+      const response = await supabase.functions.invoke('send-contact-message', {
+        body: formData
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to send message');
+      }
+
       setFormState('success');
-      setTimeout(() => setFormState('idle'), 3000);
-    }, 1500);
+      setFormData({ name: '', email: '', message: '' });
+      setTimeout(() => setFormState('idle'), 4000);
+    } catch (error: any) {
+      console.error('Contact form error:', error);
+      setErrorMessage(error.message || 'Failed to send message. Please try again.');
+      setFormState('error');
+      setTimeout(() => setFormState('idle'), 4000);
+    }
   };
 
   return (
@@ -137,17 +155,44 @@ const ContactForm = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="space-y-2">
               <label htmlFor="name" className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Name</label>
-              <Input id="name" required type="text" className="w-full bg-white/5 border border-white/10 rounded-none px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-nobel-gold focus:bg-white/10 transition-all" placeholder="John Doe" />
+              <Input 
+                id="name" 
+                required 
+                type="text" 
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                className="w-full bg-white/5 border border-white/10 rounded-none px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-nobel-gold focus:bg-white/10 transition-all" 
+                placeholder="John Doe" 
+              />
             </div>
             <div className="space-y-2">
               <label htmlFor="email" className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Email</label>
-              <Input id="email" required type="email" className="w-full bg-white/5 border border-white/10 rounded-none px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-nobel-gold focus:bg-white/10 transition-all" placeholder="uites@edu.ng" />
+              <Input 
+                id="email" 
+                required 
+                type="email" 
+                value={formData.email}
+                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                className="w-full bg-white/5 border border-white/10 rounded-none px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-nobel-gold focus:bg-white/10 transition-all" 
+                placeholder="uites@edu.ng" 
+              />
             </div>
           </div>
           <div className="space-y-2">
             <label htmlFor="message" className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Message</label>
-            <Textarea id="message" required rows={4} className="w-full bg-white/5 border border-white/10 rounded-none px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-nobel-gold focus:bg-white/10 transition-all resize-none" placeholder="Type your message here..." />
+            <Textarea 
+              id="message" 
+              required 
+              rows={4} 
+              value={formData.message}
+              onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
+              className="w-full bg-white/5 border border-white/10 rounded-none px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-nobel-gold focus:bg-white/10 transition-all resize-none" 
+              placeholder="Type your message here..." 
+            />
           </div>
+          {formState === 'error' && (
+            <p className="text-red-400 text-sm">{errorMessage}</p>
+          )}
           <button type="submit" disabled={formState === 'submitting'} className="w-full bg-nobel-gold text-ui-blue font-bold uppercase tracking-widest py-4 rounded-none hover:bg-white hover:shadow-lg hover:shadow-white/10 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2 border border-nobel-gold">
             {formState === 'submitting' ? 'Sending...' : 'Send Message'} 
           </button>

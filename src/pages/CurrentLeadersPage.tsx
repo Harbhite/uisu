@@ -8,8 +8,8 @@ const CurrentLeadersPage = () => {
   return (
     <>
       <SEO
-        title="Current Leaders"
-        description="Meet the current executive council, legislators, and hall leaders of the University of Ibadan Students' Union."
+        title="Current Student Leaders | UISU Executive & Legislature 2024/25"
+        description="Meet the serving UI Students' Union executives, SRC legislators, and hall majority leaders. Contact your representatives, view portfolios, and connect with student government."
         image="/screenshots/current-leaders.png"
       />
       <CurrentLeadersContent onBack={() => navigate("/")} />

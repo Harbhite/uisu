@@ -8,8 +8,8 @@ const GovernancePage = () => {
   return (
     <>
       <SEO
-        title="Governance"
-        description="Understand the structure of the University of Ibadan Students' Union. Executive, Legislative, and Student Representative Council."
+        title="Governance Structure | UISU Executive & Legislature"
+        description="Learn how UI Students' Union operates: Executive Council, Students' Representative Council (SRC), Judicial Council, and committee structures. Understand the first student union in Nigeria."
         image="/screenshots/governance.png"
       />
       <GovernanceContent onBack={() => navigate("/")} />
