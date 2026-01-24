@@ -5,8 +5,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Search, Users, Star, Globe, BookOpen, Heart, Gavel, Cpu, Palette, Calendar, Award, ChevronRight, ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowLeft, Search, Users, Star, Globe, BookOpen, Heart, Gavel, Cpu, Palette, Calendar, Award, ChevronRight, ArrowRight, Loader2, Edit, Mail, MapPin, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAdminCheck } from '@/hooks/useAdminCheck';
+import { Button } from '@/components/ui/button';
+import { ClubEditModal } from '@/components/ClubEditModal';
 
 /**
  * Props for the Communities component.
@@ -128,37 +131,39 @@ interface ClubDetailProps {
 export const ClubDetailPage: React.FC<ClubDetailProps> = ({ clubId, onBack }) => {
     const [club, setClub] = useState<Club | null>(null);
     const [loading, setLoading] = useState(true);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const { isStaff } = useAdminCheck();
+
+    const fetchClub = async () => {
+        const { data, error } = await supabase
+            .from('clubs')
+            .select('*')
+            .eq('id', clubId)
+            .maybeSingle();
+
+        if (error) {
+            console.error('Error fetching club:', error);
+        } else if (data) {
+            setClub({
+                id: data.id,
+                name: data.name,
+                acronym: data.acronym || undefined,
+                category: data.category,
+                founded: data.founded || '',
+                motto: data.motto || '',
+                description: data.description || '',
+                activities: data.activities || [],
+                president: data.president || undefined,
+                color: data.color || '#6d28d9',
+                iconName: data.icon_name || undefined,
+                imageUrl: data.image_url || undefined,
+                headerImageUrl: data.header_image_url || undefined
+            });
+        }
+        setLoading(false);
+    };
 
     useEffect(() => {
-        const fetchClub = async () => {
-            const { data, error } = await supabase
-                .from('clubs')
-                .select('*')
-                .eq('id', clubId)
-                .maybeSingle();
-
-            if (error) {
-                console.error('Error fetching club:', error);
-            } else if (data) {
-                setClub({
-                    id: data.id,
-                    name: data.name,
-                    acronym: data.acronym || undefined,
-                    category: data.category,
-                    founded: data.founded || '',
-                    motto: data.motto || '',
-                    description: data.description || '',
-                    activities: data.activities || [],
-                    president: data.president || undefined,
-                    color: data.color || '#6d28d9',
-                    iconName: data.icon_name || undefined,
-                    imageUrl: data.image_url || undefined,
-                    headerImageUrl: data.header_image_url || undefined
-                });
-            }
-            setLoading(false);
-        };
-
         fetchClub();
     }, [clubId]);
 
@@ -179,155 +184,251 @@ export const ClubDetailPage: React.FC<ClubDetailProps> = ({ clubId, onBack }) =>
         </div>
     );
 
-    const icon = getIconComponent(club.iconName);
+    const icon = getIconComponent(club.iconName, 80);
 
     return (
-        <div className="min-h-screen bg-background pt-32 pb-16">
-            <div className="container mx-auto px-6">
-                {/* Back Navigation */}
-                <button 
-                    onClick={onBack}
-                    className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors mb-12"
-                >
-                    <div className="p-2 rounded-full border border-border group-hover:border-nobel-gold transition-colors">
-                        <ArrowLeft size={14} />
-                    </div>
-                    <span>Directory</span>
-                </button>
+        <div className="min-h-screen bg-background">
+            {/* Edit Modal */}
+            <ClubEditModal
+                isOpen={showEditModal}
+                onClose={() => setShowEditModal(false)}
+                club={club}
+                onSave={() => fetchClub()}
+            />
 
-                {/* Hero Header */}
-                <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm mb-12">
-                    <div className="h-48 md:h-64 relative bg-foreground overflow-hidden">
-                        {/* Dynamic Background - use header image if available */}
-                        {club.headerImageUrl ? (
-                            <img 
-                                src={club.headerImageUrl} 
-                                alt={`${club.name} banner`}
-                                className="absolute inset-0 w-full h-full object-cover"
-                            />
-                        ) : (
-                            <>
-                                <div className="absolute inset-0 opacity-80" style={{ backgroundColor: club.color }}></div>
-                                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-40"></div>
-                                <div className="absolute inset-0 flex items-center justify-center opacity-10 scale-150 text-white">
-                                    {icon}
-                                </div>
-                            </>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+            {/* Hero Banner */}
+            <div className="relative h-[50vh] min-h-[400px] overflow-hidden">
+                {/* Background */}
+                {club.headerImageUrl ? (
+                    <img 
+                        src={club.headerImageUrl} 
+                        alt={`${club.name} banner`}
+                        className="absolute inset-0 w-full h-full object-cover"
+                    />
+                ) : (
+                    <div className="absolute inset-0" style={{ backgroundColor: club.color }}>
+                        <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-30"></div>
+                        <div className="absolute inset-0 flex items-center justify-center opacity-5">
+                            {React.cloneElement(icon as React.ReactElement, { size: 400 })}
+                        </div>
                     </div>
-                    
-                        <div className="px-8 pb-8 md:px-12 md:pb-12 -mt-16 relative z-10">
-                            <div className="flex flex-col md:flex-row gap-8 items-start">
-                                <motion.div 
-                                    initial={{ scale: 0.9, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                    className="w-32 h-32 md:w-40 md:h-40 bg-card rounded-2xl shadow-xl flex items-center justify-center text-5xl md:text-6xl border-4 border-card overflow-hidden"
-                                    style={{ color: club.color }}
-                                >
-                                    {club.imageUrl ? (
-                                        <img 
-                                            src={club.imageUrl} 
-                                            alt={`${club.name} logo`}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    ) : (
-                                        icon
-                                    )}
-                                </motion.div>
-                            
-                            <div className="flex-1 pt-4 md:pt-16">
-                                <div className="flex flex-wrap gap-3 mb-3">
-                                    <span className="px-3 py-1 bg-muted text-muted-foreground text-[10px] font-bold uppercase tracking-widest rounded-full border border-border">
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent"></div>
+
+                {/* Navigation */}
+                <div className="absolute top-0 left-0 right-0 z-20 pt-24 px-6">
+                    <div className="container mx-auto flex items-center justify-between">
+                        <button 
+                            onClick={onBack}
+                            className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-white/80 hover:text-white transition-colors"
+                        >
+                            <div className="p-2.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 group-hover:bg-white/20 transition-colors">
+                                <ArrowLeft size={16} />
+                            </div>
+                            <span>Directory</span>
+                        </button>
+
+                        {isStaff && (
+                            <Button
+                                onClick={() => setShowEditModal(true)}
+                                variant="outline"
+                                size="sm"
+                                className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white hover:text-primary"
+                            >
+                                <Edit size={14} className="mr-2" />
+                                Edit Club
+                            </Button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Hero Content */}
+                <div className="absolute bottom-0 left-0 right-0 z-10">
+                    <div className="container mx-auto px-6 pb-8">
+                        <div className="flex flex-col md:flex-row gap-6 items-end md:items-center">
+                            {/* Logo */}
+                            <motion.div 
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                className="w-28 h-28 md:w-36 md:h-36 bg-card rounded-2xl shadow-2xl flex items-center justify-center border-4 border-background overflow-hidden shrink-0"
+                                style={{ color: club.color }}
+                            >
+                                {club.imageUrl ? (
+                                    <img 
+                                        src={club.imageUrl} 
+                                        alt={`${club.name} logo`}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    React.cloneElement(icon as React.ReactElement, { size: 48 })
+                                )}
+                            </motion.div>
+
+                            {/* Title */}
+                            <div className="flex-1">
+                                <div className="flex flex-wrap gap-2 mb-3">
+                                    <span 
+                                        className="px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full text-white"
+                                        style={{ backgroundColor: club.color }}
+                                    >
                                         {club.category}
                                     </span>
                                     {club.acronym && (
-                                        <span className="px-3 py-1 bg-ui-blue/10 text-ui-blue text-[10px] font-bold uppercase tracking-widest rounded-full border border-ui-blue/20">
+                                        <span className="px-3 py-1 bg-white/10 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-widest rounded-full border border-white/20">
                                             {club.acronym}
                                         </span>
                                     )}
                                 </div>
                                 <h1 className="font-serif text-4xl md:text-6xl text-foreground leading-none mb-2">{club.name}</h1>
-                                <p className="font-serif text-xl md:text-2xl text-muted-foreground italic">"{club.motto}"</p>
-                            </div>
-
-                            <div className="pt-4 md:pt-16 flex gap-4">
-                                <button className="px-6 py-3 bg-ui-blue text-white rounded-full text-xs font-bold uppercase tracking-widest hover:bg-nobel-gold hover:text-foreground transition-all shadow-md">
-                                    Join Club
-                                </button>
+                                {club.motto && (
+                                    <p className="font-serif text-lg md:text-xl text-muted-foreground italic">"{club.motto}"</p>
+                                )}
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                {/* Details Grid */}
+            {/* Content */}
+            <div className="container mx-auto px-6 py-12">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                     {/* Main Content */}
                     <div className="lg:col-span-2 space-y-12">
-                        <section>
+                        {/* About */}
+                        <motion.section
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                        >
                             <h3 className="flex items-center gap-3 text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mb-6">
-                                <BookOpen size={16} /> About The Association
+                                <BookOpen size={16} className="text-accent" /> About The Association
                             </h3>
-                            <p className="text-xl text-muted-foreground leading-relaxed font-light">
-                                {club.description}
-                            </p>
-                        </section>
-
-                        <section>
-                            <h3 className="flex items-center gap-3 text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mb-6">
-                                <Star size={16} /> Key Activities & Events
-                            </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {club.activities.map((activity, idx) => (
-                                    <ActivityCard key={idx} activity={activity} />
-                                ))}
+                            <div className="bg-card border border-border rounded-2xl p-8">
+                                <p className="text-lg text-muted-foreground leading-relaxed">
+                                    {club.description || 'No description available.'}
+                                </p>
                             </div>
-                        </section>
+                        </motion.section>
+
+                        {/* President */}
+                        {club.president && (
+                            <motion.section
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 }}
+                            >
+                                <h3 className="flex items-center gap-3 text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mb-6">
+                                    <Users size={16} className="text-accent" /> Leadership
+                                </h3>
+                                <div className="bg-card border border-border rounded-2xl p-6 flex items-center gap-6">
+                                    <div 
+                                        className="w-16 h-16 rounded-xl flex items-center justify-center text-white text-2xl font-bold"
+                                        style={{ backgroundColor: club.color }}
+                                    >
+                                        {club.president.charAt(0)}
+                                    </div>
+                                    <div>
+                                        <p className="font-serif text-xl font-bold text-foreground">{club.president}</p>
+                                        <p className="text-sm text-muted-foreground">President</p>
+                                    </div>
+                                </div>
+                            </motion.section>
+                        )}
+
+                        {/* Activities */}
+                        {club.activities.length > 0 && (
+                            <motion.section
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.2 }}
+                            >
+                                <h3 className="flex items-center gap-3 text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mb-6">
+                                    <Star size={16} className="text-accent" /> Key Activities & Events
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {club.activities.map((activity, idx) => (
+                                        <ActivityCard key={idx} activity={activity} />
+                                    ))}
+                                </div>
+                            </motion.section>
+                        )}
                     </div>
 
-                    {/* Sidebar Info */}
-                    <div className="space-y-6">
-                         <div className="p-6 bg-card border border-border rounded-xl">
+                    {/* Sidebar */}
+                    <motion.div 
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="space-y-6"
+                    >
+                        {/* Quick Facts */}
+                        <div className="bg-card border border-border rounded-2xl p-6">
                             <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-6">Quick Facts</h4>
                             
-                            <div className="space-y-6">
-                                <div>
-                                    <div className="text-xs text-muted-foreground mb-1">Established</div>
-                                    <div className="font-serif text-xl text-foreground">{club.founded}</div>
+                            <div className="space-y-5">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center text-accent">
+                                        <Calendar size={18} />
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-muted-foreground">Established</div>
+                                        <div className="font-serif text-lg text-foreground">{club.founded || 'Unknown'}</div>
+                                    </div>
                                 </div>
                                 
-                                <div className="h-px bg-border w-full"></div>
+                                <div className="h-px bg-border"></div>
 
-                                <div>
-                                    <div className="text-xs text-muted-foreground mb-1">Membership Status</div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                                        <span className="font-serif text-lg text-foreground">Open for Registration</span>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center text-green-500">
+                                        <Users size={18} />
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-muted-foreground">Membership Status</div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                            <span className="font-serif text-base text-foreground">Open</span>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="h-px bg-border w-full"></div>
+                                <div className="h-px bg-border"></div>
 
-                                <div>
-                                    <div className="text-xs text-muted-foreground mb-1">Affiliation</div>
-                                    <div className="font-serif text-lg text-foreground">Registered with Student Affairs</div>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-lg bg-ui-blue/10 flex items-center justify-center text-ui-blue">
+                                        <MapPin size={18} />
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-muted-foreground">Affiliation</div>
+                                        <div className="font-serif text-base text-foreground">Student Affairs</div>
+                                    </div>
                                 </div>
                             </div>
-                         </div>
+                        </div>
 
-                         <div className="p-6 bg-ui-blue text-white rounded-xl relative overflow-hidden">
+                        {/* CTA Card */}
+                        <div 
+                            className="rounded-2xl p-6 relative overflow-hidden text-white"
+                            style={{ backgroundColor: club.color }}
+                        >
+                            <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20"></div>
                             <div className="relative z-10">
-                                <h4 className="text-xs font-bold text-white/60 uppercase tracking-widest mb-2">Get Involved</h4>
-                                <p className="text-sm text-white/80 mb-4 leading-relaxed">
-                                    Interested in joining {club.name}? Visit their secretariat or contact the PRO.
+                                <h4 className="text-xs font-bold text-white/70 uppercase tracking-widest mb-3">Get Involved</h4>
+                                <p className="text-sm text-white/90 mb-6 leading-relaxed">
+                                    Ready to join {club.acronym || club.name}? Connect with the executive team.
                                 </p>
-                                <button className="w-full py-3 bg-white/10 border border-white/20 hover:bg-white hover:text-ui-blue rounded-lg text-xs font-bold uppercase tracking-widest transition-colors">
-                                    Contact Executive
-                                </button>
+                                <div className="space-y-3">
+                                    <button className="w-full py-3 bg-white text-primary rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-white/90 transition-colors flex items-center justify-center gap-2">
+                                        <Mail size={14} />
+                                        Contact Executive
+                                    </button>
+                                    <button className="w-full py-3 bg-white/10 border border-white/30 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-white/20 transition-colors flex items-center justify-center gap-2">
+                                        <ExternalLink size={14} />
+                                        Visit Secretariat
+                                    </button>
+                                </div>
                             </div>
-                            <Users size={100} className="absolute -bottom-4 -right-4 text-white/5 rotate-12" />
-                         </div>
-                    </div>
+                            <Users size={120} className="absolute -bottom-6 -right-6 text-white/10 rotate-12" />
+                        </div>
+                    </motion.div>
                 </div>
             </div>
         </div>
