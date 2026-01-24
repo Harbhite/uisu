@@ -15,6 +15,7 @@ import Warning from '@editorjs/warning';
 import LinkTool from '@editorjs/link';
 import Embed from '@editorjs/embed';
 import Raw from '@editorjs/raw';
+import { supabase } from '@/integrations/supabase/client';
 
 type PieceType = 'Article' | 'Blog' | 'Report' | 'Essay' | 'Poetry' | 'Opinion' | 'Interview' | 'Fiction';
 
@@ -26,6 +27,178 @@ interface EditorJSComponentProps {
   readOnly?: boolean;
   placeholder?: string;
   pieceType?: PieceType;
+}
+
+// Custom Image Tool class for Supabase storage
+class SimpleImageTool {
+  static get toolbox() {
+    return {
+      title: 'Image',
+      icon: '<svg width="17" height="15" viewBox="0 0 336 276" xmlns="http://www.w3.org/2000/svg"><path d="M291 150V79c0-19-15-34-34-34H79c-19 0-34 15-34 34v42l67-44 81 72 56-29 42 30zm0 52l-43-30-56 30-81-67-66 39v23c0 19 15 34 34 34h178c17 0 31-13 34-29zM79 0h178c44 0 79 35 79 79v118c0 44-35 79-79 79H79c-44 0-79-35-79-79V79C0 35 35 0 79 0z"/></svg>'
+    };
+  }
+
+  private wrapper: HTMLDivElement | null = null;
+  private data: { url?: string; caption?: string };
+  private config: { onUpload?: (file: File) => Promise<string> };
+
+  constructor({ data, config }: { data?: { url?: string; caption?: string }; config?: { onUpload?: (file: File) => Promise<string> } }) {
+    this.data = data || {};
+    this.config = config || {};
+  }
+
+  render() {
+    this.wrapper = document.createElement('div');
+    this.wrapper.classList.add('simple-image');
+
+    if (this.data.url) {
+      this._createImage(this.data.url, this.data.caption);
+    } else {
+      this._createUploadArea();
+    }
+
+    return this.wrapper;
+  }
+
+  private _createUploadArea() {
+    if (!this.wrapper) return;
+
+    const uploadArea = document.createElement('div');
+    uploadArea.style.cssText = 'border: 2px dashed hsl(var(--border)); border-radius: 8px; padding: 40px; text-align: center; cursor: pointer; transition: border-color 0.2s;';
+    uploadArea.innerHTML = `
+      <div style="color: hsl(var(--muted-foreground)); font-size: 14px;">
+        <svg style="width: 32px; height: 32px; margin: 0 auto 8px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+          <polyline points="21,15 16,10 5,21"></polyline>
+        </svg>
+        <div>Click or drag to upload image</div>
+      </div>
+    `;
+
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.style.display = 'none';
+
+    uploadArea.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.style.borderColor = 'hsl(var(--accent))';
+    });
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.style.borderColor = 'hsl(var(--border))';
+    });
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.style.borderColor = 'hsl(var(--border))';
+      const file = e.dataTransfer?.files[0];
+      if (file && file.type.startsWith('image/')) {
+        this._uploadFile(file);
+      }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        this._uploadFile(file);
+      }
+    });
+
+    this.wrapper.appendChild(uploadArea);
+    this.wrapper.appendChild(fileInput);
+  }
+
+  private async _uploadFile(file: File) {
+    if (!this.wrapper) return;
+
+    // Show loading state
+    this.wrapper.innerHTML = `
+      <div style="border: 2px solid hsl(var(--border)); border-radius: 8px; padding: 40px; text-align: center;">
+        <div style="color: hsl(var(--muted-foreground)); font-size: 14px;">
+          <svg style="width: 24px; height: 24px; margin: 0 auto 8px; animation: spin 1s linear infinite;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12a9 9 0 11-6.219-8.56"></path>
+          </svg>
+          <div>Uploading...</div>
+        </div>
+      </div>
+      <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
+    `;
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `ink-images/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('club-images')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('club-images')
+        .getPublicUrl(fileName);
+
+      this.data.url = publicUrl;
+      this._createImage(publicUrl);
+    } catch (error) {
+      console.error('Upload error:', error);
+      this.wrapper.innerHTML = `
+        <div style="border: 2px solid hsl(var(--destructive)); border-radius: 8px; padding: 20px; text-align: center; color: hsl(var(--destructive));">
+          Upload failed. Click to try again.
+        </div>
+      `;
+      this.wrapper.addEventListener('click', () => {
+        this._createUploadArea();
+      }, { once: true });
+    }
+  }
+
+  private _createImage(url: string, caption?: string) {
+    if (!this.wrapper) return;
+
+    this.wrapper.innerHTML = '';
+    
+    const figure = document.createElement('figure');
+    figure.style.cssText = 'margin: 0; position: relative;';
+
+    const img = document.createElement('img');
+    img.src = url;
+    img.style.cssText = 'max-width: 100%; border-radius: 8px; display: block;';
+    
+    const captionInput = document.createElement('input');
+    captionInput.type = 'text';
+    captionInput.placeholder = 'Add a caption...';
+    captionInput.value = caption || '';
+    captionInput.style.cssText = 'width: 100%; border: none; text-align: center; font-size: 13px; color: hsl(var(--muted-foreground)); padding: 8px 0; background: transparent; outline: none;';
+    captionInput.addEventListener('input', (e) => {
+      this.data.caption = (e.target as HTMLInputElement).value;
+    });
+
+    figure.appendChild(img);
+    figure.appendChild(captionInput);
+    this.wrapper.appendChild(figure);
+  }
+
+  save() {
+    return {
+      url: this.data.url || '',
+      caption: this.data.caption || ''
+    };
+  }
+
+  validate(savedData: { url?: string }) {
+    return !!savedData.url;
+  }
+
+  static get pasteConfig() {
+    return {
+      tags: ['IMG'],
+      patterns: {
+        image: /https?:\/\/\S+\.(gif|jpe?g|tiff|png|webp)$/i
+      }
+    };
+  }
 }
 
 // Base tools available for all types
@@ -109,8 +282,11 @@ const getTechnicalTools = (): EditorTools => ({
   }
 });
 
-// Media/embed tools
+// Media/embed tools (now includes image)
 const getMediaTools = (): EditorTools => ({
+  image: {
+    class: SimpleImageTool as unknown as ToolConstructable
+  },
   embed: {
     class: Embed as unknown as ToolConstructable,
     config: {
@@ -156,21 +332,23 @@ const getToolsForType = (pieceType?: PieceType): EditorTools => {
     
     case 'Essay':
     case 'Opinion':
-      // Essays and opinions focus on prose - minimal technical tools
+      // Essays and opinions focus on prose - minimal technical tools but keep images
       return { 
         ...base,
+        image: media.image,
         embed: media.embed
       };
     
     case 'Poetry':
     case 'Fiction':
-      // Creative writing needs clean, distraction-free tools
-      return base;
+      // Creative writing - clean tools with optional images
+      return { ...base, image: media.image };
     
     case 'Interview':
-      // Interviews need quotes, basic formatting, and embeds
+      // Interviews need quotes, basic formatting, embeds, and images
       return { 
         ...base,
+        image: media.image,
         embed: media.embed
       };
     
@@ -239,7 +417,7 @@ const EditorJSComponent: React.FC<EditorJSComponentProps> = ({
   return (
     <div 
       ref={holderRef} 
-      className="prose prose-slate max-w-none min-h-[400px] bg-card border border-border p-6 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 transition-all [&_.ce-block__content]:max-w-none [&_.ce-toolbar__content]:max-w-none [&_.codex-editor__redactor]:pb-6"
+      className="prose prose-slate max-w-none min-h-[400px] bg-card border border-border rounded-lg p-6 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 transition-all [&_.ce-block__content]:max-w-none [&_.ce-toolbar__content]:max-w-none [&_.codex-editor__redactor]:pb-6 [&_.simple-image]:my-4"
     />
   );
 };
