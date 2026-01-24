@@ -122,7 +122,7 @@ export const ClubEditModal: React.FC<ClubEditModalProps> = ({
 
     setLoading(true);
     try {
-      const payload: Record<string, unknown> = {
+      const payload = {
         name: formData.name,
         acronym: formData.acronym || null,
         category: formData.category,
@@ -139,7 +139,7 @@ export const ClubEditModal: React.FC<ClubEditModalProps> = ({
         website: formData.website || null,
         meeting_location: formData.meetingLocation || null,
         meeting_schedule: formData.meetingSchedule || null,
-        social_links: formData.socialLinks
+        social_links: formData.socialLinks as Record<string, string>
       };
 
       if (club?.id) {
@@ -152,7 +152,7 @@ export const ClubEditModal: React.FC<ClubEditModalProps> = ({
       } else {
         const { error } = await supabase
           .from('clubs')
-          .insert(payload);
+          .insert([payload]);
         if (error) throw error;
         toast.success('Club created');
       }
