@@ -152,18 +152,23 @@ const InksPiecePage = () => {
       switch (block.type) {
         case 'header': {
           const HeaderTag = `h${data.level || 2}` as keyof JSX.IntrinsicElements;
-          return <HeaderTag key={index} className="font-serif text-foreground mb-4">{data.text}</HeaderTag>;
+          const headerClasses = data.level === 1 
+            ? 'font-serif text-3xl md:text-4xl font-bold text-foreground mb-6 mt-8'
+            : data.level === 2 
+            ? 'font-serif text-2xl md:text-3xl font-bold text-foreground mb-5 mt-8'
+            : 'font-serif text-xl md:text-2xl font-semibold text-foreground mb-4 mt-6';
+          return <HeaderTag key={index} className={headerClasses}>{data.text}</HeaderTag>;
         }
         
         case 'paragraph':
-          return <p key={index} className="mb-4 leading-relaxed" dangerouslySetInnerHTML={{ __html: data.text || '' }} />;
+          return <p key={index} className="font-serif text-lg md:text-xl text-foreground/90 mb-6 leading-relaxed" dangerouslySetInnerHTML={{ __html: data.text || '' }} />;
         
         case 'list': {
           const ListTag = data.style === 'ordered' ? 'ol' : 'ul';
           return (
-            <ListTag key={index} className={`mb-4 ml-6 ${data.style === 'ordered' ? 'list-decimal' : 'list-disc'}`}>
+            <ListTag key={index} className={`font-serif text-lg text-foreground/90 mb-6 ml-6 leading-relaxed ${data.style === 'ordered' ? 'list-decimal' : 'list-disc'}`}>
               {(data.items || []).map((item: string, i: number) => (
-                <li key={i} className="mb-1" dangerouslySetInnerHTML={{ __html: item }} />
+                <li key={i} className="mb-2" dangerouslySetInnerHTML={{ __html: item }} />
               ))}
             </ListTag>
           );
@@ -171,10 +176,10 @@ const InksPiecePage = () => {
         
         case 'quote':
           return (
-            <blockquote key={index} className="border-l-4 border-accent pl-6 my-6 italic text-muted-foreground">
-              <p dangerouslySetInnerHTML={{ __html: data.text || '' }} />
+            <blockquote key={index} className="border-l-4 border-accent pl-6 md:pl-8 my-8 md:my-10">
+              <p className="font-serif text-xl md:text-2xl font-semibold text-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: data.text || '' }} />
               {data.caption && (
-                <cite className="text-sm text-muted-foreground mt-2 block">— {data.caption}</cite>
+                <cite className="font-sans text-sm text-muted-foreground mt-4 block not-italic">— {data.caption}</cite>
               )}
             </blockquote>
           );
@@ -597,47 +602,76 @@ const EssayView = ({ piece, renderContent, readingTime }: ViewProps) => (
 );
 
 const BlogView = ({ piece, renderContent, readingTime }: ViewProps) => (
-  <article className="container mx-auto px-6 max-w-4xl">
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
-      <div className="md:col-span-1">
-        <div className="sticky top-32">
-          <Link to={piece.user_id ? `/profile/${piece.user_id}` : '#'} className="block w-20 h-20 mb-4 overflow-hidden hover:opacity-80 transition-opacity">
-            <div className="w-full h-full bg-gradient-to-br from-accent to-yellow-500 flex items-center justify-center text-primary-foreground text-2xl font-bold">
-              {piece.author_name.charAt(0)}
-            </div>
+  <article className="container mx-auto px-6 max-w-3xl">
+    {/* Blog Header */}
+    <header className="mb-12 md:mb-16">
+      {/* Category & Date */}
+      <div className="flex items-center gap-3 mb-6">
+        <span className="px-3 py-1 bg-accent/10 text-accent text-xs font-bold uppercase tracking-widest">{piece.type}</span>
+        <span className="text-muted-foreground text-sm">{new Date(piece.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+      </div>
+
+      {/* Title */}
+      <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl text-foreground leading-tight mb-6">{piece.title}</h1>
+
+      {/* Summary/Subtitle */}
+      {piece.summary && (
+        <p className="font-serif text-xl md:text-2xl text-muted-foreground leading-relaxed mb-8">{piece.summary}</p>
+      )}
+
+      {/* Author & Meta */}
+      <div className="flex items-center justify-between flex-wrap gap-4 pt-6 border-t border-border">
+        <div className="flex items-center gap-4">
+          <Link to={piece.user_id ? `/profile/${piece.user_id}` : '#'} className="w-14 h-14 rounded-full overflow-hidden hover:opacity-80 transition-opacity bg-gradient-to-br from-accent to-accent/60 flex items-center justify-center text-white text-xl font-serif font-bold">
+            {piece.author_name.charAt(0)}
           </Link>
-          <AuthorLink userId={piece.user_id} authorName={piece.author_name} className="font-bold text-foreground block" />
-          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-6">{piece.author_role}</p>
-          <div className="text-sm text-muted-foreground mb-6">
-            <p>Sharing thoughts and stories from the university community.</p>
+          <div>
+            <AuthorLink userId={piece.user_id} authorName={piece.author_name} className="font-serif font-bold text-foreground text-lg block" />
+            <p className="text-sm text-muted-foreground">{piece.author_role}</p>
           </div>
-          <SocialShare title={piece.title} summary={piece.summary || ''} />
+        </div>
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <span className="flex items-center gap-1"><Clock size={14} /> {readingTime} min read</span>
+          {piece.view_count !== null && <span>{piece.view_count} views</span>}
         </div>
       </div>
-      <div className="md:col-span-3">
-        <div className="mb-8">
-          <span className="text-accent text-xs font-bold uppercase tracking-widest mb-2 block">
-            {new Date(piece.created_at).toLocaleDateString()}
-          </span>
-          <h1 className="text-4xl font-bold text-foreground mb-4">{piece.title}</h1>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground mb-6">
-            <span><Clock size={12} className="inline mr-1" />{readingTime} min read</span>
-            {piece.view_count !== null && <span>{piece.view_count} views</span>}
-          </div>
-          {piece.tags && piece.tags.length > 0 && (
-            <div className="flex gap-2">
-              {piece.tags.map(t => (
-                <span key={t} className="bg-muted text-muted-foreground px-2 py-1 text-xs">#{t}</span>
-              ))}
-            </div>
-          )}
-        </div>
-        <div className="prose prose-slate dark:prose-invert max-w-none">
-          {renderContent(piece.content)}
-        </div>
-        <InkComments pieceId={piece.id} />
+    </header>
+
+    {/* Cover Image */}
+    {piece.cover_image && (
+      <div className="mb-12 -mx-6 md:mx-0">
+        <img 
+          src={piece.cover_image} 
+          alt={piece.title} 
+          className="w-full aspect-[16/9] object-cover md:rounded-lg"
+        />
+      </div>
+    )}
+
+    {/* Blog Content - Serif typography */}
+    <div className="blog-content">
+      {renderContent(piece.content)}
+    </div>
+
+    {/* Tags */}
+    {piece.tags && piece.tags.length > 0 && (
+      <div className="mt-12 pt-8 border-t border-border flex flex-wrap gap-2">
+        {piece.tags.map(t => (
+          <span key={t} className="px-3 py-1.5 bg-muted text-muted-foreground text-sm font-medium rounded-full">#{t}</span>
+        ))}
+      </div>
+    )}
+
+    {/* Share */}
+    <div className="mt-12 pt-8 border-t border-border">
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-muted-foreground font-medium">Share this article</span>
+        <SocialShare title={piece.title} summary={piece.summary || ''} />
       </div>
     </div>
+
+    {/* Comments */}
+    <InkComments pieceId={piece.id} />
   </article>
 );
 

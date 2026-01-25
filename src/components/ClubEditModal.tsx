@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Club } from '@/components/Communities';
+import { Club, ClubActivity, serializeActivity, parseActivity } from '@/components/Communities';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface ClubEditModalProps {
@@ -39,7 +39,7 @@ export const ClubEditModal: React.FC<ClubEditModalProps> = ({
     founded: club?.founded || '',
     motto: club?.motto || '',
     description: club?.description || '',
-    activities: club?.activities || [],
+    activities: club?.activities || [] as ClubActivity[],
     president: club?.president || '',
     color: club?.color || '#6d28d9',
     iconName: club?.iconName || 'Star',
@@ -94,7 +94,7 @@ export const ClubEditModal: React.FC<ClubEditModalProps> = ({
     if (newActivity.trim()) {
       setFormData(prev => ({
         ...prev,
-        activities: [...prev.activities, newActivity.trim()]
+        activities: [...prev.activities, { title: newActivity.trim() }]
       }));
       setNewActivity('');
     }
@@ -122,6 +122,9 @@ export const ClubEditModal: React.FC<ClubEditModalProps> = ({
 
     setLoading(true);
     try {
+      // Convert ClubActivity[] to string[] for DB storage
+      const activitiesForDb = formData.activities.map(a => serializeActivity(a));
+      
       const payload = {
         name: formData.name,
         acronym: formData.acronym || null,
@@ -129,7 +132,7 @@ export const ClubEditModal: React.FC<ClubEditModalProps> = ({
         founded: formData.founded || null,
         motto: formData.motto || null,
         description: formData.description || null,
-        activities: formData.activities,
+        activities: activitiesForDb,
         president: formData.president || null,
         color: formData.color,
         icon_name: formData.iconName,
@@ -343,7 +346,7 @@ export const ClubEditModal: React.FC<ClubEditModalProps> = ({
                         className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg group"
                       >
                         <GripVertical size={16} className="text-muted-foreground/50" />
-                        <span className="flex-1 text-sm">{activity}</span>
+                        <span className="flex-1 text-sm">{activity.title}</span>
                         <button
                           onClick={() => removeActivity(index)}
                           className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors opacity-0 group-hover:opacity-100"
