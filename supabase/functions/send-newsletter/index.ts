@@ -20,9 +20,38 @@ interface SendNewsletterRequest {
 // Hosted gold fist logo URL
 const logoUrl = "https://uisu.lovable.app/newsletter-logo.png";
 
+// Tracking base URL
+const TRACKING_BASE_URL = "https://zdxmmwqjvkedddcgucyz.supabase.co/functions/v1/track-email";
+
+// Generate tracking pixel URL
+const getTrackingPixelUrl = (campaignId: string, email: string) =>
+  `${TRACKING_BASE_URL}?c=${encodeURIComponent(campaignId)}&e=${encodeURIComponent(email)}&t=open`;
+
+// Generate tracked link URL
+const getTrackedLinkUrl = (campaignId: string, email: string, originalUrl: string) =>
+  `${TRACKING_BASE_URL}?c=${encodeURIComponent(campaignId)}&e=${encodeURIComponent(email)}&t=click&l=${encodeURIComponent(originalUrl)}`;
+
 // Generate unsubscribe URL
 const getUnsubscribeUrl = (email: string) => 
   `https://uisu.lovable.app/unsubscribe?email=${encodeURIComponent(email)}`;
+
+// Wrap all links in content for tracking
+const wrapLinksForTracking = (html: string, campaignId: string, email: string): string => {
+  // Match href attributes but exclude unsubscribe, privacy, and terms links
+  return html.replace(
+    /href="(https?:\/\/[^"]+)"/g,
+    (match, url) => {
+      // Skip tracking for unsubscribe, privacy, terms links and tracking URLs
+      if (url.includes('unsubscribe') || 
+          url.includes('privacy-policy') || 
+          url.includes('terms-of-service') ||
+          url.includes('track-email')) {
+        return match;
+      }
+      return `href="${getTrackedLinkUrl(campaignId, email, url)}"`;
+    }
+  );
+};
 
 // Unsubscribe footer section
 const generateUnsubscribeFooter = (email: string) => `
@@ -412,7 +441,7 @@ const convertMarkdown = (content: string) => {
     .replace(/$/, '</p>');
 };
 
-// Main template generator
+// Main template generator (without tracking pixel - added separately per campaign)
 const generateNewsletterHtml = (content: string, subject: string, template: string = 'classic', email: string = '') => {
   switch (template) {
     case 'minimal':
@@ -425,6 +454,16 @@ const generateNewsletterHtml = (content: string, subject: string, template: stri
     default:
       return generateClassicTemplate(content, subject, email);
   }
+};
+
+// Add tracking pixel and wrap links for a campaign
+const addTrackingToHtml = (html: string, campaignId: string, email: string): string => {
+  // Add tracking pixel before closing body tag
+  const trackingPixel = `<img src="${getTrackingPixelUrl(campaignId, email)}" alt="" width="1" height="1" style="display:none;visibility:hidden;width:1px;height:1px;opacity:0;">`;
+  const htmlWithPixel = html.replace('</body>', `${trackingPixel}</body>`);
+  
+  // Wrap all links for click tracking
+  return wrapLinksForTracking(htmlWithPixel, campaignId, email);
 };
 
 const handler = async (req: Request): Promise<Response> => {
@@ -458,7 +497,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Subject and content are required");
     }
 
-    // If test email is provided, send only to that email
+    // If test email is provided, send only to that email (no tracking for tests)
     if (testEmail) {
       const htmlContent = generateNewsletterHtml(content, subject, template, testEmail);
       
@@ -485,8 +524,8 @@ const handler = async (req: Request): Promise<Response> => {
       const now = new Date();
       
       if (scheduledTime > now) {
-        // Store campaign as scheduled
-        const { error: campaignError } = await supabase
+        // Store campaign as scheduled (tracking will be added when sent)
+        const { data: newCampaign, error: campaignError } = await supabase
           .from("newsletter_campaigns")
           .insert({
             subject,
@@ -495,7 +534,9 @@ const handler = async (req: Request): Promise<Response> => {
             status: 'scheduled',
             scheduled_at: scheduledAt,
             html_content: generateNewsletterHtml(content, subject, template, 'preview@example.com'),
-          });
+          })
+          .select()
+          .single();
 
         if (campaignError) {
           console.error("Error creating scheduled campaign:", campaignError);
@@ -506,7 +547,8 @@ const handler = async (req: Request): Promise<Response> => {
           JSON.stringify({ 
             success: true, 
             message: `Newsletter scheduled for ${scheduledTime.toLocaleString()}`,
-            scheduled: true
+            scheduled: true,
+            campaignId: newCampaign?.id
           }),
           { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
@@ -530,19 +572,45 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Send to all subscribers
+    // Create campaign record first to get campaign ID for tracking
+    let activeCampaignId: string = campaignId || '';
+    if (!activeCampaignId) {
+      const { data: newCampaign, error: insertError } = await supabase
+        .from("newsletter_campaigns")
+        .insert({
+          subject,
+          content,
+          template,
+          status: 'sending',
+          recipients_count: subscribers.length,
+          html_content: generateNewsletterHtml(content, subject, template, 'preview@example.com'),
+        })
+        .select()
+        .single();
+
+      if (insertError || !newCampaign) {
+        console.error("Error creating campaign:", insertError);
+        throw new Error("Failed to create campaign record");
+      }
+      activeCampaignId = newCampaign.id;
+    }
+
+    // Send to all subscribers with tracking
     let successCount = 0;
     let failCount = 0;
 
     for (const subscriber of subscribers) {
       try {
-        const htmlContent = generateNewsletterHtml(content, subject, template, subscriber.email);
+        // Generate email with template
+        const baseHtml = generateNewsletterHtml(content, subject, template, subscriber.email);
+        // Add tracking pixel and wrap links
+        const trackedHtml = addTrackingToHtml(baseHtml, activeCampaignId, subscriber.email);
         
         await resend.emails.send({
           from: "UISU Archive <newsletter@uisu.space>",
           to: [subscriber.email],
           subject,
-          html: htmlContent,
+          html: trackedHtml,
         });
         successCount++;
       } catch (error) {
@@ -551,33 +619,17 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Update or create campaign record
-    if (campaignId) {
-      await supabase
-        .from("newsletter_campaigns")
-        .update({
-          status: 'sent',
-          sent_at: new Date().toISOString(),
-          recipients_count: subscribers.length,
-          successful_count: successCount,
-          failed_count: failCount,
-        })
-        .eq("id", campaignId);
-    } else {
-      await supabase
-        .from("newsletter_campaigns")
-        .insert({
-          subject,
-          content,
-          template,
-          status: 'sent',
-          sent_at: new Date().toISOString(),
-          recipients_count: subscribers.length,
-          successful_count: successCount,
-          failed_count: failCount,
-          html_content: generateNewsletterHtml(content, subject, template, 'preview@example.com'),
-        });
-    }
+    // Update campaign record with final stats
+    await supabase
+      .from("newsletter_campaigns")
+      .update({
+        status: 'sent',
+        sent_at: new Date().toISOString(),
+        recipients_count: subscribers.length,
+        successful_count: successCount,
+        failed_count: failCount,
+      })
+      .eq("id", activeCampaignId);
 
     return new Response(
       JSON.stringify({ 
@@ -585,7 +637,8 @@ const handler = async (req: Request): Promise<Response> => {
         message: `Newsletter sent to ${successCount} subscribers (${failCount} failed)`,
         recipientsCount: subscribers.length,
         successCount,
-        failCount
+        failCount,
+        campaignId: activeCampaignId
       }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );

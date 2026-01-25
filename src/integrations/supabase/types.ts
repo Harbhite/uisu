@@ -409,6 +409,47 @@ export type Database = {
         }
         Relationships: []
       }
+      email_tracking: {
+        Row: {
+          campaign_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          ip_address: string | null
+          link_url: string | null
+          subscriber_email: string
+          user_agent: string | null
+        }
+        Insert: {
+          campaign_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          link_url?: string | null
+          subscriber_email: string
+          user_agent?: string | null
+        }
+        Update: {
+          campaign_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          link_url?: string | null
+          subscriber_email?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_tracking_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_rsvps: {
         Row: {
           created_at: string | null
@@ -804,11 +845,13 @@ export type Database = {
       }
       newsletter_campaigns: {
         Row: {
+          click_count: number | null
           content: string
           created_at: string
           failed_count: number | null
           html_content: string | null
           id: string
+          open_count: number | null
           recipients_count: number | null
           scheduled_at: string | null
           sent_at: string | null
@@ -817,14 +860,18 @@ export type Database = {
           subject: string
           successful_count: number | null
           template: string | null
+          unique_clicks: number | null
+          unique_opens: number | null
           updated_at: string
         }
         Insert: {
+          click_count?: number | null
           content: string
           created_at?: string
           failed_count?: number | null
           html_content?: string | null
           id?: string
+          open_count?: number | null
           recipients_count?: number | null
           scheduled_at?: string | null
           sent_at?: string | null
@@ -833,14 +880,18 @@ export type Database = {
           subject: string
           successful_count?: number | null
           template?: string | null
+          unique_clicks?: number | null
+          unique_opens?: number | null
           updated_at?: string
         }
         Update: {
+          click_count?: number | null
           content?: string
           created_at?: string
           failed_count?: number | null
           html_content?: string | null
           id?: string
+          open_count?: number | null
           recipients_count?: number | null
           scheduled_at?: string | null
           sent_at?: string | null
@@ -849,6 +900,8 @@ export type Database = {
           subject?: string
           successful_count?: number | null
           template?: string | null
+          unique_clicks?: number | null
+          unique_opens?: number | null
           updated_at?: string
         }
         Relationships: []
@@ -1113,6 +1166,14 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_campaign_clicks: {
+        Args: { campaign_uuid: string; is_unique: boolean }
+        Returns: undefined
+      }
+      increment_campaign_opens: {
+        Args: { campaign_uuid: string; is_unique: boolean }
+        Returns: undefined
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_moderator_or_admin: { Args: { _user_id: string }; Returns: boolean }
