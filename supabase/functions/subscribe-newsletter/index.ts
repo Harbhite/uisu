@@ -13,16 +13,11 @@ interface SubscribeRequest {
   source?: string;
 }
 
-const sendWelcomeEmail = async (email: string) => {
-  const resendApiKey = Deno.env.get("RESEND_API_KEY");
-  if (!resendApiKey) {
-    console.log("RESEND_API_KEY not configured, skipping welcome email");
-    return;
-  }
+const ADMIN_EMAIL = "uisuarchive@gmail.com"; // Admin notification recipient
+const logoUrl = "https://uisu.lovable.app/uisu-logo.png";
 
-  const resend = new Resend(resendApiKey);
-  const logoUrl = "https://uisu.lovable.app/uisu-logo.png";
-
+// Send welcome/confirmation email to the new subscriber
+const sendWelcomeEmail = async (resend: Resend, email: string) => {
   try {
     await resend.emails.send({
       from: "UISU Archive <noreply@resend.dev>",
@@ -131,7 +126,108 @@ const sendWelcomeEmail = async (email: string) => {
     console.log("Welcome email sent successfully to:", email);
   } catch (error) {
     console.error("Error sending welcome email:", error);
-    // Don't throw - subscription should still succeed even if email fails
+  }
+};
+
+// Send admin notification about new subscriber
+const sendAdminNotification = async (resend: Resend, subscriberEmail: string, source: string) => {
+  try {
+    const timestamp = new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos' });
+    
+    await resend.emails.send({
+      from: "UISU Archive <noreply@resend.dev>",
+      to: [ADMIN_EMAIL],
+      subject: `📬 New Newsletter Subscriber: ${subscriberEmail}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8f6f1;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8f6f1;">
+            <tr>
+              <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" width="100%" style="max-width: 500px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                  
+                  <!-- Header -->
+                  <tr>
+                    <td style="padding: 32px 32px 24px; border-bottom: 1px solid #eee;">
+                      <table role="presentation" width="100%">
+                        <tr>
+                          <td>
+                            <h1 style="margin: 0; font-size: 20px; font-weight: 600; color: #0a2e52;">
+                              New Subscriber Alert
+                            </h1>
+                          </td>
+                          <td align="right">
+                            <img src="${logoUrl}" alt="UISU" width="40" height="40" />
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  
+                  <!-- Content -->
+                  <tr>
+                    <td style="padding: 24px 32px;">
+                      <p style="margin: 0 0 16px 0; font-size: 15px; color: #333;">
+                        A new user has subscribed to the UISU Archive newsletter:
+                      </p>
+                      
+                      <table role="presentation" width="100%" style="background-color: #f8f6f1; border-radius: 8px; padding: 16px;">
+                        <tr>
+                          <td style="padding: 12px 16px;">
+                            <p style="margin: 0 0 8px 0; font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 1px;">Email Address</p>
+                            <p style="margin: 0; font-size: 16px; color: #0a2e52; font-weight: 600;">${subscriberEmail}</p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 12px 16px;">
+                            <p style="margin: 0 0 8px 0; font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 1px;">Source</p>
+                            <p style="margin: 0; font-size: 14px; color: #333;">${source}</p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 12px 16px;">
+                            <p style="margin: 0 0 8px 0; font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 1px;">Subscribed At</p>
+                            <p style="margin: 0; font-size: 14px; color: #333;">${timestamp}</p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  
+                  <!-- CTA -->
+                  <tr>
+                    <td style="padding: 0 32px 32px;">
+                      <a href="https://uisu.lovable.app/admin" style="display: inline-block; background-color: #0a2e52; color: #ffffff; padding: 12px 24px; text-decoration: none; font-weight: 600; font-size: 13px; border-radius: 6px;">
+                        View in Dashboard →
+                      </a>
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer -->
+                  <tr>
+                    <td style="padding: 16px 32px; background-color: #f8f6f1; border-radius: 0 0 12px 12px;">
+                      <p style="margin: 0; font-size: 11px; color: #888; text-align: center;">
+                        This is an automated notification from UISU Archive.
+                      </p>
+                    </td>
+                  </tr>
+                  
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `,
+    });
+    console.log("Admin notification sent for new subscriber:", subscriberEmail);
+  } catch (error) {
+    console.error("Error sending admin notification:", error);
   }
 };
 
@@ -157,6 +253,9 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    const resend = resendApiKey ? new Resend(resendApiKey) : null;
+
     // Check if email already exists
     const { data: existing } = await supabase
       .from("newsletter_subscribers")
@@ -180,8 +279,13 @@ const handler = async (req: Request): Promise<Response> => {
           .update({ is_active: true, subscribed_at: new Date().toISOString() })
           .eq("id", existing.id);
         
-        // Send welcome back email
-        await sendWelcomeEmail(email.toLowerCase());
+        // Send welcome back email and notify admin
+        if (resend) {
+          await Promise.all([
+            sendWelcomeEmail(resend, email.toLowerCase()),
+            sendAdminNotification(resend, email.toLowerCase(), `${source} (reactivated)`),
+          ]);
+        }
         
         return new Response(
           JSON.stringify({ success: true, message: "Welcome back! Subscription reactivated." }),
@@ -203,8 +307,15 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Failed to subscribe");
     }
 
-    // Send welcome email to new subscriber
-    await sendWelcomeEmail(email.toLowerCase());
+    // Send welcome email to new subscriber AND notify admin (in parallel)
+    if (resend) {
+      await Promise.all([
+        sendWelcomeEmail(resend, email.toLowerCase()),
+        sendAdminNotification(resend, email.toLowerCase(), source),
+      ]);
+    } else {
+      console.log("RESEND_API_KEY not configured, skipping emails");
+    }
 
     return new Response(
       JSON.stringify({ success: true, message: "Successfully subscribed!" }),
