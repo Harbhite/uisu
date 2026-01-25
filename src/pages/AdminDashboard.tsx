@@ -181,6 +181,10 @@ const AdminDashboard = () => {
   const [sendingNewsletter, setSendingNewsletter] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [testEmail, setTestEmail] = useState("");
+  const [selectedTemplate, setSelectedTemplate] = useState<"classic" | "minimal" | "announcement" | "newspaper">("classic");
+  const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleTime, setScheduleTime] = useState("");
+  const [isScheduling, setIsScheduling] = useState(false);
   const [sendingTest, setSendingTest] = useState(false);
   
   // Audit log filters
@@ -1055,7 +1059,7 @@ const AdminDashboard = () => {
   };
 
   // Send newsletter function
-  const sendNewsletter = async () => {
+  const sendNewsletter = async (scheduled = false) => {
     if (!composeSubject.trim() || !composeContent.trim()) {
       toast({
         title: "Missing fields",
@@ -1066,12 +1070,68 @@ const AdminDashboard = () => {
     }
 
     const activeSubscribers = newsletterSubscribers.filter(s => s.is_active).length;
-    if (activeSubscribers === 0) {
+    if (activeSubscribers === 0 && !scheduled) {
       toast({
         title: "No subscribers",
         description: "There are no active subscribers to send to.",
         variant: "destructive",
       });
+      return;
+    }
+
+    // Handle scheduling
+    if (scheduled && scheduleDate && scheduleTime) {
+      const scheduledDateTime = new Date(`${scheduleDate}T${scheduleTime}`);
+      if (scheduledDateTime <= new Date()) {
+        toast({
+          title: "Invalid schedule",
+          description: "Scheduled time must be in the future.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!confirm(`Schedule this newsletter for ${scheduledDateTime.toLocaleString()}?`)) return;
+
+      setIsScheduling(true);
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData?.session?.access_token;
+
+        const response = await supabase.functions.invoke('send-newsletter', {
+          body: { 
+            subject: composeSubject.trim(), 
+            content: composeContent.trim(),
+            template: selectedTemplate,
+            scheduledAt: scheduledDateTime.toISOString(),
+          },
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+
+        if (response.error) {
+          throw new Error(response.error.message || 'Failed to schedule newsletter');
+        }
+
+        toast({
+          title: "Newsletter scheduled!",
+          description: `Will be sent on ${scheduledDateTime.toLocaleString()}`,
+        });
+
+        setComposeSubject("");
+        setComposeContent("");
+        setScheduleDate("");
+        setScheduleTime("");
+        fetchData();
+      } catch (error: any) {
+        console.error("Newsletter schedule error:", error);
+        toast({
+          title: "Error scheduling newsletter",
+          description: error.message,
+          variant: "destructive",
+        });
+      } finally {
+        setIsScheduling(false);
+      }
       return;
     }
 
@@ -1085,7 +1145,8 @@ const AdminDashboard = () => {
       const response = await supabase.functions.invoke('send-newsletter', {
         body: { 
           subject: composeSubject.trim(), 
-          content: composeContent.trim() 
+          content: composeContent.trim(),
+          template: selectedTemplate,
         },
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
@@ -1098,6 +1159,7 @@ const AdminDashboard = () => {
       
       await logAuditAction('send_newsletter', 'newsletter_campaigns', null, null, {
         subject: composeSubject,
+        template: selectedTemplate,
         recipients: result.stats?.total || activeSubscribers,
         successful: result.stats?.successful || 0,
         failed: result.stats?.failed || 0,
@@ -1151,6 +1213,7 @@ const AdminDashboard = () => {
         body: { 
           subject: composeSubject.trim(), 
           content: composeContent.trim(),
+          template: selectedTemplate,
           testEmail: testEmail.trim(),
         },
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
@@ -1178,41 +1241,112 @@ const AdminDashboard = () => {
     }
   };
 
-  // Generate preview HTML for display
+  // Generate preview HTML for display based on template
   const generatePreviewHtml = () => {
     const htmlContent = composeContent
-      .replace(/\n\n/g, '</p><p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.7; color: #1a1a1a;">')
+      .replace(/\n\n/g, '</p><p style="margin: 0 0 20px 0;">')
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/\n/g, '<br>');
+      .replace(/\n/g, '<br>')
+      .replace(/^/, '<p style="margin: 0 0 20px 0;">')
+      .replace(/$/, '</p>');
     
-    return `
-      <div style="font-family: Georgia, 'Times New Roman', serif; background-color: #f8f6f1; padding: 40px 20px;">
-        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-          <div style="padding: 32px 32px 24px; border-bottom: 2px solid #0a2e52;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <p style="margin: 0; font-size: 12px; color: #c9a227; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">UISU Archive Newsletter</p>
-              <img src="https://uisu.lovable.app/uisu-logo.png" alt="UISU" width="48" height="48" />
+    const subject = composeSubject || 'Newsletter Subject';
+    const content = htmlContent || 'Your newsletter content will appear here...';
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    
+    const goldLogo = `<svg width="48" height="48" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="45" fill="none" stroke="#C5A059" stroke-width="3"/><circle cx="50" cy="50" r="35" fill="none" stroke="#C5A059" stroke-width="2"/><text x="50" y="58" font-family="Georgia, serif" font-size="24" font-weight="bold" fill="#C5A059" text-anchor="middle">UI</text><text x="50" y="75" font-family="Georgia, serif" font-size="10" fill="#C5A059" text-anchor="middle">SU</text></svg>`;
+    
+    if (selectedTemplate === 'minimal') {
+      return `
+        <div style="font-family: -apple-system, sans-serif; background-color: #FFFFFF; padding: 48px 24px;">
+          <div style="max-width: 520px; margin: 0 auto; text-align: center;">
+            <div style="border-bottom: 2px solid #C5A059; display: inline-block; padding-bottom: 8px; margin-bottom: 40px;">
+              <span style="font-size: 11px; color: #C5A059; text-transform: uppercase; letter-spacing: 4px; font-weight: 600;">UISU Archive</span>
+            </div>
+            <h1 style="font-size: 28px; font-weight: 300; color: #0F172A; line-height: 1.4; font-family: Georgia, serif; margin: 0 0 32px 0;">${subject}</h1>
+            <div style="font-size: 16px; line-height: 1.9; color: #475569; text-align: left;">${content}</div>
+            <div style="margin-top: 40px;"><a href="#" style="color: #C5A059; font-size: 14px; border-bottom: 1px solid #C5A059;">Explore the Archive →</a></div>
+            <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #F1F5F9;">
+              <p style="font-size: 18px; font-style: italic; color: #C5A059; margin: 0 0 4px 0;">First and Best</p>
+              <p style="font-size: 11px; color: #94A3B8; margin: 0;">UISU Archive • University of Ibadan</p>
             </div>
           </div>
-          <div style="padding: 32px 32px 0;">
-            <h1 style="margin: 0 0 24px 0; font-size: 28px; font-weight: 700; color: #0a2e52; line-height: 1.3;">
-              ${composeSubject || 'Newsletter Subject'}
-            </h1>
+        </div>
+      `;
+    }
+    
+    if (selectedTemplate === 'announcement') {
+      return `
+        <div style="font-family: Georgia, serif; background-color: #0F172A; padding: 48px 20px;">
+          <div style="max-width: 560px; margin: 0 auto; text-align: center;">
+            <span style="display: inline-block; background-color: #C5A059; color: #0F172A; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; padding: 8px 16px; margin-bottom: 24px;">Official Announcement</span>
+            <div style="margin-bottom: 24px;">${goldLogo}</div>
+            <h1 style="font-size: 32px; font-weight: 700; color: #FFFFFF; line-height: 1.2; margin: 0 0 24px 0;">${subject}</h1>
+            <div style="width: 60px; height: 3px; background-color: #C5A059; margin: 0 auto 24px;"></div>
+            <div style="background-color: #1E293B; border-left: 4px solid #C5A059; padding: 24px; text-align: left;">
+              <div style="font-size: 16px; line-height: 1.8; color: #E2E8F0;">${content}</div>
+            </div>
+            <div style="margin-top: 32px;"><a href="#" style="display: inline-block; background-color: #C5A059; color: #0F172A; padding: 16px 40px; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; text-decoration: none;">Read More</a></div>
+            <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #334155;">
+              <p style="font-size: 18px; font-style: italic; color: #C5A059; margin: 0 0 8px 0;">First and Best</p>
+              <p style="font-size: 12px; color: #64748B; margin: 0;">UISU Archive • University of Ibadan Students' Union</p>
+            </div>
           </div>
-          <div style="padding: 0 32px 32px;">
-            <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.7; color: #1a1a1a;">
-              ${htmlContent || 'Your newsletter content will appear here...'}
-            </p>
+        </div>
+      `;
+    }
+    
+    if (selectedTemplate === 'newspaper') {
+      return `
+        <div style="font-family: Georgia, serif; background-color: #FFFEF7; padding: 32px 20px;">
+          <div style="max-width: 640px; margin: 0 auto; background-color: #FFFEF7; border: 1px solid #E5E2D9;">
+            <div style="padding: 24px 32px; border-bottom: 3px double #0F172A; text-align: center;">
+              <p style="font-size: 10px; color: #64748B; text-transform: uppercase; letter-spacing: 3px; margin: 0 0 4px 0;">The Official Newsletter of</p>
+              <h1 style="font-size: 36px; font-weight: 400; color: #0F172A; font-family: Georgia, serif; letter-spacing: -1px; margin: 0;">THE ARCHIVE</h1>
+              <p style="font-size: 11px; color: #64748B; margin: 8px 0 0 0;">${today} • <span style="color: #C5A059;">University of Ibadan</span></p>
+            </div>
+            <div style="padding: 24px 32px 16px;">
+              <h2 style="font-size: 24px; font-weight: 700; color: #0F172A; line-height: 1.3; text-align: center; border-bottom: 1px solid #0F172A; padding-bottom: 16px; margin: 0;">${subject}</h2>
+            </div>
+            <div style="padding: 16px 32px 32px;">
+              <div style="font-size: 16px; line-height: 1.8; color: #1E293B; text-align: justify;">${content}</div>
+            </div>
+            <div style="padding: 20px 32px; background-color: #0F172A; text-align: center;">
+              <a href="#" style="color: #C5A059; font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; text-decoration: none;">Continue Reading on the Archive →</a>
+            </div>
+            <div style="padding: 24px 32px; text-align: center; border-top: 1px solid #E5E2D9;">
+              ${goldLogo}
+              <p style="font-size: 16px; font-style: italic; color: #C5A059; margin: 12px 0 4px 0;">First and Best</p>
+              <p style="font-size: 11px; color: #94A3B8; margin: 0;">UISU Archive • Est. 1948</p>
+            </div>
           </div>
-          <div style="padding: 0 32px 32px;">
-            <a href="#" style="display: inline-block; background-color: #0a2e52; color: #ffffff; padding: 14px 32px; text-decoration: none; font-weight: 600; font-size: 14px; letter-spacing: 1px; border-radius: 4px;">
-              Visit the Archive →
-            </a>
+        </div>
+      `;
+    }
+    
+    // Classic template (default)
+    return `
+      <div style="font-family: Georgia, serif; background-color: #F8F6F1; padding: 48px 20px;">
+        <div style="max-width: 600px; margin: 0 auto;">
+          <div style="display: flex; align-items: center; margin-bottom: 32px;">
+            <div style="width: 48px; height: 48px; border: 2px solid #C5A059; border-radius: 50%; display: flex; align-items: center; justify-content: center;">${goldLogo}</div>
+            <div style="margin-left: 16px;">
+              <p style="font-size: 11px; color: #C5A059; text-transform: uppercase; letter-spacing: 3px; font-weight: 600; margin: 0;">The Archive Newsletter</p>
+              <p style="font-size: 12px; color: #64748B; margin: 4px 0 0 0;">University of Ibadan Students' Union</p>
+            </div>
           </div>
-          <div style="padding: 24px 32px; background-color: #f8f6f1; border-radius: 0 0 8px 8px;">
-            <p style="margin: 0 0 4px 0; font-size: 16px; font-style: italic; color: #c9a227;">First and Best</p>
-            <p style="margin: 0; font-size: 12px; color: #888;">UISU Archive • University of Ibadan Students' Union</p>
+          <div style="height: 1px; background: linear-gradient(to right, transparent, #C5A059, transparent); margin-bottom: 32px;"></div>
+          <h1 style="font-size: 28px; font-weight: 700; color: #0F172A; line-height: 1.2; margin: 0 0 24px 0;">${subject}</h1>
+          <div style="background-color: #FFFFFF; border: 1px solid #E2E8F0; box-shadow: 0 4px 24px rgba(0,0,0,0.06); padding: 32px; margin-bottom: 32px;">
+            <div style="font-size: 17px; line-height: 1.8; color: #1E293B;">${content}</div>
+          </div>
+          <div style="text-align: center; margin-bottom: 40px;">
+            <a href="#" style="display: inline-block; background-color: #C5A059; color: #FFFFFF; padding: 16px 40px; font-weight: 600; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; text-decoration: none;">Visit the Archive</a>
+          </div>
+          <div style="border-top: 1px solid #E2E8F0; padding-top: 24px; text-align: center;">
+            <p style="font-size: 20px; font-style: italic; color: #C5A059; margin: 0 0 8px 0;">First and Best</p>
+            <p style="font-size: 12px; color: #64748B; margin: 0;">UISU Archive • Est. 1948</p>
           </div>
         </div>
       </div>
@@ -1577,6 +1711,61 @@ const AdminDashboard = () => {
                       </p>
                     </div>
 
+                    {/* Template Selector */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Template Style</label>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {[
+                          { id: 'classic', name: 'Classic', desc: 'Editorial with gold accents' },
+                          { id: 'minimal', name: 'Minimal', desc: 'Clean and modern' },
+                          { id: 'announcement', name: 'Announcement', desc: 'Bold dark theme' },
+                          { id: 'newspaper', name: 'Newspaper', desc: 'Traditional masthead' },
+                        ].map((tmpl) => (
+                          <button
+                            key={tmpl.id}
+                            type="button"
+                            onClick={() => setSelectedTemplate(tmpl.id as any)}
+                            className={`p-3 border text-left transition-all ${
+                              selectedTemplate === tmpl.id 
+                                ? 'border-nobel-gold bg-nobel-gold/10' 
+                                : 'border-border hover:border-muted-foreground'
+                            }`}
+                          >
+                            <p className="text-sm font-medium text-foreground">{tmpl.name}</p>
+                            <p className="text-xs text-muted-foreground">{tmpl.desc}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Scheduling Section */}
+                    <div className="border border-border rounded-lg p-4 bg-muted/30">
+                      <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Schedule for Later</p>
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <input
+                          type="date"
+                          value={scheduleDate}
+                          onChange={(e) => setScheduleDate(e.target.value)}
+                          min={new Date().toISOString().split('T')[0]}
+                          className="flex-1 px-4 py-2.5 bg-background border border-border focus:border-nobel-gold focus:outline-none text-sm"
+                        />
+                        <input
+                          type="time"
+                          value={scheduleTime}
+                          onChange={(e) => setScheduleTime(e.target.value)}
+                          className="px-4 py-2.5 bg-background border border-border focus:border-nobel-gold focus:outline-none text-sm"
+                        />
+                        <button
+                          onClick={() => sendNewsletter(true)}
+                          disabled={isScheduling || !composeSubject.trim() || !composeContent.trim() || !scheduleDate || !scheduleTime}
+                          className="flex items-center justify-center gap-2 px-5 py-2.5 border border-nobel-gold text-nobel-gold text-xs font-bold uppercase tracking-widest hover:bg-nobel-gold hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                        >
+                          {isScheduling ? <Loader2 className="w-3 h-3 animate-spin" /> : <Calendar size={12} />}
+                          {isScheduling ? "Scheduling..." : "Schedule"}
+                        </button>
+                      </div>
+                    </div>
+
                     {/* Preview & Test Send Section */}
                     <div className="border border-border rounded-lg p-4 bg-muted/30">
                       <div className="flex items-center justify-between mb-3">
@@ -1633,7 +1822,7 @@ const AdminDashboard = () => {
                         Will be sent to <strong>{newsletterSubscribers.filter(s => s.is_active).length}</strong> active subscriber(s) from <strong>newsletter@uisu.space</strong>
                       </p>
                       <button
-                        onClick={sendNewsletter}
+                        onClick={() => sendNewsletter(false)}
                         disabled={sendingNewsletter || !composeSubject.trim() || !composeContent.trim()}
                         className="flex items-center gap-2 px-6 py-3 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest hover:bg-nobel-gold hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
