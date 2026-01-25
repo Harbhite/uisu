@@ -802,6 +802,51 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_campaigns: {
+        Row: {
+          content: string
+          created_at: string
+          failed_count: number | null
+          html_content: string | null
+          id: string
+          recipients_count: number | null
+          sent_at: string | null
+          sent_by: string | null
+          status: string
+          subject: string
+          successful_count: number | null
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          failed_count?: number | null
+          html_content?: string | null
+          id?: string
+          recipients_count?: number | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          subject: string
+          successful_count?: number | null
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          failed_count?: number | null
+          html_content?: string | null
+          id?: string
+          recipients_count?: number | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          subject?: string
+          successful_count?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           email: string
