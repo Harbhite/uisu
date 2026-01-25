@@ -20,7 +20,7 @@ const logoUrl = "https://uisu.lovable.app/uisu-logo.png";
 const sendWelcomeEmail = async (resend: Resend, email: string) => {
   try {
     await resend.emails.send({
-      from: "UISU Archive <noreply@resend.dev>",
+      from: "UISU Archive <newsletter@uisu.space>",
       to: [email],
       subject: "Welcome to UISU Archive Newsletter!",
       html: `
@@ -135,7 +135,7 @@ const sendAdminNotification = async (resend: Resend, subscriberEmail: string, so
     const timestamp = new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos' });
     
     await resend.emails.send({
-      from: "UISU Archive <noreply@resend.dev>",
+      from: "UISU Archive <newsletter@uisu.space>",
       to: [ADMIN_EMAIL],
       subject: `📬 New Newsletter Subscriber: ${subscriberEmail}`,
       html: `

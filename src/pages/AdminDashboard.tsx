@@ -179,6 +179,9 @@ const AdminDashboard = () => {
   const [composeSubject, setComposeSubject] = useState("");
   const [composeContent, setComposeContent] = useState("");
   const [sendingNewsletter, setSendingNewsletter] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [testEmail, setTestEmail] = useState("");
+  const [sendingTest, setSendingTest] = useState(false);
   
   // Audit log filters
   const [auditSearchQuery, setAuditSearchQuery] = useState("");
@@ -1120,6 +1123,102 @@ const AdminDashboard = () => {
     }
   };
 
+  const sendTestNewsletter = async () => {
+    if (!composeSubject.trim() || !composeContent.trim()) {
+      toast({
+        title: "Missing fields",
+        description: "Please enter a subject and content for the newsletter.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!testEmail.trim()) {
+      toast({
+        title: "Missing test email",
+        description: "Please enter an email address for the test send.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSendingTest(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+
+      const response = await supabase.functions.invoke('send-newsletter', {
+        body: { 
+          subject: composeSubject.trim(), 
+          content: composeContent.trim(),
+          testEmail: testEmail.trim(),
+        },
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to send test email');
+      }
+
+      toast({
+        title: "Test email sent!",
+        description: `Preview sent to ${testEmail}`,
+      });
+
+      setTestEmail("");
+    } catch (error: any) {
+      console.error("Test send error:", error);
+      toast({
+        title: "Error sending test",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSendingTest(false);
+    }
+  };
+
+  // Generate preview HTML for display
+  const generatePreviewHtml = () => {
+    const htmlContent = composeContent
+      .replace(/\n\n/g, '</p><p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.7; color: #1a1a1a;">')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/\n/g, '<br>');
+    
+    return `
+      <div style="font-family: Georgia, 'Times New Roman', serif; background-color: #f8f6f1; padding: 40px 20px;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+          <div style="padding: 32px 32px 24px; border-bottom: 2px solid #0a2e52;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <p style="margin: 0; font-size: 12px; color: #c9a227; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">UISU Archive Newsletter</p>
+              <img src="https://uisu.lovable.app/uisu-logo.png" alt="UISU" width="48" height="48" />
+            </div>
+          </div>
+          <div style="padding: 32px 32px 0;">
+            <h1 style="margin: 0 0 24px 0; font-size: 28px; font-weight: 700; color: #0a2e52; line-height: 1.3;">
+              ${composeSubject || 'Newsletter Subject'}
+            </h1>
+          </div>
+          <div style="padding: 0 32px 32px;">
+            <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.7; color: #1a1a1a;">
+              ${htmlContent || 'Your newsletter content will appear here...'}
+            </p>
+          </div>
+          <div style="padding: 0 32px 32px;">
+            <a href="#" style="display: inline-block; background-color: #0a2e52; color: #ffffff; padding: 14px 32px; text-decoration: none; font-weight: 600; font-size: 14px; letter-spacing: 1px; border-radius: 4px;">
+              Visit the Archive →
+            </a>
+          </div>
+          <div style="padding: 24px 32px; background-color: #f8f6f1; border-radius: 0 0 8px 8px;">
+            <p style="margin: 0 0 4px 0; font-size: 16px; font-style: italic; color: #c9a227;">First and Best</p>
+            <p style="margin: 0; font-size: 12px; color: #888;">UISU Archive • University of Ibadan Students' Union</p>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
   if (authLoading || !user || !isStaff) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
@@ -1477,9 +1576,61 @@ const AdminDashboard = () => {
                         Tip: Use **text** for bold and *text* for italic formatting.
                       </p>
                     </div>
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
+
+                    {/* Preview & Test Send Section */}
+                    <div className="border border-border rounded-lg p-4 bg-muted/30">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Preview & Test</p>
+                        <button
+                          onClick={() => setShowPreview(!showPreview)}
+                          disabled={!composeSubject.trim() && !composeContent.trim()}
+                          className="flex items-center gap-2 text-xs text-ui-blue hover:text-nobel-gold transition-colors disabled:opacity-50"
+                        >
+                          <Eye size={14} />
+                          {showPreview ? "Hide Preview" : "Show Preview"}
+                        </button>
+                      </div>
+                      
+                      {/* Email Preview */}
+                      <AnimatePresence>
+                        {showPreview && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="mb-4 overflow-hidden"
+                          >
+                            <div 
+                              className="border border-border rounded-lg overflow-hidden max-h-[500px] overflow-y-auto"
+                              dangerouslySetInnerHTML={{ __html: generatePreviewHtml() }}
+                            />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {/* Test Send */}
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <input
+                          type="email"
+                          value={testEmail}
+                          onChange={(e) => setTestEmail(e.target.value)}
+                          placeholder="Enter email for test send..."
+                          className="flex-1 px-4 py-2.5 bg-background border border-border focus:border-nobel-gold focus:outline-none text-sm"
+                        />
+                        <button
+                          onClick={sendTestNewsletter}
+                          disabled={sendingTest || !composeSubject.trim() || !composeContent.trim() || !testEmail.trim()}
+                          className="flex items-center justify-center gap-2 px-5 py-2.5 border border-ui-blue text-ui-blue text-xs font-bold uppercase tracking-widest hover:bg-ui-blue hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                        >
+                          {sendingTest ? <Loader2 className="w-3 h-3 animate-spin" /> : <Mail size={12} />}
+                          {sendingTest ? "Sending..." : "Send Test"}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2 border-t border-border">
                       <p className="text-sm text-muted-foreground">
-                        Will be sent to <strong>{newsletterSubscribers.filter(s => s.is_active).length}</strong> active subscriber(s)
+                        Will be sent to <strong>{newsletterSubscribers.filter(s => s.is_active).length}</strong> active subscriber(s) from <strong>newsletter@uisu.space</strong>
                       </p>
                       <button
                         onClick={sendNewsletter}
