@@ -37,6 +37,36 @@ interface SocialLinks {
 /**
  * Represents a student club, society, or association.
  */
+/** Represents an activity with title and description (for UI) */
+export interface ClubActivity {
+    title: string;
+    description?: string;
+}
+
+// Helper to parse activity from string (supports JSON format or plain string)
+export const parseActivity = (activity: string): ClubActivity => {
+    try {
+        const parsed = JSON.parse(activity);
+        if (typeof parsed === 'object' && parsed.title) {
+            return parsed as ClubActivity;
+        }
+    } catch {
+        // Not JSON, treat as plain title
+    }
+    return { title: activity };
+};
+
+// Helper to serialize activity to string for DB storage
+export const serializeActivity = (activity: ClubActivity): string => {
+    if (activity.description) {
+        return JSON.stringify(activity);
+    }
+    return activity.title;
+};
+
+/**
+ * Represents a student club, society, or association.
+ */
 export interface Club {
     /** Unique identifier for the club. */
     id: string;
@@ -53,7 +83,7 @@ export interface Club {
     /** A detailed description of the club's mission and activities. */
     description: string;
     /** A list of key activities or events organized by the club. */
-    activities: string[];
+    activities: ClubActivity[];
     /** Name of the current president (optional). */
     president?: string;
     /** Brand color for the club. */
@@ -93,49 +123,81 @@ const getIconComponent = (iconName?: string, size: number = 24) => {
 // --- COMPONENT FOR EDITABLE ACTIVITY ITEMS ---
 interface ActivityCardProps {
     activity: string;
+    activityDescription?: string;
     isEditing?: boolean;
-    onEdit?: (newValue: string) => void;
+    onEdit?: (newTitle: string, newDescription: string) => void;
     onDelete?: () => void;
     color?: string;
 }
 
-const ActivityCard: React.FC<ActivityCardProps> = ({ activity, isEditing, onEdit, onDelete, color }) => {
+const ActivityCard: React.FC<ActivityCardProps> = ({ 
+    activity, 
+    activityDescription = '', 
+    isEditing, 
+    onEdit, 
+    onDelete, 
+    color 
+}) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [editValue, setEditValue] = useState(activity);
+    const [editTitle, setEditTitle] = useState(activity);
+    const [editDescription, setEditDescription] = useState(
+        activityDescription || `Participate in the annual ${activity}. A cornerstone event that brings together members for professional development, networking, and celebration of our shared values.`
+    );
     const [isEditable, setIsEditable] = useState(false);
+
+    // Update local state when props change
+    useEffect(() => {
+        setEditTitle(activity);
+        setEditDescription(
+            activityDescription || `Participate in the annual ${activity}. A cornerstone event that brings together members for professional development, networking, and celebration of our shared values.`
+        );
+    }, [activity, activityDescription]);
 
     if (isEditing && isEditable) {
         return (
-            <div className="p-4 bg-card border border-accent rounded-xl flex items-center gap-3">
-                <Input
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    className="flex-1 bg-muted/50"
-                    autoFocus
+            <div className="p-4 bg-card border border-accent rounded-xl space-y-3">
+                <div className="flex items-center gap-3">
+                    <Input
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        className="flex-1 bg-muted/50 font-serif font-semibold"
+                        placeholder="Activity title..."
+                        autoFocus
+                    />
+                </div>
+                <textarea
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    className="w-full min-h-[80px] p-3 bg-muted/50 border border-border rounded-md text-sm text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-accent"
+                    placeholder="Describe this activity..."
                 />
-                <Button 
-                    size="icon" 
-                    variant="ghost"
-                    onClick={() => {
-                        onEdit?.(editValue);
-                        setIsEditable(false);
-                    }}
-                >
-                    <Check size={16} className="text-green-500" />
-                </Button>
-                <Button 
-                    size="icon" 
-                    variant="ghost"
-                    onClick={() => {
-                        setEditValue(activity);
-                        setIsEditable(false);
-                    }}
-                >
-                    <XIcon size={16} className="text-muted-foreground" />
-                </Button>
+                <div className="flex justify-end gap-2">
+                    <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={() => {
+                            setEditTitle(activity);
+                            setEditDescription(activityDescription || `Participate in the annual ${activity}. A cornerstone event that brings together members for professional development, networking, and celebration of our shared values.`);
+                            setIsEditable(false);
+                        }}
+                    >
+                        <XIcon size={14} className="mr-1" /> Cancel
+                    </Button>
+                    <Button 
+                        size="sm"
+                        onClick={() => {
+                            onEdit?.(editTitle, editDescription);
+                            setIsEditable(false);
+                        }}
+                    >
+                        <Check size={14} className="mr-1" /> Save
+                    </Button>
+                </div>
             </div>
         );
     }
+
+    const displayDescription = activityDescription || `Participate in the annual ${activity}. A cornerstone event that brings together members for professional development, networking, and celebration of our shared values.`;
 
     return (
         <div 
@@ -198,7 +260,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity, isEditing, onEdit
                     >
                         <div className="pt-4 mt-4 border-t border-border pl-[3.5rem]">
                             <p className="text-sm text-muted-foreground leading-relaxed font-light mb-4">
-                                Participate in the annual {activity}. A cornerstone event that brings together members for professional development, networking, and celebration of our shared values.
+                                {displayDescription}
                             </p>
                             <button 
                                 className="text-[10px] font-bold uppercase tracking-widest hover:opacity-70 transition-colors flex items-center gap-2"
@@ -225,7 +287,7 @@ export const ClubDetailPage: React.FC<ClubDetailProps> = ({ clubId, onBack }) =>
     const [loading, setLoading] = useState(true);
     const [showEditModal, setShowEditModal] = useState(false);
     const [isInlineEditing, setIsInlineEditing] = useState(false);
-    const [editedActivities, setEditedActivities] = useState<string[]>([]);
+    const [editedActivities, setEditedActivities] = useState<ClubActivity[]>([]);
     const [newActivity, setNewActivity] = useState('');
     const { isStaff } = useAdminCheck();
 
@@ -239,6 +301,9 @@ export const ClubDetailPage: React.FC<ClubDetailProps> = ({ clubId, onBack }) =>
         if (error) {
             console.error('Error fetching club:', error);
         } else if (data) {
+            // Convert string[] from DB to ClubActivity[]
+            const activities: ClubActivity[] = (data.activities || []).map((a: string) => parseActivity(a));
+            
             const mapped: Club = {
                 id: data.id,
                 name: data.name,
@@ -247,7 +312,7 @@ export const ClubDetailPage: React.FC<ClubDetailProps> = ({ clubId, onBack }) =>
                 founded: data.founded || '',
                 motto: data.motto || '',
                 description: data.description || '',
-                activities: data.activities || [],
+                activities,
                 president: data.president || undefined,
                 color: data.color || '#6d28d9',
                 iconName: data.icon_name || undefined,
@@ -273,9 +338,12 @@ export const ClubDetailPage: React.FC<ClubDetailProps> = ({ clubId, onBack }) =>
         if (!club) return;
         
         try {
+            // Convert ClubActivity[] back to string[] for DB
+            const activitiesForDb = editedActivities.map(a => serializeActivity(a));
+            
             const { error } = await supabase
                 .from('clubs')
-                .update({ activities: editedActivities })
+                .update({ activities: activitiesForDb })
                 .eq('id', club.id);
             
             if (error) throw error;
@@ -286,9 +354,9 @@ export const ClubDetailPage: React.FC<ClubDetailProps> = ({ clubId, onBack }) =>
         }
     };
 
-    const handleActivityEdit = (index: number, newValue: string) => {
+    const handleActivityEdit = (index: number, newTitle: string, newDescription: string) => {
         const updated = [...editedActivities];
-        updated[index] = newValue;
+        updated[index] = { title: newTitle, description: newDescription };
         setEditedActivities(updated);
     };
 
@@ -298,7 +366,7 @@ export const ClubDetailPage: React.FC<ClubDetailProps> = ({ clubId, onBack }) =>
 
     const addNewActivity = () => {
         if (newActivity.trim()) {
-            setEditedActivities(prev => [...prev, newActivity.trim()]);
+            setEditedActivities(prev => [...prev, { title: newActivity.trim() }]);
             setNewActivity('');
         }
     };
@@ -379,51 +447,52 @@ export const ClubDetailPage: React.FC<ClubDetailProps> = ({ clubId, onBack }) =>
                     </div>
                 </div>
 
-                {/* Hero Content */}
-                <div className="absolute bottom-0 left-0 right-0 z-10">
-                    <div className="container mx-auto px-6 pb-8">
-                        <div className="flex flex-col md:flex-row gap-6 items-end md:items-center">
-                            {/* Logo */}
-                            <motion.div 
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                className="w-28 h-28 md:w-36 md:h-36 bg-card rounded-2xl shadow-2xl flex items-center justify-center border-4 border-background overflow-hidden shrink-0"
-                                style={{ color: club.color }}
-                            >
-                                {club.imageUrl ? (
-                                    <img 
-                                        src={club.imageUrl} 
-                                        alt={`${club.name} logo`}
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    React.cloneElement(icon as React.ReactElement, { size: 48 })
-                                )}
-                            </motion.div>
+            {/* Hero Content */}
+            <div className="absolute bottom-0 left-0 right-0 z-10">
+                <div className="container mx-auto px-6 pb-8">
+                    {/* Mobile: Horizontal layout matching desktop alignment */}
+                    <div className="flex flex-row gap-4 md:gap-6 items-center">
+                        {/* Logo */}
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="w-20 h-20 md:w-36 md:h-36 bg-card rounded-xl md:rounded-2xl shadow-2xl flex items-center justify-center border-2 md:border-4 border-background overflow-hidden shrink-0"
+                            style={{ color: club.color }}
+                        >
+                            {club.imageUrl ? (
+                                <img 
+                                    src={club.imageUrl} 
+                                    alt={`${club.name} logo`}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                React.cloneElement(icon as React.ReactElement, { size: 36 })
+                            )}
+                        </motion.div>
 
-                            {/* Title */}
-                            <div className="flex-1">
-                                <div className="flex flex-wrap gap-2 mb-3">
-                                    <span 
-                                        className="px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full text-white"
-                                        style={{ backgroundColor: club.color }}
-                                    >
-                                        {club.category}
+                        {/* Title - Left aligned on all screens */}
+                        <div className="flex-1 text-left">
+                            <div className="flex flex-wrap gap-2 mb-2 md:mb-3">
+                                <span 
+                                    className="px-2 md:px-3 py-0.5 md:py-1 text-[9px] md:text-[10px] font-bold uppercase tracking-widest rounded-full text-white"
+                                    style={{ backgroundColor: club.color }}
+                                >
+                                    {club.category}
+                                </span>
+                                {club.acronym && (
+                                    <span className="px-2 md:px-3 py-0.5 md:py-1 bg-white/10 backdrop-blur-sm text-white text-[9px] md:text-[10px] font-bold uppercase tracking-widest rounded-full border border-white/20">
+                                        {club.acronym}
                                     </span>
-                                    {club.acronym && (
-                                        <span className="px-3 py-1 bg-white/10 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-widest rounded-full border border-white/20">
-                                            {club.acronym}
-                                        </span>
-                                    )}
-                                </div>
-                                <h1 className="font-serif text-4xl md:text-6xl text-foreground leading-none mb-2">{club.name}</h1>
-                                {club.motto && (
-                                    <p className="font-serif text-lg md:text-xl text-muted-foreground italic">"{club.motto}"</p>
                                 )}
                             </div>
+                            <h1 className="font-serif text-2xl md:text-6xl text-foreground leading-tight md:leading-none mb-1 md:mb-2">{club.name}</h1>
+                            {club.motto && (
+                                <p className="font-serif text-sm md:text-xl text-muted-foreground italic line-clamp-2 md:line-clamp-none">"{club.motto}"</p>
+                            )}
                         </div>
                     </div>
                 </div>
+            </div>
             </div>
 
             {/* Content */}
@@ -526,9 +595,10 @@ export const ClubDetailPage: React.FC<ClubDetailProps> = ({ clubId, onBack }) =>
                                     (isInlineEditing ? editedActivities : club.activities).map((activity, idx) => (
                                         <ActivityCard 
                                             key={idx} 
-                                            activity={activity}
+                                            activity={activity.title}
+                                            activityDescription={activity.description}
                                             isEditing={isInlineEditing}
-                                            onEdit={(newValue) => handleActivityEdit(idx, newValue)}
+                                            onEdit={(newTitle, newDesc) => handleActivityEdit(idx, newTitle, newDesc)}
                                             onDelete={() => handleActivityDelete(idx)}
                                             color={club.color}
                                         />
@@ -746,7 +816,7 @@ export const CommunitiesPage: React.FC<CommunitiesProps> = ({ onBack, onClubSele
                     founded: club.founded || '',
                     motto: club.motto || '',
                     description: club.description || '',
-                    activities: club.activities || [],
+                    activities: (club.activities || []).map((a: string) => parseActivity(a)),
                     president: club.president || undefined,
                     color: club.color || '#6d28d9',
                     iconName: club.icon_name || undefined,
