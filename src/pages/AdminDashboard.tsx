@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { 
   ArrowLeft, Star, Plus, Trash2, Edit2, Calendar, FileText, 
   Megaphone, X, Upload, Loader2, Check, Users, Award, ShieldAlert,
-  ArrowUpDown, History, Search, Download, Filter, Eye, Mail, BookOpen, Inbox
+  ArrowUpDown, History, Search, Download, Filter, Eye, Mail, BookOpen, Inbox, Send
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
@@ -171,8 +171,14 @@ const AdminDashboard = () => {
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [newsletterSubscribers, setNewsletterSubscribers] = useState<any[]>([]);
+  const [newsletterCampaigns, setNewsletterCampaigns] = useState<any[]>([]);
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [newUserRole, setNewUserRole] = useState<"admin" | "moderator">("moderator");
+  
+  // Newsletter compose state
+  const [composeSubject, setComposeSubject] = useState("");
+  const [composeContent, setComposeContent] = useState("");
+  const [sendingNewsletter, setSendingNewsletter] = useState(false);
   
   // Audit log filters
   const [auditSearchQuery, setAuditSearchQuery] = useState("");
@@ -343,12 +349,21 @@ const AdminDashboard = () => {
         );
         setAuditLogs(logsWithProfiles);
       } else if (activeTab === "newsletter") {
-        const { data, error } = await supabase
-          .from("newsletter_subscribers")
-          .select("*")
-          .order("subscribed_at", { ascending: false });
-        if (error) throw error;
-        setNewsletterSubscribers(data || []);
+        const [subsResult, campaignsResult] = await Promise.all([
+          supabase
+            .from("newsletter_subscribers")
+            .select("*")
+            .order("subscribed_at", { ascending: false }),
+          supabase
+            .from("newsletter_campaigns")
+            .select("*")
+            .order("created_at", { ascending: false })
+            .limit(20)
+        ]);
+        
+        if (subsResult.error) throw subsResult.error;
+        setNewsletterSubscribers(subsResult.data || []);
+        setNewsletterCampaigns(campaignsResult.data || []);
       }
     } catch (error: any) {
       toast({
@@ -1036,6 +1051,75 @@ const AdminDashboard = () => {
     }
   };
 
+  // Send newsletter function
+  const sendNewsletter = async () => {
+    if (!composeSubject.trim() || !composeContent.trim()) {
+      toast({
+        title: "Missing fields",
+        description: "Please enter a subject and content for the newsletter.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const activeSubscribers = newsletterSubscribers.filter(s => s.is_active).length;
+    if (activeSubscribers === 0) {
+      toast({
+        title: "No subscribers",
+        description: "There are no active subscribers to send to.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!confirm(`Send this newsletter to ${activeSubscribers} subscriber(s)?`)) return;
+
+    setSendingNewsletter(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+
+      const response = await supabase.functions.invoke('send-newsletter', {
+        body: { 
+          subject: composeSubject.trim(), 
+          content: composeContent.trim() 
+        },
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to send newsletter');
+      }
+
+      const result = response.data;
+      
+      await logAuditAction('send_newsletter', 'newsletter_campaigns', null, null, {
+        subject: composeSubject,
+        recipients: result.stats?.total || activeSubscribers,
+        successful: result.stats?.successful || 0,
+        failed: result.stats?.failed || 0,
+      });
+
+      toast({
+        title: "Newsletter sent!",
+        description: result.message || `Sent to ${result.stats?.successful || activeSubscribers} subscribers.`,
+      });
+
+      setComposeSubject("");
+      setComposeContent("");
+      fetchData();
+    } catch (error: any) {
+      console.error("Newsletter send error:", error);
+      toast({
+        title: "Error sending newsletter",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSendingNewsletter(false);
+    }
+  };
+
   if (authLoading || !user || !isStaff) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
@@ -1363,13 +1447,86 @@ const AdminDashboard = () => {
             {/* Newsletter Subscribers Tab */}
             {activeTab === "newsletter" && (
               <div className="space-y-6">
-                {/* Header with Export */}
+                {/* Compose Newsletter Section */}
+                <div className="bg-card border border-border p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Send className="w-5 h-5 text-ui-blue" />
+                    <h3 className="font-serif text-lg text-foreground">Compose Newsletter</h3>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Subject</label>
+                      <input
+                        type="text"
+                        value={composeSubject}
+                        onChange={(e) => setComposeSubject(e.target.value)}
+                        placeholder="e.g. UISU Archive Update - January 2026"
+                        className="w-full px-4 py-3 bg-background border border-border focus:border-nobel-gold focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Content</label>
+                      <textarea
+                        value={composeContent}
+                        onChange={(e) => setComposeContent(e.target.value)}
+                        placeholder="Write your newsletter content here. Use **bold** for emphasis and *italic* for subtitles..."
+                        rows={8}
+                        className="w-full px-4 py-3 bg-background border border-border focus:border-nobel-gold focus:outline-none resize-none font-serif"
+                      />
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Tip: Use **text** for bold and *text* for italic formatting.
+                      </p>
+                    </div>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
+                      <p className="text-sm text-muted-foreground">
+                        Will be sent to <strong>{newsletterSubscribers.filter(s => s.is_active).length}</strong> active subscriber(s)
+                      </p>
+                      <button
+                        onClick={sendNewsletter}
+                        disabled={sendingNewsletter || !composeSubject.trim() || !composeContent.trim()}
+                        className="flex items-center gap-2 px-6 py-3 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest hover:bg-nobel-gold hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {sendingNewsletter ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send size={14} />}
+                        {sendingNewsletter ? "Sending..." : "Send Newsletter"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recent Campaigns */}
+                {newsletterCampaigns.length > 0 && (
+                  <div className="bg-card border border-border p-6">
+                    <h3 className="font-serif text-lg text-foreground mb-4">Recent Campaigns</h3>
+                    <div className="space-y-3">
+                      {newsletterCampaigns.slice(0, 5).map((campaign) => (
+                        <div key={campaign.id} className="flex items-center justify-between py-3 border-b border-border last:border-0">
+                          <div>
+                            <p className="text-sm text-foreground font-medium">{campaign.subject}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {campaign.sent_at ? new Date(campaign.sent_at).toLocaleDateString() : 'Draft'} • 
+                              {campaign.successful_count || 0} sent
+                            </p>
+                          </div>
+                          <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${
+                            campaign.status === 'sent' 
+                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                              : 'bg-muted text-muted-foreground'
+                          }`}>
+                            {campaign.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Subscribers Header with Export */}
                 <div className="bg-card border border-border p-6">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
-                      <h3 className="font-serif text-lg text-foreground">Newsletter Subscribers</h3>
+                      <h3 className="font-serif text-lg text-foreground">Subscribers</h3>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {newsletterSubscribers.filter(s => s.is_active).length} active subscribers, {newsletterSubscribers.filter(s => !s.is_active).length} unsubscribed
+                        {newsletterSubscribers.filter(s => s.is_active).length} active, {newsletterSubscribers.filter(s => !s.is_active).length} unsubscribed
                       </p>
                     </div>
                     <button

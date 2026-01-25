@@ -13,7 +13,7 @@ interface SubscribeRequest {
   source?: string;
 }
 
-const ADMIN_EMAIL = "uisuarchive@gmail.com"; // Admin notification recipient
+const ADMIN_EMAIL = "theharbystud@gmail.com"; // Admin notification recipient
 const logoUrl = "https://uisu.lovable.app/uisu-logo.png";
 
 // Send welcome/confirmation email to the new subscriber
