@@ -810,11 +810,13 @@ export type Database = {
           html_content: string | null
           id: string
           recipients_count: number | null
+          scheduled_at: string | null
           sent_at: string | null
           sent_by: string | null
           status: string
           subject: string
           successful_count: number | null
+          template: string | null
           updated_at: string
         }
         Insert: {
@@ -824,11 +826,13 @@ export type Database = {
           html_content?: string | null
           id?: string
           recipients_count?: number | null
+          scheduled_at?: string | null
           sent_at?: string | null
           sent_by?: string | null
           status?: string
           subject: string
           successful_count?: number | null
+          template?: string | null
           updated_at?: string
         }
         Update: {
@@ -838,11 +842,13 @@ export type Database = {
           html_content?: string | null
           id?: string
           recipients_count?: number | null
+          scheduled_at?: string | null
           sent_at?: string | null
           sent_by?: string | null
           status?: string
           subject?: string
           successful_count?: number | null
+          template?: string | null
           updated_at?: string
         }
         Relationships: []
