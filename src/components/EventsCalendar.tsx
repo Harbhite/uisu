@@ -319,16 +319,24 @@ export const EventsCalendar: React.FC<EventsCalendarProps> = ({ onBack }) => {
             </AnimatePresence>
           </div>
 
-          {/* Sidebar - Registry Index Style */}
+          {/* Sidebar - Bold Schedule Style */}
           <div className="space-y-6 md:space-y-8">
-            <div className="bg-white border border-slate-200 p-6 md:p-8 border-t-4 border-t-ui-blue shadow-sm">
-              <h3 className="text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] text-slate-400 mb-6 md:mb-8 flex items-center gap-2">
-                <Filter size={14} /> Upcoming Dispatch
-              </h3>
+            <div className="bg-white border border-slate-200 shadow-sm overflow-hidden">
+              {/* Header */}
+              <div className="bg-ui-blue p-4 md:p-6">
+                <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-white/60 block mb-1">Official Schedule</span>
+                <h3 className="text-2xl md:text-3xl font-serif italic text-white leading-tight">
+                  Upcoming<br/>Dispatch
+                </h3>
+              </div>
 
-              <div className="space-y-0 divide-y divide-slate-100">
-                {upcomingEvents.map((event) => {
+              {/* Events List */}
+              <div className="divide-y-0">
+                {upcomingEvents.map((event, index) => {
                   const config = eventTypeConfig[event.type];
+                  const bgColors = ['bg-ui-blue', 'bg-nobel-gold', 'bg-green-600', 'bg-purple-600', 'bg-orange-500'];
+                  const bgColor = bgColors[index % bgColors.length];
+                  
                   return (
                     <button
                       key={event.id}
@@ -336,20 +344,30 @@ export const EventsCalendar: React.FC<EventsCalendarProps> = ({ onBack }) => {
                         setSelectedDate(event.date);
                         setCurrentMonth(event.date);
                       }}
-                      className="w-full text-left py-3 md:py-4 px-2 hover:bg-slate-50 transition-colors group"
+                      className={`w-full text-left ${bgColor} p-4 md:p-5 hover:brightness-110 transition-all group border-b-2 border-white/10 last:border-b-0`}
                     >
                       <div className="flex items-start gap-4">
-                        <div className="flex flex-col items-center min-w-[2.5rem] md:min-w-[3rem]">
-                          <span className="text-[8px] md:text-[10px] font-bold uppercase text-slate-400">{format(event.date, 'MMM')}</span>
-                          <span className="text-lg md:text-xl font-serif text-ui-blue font-bold">{format(event.date, 'dd')}</span>
+                        {/* Time/Date Column */}
+                        <div className="flex flex-col items-start min-w-[70px] md:min-w-[80px]">
+                          <span className="text-white/70 text-[10px] font-bold uppercase tracking-wide mb-0.5">
+                            {format(event.date, 'MMM dd')}
+                          </span>
+                          <span className="text-xl md:text-2xl font-bold text-white leading-none">
+                            {event.time || format(event.date, 'yyyy')}
+                          </span>
                         </div>
-                        <div>
-                          <h4 className="font-serif text-slate-700 text-base md:text-lg leading-tight group-hover:text-nobel-gold transition-colors mb-1">
+                        
+                        {/* Content Column */}
+                        <div className="flex-1 border-l-2 border-white/20 pl-4">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="w-2 h-2 bg-white rotate-45"></div>
+                          </div>
+                          <h4 className="font-bold text-white text-sm md:text-base leading-tight mb-1 group-hover:underline underline-offset-2">
                             {event.title}
                           </h4>
-                          <span className={`text-[8px] font-bold uppercase tracking-widest ${config.text}`}>
-                            {config.label}
-                          </span>
+                          <p className="text-white/70 text-[10px] md:text-xs leading-relaxed line-clamp-2">
+                            {event.description || `${config.label} event scheduled`}
+                          </p>
                         </div>
                       </div>
                     </button>
@@ -357,13 +375,24 @@ export const EventsCalendar: React.FC<EventsCalendarProps> = ({ onBack }) => {
                 })}
 
                 {upcomingEvents.length === 0 && (
-                   <div className="py-4 text-center text-slate-400 text-xs italic">No upcoming events scheduled.</div>
+                  <div className="p-8 text-center bg-slate-50">
+                    <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Calendar size={20} className="text-slate-300" />
+                    </div>
+                    <p className="text-slate-400 text-xs italic">No upcoming events scheduled.</p>
+                  </div>
                 )}
               </div>
 
-              <button className="w-full mt-6 py-3 border border-slate-200 text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:bg-ui-blue hover:text-white hover:border-ui-blue transition-all">
-                View Full Archive
-              </button>
+              {/* Footer */}
+              <div className="bg-slate-900 p-4 flex items-center justify-between">
+                <span className="text-[8px] md:text-[9px] font-bold uppercase tracking-widest text-slate-400">
+                  {upcomingEvents.length} Event{upcomingEvents.length !== 1 ? 's' : ''} Queued
+                </span>
+                <button className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-nobel-gold hover:text-white transition-colors">
+                  View All →
+                </button>
+              </div>
             </div>
 
             {/* Protocol Legend */}
