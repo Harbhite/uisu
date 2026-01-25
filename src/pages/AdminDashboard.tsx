@@ -1840,20 +1840,45 @@ const AdminDashboard = () => {
                     <div className="space-y-3">
                       {newsletterCampaigns.slice(0, 5).map((campaign) => (
                         <div key={campaign.id} className="flex items-center justify-between py-3 border-b border-border last:border-0">
-                          <div>
+                          <div className="flex-1">
                             <p className="text-sm text-foreground font-medium">{campaign.subject}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {campaign.sent_at ? new Date(campaign.sent_at).toLocaleDateString() : 'Draft'} • 
-                              {campaign.successful_count || 0} sent
-                            </p>
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
+                              <span>
+                                {campaign.sent_at ? new Date(campaign.sent_at).toLocaleDateString() : 'Draft'}
+                              </span>
+                              <span>•</span>
+                              <span>{campaign.successful_count || 0} sent</span>
+                              {campaign.status === 'sent' && (
+                                <>
+                                  <span>•</span>
+                                  <span className="flex items-center gap-1">
+                                    <Eye size={12} />
+                                    {campaign.unique_opens || 0} opens ({campaign.open_count || 0} total)
+                                  </span>
+                                  <span>•</span>
+                                  <span className="text-primary">
+                                    {campaign.unique_clicks || 0} clicks
+                                  </span>
+                                </>
+                              )}
+                            </div>
                           </div>
-                          <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${
-                            campaign.status === 'sent' 
-                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                              : 'bg-muted text-muted-foreground'
-                          }`}>
-                            {campaign.status}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            {campaign.status === 'sent' && campaign.successful_count > 0 && (
+                              <span className="text-xs text-muted-foreground">
+                                {Math.round(((campaign.unique_opens || 0) / campaign.successful_count) * 100)}% open rate
+                              </span>
+                            )}
+                            <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${
+                              campaign.status === 'sent' 
+                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                : campaign.status === 'scheduled'
+                                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                  : 'bg-muted text-muted-foreground'
+                            }`}>
+                              {campaign.status}
+                            </span>
+                          </div>
                         </div>
                       ))}
                     </div>
