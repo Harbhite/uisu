@@ -21,6 +21,7 @@ const sendWelcomeEmail = async (email: string) => {
   }
 
   const resend = new Resend(resendApiKey);
+  const logoUrl = "https://uisu.lovable.app/uisu-logo.png";
 
   try {
     await resend.emails.send({
@@ -34,41 +35,95 @@ const sendWelcomeEmail = async (email: string) => {
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
         </head>
-        <body style="font-family: Georgia, 'Times New Roman', serif; line-height: 1.6; color: #1a1a1a; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #0a2e52; font-size: 28px; margin-bottom: 10px;">Welcome to UISU Archive</h1>
-            <p style="color: #c9a227; font-style: italic; font-size: 14px; text-transform: uppercase; letter-spacing: 2px;">First and Best</p>
-          </div>
-          
-          <div style="background-color: #f8f9fa; padding: 30px; border-left: 4px solid #c9a227;">
-            <p style="font-size: 16px; margin-bottom: 15px;">Dear Subscriber,</p>
-            <p style="font-size: 16px; margin-bottom: 15px;">
-              Thank you for subscribing to the UISU Archive newsletter. You've joined a community dedicated to preserving and celebrating the rich history, culture, and intellectual heritage of the University of Ibadan Students' Union.
-            </p>
-            <p style="font-size: 16px; margin-bottom: 15px;">
-              As a subscriber, you'll receive:
-            </p>
-            <ul style="font-size: 15px; color: #444;">
-              <li style="margin-bottom: 8px;">Historical documents and archival discoveries</li>
-              <li style="margin-bottom: 8px;">Updates on union governance and leadership</li>
-              <li style="margin-bottom: 8px;">Exclusive stories from past student leaders</li>
-              <li style="margin-bottom: 8px;">Event announcements and community news</li>
-            </ul>
-          </div>
-          
-          <div style="text-align: center; margin-top: 30px;">
-            <a href="https://uisu.lovable.app" style="display: inline-block; background-color: #0a2e52; color: white; padding: 12px 30px; text-decoration: none; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; font-size: 13px;">
-              Explore the Archive
-            </a>
-          </div>
-          
-          <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #888; font-size: 12px;">
-            <p>© ${new Date().getFullYear()} UISU Archive. University of Ibadan Students' Union.</p>
-            <p style="margin-top: 5px;">
-              <a href="https://uisu.lovable.app/privacy-policy" style="color: #0a2e52; text-decoration: none;">Privacy Policy</a> | 
-              <a href="https://uisu.lovable.app/terms-of-service" style="color: #0a2e52; text-decoration: none;">Terms of Service</a>
-            </p>
-          </div>
+        <body style="margin: 0; padding: 0; font-family: Georgia, 'Times New Roman', serif; background-color: #f8f6f1;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8f6f1;">
+            <tr>
+              <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" width="100%" style="max-width: 560px; background-color: #f8f6f1;">
+                  
+                  <!-- Logo Section -->
+                  <tr>
+                    <td align="right" style="padding-bottom: 40px;">
+                      <img src="${logoUrl}" alt="UISU" width="48" height="48" style="display: block;" />
+                      <p style="margin: 8px 0 0 0; font-size: 14px; color: #0a2e52; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;">UISU ARCHIVE</p>
+                    </td>
+                  </tr>
+                  
+                  <!-- Title Section -->
+                  <tr>
+                    <td style="padding-bottom: 32px;">
+                      <h1 style="margin: 0; font-size: 26px; font-weight: 700; color: #0a2e52; line-height: 1.3; border-bottom: 3px solid #0a2e52; display: inline-block; padding-bottom: 8px;">
+                        Welcome to the Archive
+                      </h1>
+                    </td>
+                  </tr>
+                  
+                  <!-- Content Section -->
+                  <tr>
+                    <td style="padding-bottom: 24px;">
+                      <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.7; color: #1a1a1a;">
+                        Thank you for subscribing. You've joined a community dedicated to preserving and celebrating the rich history, culture, and intellectual heritage of the University of Ibadan Students' Union.
+                      </p>
+                    </td>
+                  </tr>
+                  
+                  <!-- Benefits List -->
+                  <tr>
+                    <td style="padding-bottom: 32px;">
+                      <p style="margin: 0 0 16px 0; font-size: 15px; color: #444;">As a subscriber, you'll receive:</p>
+                      <ul style="margin: 0; padding: 0 0 0 20px; font-size: 15px; color: #1a1a1a; line-height: 1.8;">
+                        <li style="margin-bottom: 8px;">Historical documents and archival discoveries</li>
+                        <li style="margin-bottom: 8px;">Updates on union governance and leadership</li>
+                        <li style="margin-bottom: 8px;">Exclusive stories from past student leaders</li>
+                        <li style="margin-bottom: 8px;">Event announcements and community news</li>
+                      </ul>
+                    </td>
+                  </tr>
+                  
+                  <!-- CTA Button -->
+                  <tr>
+                    <td style="padding-bottom: 48px;">
+                      <a href="https://uisu.lovable.app" style="display: inline-block; background-color: #0a2e52; color: #ffffff; padding: 14px 32px; text-decoration: none; font-weight: 600; font-size: 14px; letter-spacing: 1px; border-radius: 4px;">
+                        Explore the Archive →
+                      </a>
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer Section -->
+                  <tr>
+                    <td style="border-top: 1px solid #d4d0c8; padding-top: 24px;">
+                      <table role="presentation" width="100%">
+                        <tr>
+                          <td style="vertical-align: bottom;">
+                            <p style="margin: 0 0 4px 0; font-size: 18px; font-style: italic; color: #c9a227;">First and Best</p>
+                            <p style="margin: 0; font-size: 12px; color: #888;">UISU Archive</p>
+                          </td>
+                          <td align="right" style="vertical-align: bottom;">
+                            <div style="width: 60px; height: 2px; background-color: #c9a227;"></div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  
+                  <!-- Legal Footer -->
+                  <tr>
+                    <td style="padding-top: 32px; text-align: center;">
+                      <p style="margin: 0 0 8px 0; font-size: 11px; color: #888;">
+                        © ${new Date().getFullYear()} UISU Archive. University of Ibadan Students' Union.
+                      </p>
+                      <p style="margin: 0; font-size: 11px;">
+                        <a href="https://uisu.lovable.app/privacy-policy" style="color: #0a2e52; text-decoration: none;">Privacy Policy</a>
+                        <span style="color: #ccc; margin: 0 8px;">|</span>
+                        <a href="https://uisu.lovable.app/terms-of-service" style="color: #0a2e52; text-decoration: none;">Terms of Service</a>
+                      </p>
+                    </td>
+                  </tr>
+                  
+                </table>
+              </td>
+            </tr>
+          </table>
         </body>
         </html>
       `,
