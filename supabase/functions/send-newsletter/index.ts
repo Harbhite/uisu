@@ -9,9 +9,10 @@ const corsHeaders = {
 };
 
 interface SendNewsletterRequest {
-  campaignId: string;
+  campaignId?: string;
   subject: string;
   content: string;
+  testEmail?: string; // For test sending to a specific email
 }
 
 const logoUrl = "https://uisu.lovable.app/uisu-logo.png";
@@ -161,7 +162,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { campaignId, subject, content }: SendNewsletterRequest = await req.json();
+    const { campaignId, subject, content, testEmail }: SendNewsletterRequest = await req.json();
 
     if (!subject || !content) {
       throw new Error("Subject and content are required");
@@ -173,8 +174,43 @@ const handler = async (req: Request): Promise<Response> => {
     }
     
     const resend = new Resend(resendApiKey);
+    const htmlContent = generateNewsletterHtml(content, subject);
 
-    // Fetch active subscribers
+    // If testEmail is provided, send only to that email (test mode)
+    if (testEmail) {
+      try {
+        const { data, error } = await resend.emails.send({
+          from: "UISU Archive <newsletter@uisu.space>",
+          to: testEmail,
+          subject: `[TEST] ${subject}`,
+          html: htmlContent,
+        });
+
+        if (error) {
+          console.error("Test send error:", error);
+          throw new Error(`Failed to send test email: ${error.message}`);
+        }
+
+        console.log(`Test newsletter sent to ${testEmail}`);
+
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: `Test email sent to ${testEmail}`,
+            isTest: true,
+          }),
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      } catch (testError: any) {
+        console.error("Test email error:", testError);
+        return new Response(
+          JSON.stringify({ error: testError.message }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+    }
+
+    // Fetch active subscribers for regular send
     const { data: subscribers, error: fetchError } = await supabase
       .from("newsletter_subscribers")
       .select("email")
@@ -191,8 +227,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const htmlContent = generateNewsletterHtml(content, subject);
-    
     // Send emails in batches using Resend's batch API
     let successCount = 0;
     let failCount = 0;
@@ -203,7 +237,7 @@ const handler = async (req: Request): Promise<Response> => {
       
       try {
         const emails = batch.map((sub) => ({
-          from: "UISU Archive <noreply@resend.dev>",
+          from: "UISU Archive <newsletter@uisu.space>",
           to: sub.email,
           subject: subject,
           html: htmlContent,
