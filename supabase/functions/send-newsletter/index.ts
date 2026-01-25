@@ -14,21 +14,36 @@ interface SendNewsletterRequest {
   content: string;
   template?: string;
   testEmail?: string;
-  scheduledAt?: string; // ISO date string for scheduling
+  scheduledAt?: string;
 }
 
-// Gold colored SVG logo (inline for email compatibility)
-const goldLogoSvg = `<svg width="48" height="48" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="50" cy="50" r="45" fill="none" stroke="#C5A059" stroke-width="3"/>
-  <circle cx="50" cy="50" r="35" fill="none" stroke="#C5A059" stroke-width="2"/>
-  <text x="50" y="58" font-family="Georgia, serif" font-size="24" font-weight="bold" fill="#C5A059" text-anchor="middle">UI</text>
-  <text x="50" y="75" font-family="Georgia, serif" font-size="10" fill="#C5A059" text-anchor="middle">SU</text>
-</svg>`;
+// Hosted gold fist logo URL
+const logoUrl = "https://uisu.lovable.app/newsletter-logo.png";
 
-const goldLogoBase64 = `data:image/svg+xml;base64,${btoa(goldLogoSvg)}`;
+// Generate unsubscribe URL
+const getUnsubscribeUrl = (email: string) => 
+  `https://uisu.lovable.app/unsubscribe?email=${encodeURIComponent(email)}`;
+
+// Unsubscribe footer section
+const generateUnsubscribeFooter = (email: string) => `
+  <tr>
+    <td style="padding: 24px 32px; text-align: center; border-top: 1px solid #E2E8F0;">
+      <p style="margin: 0; font-size: 11px; color: #94A3B8;">
+        You're receiving this because you subscribed to the UISU Archive newsletter.
+      </p>
+      <p style="margin: 8px 0 0 0; font-size: 11px;">
+        <a href="${getUnsubscribeUrl(email)}" style="color: #64748B; text-decoration: underline;">Unsubscribe</a>
+        <span style="color: #CBD5E1; margin: 0 8px;">|</span>
+        <a href="https://uisu.lovable.app/privacy-policy" style="color: #64748B; text-decoration: none;">Privacy</a>
+        <span style="color: #CBD5E1; margin: 0 8px;">|</span>
+        <a href="https://uisu.lovable.app/terms-of-service" style="color: #64748B; text-decoration: none;">Terms</a>
+      </p>
+    </td>
+  </tr>
+`;
 
 // Template: Classic Editorial
-const generateClassicTemplate = (content: string, subject: string) => {
+const generateClassicTemplate = (content: string, subject: string, email: string) => {
   const htmlContent = convertMarkdown(content);
   return `
     <!DOCTYPE html>
@@ -43,15 +58,13 @@ const generateClassicTemplate = (content: string, subject: string) => {
           <td align="center" style="padding: 48px 20px;">
             <table role="presentation" width="100%" style="max-width: 640px;">
               
-              <!-- Header with Gold Accents -->
+              <!-- Header with Gold Logo -->
               <tr>
                 <td style="padding-bottom: 32px;">
                   <table role="presentation" width="100%">
                     <tr>
-                      <td style="width: 60px; vertical-align: top;">
-                        <div style="width: 48px; height: 48px; border: 2px solid #C5A059; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                          <img src="${goldLogoBase64}" alt="UISU" width="44" height="44" style="display: block;" />
-                        </div>
+                      <td style="width: 80px; vertical-align: top;">
+                        <img src="${logoUrl}" alt="UISU" width="64" height="64" style="display: block;" />
                       </td>
                       <td style="padding-left: 16px; vertical-align: middle;">
                         <p style="margin: 0; font-size: 11px; color: #C5A059; text-transform: uppercase; letter-spacing: 3px; font-weight: 600;">The Archive Newsletter</p>
@@ -114,16 +127,14 @@ const generateClassicTemplate = (content: string, subject: string) => {
                       <td style="text-align: center;">
                         <p style="margin: 0 0 8px 0; font-size: 20px; font-style: italic; color: #C5A059; font-family: Georgia, serif;">First and Best</p>
                         <p style="margin: 0 0 16px 0; font-size: 12px; color: #64748B;">UISU Archive • Est. 1948</p>
-                        <p style="margin: 0; font-size: 11px; color: #94A3B8;">
-                          <a href="https://uisu.lovable.app/privacy-policy" style="color: #64748B; text-decoration: none;">Privacy</a>
-                          <span style="margin: 0 8px; color: #CBD5E1;">|</span>
-                          <a href="https://uisu.lovable.app/terms-of-service" style="color: #64748B; text-decoration: none;">Terms</a>
-                        </p>
                       </td>
                     </tr>
                   </table>
                 </td>
               </tr>
+              
+              <!-- Unsubscribe Footer -->
+              ${generateUnsubscribeFooter(email)}
               
             </table>
           </td>
@@ -135,7 +146,7 @@ const generateClassicTemplate = (content: string, subject: string) => {
 };
 
 // Template: Minimal Modern
-const generateMinimalTemplate = (content: string, subject: string) => {
+const generateMinimalTemplate = (content: string, subject: string, email: string) => {
   const htmlContent = convertMarkdown(content);
   return `
     <!DOCTYPE html>
@@ -150,9 +161,10 @@ const generateMinimalTemplate = (content: string, subject: string) => {
           <td align="center" style="padding: 60px 24px;">
             <table role="presentation" width="100%" style="max-width: 560px;">
               
-              <!-- Minimal Header -->
+              <!-- Minimal Header with Logo -->
               <tr>
                 <td style="padding-bottom: 48px; text-align: center;">
+                  <img src="${logoUrl}" alt="UISU" width="56" height="56" style="display: block; margin: 0 auto 16px;" />
                   <div style="display: inline-block; border-bottom: 2px solid #C5A059; padding-bottom: 8px;">
                     <span style="font-size: 11px; color: #C5A059; text-transform: uppercase; letter-spacing: 4px; font-weight: 600;">UISU Archive</span>
                   </div>
@@ -194,6 +206,9 @@ const generateMinimalTemplate = (content: string, subject: string) => {
                 </td>
               </tr>
               
+              <!-- Unsubscribe Footer -->
+              ${generateUnsubscribeFooter(email)}
+              
             </table>
           </td>
         </tr>
@@ -204,7 +219,7 @@ const generateMinimalTemplate = (content: string, subject: string) => {
 };
 
 // Template: Bold Announcement
-const generateAnnouncementTemplate = (content: string, subject: string) => {
+const generateAnnouncementTemplate = (content: string, subject: string, email: string) => {
   const htmlContent = convertMarkdown(content);
   return `
     <!DOCTYPE html>
@@ -231,7 +246,7 @@ const generateAnnouncementTemplate = (content: string, subject: string) => {
               <!-- Logo -->
               <tr>
                 <td style="padding-bottom: 24px; text-align: center;">
-                  <img src="${goldLogoBase64}" alt="UISU" width="64" height="64" />
+                  <img src="${logoUrl}" alt="UISU" width="80" height="80" style="display: block; margin: 0 auto;" />
                 </td>
               </tr>
               
@@ -283,6 +298,22 @@ const generateAnnouncementTemplate = (content: string, subject: string) => {
                 </td>
               </tr>
               
+              <!-- Unsubscribe Footer (dark mode) -->
+              <tr>
+                <td style="padding: 24px 32px; text-align: center; border-top: 1px solid #334155;">
+                  <p style="margin: 0; font-size: 11px; color: #64748B;">
+                    You're receiving this because you subscribed to the UISU Archive newsletter.
+                  </p>
+                  <p style="margin: 8px 0 0 0; font-size: 11px;">
+                    <a href="${getUnsubscribeUrl(email)}" style="color: #94A3B8; text-decoration: underline;">Unsubscribe</a>
+                    <span style="color: #475569; margin: 0 8px;">|</span>
+                    <a href="https://uisu.lovable.app/privacy-policy" style="color: #94A3B8; text-decoration: none;">Privacy</a>
+                    <span style="color: #475569; margin: 0 8px;">|</span>
+                    <a href="https://uisu.lovable.app/terms-of-service" style="color: #94A3B8; text-decoration: none;">Terms</a>
+                  </p>
+                </td>
+              </tr>
+              
             </table>
           </td>
         </tr>
@@ -293,7 +324,7 @@ const generateAnnouncementTemplate = (content: string, subject: string) => {
 };
 
 // Template: Newspaper Style
-const generateNewspaperTemplate = (content: string, subject: string) => {
+const generateNewspaperTemplate = (content: string, subject: string, email: string) => {
   const htmlContent = convertMarkdown(content);
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   return `
@@ -307,20 +338,19 @@ const generateNewspaperTemplate = (content: string, subject: string) => {
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #FFFEF7;">
         <tr>
           <td align="center" style="padding: 32px 20px;">
-            <table role="presentation" width="100%" style="max-width: 680px; background-color: #FFFEF7; border: 1px solid #E5E2D9;">
+            <table role="presentation" width="100%" style="max-width: 680px; background-color: #FFFEF7; border: 3px double #0F172A;">
               
               <!-- Masthead -->
               <tr>
                 <td style="padding: 24px 32px; border-bottom: 3px double #0F172A; text-align: center;">
+                  <img src="${logoUrl}" alt="UISU" width="48" height="48" style="display: block; margin: 0 auto 12px;" />
                   <p style="margin: 0 0 4px 0; font-size: 10px; color: #64748B; text-transform: uppercase; letter-spacing: 3px;">The Official Newsletter of</p>
                   <h1 style="margin: 0; font-size: 42px; font-weight: 400; color: #0F172A; font-family: Georgia, serif; letter-spacing: -1px;">
                     THE ARCHIVE
                   </h1>
-                  <div style="display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 8px;">
-                    <span style="font-size: 11px; color: #64748B;">${today}</span>
-                    <span style="display: inline-block; width: 4px; height: 4px; background-color: #C5A059; border-radius: 50%;"></span>
-                    <span style="font-size: 11px; color: #C5A059;">University of Ibadan</span>
-                  </div>
+                  <p style="margin: 12px 0 0 0; font-size: 11px; color: #64748B;">
+                    ${today} <span style="color: #C5A059; margin: 0 8px;">★</span> University of Ibadan
+                  </p>
                 </td>
               </tr>
               
@@ -354,11 +384,13 @@ const generateNewspaperTemplate = (content: string, subject: string) => {
               <!-- Footer -->
               <tr>
                 <td style="padding: 24px 32px; text-align: center; border-top: 1px solid #E5E2D9;">
-                  <img src="${goldLogoBase64}" alt="UISU" width="36" height="36" style="margin-bottom: 12px;" />
                   <p style="margin: 0 0 4px 0; font-size: 16px; font-style: italic; color: #C5A059;">First and Best</p>
                   <p style="margin: 0; font-size: 11px; color: #94A3B8;">UISU Archive • Est. 1948</p>
                 </td>
               </tr>
+              
+              <!-- Unsubscribe Footer -->
+              ${generateUnsubscribeFooter(email)}
               
             </table>
           </td>
@@ -381,17 +413,17 @@ const convertMarkdown = (content: string) => {
 };
 
 // Main template generator
-const generateNewsletterHtml = (content: string, subject: string, template: string = 'classic') => {
+const generateNewsletterHtml = (content: string, subject: string, template: string = 'classic', email: string = '') => {
   switch (template) {
     case 'minimal':
-      return generateMinimalTemplate(content, subject);
+      return generateMinimalTemplate(content, subject, email);
     case 'announcement':
-      return generateAnnouncementTemplate(content, subject);
+      return generateAnnouncementTemplate(content, subject, email);
     case 'newspaper':
-      return generateNewspaperTemplate(content, subject);
+      return generateNewspaperTemplate(content, subject, email);
     case 'classic':
     default:
-      return generateClassicTemplate(content, subject);
+      return generateClassicTemplate(content, subject, email);
   }
 };
 
@@ -411,38 +443,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    
-    // Verify user is staff
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    
-    const { data: claims, error: claimsError } = await userClient.auth.getUser();
-    if (claimsError || !claims?.user) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    // Use service client for operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Check if user is admin/moderator
-    const { data: roleData } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", claims.user.id)
-      .in("role", ["admin", "moderator"])
-      .maybeSingle();
-
-    if (!roleData) {
-      return new Response(
-        JSON.stringify({ error: "Forbidden: Staff access required" }),
-        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      throw new Error("RESEND_API_KEY is not configured");
     }
+
+    const resend = new Resend(resendApiKey);
 
     const { campaignId, subject, content, template = 'classic', testEmail, scheduledAt }: SendNewsletterRequest = await req.json();
 
@@ -450,89 +458,68 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Subject and content are required");
     }
 
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      throw new Error("RESEND_API_KEY not configured");
-    }
-    
-    const resend = new Resend(resendApiKey);
-    const htmlContent = generateNewsletterHtml(content, subject, template);
-
-    // If scheduling for later, just save to database
-    if (scheduledAt && !testEmail) {
-      const scheduledDate = new Date(scheduledAt);
-      if (scheduledDate <= new Date()) {
-        throw new Error("Scheduled time must be in the future");
-      }
-
-      const { data: campaign, error: insertError } = await supabase
-        .from("newsletter_campaigns")
-        .insert({
-          subject,
-          content,
-          html_content: htmlContent,
-          template,
-          status: "scheduled",
-          scheduled_at: scheduledAt,
-          sent_by: claims.user.id,
-        })
-        .select()
-        .single();
-
-      if (insertError) throw insertError;
+    // If test email is provided, send only to that email
+    if (testEmail) {
+      const htmlContent = generateNewsletterHtml(content, subject, template, testEmail);
+      
+      await resend.emails.send({
+        from: "UISU Archive <newsletter@uisu.space>",
+        to: [testEmail],
+        subject: `[TEST] ${subject}`,
+        html: htmlContent,
+      });
 
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: `Newsletter scheduled for ${scheduledDate.toLocaleString()}`,
-          isScheduled: true,
-          campaignId: campaign.id,
+          message: `Test email sent to ${testEmail}`,
+          testEmail: true
         }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // If testEmail is provided, send only to that email (test mode)
-    if (testEmail) {
-      try {
-        const { data, error } = await resend.emails.send({
-          from: "UISU Archive <newsletter@uisu.space>",
-          to: testEmail,
-          subject: `[TEST] ${subject}`,
-          html: htmlContent,
-        });
+    // Handle scheduling
+    if (scheduledAt) {
+      const scheduledTime = new Date(scheduledAt);
+      const now = new Date();
+      
+      if (scheduledTime > now) {
+        // Store campaign as scheduled
+        const { error: campaignError } = await supabase
+          .from("newsletter_campaigns")
+          .insert({
+            subject,
+            content,
+            template,
+            status: 'scheduled',
+            scheduled_at: scheduledAt,
+            html_content: generateNewsletterHtml(content, subject, template, 'preview@example.com'),
+          });
 
-        if (error) {
-          console.error("Test send error:", error);
-          throw new Error(`Failed to send test email: ${error.message}`);
+        if (campaignError) {
+          console.error("Error creating scheduled campaign:", campaignError);
+          throw new Error("Failed to schedule campaign");
         }
-
-        console.log(`Test newsletter sent to ${testEmail}`);
 
         return new Response(
           JSON.stringify({ 
             success: true, 
-            message: `Test email sent to ${testEmail}`,
-            isTest: true,
+            message: `Newsletter scheduled for ${scheduledTime.toLocaleString()}`,
+            scheduled: true
           }),
           { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
-      } catch (testError: any) {
-        console.error("Test email error:", testError);
-        return new Response(
-          JSON.stringify({ error: testError.message }),
-          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
       }
     }
 
-    // Fetch active subscribers for regular send
-    const { data: subscribers, error: fetchError } = await supabase
+    // Get active subscribers
+    const { data: subscribers, error: subError } = await supabase
       .from("newsletter_subscribers")
       .select("email")
       .eq("is_active", true);
 
-    if (fetchError) {
+    if (subError) {
       throw new Error("Failed to fetch subscribers");
     }
 
@@ -543,33 +530,24 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Send emails in batches using Resend's batch API
+    // Send to all subscribers
     let successCount = 0;
     let failCount = 0;
-    const batchSize = 50; // Resend batch limit
 
-    for (let i = 0; i < subscribers.length; i += batchSize) {
-      const batch = subscribers.slice(i, i + batchSize);
-      
+    for (const subscriber of subscribers) {
       try {
-        const emails = batch.map((sub) => ({
-          from: "UISU Archive <newsletter@uisu.space>",
-          to: sub.email,
-          subject: subject,
-          html: htmlContent,
-        }));
-
-        const { data, error } = await resend.batch.send(emails);
+        const htmlContent = generateNewsletterHtml(content, subject, template, subscriber.email);
         
-        if (error) {
-          console.error("Batch send error:", error);
-          failCount += batch.length;
-        } else {
-          successCount += batch.length;
-        }
-      } catch (batchError) {
-        console.error("Batch error:", batchError);
-        failCount += batch.length;
+        await resend.emails.send({
+          from: "UISU Archive <newsletter@uisu.space>",
+          to: [subscriber.email],
+          subject,
+          html: htmlContent,
+        });
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to send to ${subscriber.email}:`, error);
+        failCount++;
       }
     }
 
@@ -578,14 +556,11 @@ const handler = async (req: Request): Promise<Response> => {
       await supabase
         .from("newsletter_campaigns")
         .update({
-          status: "sent",
+          status: 'sent',
           sent_at: new Date().toISOString(),
-          sent_by: claims.user.id,
           recipients_count: subscribers.length,
           successful_count: successCount,
           failed_count: failCount,
-          html_content: htmlContent,
-          template,
         })
         .eq("id", campaignId);
     } else {
@@ -594,31 +569,27 @@ const handler = async (req: Request): Promise<Response> => {
         .insert({
           subject,
           content,
-          html_content: htmlContent,
           template,
-          status: "sent",
+          status: 'sent',
           sent_at: new Date().toISOString(),
-          sent_by: claims.user.id,
           recipients_count: subscribers.length,
           successful_count: successCount,
           failed_count: failCount,
+          html_content: generateNewsletterHtml(content, subject, template, 'preview@example.com'),
         });
     }
-
-    console.log(`Newsletter sent: ${successCount} success, ${failCount} failed`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `Newsletter sent to ${successCount} subscribers`,
-        stats: {
-          total: subscribers.length,
-          successful: successCount,
-          failed: failCount,
-        }
+        message: `Newsletter sent to ${successCount} subscribers (${failCount} failed)`,
+        recipientsCount: subscribers.length,
+        successCount,
+        failCount
       }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
+
   } catch (error: any) {
     console.error("Error in send-newsletter:", error);
     return new Response(

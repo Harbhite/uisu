@@ -15,15 +15,12 @@ interface SubscribeRequest {
 
 const ADMIN_EMAIL = "theharbystud@gmail.com";
 
-// Gold colored SVG logo (inline for email compatibility)
-const goldLogoSvg = `<svg width="48" height="48" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="50" cy="50" r="45" fill="none" stroke="#C5A059" stroke-width="3"/>
-  <circle cx="50" cy="50" r="35" fill="none" stroke="#C5A059" stroke-width="2"/>
-  <text x="50" y="58" font-family="Georgia, serif" font-size="24" font-weight="bold" fill="#C5A059" text-anchor="middle">UI</text>
-  <text x="50" y="75" font-family="Georgia, serif" font-size="10" fill="#C5A059" text-anchor="middle">SU</text>
-</svg>`;
+// Hosted gold fist logo URL
+const logoUrl = "https://uisu.lovable.app/newsletter-logo.png";
 
-const goldLogoBase64 = `data:image/svg+xml;base64,${btoa(goldLogoSvg)}`;
+// Generate unsubscribe URL
+const getUnsubscribeUrl = (email: string) => 
+  `https://uisu.lovable.app/unsubscribe?email=${encodeURIComponent(email)}`;
 
 // Send welcome/confirmation email to the new subscriber
 const sendWelcomeEmail = async (resend: Resend, email: string) => {
@@ -45,13 +42,13 @@ const sendWelcomeEmail = async (resend: Resend, email: string) => {
               <td align="center" style="padding: 48px 20px;">
                 <table role="presentation" width="100%" style="max-width: 580px;">
                   
-                  <!-- Header -->
+                  <!-- Header with Gold Logo -->
                   <tr>
                     <td style="padding-bottom: 32px;">
                       <table role="presentation" width="100%">
                         <tr>
                           <td align="center">
-                            <img src="${goldLogoBase64}" alt="UISU" width="64" height="64" style="display: block; margin-bottom: 16px;" />
+                            <img src="${logoUrl}" alt="UISU" width="80" height="80" style="display: block; margin-bottom: 16px;" />
                             <p style="margin: 0; font-size: 11px; color: #C5A059; text-transform: uppercase; letter-spacing: 4px; font-weight: 600;">UISU ARCHIVE</p>
                           </td>
                         </tr>
@@ -156,7 +153,18 @@ const sendWelcomeEmail = async (resend: Resend, email: string) => {
                       <p style="margin: 0; font-size: 11px; color: #94A3B8;">
                         © ${new Date().getFullYear()} UISU Archive. University of Ibadan Students' Union.
                       </p>
-                      <p style="margin: 16px 0 0 0; font-size: 11px;">
+                    </td>
+                  </tr>
+                  
+                  <!-- Unsubscribe Footer -->
+                  <tr>
+                    <td style="padding: 24px 32px; text-align: center; border-top: 1px solid #E2E8F0;">
+                      <p style="margin: 0; font-size: 11px; color: #94A3B8;">
+                        You're receiving this because you subscribed to the UISU Archive newsletter.
+                      </p>
+                      <p style="margin: 8px 0 0 0; font-size: 11px;">
+                        <a href="${getUnsubscribeUrl(email)}" style="color: #64748B; text-decoration: underline;">Unsubscribe</a>
+                        <span style="color: #CBD5E1; margin: 0 8px;">|</span>
                         <a href="https://uisu.lovable.app/privacy-policy" style="color: #64748B; text-decoration: none;">Privacy Policy</a>
                         <span style="color: #CBD5E1; margin: 0 8px;">|</span>
                         <a href="https://uisu.lovable.app/terms-of-service" style="color: #64748B; text-decoration: none;">Terms of Service</a>
@@ -214,7 +222,7 @@ const sendAdminNotification = async (resend: Resend, subscriberEmail: string, so
                             </h1>
                           </td>
                           <td align="right" style="vertical-align: top;">
-                            <img src="${goldLogoBase64}" alt="UISU" width="40" height="40" />
+                            <img src="${logoUrl}" alt="UISU" width="48" height="48" />
                           </td>
                         </tr>
                       </table>
@@ -363,15 +371,15 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Failed to subscribe");
     }
 
-    // Send welcome email to new subscriber AND notify admin (in parallel)
+    // Send welcome email and admin notification
     if (resend) {
       await Promise.all([
         sendWelcomeEmail(resend, email.toLowerCase()),
         sendAdminNotification(resend, email.toLowerCase(), source),
       ]);
-    } else {
-      console.log("RESEND_API_KEY not configured, skipping emails");
     }
+
+    console.log("Newsletter subscription successful for:", email);
 
     return new Response(
       JSON.stringify({ success: true, message: "Successfully subscribed!" }),
@@ -380,8 +388,9 @@ const handler = async (req: Request): Promise<Response> => {
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
+
   } catch (error: any) {
-    console.error("Error in subscribe-newsletter:", error);
+    console.error("Error in subscribe-newsletter function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

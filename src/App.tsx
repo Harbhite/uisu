@@ -48,6 +48,7 @@ const ConstitutionPage = lazy(() => import("./pages/ConstitutionPage"));
 const ProfileCardPage = lazy(() => import("./pages/ProfileCardPage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
+const UnsubscribePage = lazy(() => import("./pages/UnsubscribePage"));
 const queryClient = new QueryClient();
 
 const LoadingFallback = () => (
@@ -119,6 +120,9 @@ const AppRoutes = () => {
         {/* Legal Pages */}
         <Route path="/privacy-policy" element={<PageWrapper><PrivacyPolicyPage /></PageWrapper>} />
         <Route path="/terms-of-service" element={<PageWrapper><TermsOfServicePage /></PageWrapper>} />
+        
+        {/* Newsletter */}
+        <Route path="/unsubscribe" element={<PageWrapper><UnsubscribePage /></PageWrapper>} />
 
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
