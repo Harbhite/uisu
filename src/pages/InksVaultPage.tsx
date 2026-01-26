@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, BookOpen, PenTool, FileText, User, Mic, Book, Coffee, Feather, Newspaper, Quote, Plus, Loader2, Pencil, FileStack, Eye, Search, Clock, X, Heart, TrendingUp } from 'lucide-react';
+import { ArrowLeft, BookOpen, PenTool, FileText, User, Mic, Book, Coffee, Feather, Newspaper, Quote, Plus, Loader2, Pencil, FileStack, Eye, Search, Clock, X, Heart, ArrowRight } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -13,13 +13,13 @@ import { User as SupabaseUser } from '@supabase/supabase-js';
 import { LikeButton } from '@/components/LikeButton';
 
 const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-        opacity: 1,
-        transition: {
-            staggerChildren: 0.05
-        }
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05
     }
+  }
 };
 
 interface InksPiece {
@@ -80,6 +80,8 @@ const InksVaultPage = () => {
   const [activeTab, setActiveTab] = useState<string>('published');
   const [sortBy, setSortBy] = useState<'latest' | 'popular'>('latest');
   const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [subscribing, setSubscribing] = useState(false);
 
   const categories = ['All', 'Article', 'Blog', 'Report', 'Essay', 'Poetry', 'Opinion', 'Interview', 'Fiction'];
 
@@ -152,14 +154,32 @@ const InksVaultPage = () => {
     if (sortBy === 'popular') {
       return [...list].sort((a, b) => (likeCounts[b.id] || 0) - (likeCounts[a.id] || 0));
     }
-    return list; // Already sorted by latest from DB
+    return list;
   };
 
   const filteredPieces = sortPieces(filterPieces(pieces));
   const filteredDrafts = filterPieces(drafts);
+  const featuredPiece = filteredPieces[0];
+  const gridPieces = filteredPieces.slice(1);
 
   const canEdit = (piece: InksPiece) => {
     return isStaff || (user && piece.user_id === user.id);
+  };
+
+  const handleNewsletterSubscribe = async () => {
+    if (!newsletterEmail.trim()) return;
+    setSubscribing(true);
+    try {
+      const { error } = await supabase.functions.invoke('subscribe-newsletter', {
+        body: { email: newsletterEmail, source: 'inks-vault' }
+      });
+      if (!error) {
+        setNewsletterEmail('');
+      }
+    } catch (err) {
+      console.error('Subscribe error:', err);
+    }
+    setSubscribing(false);
   };
 
   const renderEditButton = (piece: InksPiece) => (
@@ -168,29 +188,24 @@ const InksVaultPage = () => {
         e.stopPropagation();
         navigate(`/admin/inks-vault/edit/${piece.id}`);
       }}
-      className="absolute top-2 right-2 p-2 bg-background/90 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background border border-border"
+      className="absolute top-3 right-3 p-2 bg-background/90 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background border border-border"
     >
       <Pencil size={14} className="text-foreground" />
     </button>
   );
 
-  const renderMeta = (piece: InksPiece) => {
-    const readingTime = calculateReadingTime(piece.content);
-    return (
-      <div className="flex items-center gap-3 text-[10px] text-muted-foreground uppercase tracking-wider">
-        <span className="flex items-center gap-1">
-          <Clock size={10} />
-          {readingTime} min read
-        </span>
-        {piece.view_count > 0 && (
-          <span className="flex items-center gap-1">
-            <Eye size={10} />
-            {piece.view_count} views
-          </span>
-        )}
-        <LikeButton pieceId={piece.id} initialLikeCount={likeCounts[piece.id] || 0} size="sm" />
-      </div>
-    );
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'Poetry': return Feather;
+      case 'Report': return FileText;
+      case 'Interview': return Mic;
+      case 'Article': return Newspaper;
+      case 'Blog': return Coffee;
+      case 'Essay': return PenTool;
+      case 'Opinion': return Quote;
+      case 'Fiction': return Book;
+      default: return BookOpen;
+    }
   };
 
   const AuthorLink = ({ piece, className = '' }: { piece: InksPiece; className?: string }) => {
@@ -206,220 +221,137 @@ const InksVaultPage = () => {
     );
   };
 
+  // New unified card design with rounded corners
   const renderCard = (piece: InksPiece, isDraft = false) => {
     const cardClick = () => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`);
+    const readingTime = calculateReadingTime(piece.content);
+    const TypeIcon = getTypeIcon(piece.type);
     
-    switch (piece.type) {
-      case 'Poetry':
-        return (
-          <div onClick={cardClick} className="bg-card p-8 border border-border hover:border-accent transition-all cursor-pointer flex flex-col items-center justify-center text-center h-full group relative overflow-hidden">
-            {isDraft && <div className="absolute top-2 left-2 bg-accent/20 text-accent text-[10px] font-bold uppercase px-2 py-1">Draft</div>}
-            <div className="absolute inset-0 border border-border/50 m-3 pointer-events-none"></div>
-            <Feather className="text-muted-foreground mb-4 group-hover:text-accent transition-colors" size={24} />
-            <h3 className="text-2xl font-serif italic text-foreground mb-2 group-hover:text-accent transition-colors">{piece.title}</h3>
-            <div className="w-12 h-px bg-accent my-3"></div>
-            <p className="text-muted-foreground text-sm font-serif mb-3">by <AuthorLink piece={piece} /></p>
-            {renderMeta(piece)}
-            {canEdit(piece) && renderEditButton(piece)}
+    return (
+      <motion.div
+        onClick={cardClick}
+        className="bg-card rounded-xl overflow-hidden border border-border hover:border-accent/50 hover:shadow-lg transition-all cursor-pointer h-full group relative flex flex-col"
+        whileHover={{ y: -4 }}
+        transition={{ duration: 0.2 }}
+      >
+        {isDraft && (
+          <div className="absolute top-3 left-3 z-10 bg-accent text-accent-foreground text-[10px] font-bold uppercase px-2 py-1 rounded-md">
+            Draft
           </div>
-        );
-
-      case 'Report':
-        return (
-          <div onClick={cardClick} className="bg-card border border-border hover:border-primary/50 transition-all cursor-pointer h-full group overflow-hidden flex flex-col relative">
-            {isDraft && <div className="absolute top-2 left-2 z-10 bg-accent/20 text-accent text-[10px] font-bold uppercase px-2 py-1">Draft</div>}
-            <div className="h-1 bg-primary w-full"></div>
-            <div className="p-6 flex-grow flex flex-col">
-              <div className="flex justify-between items-start mb-4">
-                <div className="bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-[0.15em] px-2 py-1">Official</div>
-                <FileText size={18} className="text-muted-foreground group-hover:text-primary transition-colors"/>
+        )}
+        
+        {/* Cover Image */}
+        <div className="h-48 bg-muted flex items-center justify-center overflow-hidden relative">
+          {piece.cover_image ? (
+            <img 
+              src={piece.cover_image} 
+              alt="" 
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-primary/10 via-accent/10 to-primary/5 flex items-center justify-center">
+              <TypeIcon size={48} className="text-muted-foreground/30" />
+            </div>
+          )}
+        </div>
+        
+        {/* Content */}
+        <div className="p-5 flex flex-col flex-grow">
+          {/* Type Badge & Date */}
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-accent text-xs font-semibold">{piece.type}</span>
+            <span className="text-muted-foreground text-xs">•</span>
+            <span className="text-muted-foreground text-xs">
+              {new Date(piece.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
+          </div>
+          
+          {/* Title */}
+          <h3 className="text-lg font-serif font-semibold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+            {piece.title}
+          </h3>
+          
+          {/* Summary */}
+          <p className="text-muted-foreground text-sm line-clamp-2 mb-4 flex-grow">
+            {piece.summary || 'No summary available.'}
+          </p>
+          
+          {/* Meta Row */}
+          <div className="flex items-center justify-between pt-3 border-t border-border">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold text-xs">
+                {piece.author_name.charAt(0)}
               </div>
-              <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors">{piece.title}</h3>
-              <p className="text-muted-foreground text-xs uppercase tracking-wider mb-2">{piece.author_role}</p>
-              {renderMeta(piece)}
-              <p className="text-muted-foreground text-sm line-clamp-3 leading-relaxed mt-3">{piece.summary}</p>
+              <AuthorLink piece={piece} className="text-xs font-medium text-foreground" />
             </div>
-            <div className="px-6 py-3 bg-muted border-t border-border text-xs text-muted-foreground flex justify-between items-center">
-              <span>{new Date(piece.created_at).toLocaleDateString()}</span>
-              <span className="font-mono">REF-{piece.id.split('-')[1]}</span>
+            <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <Clock size={10} />
+                {readingTime} min
+              </span>
+              <LikeButton pieceId={piece.id} initialLikeCount={likeCounts[piece.id] || 0} size="sm" />
             </div>
-            {canEdit(piece) && renderEditButton(piece)}
           </div>
-        );
+        </div>
+        
+        {canEdit(piece) && renderEditButton(piece)}
+      </motion.div>
+    );
+  };
 
-      case 'Interview':
-        return (
-          <div onClick={cardClick} className="bg-card p-8 border border-border hover:border-accent transition-all cursor-pointer h-full relative overflow-hidden group">
-            {isDraft && <div className="absolute top-2 left-2 z-10 bg-accent/20 text-accent text-[10px] font-bold uppercase px-2 py-1">Draft</div>}
-            <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity transform rotate-12">
-              <Mic size={120} />
-            </div>
-            <div className="relative z-10">
-              <div className="inline-flex items-center gap-2 mb-4">
-                <span className="w-2 h-2 bg-destructive animate-pulse"></span>
-                <span className="text-xs font-bold uppercase text-destructive tracking-[0.15em]">Q&A Session</span>
-              </div>
-              <h3 className="text-2xl font-serif text-foreground mb-2 leading-tight group-hover:text-accent transition-colors">"{piece.title}"</h3>
-              <p className="text-xs font-bold uppercase text-muted-foreground mb-3">Featuring <AuthorLink piece={piece} /></p>
-              {renderMeta(piece)}
-              <p className="text-muted-foreground text-sm mt-4">{piece.summary}</p>
-            </div>
-            {canEdit(piece) && renderEditButton(piece)}
+  // Featured article hero card
+  const renderFeaturedCard = (piece: InksPiece) => {
+    const readingTime = calculateReadingTime(piece.content);
+    
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="grid md:grid-cols-2 gap-0 bg-muted rounded-2xl overflow-hidden mb-12 group cursor-pointer"
+        onClick={() => navigate(`/inks-vault/piece/${piece.id}`)}
+      >
+        {/* Left: Text Content */}
+        <div className="p-8 md:p-10 flex flex-col justify-center">
+          <span className="text-accent text-xs font-semibold uppercase tracking-wider mb-4">{piece.type}</span>
+          <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-4 group-hover:text-primary transition-colors leading-tight">
+            {piece.title}
+          </h2>
+          <p className="text-muted-foreground text-sm mb-6 line-clamp-3">
+            {piece.summary || 'Explore this featured piece from the Inks Vault collection.'}
+          </p>
+          <div className="text-xs text-muted-foreground">
+            {new Date(piece.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
           </div>
-        );
-
-      case 'Article':
-        return (
-          <div onClick={cardClick} className="bg-card border-b-4 border-border hover:border-accent hover:bg-muted/50 transition-all cursor-pointer h-full group p-6 flex flex-col relative">
-            {isDraft && <div className="absolute top-2 left-2 bg-accent/20 text-accent text-[10px] font-bold uppercase px-2 py-1">Draft</div>}
-            <div className="flex items-center gap-2 mb-3 text-muted-foreground">
-              <Newspaper size={16} />
-              <span className="text-xs font-bold uppercase tracking-[0.15em]">News & Analysis</span>
+        </div>
+        
+        {/* Right: Image */}
+        <div className="h-64 md:h-auto bg-accent/10 relative overflow-hidden">
+          {piece.cover_image ? (
+            <img 
+              src={piece.cover_image} 
+              alt="" 
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10 flex items-center justify-center">
+              <BookOpen size={80} className="text-muted-foreground/20" />
             </div>
-            <h3 className="text-xl font-serif font-bold text-foreground mb-3 group-hover:underline decoration-accent decoration-2 underline-offset-4">{piece.title}</h3>
-            <p className="text-muted-foreground text-sm mb-3 line-clamp-3 font-serif">{piece.summary}</p>
-            {renderMeta(piece)}
-            <div className="mt-auto pt-4 border-t border-border text-xs font-bold text-muted-foreground uppercase">
-              By <AuthorLink piece={piece} />
-            </div>
-            {canEdit(piece) && renderEditButton(piece)}
-          </div>
-        );
-
-      case 'Blog':
-        return (
-          <div onClick={cardClick} className="bg-card hover:shadow-lg transition-all cursor-pointer h-full group overflow-hidden border border-border relative">
-            {isDraft && <div className="absolute top-2 left-2 z-10 bg-accent/20 text-accent text-[10px] font-bold uppercase px-2 py-1">Draft</div>}
-            <div className="h-32 bg-muted flex items-center justify-center overflow-hidden">
-              {piece.cover_image ? (
-                <img src={piece.cover_image} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-              ) : (
-                <User size={48} className="text-muted-foreground/30 group-hover:scale-110 transition-transform duration-500" />
-              )}
-            </div>
-            <div className="p-6">
-              <div className="flex items-center gap-2 mb-2">
-                <Link 
-                  to={piece.user_id ? `/profile/${piece.user_id}` : '#'} 
-                  onClick={(e) => e.stopPropagation()}
-                  className="w-8 h-8 bg-accent/20 flex items-center justify-center text-accent font-bold text-xs hover:bg-accent/30 transition-colors"
-                >
-                  {piece.author_name.charAt(0)}
-                </Link>
-                <div className="flex flex-col">
-                  <AuthorLink piece={piece} className="text-xs font-bold text-foreground" />
-                  <span className="text-[10px] text-muted-foreground uppercase">{piece.author_role}</span>
-                </div>
-              </div>
-              <h3 className="text-lg font-bold text-foreground mb-2 leading-tight">{piece.title}</h3>
-              <p className="text-muted-foreground text-sm line-clamp-2 mb-3">{piece.summary}</p>
-              {renderMeta(piece)}
-              <div className="mt-4 flex items-center gap-1 text-accent text-xs font-bold group-hover:gap-2 transition-all">
-                Read Post <ArrowLeft size={12} className="rotate-180" />
-              </div>
-            </div>
-            {canEdit(piece) && renderEditButton(piece)}
-          </div>
-        );
-
-      case 'Essay':
-        return (
-          <div onClick={cardClick} className="bg-card p-8 border border-border hover:border-muted-foreground transition-all cursor-pointer h-full group flex flex-col shadow-[4px_4px_0px_0px_hsl(var(--border))] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] relative">
-            {isDraft && <div className="absolute top-2 left-2 bg-accent/20 text-accent text-[10px] font-bold uppercase px-2 py-1">Draft</div>}
-            <div className="mb-4">
-              <PenTool size={20} className="text-muted-foreground" />
-            </div>
-            <h3 className="text-2xl font-serif text-foreground mb-4 leading-tight group-hover:text-primary transition-colors">{piece.title}</h3>
-            <div className="w-full h-px bg-border mb-4"></div>
-            <p className="text-muted-foreground font-serif text-sm leading-relaxed mb-4 flex-grow">{piece.summary}</p>
-            {renderMeta(piece)}
-            <p className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground mt-4">Essential Reading</p>
-            {canEdit(piece) && renderEditButton(piece)}
-          </div>
-        );
-
-      case 'Opinion':
-        return (
-          <div onClick={cardClick} className="bg-primary text-primary-foreground p-8 hover:bg-primary/90 transition-all cursor-pointer h-full group relative overflow-hidden">
-            {isDraft && <div className="absolute top-2 left-2 z-10 bg-accent text-primary text-[10px] font-bold uppercase px-2 py-1">Draft</div>}
-            <Quote size={80} className="absolute -bottom-4 -right-4 text-primary-foreground/5 group-hover:text-primary-foreground/10 transition-colors" />
-            <div className="relative z-10">
-              <div className="bg-accent text-primary text-[10px] font-bold uppercase tracking-[0.15em] px-2 py-1 inline-block mb-4">Op-Ed</div>
-              <h3 className="text-xl font-bold mb-4 leading-snug">"{piece.title}"</h3>
-              <p className="text-primary-foreground/70 text-sm mb-4 font-light">{piece.summary}</p>
-              <div className="text-primary-foreground/50 mb-4">{renderMeta(piece)}</div>
-              <div className="flex items-center gap-3 border-t border-primary-foreground/10 pt-4">
-                <Link 
-                  to={piece.user_id ? `/profile/${piece.user_id}` : '#'}
-                  onClick={(e) => e.stopPropagation()}
-                  className="w-8 h-8 bg-primary-foreground/10 flex items-center justify-center hover:bg-primary-foreground/20 transition-colors"
-                >
-                  <Coffee size={14} />
-                </Link>
-                <div className="flex flex-col">
-                  <AuthorLink piece={piece} className="text-xs font-bold" />
-                  <span className="text-[10px] text-primary-foreground/50 uppercase">{piece.author_role}</span>
-                </div>
-              </div>
-            </div>
-            {canEdit(piece) && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(`/admin/inks-vault/edit/${piece.id}`);
-                }}
-                className="absolute top-2 right-2 p-2 bg-primary-foreground/20 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary-foreground/30"
-              >
-                <Pencil size={14} className="text-primary-foreground" />
-              </button>
-            )}
-          </div>
-        );
-
-      case 'Fiction':
-        return (
-          <div onClick={cardClick} className="bg-[#2C1810] text-[#EADDCD] p-8 border-l-4 border-l-[#8B4513] hover:translate-x-1 transition-all cursor-pointer h-full group relative shadow-xl">
-            {isDraft && <div className="absolute top-2 left-2 z-10 bg-accent text-primary text-[10px] font-bold uppercase px-2 py-1">Draft</div>}
-            <div className="absolute top-0 right-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/paper.png')] opacity-10"></div>
-            <div className="relative z-10 flex flex-col h-full">
-              <div className="flex justify-between items-start mb-4">
-                <Book size={20} className="text-[#8B4513]" />
-                <span className="text-[10px] uppercase tracking-[0.2em] opacity-50">Short Story</span>
-              </div>
-              <h3 className="text-xl font-serif mb-2 text-[#F4E4BC]">{piece.title}</h3>
-              <div className="flex-grow">
-                <p className="text-sm opacity-70 italic font-serif leading-relaxed line-clamp-4">"{piece.summary}..."</p>
-              </div>
-              <div className="text-[#8B4513]/70 my-3">{renderMeta(piece)}</div>
-              <div className="mt-4 text-xs font-bold uppercase tracking-[0.15em] text-[#8B4513]">
-                Read Chapter
-              </div>
-            </div>
-            {canEdit(piece) && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(`/admin/inks-vault/edit/${piece.id}`);
-                }}
-                className="absolute top-2 right-2 p-2 bg-[#8B4513]/50 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#8B4513]"
-              >
-                <Pencil size={14} className="text-[#EADDCD]" />
-              </button>
-            )}
-          </div>
-        );
-
-      default:
-        return (
-          <div onClick={cardClick} className="bg-card p-8 border border-border hover:shadow-lg transition-all cursor-pointer h-full group flex flex-col relative">
-            {isDraft && <div className="absolute top-2 left-2 bg-accent/20 text-accent text-[10px] font-bold uppercase px-2 py-1">Draft</div>}
-            <h3 className="text-2xl font-serif text-foreground mb-3 group-hover:text-accent transition-colors">{piece.title}</h3>
-            <p className="text-muted-foreground mb-4 leading-relaxed text-sm flex-grow">{piece.summary}</p>
-            {renderMeta(piece)}
-            {canEdit(piece) && renderEditButton(piece)}
-          </div>
-        );
-    }
+          )}
+        </div>
+        
+        {canEdit(piece) && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/admin/inks-vault/edit/${piece.id}`);
+            }}
+            className="absolute top-4 right-4 p-2 bg-background/90 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background border border-border"
+          >
+            <Pencil size={14} className="text-foreground" />
+          </button>
+        )}
+      </motion.div>
+    );
   };
 
   if (loading) {
@@ -431,139 +363,166 @@ const InksVaultPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-32 pb-16">
+    <div className="min-h-screen bg-background pt-24 pb-16">
       <SEO
         title="Inks Vault"
         description="Explore articles, essays, poetry, and reports from the University of Ibadan Students' Union. A collection of student voices and intellectual discourse."
         image="/screenshots/inks-vault.png"
       />
+      
       <div className="container mx-auto px-6">
+        {/* Back Button */}
         <button
           onClick={() => navigate('/')}
-          className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-accent transition-colors mb-12"
+          className="group flex items-center gap-3 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors mb-8"
         >
-          <div className="p-2 border border-border group-hover:border-accent transition-colors">
-            <ArrowLeft size={14} />
-          </div>
+          <ArrowLeft size={16} />
           <span>Back to Home</span>
         </button>
 
-        <div className="mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-between mb-4"
-          >
-            <div className="flex items-center gap-4">
-              <BookOpen className="text-accent w-6 h-6" />
-              <span className="text-xs font-bold tracking-[0.2em] uppercase text-muted-foreground">Publications</span>
-            </div>
-            {user && (
-              <Button onClick={() => navigate('/admin/inks-vault/new')} className="gap-2">
-                <Plus size={16} />
-                Write Something
-              </Button>
-            )}
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-6xl md:text-8xl font-serif text-primary leading-[0.9] mb-8"
-          >
-            Inks <br/> <span className="italic text-muted-foreground/30">Vault</span>
-          </motion.h1>
-
-          {/* Search Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="mb-8"
-          >
-            <div className="relative max-w-md">
-              <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by title, author, or tags..."
-                className="pl-11 pr-10 bg-card border-border"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
-          </motion.div>
-
-          {/* Tabs for Published/Drafts */}
+        {/* Hero Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-5xl md:text-7xl font-serif font-bold text-foreground mb-4">
+            Inks Vault
+          </h1>
+          <p className="text-muted-foreground max-w-xl mx-auto">
+            Voices and narratives from the University of Ibadan Students' Union community.
+          </p>
+          
           {user && (
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-              <TabsList className="bg-muted border border-border">
-                <TabsTrigger value="published" className="gap-2 data-[state=active]:bg-background">
-                  <Eye size={14} />
-                  Published ({pieces.length})
-                </TabsTrigger>
-                <TabsTrigger value="drafts" className="gap-2 data-[state=active]:bg-background">
-                  <FileStack size={14} />
-                  My Drafts ({drafts.length})
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <Button onClick={() => navigate('/admin/inks-vault/new')} className="mt-6 rounded-full gap-2">
+              <Plus size={16} />
+              Write Something
+            </Button>
           )}
+        </motion.div>
 
-          {/* Sort & Category Filters */}
-          <div className="flex flex-wrap items-center gap-4 mb-8">
-            {/* Sort Toggle */}
-            <div className="flex items-center gap-2 mr-4">
-              <button
-                onClick={() => setSortBy('latest')}
-                className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all ${
-                  sortBy === 'latest' ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
-                }`}
+        {/* Featured Article */}
+        {featuredPiece && activeTab === 'published' && !searchQuery && filter === 'All' && (
+          renderFeaturedCard(featuredPiece)
+        )}
+
+        {/* Newsletter Subscription Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-muted/50 rounded-2xl p-8 mb-12"
+        >
+          <div className="max-w-2xl">
+            <h3 className="text-lg font-serif font-semibold text-foreground mb-2">
+              Subscribe to our newsletter for daily insights
+            </h3>
+            <div className="flex gap-3 mt-4">
+              <Input
+                value={newsletterEmail}
+                onChange={(e) => setNewsletterEmail(e.target.value)}
+                placeholder="Enter Your Email"
+                className="flex-1 rounded-full bg-card border-border"
+                onKeyDown={(e) => e.key === 'Enter' && handleNewsletterSubscribe()}
+              />
+              <Button 
+                onClick={handleNewsletterSubscribe} 
+                disabled={subscribing}
+                className="rounded-full px-6"
+                variant="outline"
               >
-                <Clock size={12} className="inline mr-1" /> Latest
-              </button>
-              <button
-                onClick={() => setSortBy('popular')}
-                className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all ${
-                  sortBy === 'popular' ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Heart size={12} className="inline mr-1" /> Most Liked
-              </button>
+                {subscribing ? <Loader2 className="animate-spin" size={16} /> : 'Subscribe'}
+              </Button>
             </div>
-
-            {/* Category Filters */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="flex flex-wrap gap-2"
-            >
-            {categories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setFilter(cat)}
-                className={`px-4 py-2 text-xs font-bold uppercase tracking-[0.15em] transition-all border ${
-                  filter === cat
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-card text-muted-foreground border-border hover:border-accent hover:text-accent'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-            </motion.div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Content */}
+        {/* Tabs for Published/Drafts */}
+        {user && (
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
+            <TabsList className="bg-muted border border-border rounded-full p-1">
+              <TabsTrigger value="published" className="gap-2 rounded-full data-[state=active]:bg-background">
+                <Eye size={14} />
+                Published ({pieces.length})
+              </TabsTrigger>
+              <TabsTrigger value="drafts" className="gap-2 rounded-full data-[state=active]:bg-background">
+                <FileStack size={14} />
+                My Drafts ({drafts.length})
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        )}
+
+        {/* Search & Filters Row */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="flex flex-col lg:flex-row lg:items-center gap-4 mb-8"
+        >
+          {/* Search Bar */}
+          <div className="relative flex-1 max-w-md">
+            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by title, author, or tags..."
+              className="pl-11 pr-10 bg-card border-border rounded-full"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          {/* Sort Toggle */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSortBy('latest')}
+              className={`px-4 py-2 text-xs font-medium rounded-full transition-all ${
+                sortBy === 'latest' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Clock size={12} className="inline mr-1.5" /> Latest
+            </button>
+            <button
+              onClick={() => setSortBy('popular')}
+              className={`px-4 py-2 text-xs font-medium rounded-full transition-all ${
+                sortBy === 'popular' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Heart size={12} className="inline mr-1.5" /> Most Liked
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Content Type Filter Pills */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="flex flex-wrap gap-2 mb-10"
+        >
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setFilter(cat)}
+              className={`px-5 py-2.5 text-xs font-medium rounded-full transition-all border ${
+                filter === cat
+                  ? 'bg-foreground text-background border-foreground'
+                  : 'bg-card text-muted-foreground border-border hover:border-foreground hover:text-foreground'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </motion.div>
+
+        {/* Content Grid */}
         {activeTab === 'published' ? (
           <motion.div
             variants={containerVariants}
@@ -572,14 +531,14 @@ const InksVaultPage = () => {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             <AnimatePresence mode="popLayout">
-              {filteredPieces.length > 0 ? (
-                filteredPieces.map(piece => (
+              {(searchQuery || filter !== 'All' ? filteredPieces : gridPieces).length > 0 ? (
+                (searchQuery || filter !== 'All' ? filteredPieces : gridPieces).map(piece => (
                   <motion.div
                     key={piece.id}
                     layout
-                    initial={{ opacity: 0, scale: 0.9 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.3 }}
                   >
                     {renderCard(piece)}
@@ -611,9 +570,9 @@ const InksVaultPage = () => {
                   <motion.div
                     key={piece.id}
                     layout
-                    initial={{ opacity: 0, scale: 0.9 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.3 }}
                   >
                     {renderCard(piece, true)}
@@ -628,7 +587,7 @@ const InksVaultPage = () => {
                   <FileStack size={48} className="mx-auto text-muted-foreground/30 mb-4" />
                   <h3 className="text-xl font-serif text-muted-foreground mb-2">No drafts yet</h3>
                   <p className="text-sm text-muted-foreground mb-6">Start writing something new!</p>
-                  <Button onClick={() => navigate('/admin/inks-vault/new')}>
+                  <Button onClick={() => navigate('/admin/inks-vault/new')} className="rounded-full">
                     <Plus size={16} className="mr-2" />
                     Create New Piece
                   </Button>
