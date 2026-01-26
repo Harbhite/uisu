@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, BookOpen, PenTool, FileText, User, Mic, Book, Coffee, Feather, Newspaper, Quote, Plus, Loader2, Pencil, FileStack, Eye, Search, Clock, X, Heart, ArrowRight } from 'lucide-react';
+import { ArrowLeft, BookOpen, PenTool, FileText, User, Mic, Book, Coffee, Feather, Newspaper, Quote, Plus, Loader2, Pencil, FileStack, Eye, Search, Clock, X, Heart, ArrowRight, Sparkles } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -159,8 +159,6 @@ const InksVaultPage = () => {
 
   const filteredPieces = sortPieces(filterPieces(pieces));
   const filteredDrafts = filterPieces(drafts);
-  const featuredPiece = filteredPieces[0];
-  const gridPieces = filteredPieces.slice(1);
 
   const canEdit = (piece: InksPiece) => {
     return isStaff || (user && piece.user_id === user.id);
@@ -188,7 +186,7 @@ const InksVaultPage = () => {
         e.stopPropagation();
         navigate(`/admin/inks-vault/edit/${piece.id}`);
       }}
-      className="absolute top-3 right-3 p-2 bg-background/90 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background border border-border"
+      className="absolute top-3 right-3 p-2 bg-background/90 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background border border-border z-10"
     >
       <Pencil size={14} className="text-foreground" />
     </button>
@@ -221,27 +219,26 @@ const InksVaultPage = () => {
     );
   };
 
-  // New unified card design with rounded corners
-  const renderCard = (piece: InksPiece, isDraft = false) => {
+  // Blog Card - Image first, then content
+  const renderBlogCard = (piece: InksPiece, isDraft = false) => {
     const cardClick = () => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`);
     const readingTime = calculateReadingTime(piece.content);
-    const TypeIcon = getTypeIcon(piece.type);
     
     return (
       <motion.div
         onClick={cardClick}
-        className="bg-card rounded-xl overflow-hidden border border-border hover:border-accent/50 hover:shadow-lg transition-all cursor-pointer h-full group relative flex flex-col"
+        className="bg-card rounded-xl overflow-hidden border border-border hover:border-accent/50 hover:shadow-xl transition-all cursor-pointer h-full group relative flex flex-col"
         whileHover={{ y: -4 }}
         transition={{ duration: 0.2 }}
       >
         {isDraft && (
-          <div className="absolute top-3 left-3 z-10 bg-accent text-accent-foreground text-[10px] font-bold uppercase px-2 py-1 rounded-md">
+          <div className="absolute top-3 left-3 z-10 bg-accent text-accent-foreground text-[10px] font-bold uppercase px-2 py-1 rounded-lg">
             Draft
           </div>
         )}
         
-        {/* Cover Image */}
-        <div className="h-48 bg-muted flex items-center justify-center overflow-hidden relative">
+        {/* Cover Image First */}
+        <div className="h-52 bg-gradient-to-br from-amber-500/20 via-orange-400/10 to-rose-400/20 flex items-center justify-center overflow-hidden relative">
           {piece.cover_image ? (
             <img 
               src={piece.cover_image} 
@@ -249,37 +246,29 @@ const InksVaultPage = () => {
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/10 via-accent/10 to-primary/5 flex items-center justify-center">
-              <TypeIcon size={48} className="text-muted-foreground/30" />
+            <div className="w-full h-full flex items-center justify-center">
+              <Coffee size={56} className="text-amber-600/30" />
             </div>
           )}
+          <div className="absolute bottom-3 left-3 bg-amber-500 text-white text-[10px] font-bold uppercase px-2.5 py-1 rounded-lg flex items-center gap-1">
+            <Coffee size={10} />
+            Blog
+          </div>
         </div>
         
         {/* Content */}
         <div className="p-5 flex flex-col flex-grow">
-          {/* Type Badge & Date */}
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-accent text-xs font-semibold">{piece.type}</span>
-            <span className="text-muted-foreground text-xs">•</span>
-            <span className="text-muted-foreground text-xs">
-              {new Date(piece.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-            </span>
-          </div>
-          
-          {/* Title */}
-          <h3 className="text-lg font-serif font-semibold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+          <h3 className="text-lg font-serif font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
             {piece.title}
           </h3>
           
-          {/* Summary */}
           <p className="text-muted-foreground text-sm line-clamp-2 mb-4 flex-grow">
-            {piece.summary || 'No summary available.'}
+            {piece.summary || 'A personal perspective on student life and experiences.'}
           </p>
           
-          {/* Meta Row */}
           <div className="flex items-center justify-between pt-3 border-t border-border">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-accent/20 flex items-center justify-center text-accent font-bold text-xs">
+              <div className="w-7 h-7 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-600 font-bold text-xs">
                 {piece.author_name.charAt(0)}
               </div>
               <AuthorLink piece={piece} className="text-xs font-medium text-foreground" />
@@ -299,59 +288,395 @@ const InksVaultPage = () => {
     );
   };
 
-  // Featured article hero card
-  const renderFeaturedCard = (piece: InksPiece) => {
+  // Poetry Card - Elegant, typographic focused
+  const renderPoetryCard = (piece: InksPiece, isDraft = false) => {
+    const cardClick = () => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`);
     const readingTime = calculateReadingTime(piece.content);
     
     return (
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="grid md:grid-cols-2 gap-0 bg-muted rounded-2xl overflow-hidden mb-12 group cursor-pointer"
-        onClick={() => navigate(`/inks-vault/piece/${piece.id}`)}
+        onClick={cardClick}
+        className="bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/20 rounded-xl overflow-hidden border border-violet-200 dark:border-violet-800/50 hover:shadow-xl hover:shadow-violet-500/10 transition-all cursor-pointer h-full group relative flex flex-col"
+        whileHover={{ y: -4 }}
+        transition={{ duration: 0.2 }}
       >
-        {/* Left: Text Content */}
-        <div className="p-8 md:p-10 flex flex-col justify-center">
-          <span className="text-accent text-xs font-semibold uppercase tracking-wider mb-4">{piece.type}</span>
-          <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-4 group-hover:text-primary transition-colors leading-tight">
-            {piece.title}
-          </h2>
-          <p className="text-muted-foreground text-sm mb-6 line-clamp-3">
-            {piece.summary || 'Explore this featured piece from the Inks Vault collection.'}
+        {isDraft && (
+          <div className="absolute top-3 left-3 z-10 bg-violet-600 text-white text-[10px] font-bold uppercase px-2 py-1 rounded-lg">
+            Draft
+          </div>
+        )}
+        
+        {/* Decorative Header */}
+        <div className="p-6 pb-4 relative">
+          <Feather className="absolute top-4 right-4 text-violet-400/40" size={32} />
+          <div className="text-violet-600 dark:text-violet-400 text-[10px] font-semibold uppercase tracking-widest mb-3 flex items-center gap-2">
+            <Sparkles size={12} />
+            Poetry
+          </div>
+          <h3 className="text-xl font-serif italic font-bold text-foreground mb-3 line-clamp-2 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
+            "{piece.title}"
+          </h3>
+          <p className="text-muted-foreground text-sm line-clamp-3 italic">
+            {piece.summary || 'Verses that speak to the soul...'}
           </p>
-          <div className="text-xs text-muted-foreground">
-            {new Date(piece.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+        </div>
+        
+        {/* Footer */}
+        <div className="mt-auto p-5 pt-4 border-t border-violet-200 dark:border-violet-800/50 bg-white/50 dark:bg-background/50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-violet-500/20 flex items-center justify-center text-violet-600 font-bold text-xs">
+                {piece.author_name.charAt(0)}
+              </div>
+              <AuthorLink piece={piece} className="text-xs font-medium text-foreground" />
+            </div>
+            <LikeButton pieceId={piece.id} initialLikeCount={likeCounts[piece.id] || 0} size="sm" />
           </div>
         </div>
         
-        {/* Right: Image */}
-        <div className="h-64 md:h-auto bg-accent/10 relative overflow-hidden">
-          {piece.cover_image ? (
-            <img 
-              src={piece.cover_image} 
-              alt="" 
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10 flex items-center justify-center">
-              <BookOpen size={80} className="text-muted-foreground/20" />
-            </div>
-          )}
-        </div>
-        
-        {canEdit(piece) && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/admin/inks-vault/edit/${piece.id}`);
-            }}
-            className="absolute top-4 right-4 p-2 bg-background/90 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background border border-border"
-          >
-            <Pencil size={14} className="text-foreground" />
-          </button>
-        )}
+        {canEdit(piece) && renderEditButton(piece)}
       </motion.div>
     );
+  };
+
+  // Article Card - Bold, news-style
+  const renderArticleCard = (piece: InksPiece, isDraft = false) => {
+    const cardClick = () => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`);
+    const readingTime = calculateReadingTime(piece.content);
+    
+    return (
+      <motion.div
+        onClick={cardClick}
+        className="bg-card rounded-xl overflow-hidden border-2 border-foreground/10 hover:border-primary/50 hover:shadow-xl transition-all cursor-pointer h-full group relative flex flex-col"
+        whileHover={{ y: -4 }}
+        transition={{ duration: 0.2 }}
+      >
+        {isDraft && (
+          <div className="absolute top-3 left-3 z-10 bg-primary text-primary-foreground text-[10px] font-bold uppercase px-2 py-1 rounded-lg">
+            Draft
+          </div>
+        )}
+        
+        {/* Header Bar */}
+        <div className="bg-foreground text-background px-4 py-2 flex items-center justify-between">
+          <span className="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5">
+            <Newspaper size={12} />
+            Article
+          </span>
+          <span className="text-[10px] opacity-70">
+            {new Date(piece.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          </span>
+        </div>
+        
+        {/* Content */}
+        <div className="p-5 flex flex-col flex-grow">
+          <h3 className="text-xl font-serif font-bold text-foreground mb-3 line-clamp-2 group-hover:text-primary transition-colors leading-tight">
+            {piece.title}
+          </h3>
+          
+          <p className="text-muted-foreground text-sm line-clamp-3 mb-4 flex-grow">
+            {piece.summary || 'An in-depth look at issues that matter to students.'}
+          </p>
+          
+          {piece.cover_image && (
+            <div className="h-32 rounded-lg overflow-hidden mb-4">
+              <img 
+                src={piece.cover_image} 
+                alt="" 
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+              />
+            </div>
+          )}
+          
+          <div className="flex items-center justify-between pt-3 border-t border-border">
+            <AuthorLink piece={piece} className="text-xs font-semibold text-foreground" />
+            <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <Clock size={10} />
+                {readingTime} min read
+              </span>
+              <LikeButton pieceId={piece.id} initialLikeCount={likeCounts[piece.id] || 0} size="sm" />
+            </div>
+          </div>
+        </div>
+        
+        {canEdit(piece) && renderEditButton(piece)}
+      </motion.div>
+    );
+  };
+
+  // Report Card - Professional, structured
+  const renderReportCard = (piece: InksPiece, isDraft = false) => {
+    const cardClick = () => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`);
+    const readingTime = calculateReadingTime(piece.content);
+    
+    return (
+      <motion.div
+        onClick={cardClick}
+        className="bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 hover:shadow-xl transition-all cursor-pointer h-full group relative flex flex-col"
+        whileHover={{ y: -4 }}
+        transition={{ duration: 0.2 }}
+      >
+        {isDraft && (
+          <div className="absolute top-3 left-3 z-10 bg-slate-700 text-white text-[10px] font-bold uppercase px-2 py-1 rounded-lg">
+            Draft
+          </div>
+        )}
+        
+        {/* Document Header */}
+        <div className="p-5 border-b border-slate-300 dark:border-slate-700">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 rounded-lg bg-slate-700 dark:bg-slate-600 flex items-center justify-center">
+              <FileText size={16} className="text-white" />
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Official Report</span>
+          </div>
+          <h3 className="text-lg font-sans font-bold text-foreground line-clamp-2 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors">
+            {piece.title}
+          </h3>
+        </div>
+        
+        {/* Content */}
+        <div className="p-5 flex-grow">
+          <p className="text-muted-foreground text-sm line-clamp-3">
+            {piece.summary || 'A comprehensive analysis and findings.'}
+          </p>
+        </div>
+        
+        {/* Footer */}
+        <div className="p-4 bg-slate-200/50 dark:bg-slate-800/50 flex items-center justify-between">
+          <div className="text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">{piece.author_name}</span>
+            <span className="mx-2">•</span>
+            {new Date(piece.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          </div>
+          <LikeButton pieceId={piece.id} initialLikeCount={likeCounts[piece.id] || 0} size="sm" />
+        </div>
+        
+        {canEdit(piece) && renderEditButton(piece)}
+      </motion.div>
+    );
+  };
+
+  // Essay Card - Academic, sophisticated
+  const renderEssayCard = (piece: InksPiece, isDraft = false) => {
+    const cardClick = () => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`);
+    const readingTime = calculateReadingTime(piece.content);
+    
+    return (
+      <motion.div
+        onClick={cardClick}
+        className="bg-gradient-to-br from-emerald-50/80 to-teal-50/80 dark:from-emerald-950/30 dark:to-teal-950/20 rounded-xl overflow-hidden border border-emerald-200 dark:border-emerald-800/50 hover:shadow-xl hover:shadow-emerald-500/10 transition-all cursor-pointer h-full group relative flex flex-col"
+        whileHover={{ y: -4 }}
+        transition={{ duration: 0.2 }}
+      >
+        {isDraft && (
+          <div className="absolute top-3 left-3 z-10 bg-emerald-600 text-white text-[10px] font-bold uppercase px-2 py-1 rounded-lg">
+            Draft
+          </div>
+        )}
+        
+        <div className="p-6 flex flex-col flex-grow">
+          <div className="flex items-center gap-2 mb-4">
+            <PenTool size={14} className="text-emerald-600 dark:text-emerald-400" />
+            <span className="text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold uppercase tracking-wider">Essay</span>
+          </div>
+          
+          <h3 className="text-xl font-serif font-bold text-foreground mb-3 line-clamp-2 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
+            {piece.title}
+          </h3>
+          
+          <p className="text-muted-foreground text-sm line-clamp-3 mb-4 flex-grow">
+            {piece.summary || 'A thoughtful exploration of ideas and arguments.'}
+          </p>
+          
+          <div className="flex items-center justify-between pt-4 border-t border-emerald-200 dark:border-emerald-800/50">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-emerald-600/20 flex items-center justify-center text-emerald-600 font-bold text-[10px]">
+                {piece.author_name.charAt(0)}
+              </div>
+              <AuthorLink piece={piece} className="text-xs font-medium text-foreground" />
+            </div>
+            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+              <Clock size={10} />
+              {readingTime} min
+            </div>
+          </div>
+        </div>
+        
+        {canEdit(piece) && renderEditButton(piece)}
+      </motion.div>
+    );
+  };
+
+  // Opinion Card - Bold statement style
+  const renderOpinionCard = (piece: InksPiece, isDraft = false) => {
+    const cardClick = () => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`);
+    const readingTime = calculateReadingTime(piece.content);
+    
+    return (
+      <motion.div
+        onClick={cardClick}
+        className="bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl overflow-hidden hover:shadow-xl hover:shadow-rose-500/20 transition-all cursor-pointer h-full group relative flex flex-col text-white"
+        whileHover={{ y: -4 }}
+        transition={{ duration: 0.2 }}
+      >
+        {isDraft && (
+          <div className="absolute top-3 left-3 z-10 bg-white text-rose-600 text-[10px] font-bold uppercase px-2 py-1 rounded-lg">
+            Draft
+          </div>
+        )}
+        
+        <div className="p-6 flex flex-col flex-grow">
+          <Quote size={32} className="text-white/30 mb-4" />
+          
+          <h3 className="text-xl font-serif font-bold mb-3 line-clamp-3 group-hover:underline transition-all leading-tight">
+            {piece.title}
+          </h3>
+          
+          <p className="text-white/80 text-sm line-clamp-2 mb-4 flex-grow">
+            {piece.summary || 'A strong perspective on matters that count.'}
+          </p>
+          
+          <div className="flex items-center justify-between pt-4 border-t border-white/20 mt-auto">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center font-bold text-xs">
+                {piece.author_name.charAt(0)}
+              </div>
+              <span className="text-xs font-medium">{piece.author_name}</span>
+            </div>
+            <span className="text-[10px] bg-white/20 px-2 py-1 rounded-lg">Opinion</span>
+          </div>
+        </div>
+        
+        {canEdit(piece) && renderEditButton(piece)}
+      </motion.div>
+    );
+  };
+
+  // Interview Card - Conversation style
+  const renderInterviewCard = (piece: InksPiece, isDraft = false) => {
+    const cardClick = () => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`);
+    const readingTime = calculateReadingTime(piece.content);
+    
+    return (
+      <motion.div
+        onClick={cardClick}
+        className="bg-card rounded-xl overflow-hidden border border-border hover:border-sky-400/50 hover:shadow-xl transition-all cursor-pointer h-full group relative flex flex-col"
+        whileHover={{ y: -4 }}
+        transition={{ duration: 0.2 }}
+      >
+        {isDraft && (
+          <div className="absolute top-3 left-3 z-10 bg-sky-600 text-white text-[10px] font-bold uppercase px-2 py-1 rounded-lg">
+            Draft
+          </div>
+        )}
+        
+        {/* Header with mic icon */}
+        <div className="bg-gradient-to-r from-sky-500 to-blue-600 p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+            <Mic size={20} className="text-white" />
+          </div>
+          <div>
+            <span className="text-white/80 text-[10px] font-semibold uppercase tracking-wider">Interview</span>
+            <p className="text-white text-sm font-medium">In Conversation</p>
+          </div>
+        </div>
+        
+        {/* Content */}
+        <div className="p-5 flex flex-col flex-grow">
+          <h3 className="text-lg font-serif font-bold text-foreground mb-2 line-clamp-2 group-hover:text-sky-600 transition-colors">
+            {piece.title}
+          </h3>
+          
+          <p className="text-muted-foreground text-sm line-clamp-2 mb-4 flex-grow">
+            {piece.summary || 'An exclusive conversation with voices that matter.'}
+          </p>
+          
+          <div className="flex items-center justify-between pt-3 border-t border-border">
+            <AuthorLink piece={piece} className="text-xs font-medium text-foreground" />
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                <Clock size={10} />
+                {readingTime} min
+              </span>
+              <LikeButton pieceId={piece.id} initialLikeCount={likeCounts[piece.id] || 0} size="sm" />
+            </div>
+          </div>
+        </div>
+        
+        {canEdit(piece) && renderEditButton(piece)}
+      </motion.div>
+    );
+  };
+
+  // Fiction Card - Creative, imaginative
+  const renderFictionCard = (piece: InksPiece, isDraft = false) => {
+    const cardClick = () => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`);
+    const readingTime = calculateReadingTime(piece.content);
+    
+    return (
+      <motion.div
+        onClick={cardClick}
+        className="bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-950 rounded-xl overflow-hidden hover:shadow-xl hover:shadow-purple-500/20 transition-all cursor-pointer h-full group relative flex flex-col text-white"
+        whileHover={{ y: -4 }}
+        transition={{ duration: 0.2 }}
+      >
+        {isDraft && (
+          <div className="absolute top-3 left-3 z-10 bg-white text-purple-600 text-[10px] font-bold uppercase px-2 py-1 rounded-lg">
+            Draft
+          </div>
+        )}
+        
+        {/* Starry effect */}
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute top-4 left-6 w-1 h-1 bg-white rounded-full animate-pulse" />
+          <div className="absolute top-12 right-10 w-1.5 h-1.5 bg-white rounded-full animate-pulse delay-300" />
+          <div className="absolute bottom-20 left-12 w-1 h-1 bg-white rounded-full animate-pulse delay-500" />
+          <div className="absolute top-8 right-24 w-0.5 h-0.5 bg-white rounded-full" />
+        </div>
+        
+        <div className="p-6 flex flex-col flex-grow relative z-10">
+          <div className="flex items-center gap-2 mb-4">
+            <Book size={16} className="text-purple-300" />
+            <span className="text-purple-300 text-[10px] font-semibold uppercase tracking-wider">Fiction</span>
+          </div>
+          
+          <h3 className="text-xl font-serif font-bold mb-3 line-clamp-2 group-hover:text-purple-200 transition-colors">
+            {piece.title}
+          </h3>
+          
+          <p className="text-white/70 text-sm line-clamp-3 mb-4 flex-grow italic">
+            {piece.summary || 'Step into a world of imagination and storytelling.'}
+          </p>
+          
+          <div className="flex items-center justify-between pt-4 border-t border-white/10 mt-auto">
+            <span className="text-xs font-medium text-white/80">{piece.author_name}</span>
+            <span className="text-[10px] text-white/60 flex items-center gap-1">
+              <Clock size={10} />
+              {readingTime} min read
+            </span>
+          </div>
+        </div>
+        
+        {canEdit(piece) && renderEditButton(piece)}
+      </motion.div>
+    );
+  };
+
+  // Universal card renderer based on type
+  const renderCard = (piece: InksPiece, isDraft = false) => {
+    switch (piece.type) {
+      case 'Blog': return renderBlogCard(piece, isDraft);
+      case 'Poetry': return renderPoetryCard(piece, isDraft);
+      case 'Article': return renderArticleCard(piece, isDraft);
+      case 'Report': return renderReportCard(piece, isDraft);
+      case 'Essay': return renderEssayCard(piece, isDraft);
+      case 'Opinion': return renderOpinionCard(piece, isDraft);
+      case 'Interview': return renderInterviewCard(piece, isDraft);
+      case 'Fiction': return renderFictionCard(piece, isDraft);
+      default: return renderBlogCard(piece, isDraft);
+    }
   };
 
   if (loading) {
@@ -380,16 +705,16 @@ const InksVaultPage = () => {
           <span>Back to Home</span>
         </button>
 
-        {/* Hero Header */}
+        {/* Hero Header - Left Aligned */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="mb-10"
         >
           <h1 className="text-5xl md:text-7xl font-serif font-bold text-foreground mb-4">
             Inks Vault
           </h1>
-          <p className="text-muted-foreground max-w-xl mx-auto">
+          <p className="text-muted-foreground max-w-xl">
             Voices and narratives from the University of Ibadan Students' Union community.
           </p>
           
@@ -401,45 +726,9 @@ const InksVaultPage = () => {
           )}
         </motion.div>
 
-        {/* Featured Article */}
-        {featuredPiece && activeTab === 'published' && !searchQuery && filter === 'All' && (
-          renderFeaturedCard(featuredPiece)
-        )}
-
-        {/* Newsletter Subscription Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-muted/50 rounded-2xl p-8 mb-12"
-        >
-          <div className="max-w-2xl">
-            <h3 className="text-lg font-serif font-semibold text-foreground mb-2">
-              Subscribe to our newsletter for daily insights
-            </h3>
-            <div className="flex gap-3 mt-4">
-              <Input
-                value={newsletterEmail}
-                onChange={(e) => setNewsletterEmail(e.target.value)}
-                placeholder="Enter Your Email"
-                className="flex-1 rounded-full bg-card border-border"
-                onKeyDown={(e) => e.key === 'Enter' && handleNewsletterSubscribe()}
-              />
-              <Button 
-                onClick={handleNewsletterSubscribe} 
-                disabled={subscribing}
-                className="rounded-full px-6"
-                variant="outline"
-              >
-                {subscribing ? <Loader2 className="animate-spin" size={16} /> : 'Subscribe'}
-              </Button>
-            </div>
-          </div>
-        </motion.div>
-
         {/* Tabs for Published/Drafts */}
         {user && (
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
             <TabsList className="bg-muted border border-border rounded-full p-1">
               <TabsTrigger value="published" className="gap-2 rounded-full data-[state=active]:bg-background">
                 <Eye size={14} />
@@ -453,12 +742,34 @@ const InksVaultPage = () => {
           </Tabs>
         )}
 
-        {/* Search & Filters Row */}
+        {/* Content Type Filter Pills - BEFORE content */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="flex flex-wrap gap-2 mb-6"
+        >
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setFilter(cat)}
+              className={`px-5 py-2.5 text-xs font-medium rounded-full transition-all border ${
+                filter === cat
+                  ? 'bg-foreground text-background border-foreground'
+                  : 'bg-card text-muted-foreground border-border hover:border-foreground hover:text-foreground'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </motion.div>
+
+        {/* Search & Sort Row */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="flex flex-col lg:flex-row lg:items-center gap-4 mb-8"
+          className="flex flex-col lg:flex-row lg:items-center gap-4 mb-10"
         >
           {/* Search Bar */}
           <div className="relative flex-1 max-w-md">
@@ -500,39 +811,17 @@ const InksVaultPage = () => {
           </div>
         </motion.div>
 
-        {/* Content Type Filter Pills */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="flex flex-wrap gap-2 mb-10"
-        >
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setFilter(cat)}
-              className={`px-5 py-2.5 text-xs font-medium rounded-full transition-all border ${
-                filter === cat
-                  ? 'bg-foreground text-background border-foreground'
-                  : 'bg-card text-muted-foreground border-border hover:border-foreground hover:text-foreground'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </motion.div>
-
         {/* Content Grid */}
         {activeTab === 'published' ? (
           <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16"
           >
             <AnimatePresence mode="popLayout">
-              {(searchQuery || filter !== 'All' ? filteredPieces : gridPieces).length > 0 ? (
-                (searchQuery || filter !== 'All' ? filteredPieces : gridPieces).map(piece => (
+              {filteredPieces.length > 0 ? (
+                filteredPieces.map(piece => (
                   <motion.div
                     key={piece.id}
                     layout
@@ -562,7 +851,7 @@ const InksVaultPage = () => {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16"
           >
             <AnimatePresence mode="popLayout">
               {filteredDrafts.length > 0 ? (
@@ -596,6 +885,37 @@ const InksVaultPage = () => {
             </AnimatePresence>
           </motion.div>
         )}
+
+        {/* Newsletter Subscription Section - At Bottom */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-muted/50 rounded-2xl p-8"
+        >
+          <div className="max-w-2xl">
+            <h3 className="text-lg font-serif font-semibold text-foreground mb-2">
+              Subscribe to our newsletter for daily insights
+            </h3>
+            <div className="flex gap-3 mt-4">
+              <Input
+                value={newsletterEmail}
+                onChange={(e) => setNewsletterEmail(e.target.value)}
+                placeholder="Enter Your Email"
+                className="flex-1 rounded-full bg-card border-border"
+                onKeyDown={(e) => e.key === 'Enter' && handleNewsletterSubscribe()}
+              />
+              <Button 
+                onClick={handleNewsletterSubscribe} 
+                disabled={subscribing}
+                className="rounded-full px-6"
+                variant="outline"
+              >
+                {subscribing ? <Loader2 className="animate-spin" size={16} /> : 'Subscribe'}
+              </Button>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
