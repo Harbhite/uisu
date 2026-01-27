@@ -240,7 +240,7 @@ const InksVaultPage = () => {
       <motion.div
         onClick={cardClick}
         onHoverStart={handleCardHover}
-        className="bg-card rounded-xl overflow-hidden border border-border hover:border-accent/50 hover:shadow-xl hover:shadow-amber-500/10 transition-all cursor-pointer h-full group relative flex flex-col"
+        className="bg-card overflow-hidden border border-border hover:border-accent/50 hover:shadow-xl hover:shadow-amber-500/10 transition-all cursor-pointer h-full group relative flex flex-col"
         whileHover={{ y: -4, scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.2 }}
@@ -302,49 +302,48 @@ const InksVaultPage = () => {
     );
   };
 
-  // Poetry Card - Elegant, typographic focused
+  // Poetry Card - Elegant, typographic focused with solid ui-blue
   const renderPoetryCard = (piece: InksPiece, isDraft = false) => {
     const cardClick = () => handleCardClick(() => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`));
-    const readingTime = calculateReadingTime(piece.content);
     
     return (
       <motion.div
         onClick={cardClick}
         onHoverStart={handleCardHover}
-        className="bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/20 rounded-xl overflow-hidden border border-violet-200 dark:border-violet-800/50 hover:shadow-xl hover:shadow-violet-500/20 transition-all cursor-pointer h-full group relative flex flex-col"
+        className="bg-ui-blue overflow-hidden border border-ui-dark hover:shadow-xl hover:shadow-ui-blue/30 transition-all cursor-pointer h-full group relative flex flex-col text-white"
         whileHover={{ y: -4, scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.2 }}
       >
         {isDraft && (
-          <div className="absolute top-3 left-3 z-10 bg-violet-600 text-white text-[10px] font-bold uppercase px-2 py-1 rounded-lg">
+          <div className="absolute top-3 left-3 z-10 bg-white text-ui-blue text-[10px] font-bold uppercase px-2 py-1">
             Draft
           </div>
         )}
         
         {/* Decorative Header */}
         <div className="p-6 pb-4 relative">
-          <Feather className="absolute top-4 right-4 text-violet-400/40" size={32} />
-          <div className="text-violet-600 dark:text-violet-400 text-[10px] font-semibold uppercase tracking-widest mb-3 flex items-center gap-2">
+          <Feather className="absolute top-4 right-4 text-white/30" size={32} />
+          <div className="text-white/80 text-[10px] font-semibold uppercase tracking-widest mb-3 flex items-center gap-2">
             <Sparkles size={12} />
             Poetry
           </div>
-          <h3 className="text-xl font-serif italic font-bold text-foreground mb-3 line-clamp-2 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
+          <h3 className="text-xl font-serif italic font-bold text-white mb-3 line-clamp-2 group-hover:text-nobel-cream transition-colors">
             "{piece.title}"
           </h3>
-          <p className="text-muted-foreground text-sm line-clamp-3 italic">
+          <p className="text-white/70 text-sm line-clamp-3 italic">
             {piece.summary || 'Verses that speak to the soul...'}
           </p>
         </div>
         
         {/* Footer */}
-        <div className="mt-auto p-5 pt-4 border-t border-violet-200 dark:border-violet-800/50 bg-white/50 dark:bg-background/50">
+        <div className="mt-auto p-5 pt-4 border-t border-white/20 bg-ui-dark/30">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-violet-500/20 flex items-center justify-center text-violet-600 font-bold text-xs">
+              <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-xs">
                 {piece.author_name.charAt(0)}
               </div>
-              <AuthorLink piece={piece} className="text-xs font-medium text-foreground" />
+              <span className="text-xs font-medium text-white">{piece.author_name}</span>
             </div>
             <LikeButton pieceId={piece.id} initialLikeCount={likeCounts[piece.id] || 0} size="sm" />
           </div>
@@ -364,7 +363,7 @@ const InksVaultPage = () => {
       <motion.div
         onClick={cardClick}
         onHoverStart={handleCardHover}
-        className="bg-card rounded-xl overflow-hidden border-2 border-foreground/10 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 transition-all cursor-pointer h-full group relative flex flex-col"
+        className="bg-card overflow-hidden border-2 border-foreground/10 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 transition-all cursor-pointer h-full group relative flex flex-col"
         whileHover={{ y: -4, scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.2 }}
@@ -432,7 +431,7 @@ const InksVaultPage = () => {
       <motion.div
         onClick={cardClick}
         onHoverStart={handleCardHover}
-        className="bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 hover:shadow-xl hover:shadow-slate-500/10 transition-all cursor-pointer h-full group relative flex flex-col"
+        className="bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 overflow-hidden border border-slate-300 dark:border-slate-700 hover:shadow-xl hover:shadow-slate-500/10 transition-all cursor-pointer h-full group relative flex flex-col"
         whileHover={{ y: -4, scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.2 }}
@@ -487,7 +486,7 @@ const InksVaultPage = () => {
       <motion.div
         onClick={cardClick}
         onHoverStart={handleCardHover}
-        className="bg-gradient-to-br from-emerald-50/80 to-teal-50/80 dark:from-emerald-950/30 dark:to-teal-950/20 rounded-xl overflow-hidden border border-emerald-200 dark:border-emerald-800/50 hover:shadow-xl hover:shadow-emerald-500/20 transition-all cursor-pointer h-full group relative flex flex-col"
+        className="bg-gradient-to-br from-emerald-50/80 to-teal-50/80 dark:from-emerald-950/30 dark:to-teal-950/20 overflow-hidden border border-emerald-200 dark:border-emerald-800/50 hover:shadow-xl hover:shadow-emerald-500/20 transition-all cursor-pointer h-full group relative flex flex-col"
         whileHover={{ y: -4, scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.2 }}
@@ -540,7 +539,7 @@ const InksVaultPage = () => {
       <motion.div
         onClick={cardClick}
         onHoverStart={handleCardHover}
-        className="bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl overflow-hidden hover:shadow-xl hover:shadow-rose-500/30 transition-all cursor-pointer h-full group relative flex flex-col text-white"
+        className="bg-gradient-to-br from-rose-500 to-pink-600 overflow-hidden hover:shadow-xl hover:shadow-rose-500/30 transition-all cursor-pointer h-full group relative flex flex-col text-white"
         whileHover={{ y: -4, scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.2 }}
@@ -587,7 +586,7 @@ const InksVaultPage = () => {
       <motion.div
         onClick={cardClick}
         onHoverStart={handleCardHover}
-        className="bg-card rounded-xl overflow-hidden border border-border hover:border-sky-400/50 hover:shadow-xl hover:shadow-sky-500/20 transition-all cursor-pointer h-full group relative flex flex-col"
+        className="bg-card overflow-hidden border border-border hover:border-sky-400/50 hover:shadow-xl hover:shadow-sky-500/20 transition-all cursor-pointer h-full group relative flex flex-col"
         whileHover={{ y: -4, scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.2 }}
@@ -645,7 +644,7 @@ const InksVaultPage = () => {
       <motion.div
         onClick={cardClick}
         onHoverStart={handleCardHover}
-        className="bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-950 rounded-xl overflow-hidden hover:shadow-xl hover:shadow-purple-500/30 transition-all cursor-pointer h-full group relative flex flex-col text-white"
+        className="bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-950 overflow-hidden hover:shadow-xl hover:shadow-purple-500/30 transition-all cursor-pointer h-full group relative flex flex-col text-white"
         whileHover={{ y: -4, scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.2 }}

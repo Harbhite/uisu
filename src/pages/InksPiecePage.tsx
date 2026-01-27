@@ -242,6 +242,22 @@ const InksPiecePage = () => {
               />
             </div>
           );
+
+        case 'image':
+          return (
+            <figure key={index} className="my-8">
+              <img 
+                src={data.url || data.file?.url} 
+                alt={data.caption || ''} 
+                className="w-full rounded-lg"
+              />
+              {data.caption && (
+                <figcaption className="text-center text-sm text-muted-foreground mt-3 italic">
+                  {data.caption}
+                </figcaption>
+              )}
+            </figure>
+          );
         
         default:
           return null;
