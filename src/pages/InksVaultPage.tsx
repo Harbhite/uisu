@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, BookOpen, PenTool, FileText, User, Mic, Book, Coffee, Feather, Newspaper, Quote, Plus, Loader2, Pencil, FileStack, Eye, Search, Clock, X, Heart, ArrowRight, Sparkles } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
@@ -11,7 +11,7 @@ import { SEO } from '@/components/SEO';
 import { Json } from '@/integrations/supabase/types';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { LikeButton } from '@/components/LikeButton';
-
+import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -71,6 +71,7 @@ const calculateReadingTime = (content: Json): number => {
 const InksVaultPage = () => {
   const navigate = useNavigate();
   const { isStaff } = useAdminCheck();
+  const { triggerHoverFeedback, triggerClickFeedback } = useHapticFeedback();
   const [filter, setFilter] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [pieces, setPieces] = useState<InksPiece[]>([]);
@@ -82,6 +83,17 @@ const InksVaultPage = () => {
   const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [subscribing, setSubscribing] = useState(false);
+
+  // Card hover handler with haptic feedback
+  const handleCardHover = useCallback(() => {
+    triggerHoverFeedback();
+  }, [triggerHoverFeedback]);
+
+  // Card click handler with haptic feedback
+  const handleCardClick = useCallback((callback: () => void) => {
+    triggerClickFeedback();
+    callback();
+  }, [triggerClickFeedback]);
 
   const categories = ['All', 'Article', 'Blog', 'Report', 'Essay', 'Poetry', 'Opinion', 'Interview', 'Fiction'];
 
@@ -221,14 +233,16 @@ const InksVaultPage = () => {
 
   // Blog Card - Image first, then content
   const renderBlogCard = (piece: InksPiece, isDraft = false) => {
-    const cardClick = () => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`);
+    const cardClick = () => handleCardClick(() => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`));
     const readingTime = calculateReadingTime(piece.content);
     
     return (
       <motion.div
         onClick={cardClick}
-        className="bg-card rounded-xl overflow-hidden border border-border hover:border-accent/50 hover:shadow-xl transition-all cursor-pointer h-full group relative flex flex-col"
-        whileHover={{ y: -4 }}
+        onHoverStart={handleCardHover}
+        className="bg-card rounded-xl overflow-hidden border border-border hover:border-accent/50 hover:shadow-xl hover:shadow-amber-500/10 transition-all cursor-pointer h-full group relative flex flex-col"
+        whileHover={{ y: -4, scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.2 }}
       >
         {isDraft && (
@@ -290,14 +304,16 @@ const InksVaultPage = () => {
 
   // Poetry Card - Elegant, typographic focused
   const renderPoetryCard = (piece: InksPiece, isDraft = false) => {
-    const cardClick = () => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`);
+    const cardClick = () => handleCardClick(() => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`));
     const readingTime = calculateReadingTime(piece.content);
     
     return (
       <motion.div
         onClick={cardClick}
-        className="bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/20 rounded-xl overflow-hidden border border-violet-200 dark:border-violet-800/50 hover:shadow-xl hover:shadow-violet-500/10 transition-all cursor-pointer h-full group relative flex flex-col"
-        whileHover={{ y: -4 }}
+        onHoverStart={handleCardHover}
+        className="bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/20 rounded-xl overflow-hidden border border-violet-200 dark:border-violet-800/50 hover:shadow-xl hover:shadow-violet-500/20 transition-all cursor-pointer h-full group relative flex flex-col"
+        whileHover={{ y: -4, scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.2 }}
       >
         {isDraft && (
@@ -341,14 +357,16 @@ const InksVaultPage = () => {
 
   // Article Card - Bold, news-style
   const renderArticleCard = (piece: InksPiece, isDraft = false) => {
-    const cardClick = () => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`);
+    const cardClick = () => handleCardClick(() => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`));
     const readingTime = calculateReadingTime(piece.content);
     
     return (
       <motion.div
         onClick={cardClick}
-        className="bg-card rounded-xl overflow-hidden border-2 border-foreground/10 hover:border-primary/50 hover:shadow-xl transition-all cursor-pointer h-full group relative flex flex-col"
-        whileHover={{ y: -4 }}
+        onHoverStart={handleCardHover}
+        className="bg-card rounded-xl overflow-hidden border-2 border-foreground/10 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 transition-all cursor-pointer h-full group relative flex flex-col"
+        whileHover={{ y: -4, scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.2 }}
       >
         {isDraft && (
@@ -407,14 +425,16 @@ const InksVaultPage = () => {
 
   // Report Card - Professional, structured
   const renderReportCard = (piece: InksPiece, isDraft = false) => {
-    const cardClick = () => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`);
+    const cardClick = () => handleCardClick(() => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`));
     const readingTime = calculateReadingTime(piece.content);
     
     return (
       <motion.div
         onClick={cardClick}
-        className="bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 hover:shadow-xl transition-all cursor-pointer h-full group relative flex flex-col"
-        whileHover={{ y: -4 }}
+        onHoverStart={handleCardHover}
+        className="bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 hover:shadow-xl hover:shadow-slate-500/10 transition-all cursor-pointer h-full group relative flex flex-col"
+        whileHover={{ y: -4, scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.2 }}
       >
         {isDraft && (
@@ -460,14 +480,16 @@ const InksVaultPage = () => {
 
   // Essay Card - Academic, sophisticated
   const renderEssayCard = (piece: InksPiece, isDraft = false) => {
-    const cardClick = () => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`);
+    const cardClick = () => handleCardClick(() => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`));
     const readingTime = calculateReadingTime(piece.content);
     
     return (
       <motion.div
         onClick={cardClick}
-        className="bg-gradient-to-br from-emerald-50/80 to-teal-50/80 dark:from-emerald-950/30 dark:to-teal-950/20 rounded-xl overflow-hidden border border-emerald-200 dark:border-emerald-800/50 hover:shadow-xl hover:shadow-emerald-500/10 transition-all cursor-pointer h-full group relative flex flex-col"
-        whileHover={{ y: -4 }}
+        onHoverStart={handleCardHover}
+        className="bg-gradient-to-br from-emerald-50/80 to-teal-50/80 dark:from-emerald-950/30 dark:to-teal-950/20 rounded-xl overflow-hidden border border-emerald-200 dark:border-emerald-800/50 hover:shadow-xl hover:shadow-emerald-500/20 transition-all cursor-pointer h-full group relative flex flex-col"
+        whileHover={{ y: -4, scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.2 }}
       >
         {isDraft && (
@@ -511,14 +533,16 @@ const InksVaultPage = () => {
 
   // Opinion Card - Bold statement style
   const renderOpinionCard = (piece: InksPiece, isDraft = false) => {
-    const cardClick = () => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`);
+    const cardClick = () => handleCardClick(() => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`));
     const readingTime = calculateReadingTime(piece.content);
     
     return (
       <motion.div
         onClick={cardClick}
-        className="bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl overflow-hidden hover:shadow-xl hover:shadow-rose-500/20 transition-all cursor-pointer h-full group relative flex flex-col text-white"
-        whileHover={{ y: -4 }}
+        onHoverStart={handleCardHover}
+        className="bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl overflow-hidden hover:shadow-xl hover:shadow-rose-500/30 transition-all cursor-pointer h-full group relative flex flex-col text-white"
+        whileHover={{ y: -4, scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.2 }}
       >
         {isDraft && (
@@ -556,14 +580,16 @@ const InksVaultPage = () => {
 
   // Interview Card - Conversation style
   const renderInterviewCard = (piece: InksPiece, isDraft = false) => {
-    const cardClick = () => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`);
+    const cardClick = () => handleCardClick(() => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`));
     const readingTime = calculateReadingTime(piece.content);
     
     return (
       <motion.div
         onClick={cardClick}
-        className="bg-card rounded-xl overflow-hidden border border-border hover:border-sky-400/50 hover:shadow-xl transition-all cursor-pointer h-full group relative flex flex-col"
-        whileHover={{ y: -4 }}
+        onHoverStart={handleCardHover}
+        className="bg-card rounded-xl overflow-hidden border border-border hover:border-sky-400/50 hover:shadow-xl hover:shadow-sky-500/20 transition-all cursor-pointer h-full group relative flex flex-col"
+        whileHover={{ y: -4, scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.2 }}
       >
         {isDraft && (
@@ -612,14 +638,16 @@ const InksVaultPage = () => {
 
   // Fiction Card - Creative, imaginative
   const renderFictionCard = (piece: InksPiece, isDraft = false) => {
-    const cardClick = () => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`);
+    const cardClick = () => handleCardClick(() => isDraft ? navigate(`/admin/inks-vault/edit/${piece.id}`) : navigate(`/inks-vault/piece/${piece.id}`));
     const readingTime = calculateReadingTime(piece.content);
     
     return (
       <motion.div
         onClick={cardClick}
-        className="bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-950 rounded-xl overflow-hidden hover:shadow-xl hover:shadow-purple-500/20 transition-all cursor-pointer h-full group relative flex flex-col text-white"
-        whileHover={{ y: -4 }}
+        onHoverStart={handleCardHover}
+        className="bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-950 rounded-xl overflow-hidden hover:shadow-xl hover:shadow-purple-500/30 transition-all cursor-pointer h-full group relative flex flex-col text-white"
+        whileHover={{ y: -4, scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.2 }}
       >
         {isDraft && (
