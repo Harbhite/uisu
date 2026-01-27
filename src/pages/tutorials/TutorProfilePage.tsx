@@ -13,49 +13,54 @@ const TutorProfilePage = () => {
   if (!tutor) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
-        <h2 className="text-2xl font-bold text-slate-800 mb-2">Tutor Not Found</h2>
+        <h2 className="text-2xl font-bold text-slate-800 mb-2 font-serif">Tutor Not Found</h2>
         <Link to="/tutorials">
-          <Button>Back to Dashboard</Button>
+          <Button className="rounded-none bg-ui-blue uppercase tracking-widest text-xs font-bold">Back to Dashboard</Button>
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      <Link to="/tutorials" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-ui-blue transition-colors">
-        <ArrowLeft size={16} /> Back to Dashboard
+    <div className="space-y-12">
+      <Link to="/tutorials" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-ui-blue transition-colors group">
+        <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back to Dashboard
       </Link>
 
       {/* Profile Header */}
-      <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-8">
-        <div className="w-32 h-32 rounded-full bg-slate-100 overflow-hidden border-4 border-slate-50 shadow-inner shrink-0">
+      <div className="bg-white p-12 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-12 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rotate-45 translate-x-32 -translate-y-32"></div>
+
+        <div className="w-40 h-40 bg-slate-100 border-4 border-white shadow-lg shrink-0 relative z-10">
           <img src={tutor.avatar} alt={tutor.name} className="w-full h-full object-cover" />
         </div>
 
-        <div className="text-center md:text-left flex-1">
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-3 mb-4">
-             <h1 className="text-3xl font-serif font-bold text-ui-blue">{tutor.name}</h1>
-             <div className="flex gap-2 mt-1">
-                {tutor.tier === 'Official' && <Badge className="bg-nobel-gold hover:bg-nobel-gold">OFFICIAL</Badge>}
-                {tutor.tier === 'Verified' && <Badge variant="secondary" className="gap-1"><CheckCircle2 size={14} /> Verified</Badge>}
+        <div className="text-center md:text-left flex-1 relative z-10">
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-4 mb-6">
+             <h1 className="text-4xl font-serif font-bold text-ui-blue">{tutor.name}</h1>
+             <div className="flex gap-3 mt-2">
+                {tutor.tier === 'Official' && <Badge className="bg-nobel-gold hover:bg-nobel-gold rounded-none text-[10px] uppercase tracking-wider px-2 py-1">OFFICIAL</Badge>}
+                {tutor.tier === 'Verified' && <Badge variant="secondary" className="gap-1 rounded-none text-[10px] uppercase tracking-wider px-2 py-1 border border-slate-200"><CheckCircle2 size={12} /> Verified</Badge>}
              </div>
           </div>
 
-          <p className="text-lg text-slate-600 mb-6 max-w-2xl">{tutor.bio}</p>
+          <p className="text-xl text-slate-600 mb-8 max-w-2xl font-light leading-relaxed">{tutor.bio}</p>
 
-          <div className="flex flex-wrap justify-center md:justify-start gap-4 md:gap-8 text-sm">
-            <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-lg border border-slate-100">
-               <BookOpen size={18} className="text-ui-blue" />
-               <span className="font-bold">{tutor.metrics.courses}</span> <span className="text-slate-500">Courses</span>
+          <div className="flex flex-wrap justify-center md:justify-start gap-px bg-slate-200 border border-slate-200">
+            <div className="flex flex-col items-center justify-center w-32 py-4 bg-slate-50">
+               <BookOpen size={20} className="text-ui-blue mb-2" />
+               <span className="font-serif font-bold text-xl text-ui-blue">{tutor.metrics.courses}</span>
+               <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Courses</span>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-lg border border-slate-100">
-               <Users size={18} className="text-ui-blue" />
-               <span className="font-bold">{tutor.metrics.students}</span> <span className="text-slate-500">Students</span>
+            <div className="flex flex-col items-center justify-center w-32 py-4 bg-slate-50">
+               <Users size={20} className="text-ui-blue mb-2" />
+               <span className="font-serif font-bold text-xl text-ui-blue">{tutor.metrics.students}</span>
+               <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Students</span>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-lg border border-slate-100">
-               <Star size={18} className="text-nobel-gold fill-current" />
-               <span className="font-bold">{tutor.metrics.rating}</span> <span className="text-slate-500">Rating</span>
+            <div className="flex flex-col items-center justify-center w-32 py-4 bg-slate-50">
+               <Star size={20} className="text-nobel-gold fill-current mb-2" />
+               <span className="font-serif font-bold text-xl text-ui-blue">{tutor.metrics.rating}</span>
+               <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Rating</span>
             </div>
           </div>
         </div>
@@ -63,15 +68,15 @@ const TutorProfilePage = () => {
 
       {/* Tutorials List */}
       <div>
-        <h2 className="text-xl font-bold text-slate-800 mb-6">Courses by {tutor.name}</h2>
+        <h2 className="text-2xl font-serif font-bold text-ui-blue mb-8 border-b border-slate-200 pb-4">Courses by {tutor.name}</h2>
         {tutorTutorials.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {tutorTutorials.map((tut) => (
               <TutorialCard key={tut.id} tutorial={tut} tutor={tutor} />
             ))}
           </div>
         ) : (
-          <div className="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 text-slate-500">
+          <div className="p-12 text-center bg-slate-50 border border-dashed border-slate-200 text-slate-400 font-light">
             No courses uploaded yet.
           </div>
         )}
