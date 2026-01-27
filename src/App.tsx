@@ -46,6 +46,12 @@ const SearchPage = lazy(() => import("./pages/SearchPage"));
 const HistoryPage = lazy(() => import("./pages/HistoryPage"));
 const ConstitutionPage = lazy(() => import("./pages/ConstitutionPage"));
 const ProfileCardPage = lazy(() => import("./pages/ProfileCardPage"));
+const TutorialsLayout = lazy(() => import("./components/tutorials/TutorialsLayout"));
+const TutorialsLandingPage = lazy(() => import("./pages/tutorials/TutorialsLandingPage"));
+const TutorialCatalogPage = lazy(() => import("./pages/tutorials/TutorialCatalogPage"));
+const TutorialDetailPage = lazy(() => import("./pages/tutorials/TutorialDetailPage"));
+const TutorProfilePage = lazy(() => import("./pages/tutorials/TutorProfilePage"));
+const UploadTutorialPage = lazy(() => import("./pages/tutorials/UploadTutorialPage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
 const UnsubscribePage = lazy(() => import("./pages/UnsubscribePage"));
@@ -123,6 +129,15 @@ const AppRoutes = () => {
         
         {/* Newsletter */}
         <Route path="/unsubscribe" element={<PageWrapper><UnsubscribePage /></PageWrapper>} />
+
+        {/* Tutorials Ecosystem (Standalone Subdomain feel) */}
+        <Route path="/tutorials" element={<TutorialsLayout />}>
+          <Route index element={<TutorialsLandingPage />} />
+          <Route path="catalog" element={<TutorialCatalogPage />} />
+          <Route path=":id" element={<TutorialDetailPage />} />
+          <Route path="tutor/:id" element={<TutorProfilePage />} />
+          <Route path="upload" element={<UploadTutorialPage />} />
+        </Route>
 
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
