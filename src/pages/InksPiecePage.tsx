@@ -10,6 +10,9 @@ import { SocialShare } from '@/components/SocialShare';
 import { InkComments } from '@/components/InkComments';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { ImageLightbox, useLightbox } from '@/components/ImageLightbox';
+import { PoetryLayoutRenderer } from '@/components/PoetryLayoutRenderers';
+import { PoetryLayout } from '@/components/PoetryLayoutSelector';
 
 interface InksPiece {
   id: string;
@@ -24,6 +27,7 @@ interface InksPiece {
   view_count: number | null;
   user_id: string | null;
   cover_image: string | null;
+  poetry_layout?: PoetryLayout | null;
 }
 
 interface EditorBlock {
@@ -86,7 +90,9 @@ const InksPiecePage = () => {
   const [loading, setLoading] = useState(true);
   const [readingTime, setReadingTime] = useState(1);
   const [relatedPieces, setRelatedPieces] = useState<InksPiece[]>([]);
-
+  
+  // Lightbox state
+  const { isOpen: lightboxOpen, imageData, openLightbox, closeLightbox } = useLightbox();
   useEffect(() => {
     const fetchPiece = async () => {
       if (!id) {
@@ -243,13 +249,15 @@ const InksPiecePage = () => {
             </div>
           );
 
-        case 'image':
+        case 'image': {
+          const imgSrc = data.url || data.file?.url;
           return (
-            <figure key={index} className="my-8">
+            <figure key={index} className="my-8 group">
               <img 
-                src={data.url || data.file?.url} 
+                src={imgSrc} 
                 alt={data.caption || ''} 
-                className="w-full rounded-lg"
+                className="w-full rounded-lg cursor-pointer transition-transform hover:scale-[1.01]"
+                onClick={() => imgSrc && openLightbox(imgSrc, data.caption || piece?.title, data.caption)}
               />
               {data.caption && (
                 <figcaption className="text-center text-sm text-muted-foreground mt-3 italic">
@@ -258,6 +266,7 @@ const InksPiecePage = () => {
               )}
             </figure>
           );
+        }
         
         default:
           return null;
@@ -288,10 +297,10 @@ const InksPiecePage = () => {
   }
 
   const renderView = () => {
-    const viewProps = { piece, renderContent, readingTime };
+    const viewProps = { piece, renderContent, readingTime, onImageClick: openLightbox };
     switch (piece.type) {
       case 'Poetry':
-        return <PoetryView {...viewProps} />;
+        return <PoetryLayoutRenderer {...viewProps} />;
       case 'Report':
         return <ReportView {...viewProps} />;
       case 'Fiction':
@@ -322,6 +331,16 @@ const InksPiecePage = () => {
         author={piece.author_name}
         publishedTime={piece.created_at}
       />
+      
+      {/* Image Lightbox */}
+      <ImageLightbox
+        isOpen={lightboxOpen}
+        onClose={closeLightbox}
+        src={imageData.src}
+        alt={imageData.alt}
+        caption={imageData.caption}
+      />
+      
       <div className="container mx-auto px-6 no-print">
         <Breadcrumbs />
         <button
@@ -386,6 +405,7 @@ interface ViewProps {
   piece: InksPiece;
   renderContent: (content: Json) => React.ReactNode;
   readingTime: number;
+  onImageClick?: (src: string, alt?: string, caption?: string) => void;
 }
 
 const ArticleView = ({ piece, renderContent, readingTime }: ViewProps) => (
@@ -432,33 +452,8 @@ const ArticleView = ({ piece, renderContent, readingTime }: ViewProps) => (
   </article>
 );
 
-const PoetryView = ({ piece, renderContent, readingTime }: ViewProps) => (
-  <article className="container mx-auto px-6 max-w-2xl">
-    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="bg-[#FAF9F6] dark:bg-card p-12 md:p-20 shadow-lg border border-border text-center relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-2 bg-accent"></div>
-      <Feather className="mx-auto text-accent mb-8" size={32} />
-      <h1 className="text-4xl md:text-6xl font-serif italic text-primary mb-4">{piece.title}</h1>
-      <div className="w-16 h-px bg-border mx-auto mb-6"></div>
-      <p className="text-sm font-serif text-muted-foreground mb-4">By <AuthorLink userId={piece.user_id} authorName={piece.author_name} /></p>
-      <div className="flex justify-center items-center gap-4 text-xs text-muted-foreground mb-12">
-        <span><Clock size={12} className="inline mr-1" />{readingTime} min</span>
-        {piece.view_count !== null && <span>{piece.view_count} views</span>}
-      </div>
-      <div className="prose prose-xl prose-p:font-serif prose-p:italic text-foreground/80 leading-loose text-center">
-        {renderContent(piece.content)}
-      </div>
-      <div className="mt-12">
-        <SocialShare title={piece.title} summary={piece.summary || ''} className="justify-center" />
-      </div>
-      {piece.tags && piece.tags.length > 0 && (
-        <div className="mt-16 pt-8 border-t border-border flex justify-center gap-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-          {piece.tags.map(t => <span key={t}>#{t}</span>)}
-        </div>
-      )}
-      <InkComments pieceId={piece.id} />
-    </motion.div>
-  </article>
-);
+// PoetryView is now handled by PoetryLayoutRenderer component
+
 
 const ReportView = ({ piece, renderContent, readingTime }: ViewProps) => (
   <article className="container mx-auto px-6 max-w-5xl">

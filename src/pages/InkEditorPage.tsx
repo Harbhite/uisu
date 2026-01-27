@@ -14,6 +14,7 @@ import { Json } from '@/integrations/supabase/types';
 import { SEO } from '@/components/SEO';
 import { useAutosave, calculateWordCount, calculateReadingTime } from '@/hooks/useAutosave';
 import { InkPreviewModal } from '@/components/InkPreviewModal';
+import { PoetryLayoutSelector, PoetryLayout } from '@/components/PoetryLayoutSelector';
 
 const EditorJSComponent = lazy(() => import('@/components/EditorJS'));
 
@@ -28,6 +29,7 @@ interface FormData {
   tags: string;
   is_published: boolean;
   cover_image: string | null;
+  poetry_layout: PoetryLayout;
 }
 
 // Helper to safely convert Json to OutputData
@@ -56,7 +58,8 @@ const defaultFormData: FormData = {
   summary: '',
   tags: '',
   is_published: false,
-  cover_image: null
+  cover_image: null,
+  poetry_layout: 'classic'
 };
 
 const InkEditorPage: React.FC = () => {
@@ -106,7 +109,8 @@ const InkEditorPage: React.FC = () => {
         tags: tagsArray,
         is_published: data.formData.is_published,
         user_id: data.userId,
-        cover_image: data.formData.cover_image
+        cover_image: data.formData.cover_image,
+        poetry_layout: data.formData.type === 'Poetry' ? data.formData.poetry_layout : null
       };
 
       if (data.pieceId) {
@@ -203,7 +207,8 @@ const InkEditorPage: React.FC = () => {
           summary: piece.summary || '',
           tags: (piece.tags || []).join(', '),
           is_published: piece.is_published || false,
-          cover_image: piece.cover_image || null
+          cover_image: piece.cover_image || null,
+          poetry_layout: (piece.poetry_layout as PoetryLayout) || 'classic'
         });
       }
 
@@ -285,7 +290,8 @@ const InkEditorPage: React.FC = () => {
         tags: tagsArray,
         is_published: publish ? true : formData.is_published,
         user_id: user.id,
-        cover_image: formData.cover_image
+        cover_image: formData.cover_image,
+        poetry_layout: formData.type === 'Poetry' ? formData.poetry_layout : null
       };
 
       if (id) {
@@ -564,6 +570,17 @@ const InkEditorPage: React.FC = () => {
                     </button>
                   )}
                 </div>
+
+                {/* Poetry Layout Selector - Only show for Poetry type */}
+                {formData.type === 'Poetry' && (
+                  <div className="pt-4 border-t border-border">
+                    <Label className="text-xs font-medium text-muted-foreground mb-3 block">Poetry Layout</Label>
+                    <PoetryLayoutSelector
+                      value={formData.poetry_layout}
+                      onChange={(layout) => setFormData({ ...formData, poetry_layout: layout })}
+                    />
+                  </div>
+                )}
               </div>
             </details>
           </div>
