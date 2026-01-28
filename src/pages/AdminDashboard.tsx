@@ -1367,7 +1367,7 @@ const AdminDashboard = () => {
       <SEO
         title="Admin Dashboard"
         description="Manage events, announcements, documents, clubs, and more."
-        image="/screenshots/admin-dashboard.png"
+        image="/og/pages-screenshot/admin-dashboard.png"
       />
       <div className="container mx-auto px-6">
         {/* Back Navigation */}

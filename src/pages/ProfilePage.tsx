@@ -262,7 +262,7 @@ const ProfilePage = () => {
       <SEO
         title={`${profile.full_name || 'User'} | UISU SPACE`}
         description={profile.bio || `View ${profile.full_name}'s profile and published pieces`}
-        image={profile.avatar_url || '/screenshots/profile.png'}
+        image={profile.avatar_url || '/og/pages-screenshot/profile.png'}
       />
       
       <div className="min-h-screen bg-background">

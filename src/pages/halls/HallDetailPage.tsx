@@ -303,8 +303,9 @@ const HallDetailPage = () => {
   return (
     <div className="min-h-screen bg-slate-50">
       <SEO
-        title={`${hall.name} - UISU Archive`}
+        title={`${hall.name} - UISU SPACE`}
         description={hall.description || ''}
+        image="/og/pages-screenshot/hall-detail.png"
       />
 
       {/* Hero Section */}

@@ -15,7 +15,7 @@ const ResourcePageLayout: React.FC<ResourcePageLayoutProps> = ({ title, descript
 
   return (
     <div className="min-h-screen bg-slate-50 pt-32 pb-16">
-      <SEO title={`${title} - Resources`} description={description} />
+      <SEO title={`${title} - Resources`} description={description} image="/og/pages-screenshot/resources.png" />
 
       <div className="container mx-auto px-6">
         <button

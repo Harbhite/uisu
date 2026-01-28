@@ -69,8 +69,8 @@ const UnsubscribePage = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <SEO 
-        title="Unsubscribe — UISU Archive"
-        description="Unsubscribe from the UISU Archive newsletter"
+        title="Unsubscribe — UISU SPACE"
+        description="Unsubscribe from the UISU SPACE newsletter"
       />
       
       <div className="max-w-md w-full">
@@ -84,7 +84,7 @@ const UnsubscribePage = () => {
             />
           </Link>
           <p className="text-xs uppercase tracking-[0.3em] text-primary font-medium">
-            UISU Archive Newsletter
+            UISU SPACE Newsletter
           </p>
         </div>
 
@@ -112,7 +112,7 @@ const UnsubscribePage = () => {
                 {email}
               </p>
               <p className="text-sm text-muted-foreground mb-8">
-                You will no longer receive updates about the UISU Archive, including announcements, 
+                You will no longer receive updates about UISU SPACE, including announcements, 
                 historical discoveries, and community news.
               </p>
               
@@ -214,7 +214,7 @@ const UnsubscribePage = () => {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-xs text-muted-foreground">
-            UISU Archive • University of Ibadan Students' Union
+            UISU SPACE • University of Ibadan Students' Union
           </p>
         </div>
       </div>
