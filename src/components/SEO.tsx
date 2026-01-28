@@ -1,5 +1,15 @@
 import { Helmet } from 'react-helmet-async';
 
+interface BreadcrumbItem {
+  name: string;
+  url: string;
+}
+
+interface FAQItem {
+  question: string;
+  answer: string;
+}
+
 interface SEOProps {
   title: string;
   description: string;
@@ -8,6 +18,8 @@ interface SEOProps {
   type?: string;
   author?: string;
   publishedTime?: string;
+  breadcrumbs?: BreadcrumbItem[];
+  faq?: FAQItem[];
 }
 
 const SITE_URL = 'https://uisu.space';
@@ -63,7 +75,9 @@ export const SEO = ({
   url,
   type = 'website',
   author,
-  publishedTime
+  publishedTime,
+  breadcrumbs,
+  faq
 }: SEOProps) => {
   const siteTitle = 'UISU SPACE';
   const fullTitle = title === siteTitle ? title : `${title} | ${siteTitle}`;
@@ -102,6 +116,32 @@ export const SEO = ({
         "url": `${SITE_URL}/uisu-logo.png`
       }
     }
+  } : null;
+
+  // Breadcrumb structured data
+  const breadcrumbSchema = breadcrumbs && breadcrumbs.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": breadcrumbs.map((item, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "name": item.name,
+      "item": item.url.startsWith('http') ? item.url : `${SITE_URL}${item.url}`
+    }))
+  } : null;
+
+  // FAQ structured data
+  const faqSchema = faq && faq.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faq.map(item => ({
+      "@type": "Question",
+      "name": item.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": item.answer
+      }
+    }))
   } : null;
 
   return (
@@ -152,6 +192,20 @@ export const SEO = ({
       {articleSchema && (
         <script type="application/ld+json">
           {JSON.stringify(articleSchema)}
+        </script>
+      )}
+
+      {/* Structured Data - Breadcrumbs */}
+      {breadcrumbSchema && (
+        <script type="application/ld+json">
+          {JSON.stringify(breadcrumbSchema)}
+        </script>
+      )}
+
+      {/* Structured Data - FAQ */}
+      {faqSchema && (
+        <script type="application/ld+json">
+          {JSON.stringify(faqSchema)}
         </script>
       )}
     </Helmet>

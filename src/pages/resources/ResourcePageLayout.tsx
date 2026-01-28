@@ -15,7 +15,16 @@ const ResourcePageLayout: React.FC<ResourcePageLayoutProps> = ({ title, descript
 
   return (
     <div className="min-h-screen bg-slate-50 pt-32 pb-16">
-      <SEO title={`${title} - Resources`} description={description} image="/og/pages-screenshot/resources.png" />
+      <SEO 
+        title={`${title} - Resources`} 
+        description={description} 
+        image="/og/pages-screenshot/resources.png" 
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Resources', url: '/resources' },
+          { name: title, url: `/resources/${title.toLowerCase().replace(/\s+/g, '-')}` }
+        ]}
+      />
 
       <div className="container mx-auto px-6">
         <button
