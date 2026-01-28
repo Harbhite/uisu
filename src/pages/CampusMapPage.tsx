@@ -28,7 +28,7 @@ const CampusMapPage = () => {
       <SEO
         title="Campus Map | UI Halls of Residence & Locations"
         description="Interactive map of University of Ibadan campus. Navigate 12+ halls of residence (Kuti, Tedder, Queen's), academic buildings, and landmarks. Find your way around Nigeria's premier university."
-        image="/screenshots/campus-map.png"
+        image="/og/og-campus-map.png"
       />
       
       {/* Header */}
@@ -46,7 +46,7 @@ const CampusMapPage = () => {
             </Link>
             <div className="flex items-center gap-3">
               <img src="/uisu-logo.png" alt="UISU Logo" className="h-8 w-8 object-contain" />
-              <span className="font-serif text-lg font-bold text-ui-blue">UISU Archive</span>
+              <span className="font-serif text-lg font-bold text-ui-blue">UISU SPACE</span>
             </div>
           </div>
         </div>

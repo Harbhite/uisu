@@ -150,7 +150,7 @@ const AuthPage = () => {
         } else {
           toast({
             title: "Account Created!",
-            description: "Welcome to UISU Archive.",
+            description: "Welcome to UISU SPACE.",
           });
         }
       }
@@ -201,8 +201,8 @@ const AuthPage = () => {
     <div className="min-h-screen bg-background pt-32 pb-16">
       <SEO
         title="Sign In"
-        description="Sign in or create an account to access UISU Archive features, contribute to the Inks Vault, and stay connected with the student union."
-        image="/screenshots/auth.png"
+        description="Sign in or create an account to access UISU SPACE features, contribute to the Inks Vault, and stay connected with the student union."
+        image="/og/og-auth.png"
       />
       <div className="container mx-auto px-6">
         <button 

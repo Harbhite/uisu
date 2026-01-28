@@ -372,9 +372,9 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-nobel-gold selection:text-white overflow-x-hidden">
       <SEO
-        title="UISU Archive"
-        description="The official digital archive and management platform for the University of Ibadan Students' Union (UISU). Preserving legacy, celebrating leadership."
-        image="/screenshots/index.png"
+        title="UISU SPACE"
+        description="The official digital space of the University of Ibadan Students' Union (UISU). Preserving legacy, celebrating leadership, powering the future."
+        image="/og/og-home.png"
       />
       
       {/* Marquee Banner */}

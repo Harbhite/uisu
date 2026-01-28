@@ -10,7 +10,7 @@ const CurrentLeadersPage = () => {
       <SEO
         title="Current Student Leaders | UISU Executive & Legislature 2024/25"
         description="Meet the serving UI Students' Union executives, SRC legislators, and hall majority leaders. Contact your representatives, view portfolios, and connect with student government."
-        image="/screenshots/current-leaders.png"
+        image="/og/og-leaders.png"
       />
       <CurrentLeadersContent onBack={() => navigate("/")} />
     </>

@@ -22,7 +22,7 @@ export const SEO = ({
   author,
   publishedTime
 }: SEOProps) => {
-  const siteTitle = 'UISU Archive';
+  const siteTitle = 'UISU SPACE';
   const fullTitle = title === siteTitle ? title : `${title} | ${siteTitle}`;
 
   // Ensure absolute URL for image - use production domain
@@ -50,7 +50,7 @@ export const SEO = ({
             <meta property="og:type" content={type} />
       <meta property="og:image" content={imageUrl} />
             <meta property="og:url" content={pageUrl} />
-      <meta property="og:site_name" content="UISU Archive" />
+      <meta property="og:site_name" content="UISU SPACE" />
 
       {/* Article specific */}
       {type === 'article' && author && (

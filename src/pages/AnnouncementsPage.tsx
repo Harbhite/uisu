@@ -10,7 +10,7 @@ const AnnouncementsPage = () => {
       <SEO
         title="Official Announcements | UISU News & Updates"
         description="Get the latest official news from UI Students' Union: policy updates, election notices, academic calendar changes, and important campus announcements. Stay informed, Uite."
-        image="/screenshots/announcements.png"
+        image="/og/og-announcements.png"
       />
       <AnnouncementsComponent onBack={() => navigate("/")} />
     </>

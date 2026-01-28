@@ -59,6 +59,7 @@ const HallsPage = () => {
       <SEO
         title="The Republics - Halls of Residence"
         description="Explore the Halls of Residence of the University of Ibadan. The autonomous republics within the union."
+        image="/og/og-campus-map.png"
       />
       <div className="container mx-auto px-6">
         <button

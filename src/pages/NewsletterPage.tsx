@@ -41,8 +41,9 @@ const NewsletterPage = () => {
   return (
     <div className="min-h-screen bg-nobel-cream flex flex-col">
       <SEO
-        title="Subscribe to the Archive Newsletter"
-        description="Get foundational documents, historical updates, and union news delivered directly to your inbox."
+        title="The Dispatch | UISU Newsletter"
+        description="Piping hot updates from the Union—history, drama, and everything in between. No spam, just substance. Join 2,000+ Uites."
+        image="/newsletter-logo.png"
       />
 
       {/* Header */}
@@ -63,12 +64,12 @@ const NewsletterPage = () => {
           className="flex-1 flex flex-col justify-center"
         >
           <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl xl:text-7xl leading-[1.1] text-ui-blue mb-6 lg:mb-8">
-            From the halls of history to the pulse of now.{" "}
-            <span className="italic text-nobel-gold">The Union speaks.</span>
+            History's still being written.{" "}
+            <span className="italic text-nobel-gold">You in?</span>
           </h1>
           
           <p className="text-ui-blue/70 text-base md:text-lg mb-8 lg:mb-12 max-w-xl">
-            Sign up below to receive foundational documents, historical updates, and union news delivered directly to your inbox.
+            The good stuff—archives, updates, and Union lore—delivered when it matters. No noise, just the real ones.
           </p>
 
           {/* Form */}
@@ -91,7 +92,7 @@ const NewsletterPage = () => {
                 to="/" 
                 className="inline-flex items-center gap-2 mt-6 text-sm font-bold text-ui-blue hover:text-nobel-gold transition-colors"
               >
-                Explore the Archive <ArrowRight size={14} />
+                Explore UISU SPACE <ArrowRight size={14} />
               </Link>
             </motion.div>
           ) : (
@@ -136,12 +137,12 @@ const NewsletterPage = () => {
           className="hidden lg:flex flex-1 items-center justify-center"
         >
           <div className="relative">
-            {/* Decorative circle with logo */}
+            {/* Decorative circle with gold logo */}
             <div className="w-64 h-64 xl:w-80 xl:h-80 rounded-full bg-gradient-to-br from-ui-blue via-ui-blue/80 to-nobel-gold/60 flex items-center justify-center shadow-2xl">
               <img 
-                src="/uisu-logo.png" 
-                alt="UISU Logo" 
-                className="w-32 h-32 xl:w-40 xl:h-40 object-contain opacity-90 filter brightness-0 invert"
+                src="/newsletter-logo.png" 
+                alt="UISU Newsletter" 
+                className="w-32 h-32 xl:w-40 xl:h-40 object-contain"
               />
             </div>
             
@@ -157,7 +158,7 @@ const NewsletterPage = () => {
       <footer className="px-6 md:px-12 py-8 border-t border-ui-blue/10">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ui-blue/50">
           <Link to="/" className="hover:text-ui-blue transition-colors">
-            ← Back to The Archive
+            ← Back to UISU SPACE
           </Link>
           <span>© {new Date().getFullYear()} University of Ibadan Students' Union</span>
         </div>
