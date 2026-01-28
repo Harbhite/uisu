@@ -260,7 +260,7 @@ const ProfilePage = () => {
   return (
     <>
       <SEO
-        title={`${profile.full_name || 'User'} | UISU`}
+        title={`${profile.full_name || 'User'} | UISU SPACE`}
         description={profile.bio || `View ${profile.full_name}'s profile and published pieces`}
         image={profile.avatar_url || '/screenshots/profile.png'}
       />

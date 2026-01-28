@@ -10,7 +10,7 @@ const GovernancePage = () => {
       <SEO
         title="Governance Structure | UISU Executive & Legislature"
         description="Learn how UI Students' Union operates: Executive Council, Students' Representative Council (SRC), Judicial Council, and committee structures. Understand the first student union in Nigeria."
-        image="/screenshots/governance.png"
+        image="/og/og-governance.png"
       />
       <GovernanceContent onBack={() => navigate("/")} />
     </>

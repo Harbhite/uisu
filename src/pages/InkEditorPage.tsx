@@ -394,7 +394,7 @@ const InkEditorPage: React.FC = () => {
       <SEO
         title={id ? 'Edit Piece' : 'New Piece'}
         description="Write and publish your content to the Inks Vault."
-        image={id ? '/screenshots/ink-editor-edit.png' : '/screenshots/ink-editor-new.png'}
+        image="/og/og-inks-vault.png"
       />
 
       {/* Preview Modal */}
