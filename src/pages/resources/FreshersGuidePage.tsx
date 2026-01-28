@@ -148,11 +148,19 @@ const FreshersGuidePage = () => {
     faq.a.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const faqStructuredData = faqs.map(f => ({ question: f.q, answer: f.a }));
+
   return (
     <div className="min-h-screen bg-slate-50 pt-32 pb-20">
       <SEO 
         title="Fresher's Guide - Resources" 
         description="Everything you need to know as a new student at the University of Ibadan." 
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Resources', url: '/resources' },
+          { name: "Fresher's Guide", url: '/resources/freshers-guide' }
+        ]}
+        faq={faqStructuredData}
       />
 
       <div className="container mx-auto px-6">

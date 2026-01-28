@@ -118,6 +118,10 @@ const ResourcesPage = () => {
         title="Student Resources"
         description="Access a wealth of resources including academic materials, career tips, scholarships, and more."
         image="/og/pages-screenshot/resources.png"
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Resources', url: '/resources' }
+        ]}
       />
 
       <div className="container mx-auto px-6 lg:px-12 max-w-6xl">
