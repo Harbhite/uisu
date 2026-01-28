@@ -1,11 +1,12 @@
 import React, { useState, useEffect, lazy, Suspense, useCallback, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, Eye, Trash2, ImagePlus, X, BookOpen, ChevronDown, Clock, FileText } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Eye, Trash2, ImagePlus, X, BookOpen, ChevronDown, Clock, FileText, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
@@ -15,6 +16,8 @@ import { SEO } from '@/components/SEO';
 import { useAutosave, calculateWordCount, calculateReadingTime } from '@/hooks/useAutosave';
 import { InkPreviewModal } from '@/components/InkPreviewModal';
 import { PoetryLayoutSelector, PoetryLayout } from '@/components/PoetryLayoutSelector';
+import { PoetryEditor, PoetryStanza } from '@/components/PoetryEditor';
+import { PoetryCoverGenerator } from '@/components/PoetryCoverGenerator';
 
 const EditorJSComponent = lazy(() => import('@/components/EditorJS'));
 
@@ -573,12 +576,40 @@ const InkEditorPage: React.FC = () => {
 
                 {/* Poetry Layout Selector - Only show for Poetry type */}
                 {formData.type === 'Poetry' && (
-                  <div className="pt-4 border-t border-border">
-                    <Label className="text-xs font-medium text-muted-foreground mb-3 block">Poetry Layout</Label>
-                    <PoetryLayoutSelector
-                      value={formData.poetry_layout}
-                      onChange={(layout) => setFormData({ ...formData, poetry_layout: layout })}
-                    />
+                  <div className="pt-4 border-t border-border space-y-6">
+                    <div>
+                      <Label className="text-xs font-medium text-muted-foreground mb-3 block">Poetry Layout</Label>
+                      <PoetryLayoutSelector
+                        value={formData.poetry_layout}
+                        onChange={(layout) => setFormData({ ...formData, poetry_layout: layout })}
+                      />
+                    </div>
+                    
+                    {/* Cover Image Generator */}
+                    <div className="pt-4 border-t border-border">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="w-full">
+                            <ImageIcon size={14} className="mr-2" />
+                            Generate Cover Image
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>Create Poetry Cover</DialogTitle>
+                          </DialogHeader>
+                          <PoetryCoverGenerator
+                            title={formData.title || 'Untitled'}
+                            authorName={formData.author_name || 'Anonymous'}
+                            coverImage={formData.cover_image}
+                            onGenerated={(url) => {
+                              // Could save to storage and set as cover_image if needed
+                              toast.success('Cover generated!');
+                            }}
+                          />
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                   </div>
                 )}
               </div>
