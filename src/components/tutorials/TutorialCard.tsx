@@ -1,77 +1,101 @@
 import { Tutorial, Tutor } from '@/lib/tutorials-data';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlayCircle, FileText, Mic, BookOpen, Star } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { PlayCircle, Mic, FileText, BookOpen, Clock, BarChart } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
 
 interface TutorialCardProps {
   tutorial: Tutorial;
-  tutor?: Tutor;
+  tutor?: Tutor; // Make it optional to prevent crashes if not found, though logic depends on it
   className?: string;
 }
 
-const FormatIcon = ({ format }: { format: Tutorial['format'] }) => {
-  switch (format) {
-    case 'Video': return <PlayCircle size={14} />;
-    case 'Audio': return <Mic size={14} />;
-    case 'Text': return <FileText size={14} />;
-    case 'Essay': return <BookOpen size={14} />;
-    default: return <FileText size={14} />;
-  }
+const formatIcon = {
+  Video: PlayCircle,
+  Audio: Mic,
+  Text: FileText,
+  Essay: BookOpen,
 };
 
 const TutorialCard = ({ tutorial, tutor, className }: TutorialCardProps) => {
+  const Icon = formatIcon[tutorial.format];
+
+  // Fallback for tutor name if undefined (though it should be passed)
+  const tutorName = tutor?.name || "Unknown Tutor";
+
   return (
-    <Link to={`/tutorials/${tutorial.id}`} className="block h-full">
-      <Card className={cn("h-full hover:shadow-xl transition-all duration-300 border border-slate-200 overflow-hidden group rounded-none bg-white hover:border-nobel-gold/50", className)}>
-        <div className="relative h-48 bg-slate-100 overflow-hidden">
-           {/* Placeholder Gradient or Image */}
-           <div className={cn(
-             "absolute inset-0 bg-gradient-to-br transition-transform duration-700 group-hover:scale-105",
-             tutorial.format === 'Video' ? "from-ui-blue to-slate-900" :
-             tutorial.format === 'Audio' ? "from-purple-900 to-slate-900" :
-             "from-slate-800 to-black"
-           )} />
+    <Link to={`/tutorials/${tutorial.id}`}>
+      <Card className={cn(
+        "group h-full flex flex-col rounded-none transition-all duration-500 overflow-hidden",
+        "bg-white/80 backdrop-blur-md border border-white/20 hover:border-nobel-gold/50 shadow-sm hover:shadow-2xl hover:-translate-y-1",
+        className
+      )}>
+        {/* Thumbnail Section with Overlay */}
+        <div className="relative aspect-video overflow-hidden bg-ui-dark">
+          {/* Placeholder for real image or fallback */}
+          <div className="w-full h-full bg-slate-200 flex items-center justify-center">
+             <img
+               src={tutorial.coverImage}
+               alt={tutorial.title}
+               className="w-full h-full object-cover opacity-80 group-hover:opacity-60 group-hover:scale-105 transition-all duration-700"
+               onError={(e) => { e.currentTarget.style.display = 'none'; }}
+             />
+             <div className="absolute inset-0 flex items-center justify-center text-slate-400">
+                <Icon size={48} opacity={0.2} />
+             </div>
+          </div>
 
-           <div className="absolute top-0 left-0 p-3 w-full flex justify-between items-start">
-             <Badge variant="secondary" className="bg-black/50 hover:bg-black/70 text-white border border-white/10 backdrop-blur-md gap-1 rounded-none text-[10px] uppercase tracking-wider font-bold">
-               <FormatIcon format={tutorial.format} />
-               {tutorial.format}
-             </Badge>
+          <div className="absolute inset-0 bg-gradient-to-t from-ui-dark via-transparent to-transparent opacity-90" />
 
-              <Badge variant="outline" className="text-white border-white/20 bg-black/20 backdrop-blur-sm rounded-none text-[10px] uppercase tracking-wider font-bold">
-                {tutorial.level}
-              </Badge>
-           </div>
+          <Badge className="absolute top-4 left-4 bg-ui-blue/90 backdrop-blur-md text-white border border-white/10 rounded-none uppercase tracking-widest text-[10px] font-bold px-3 py-1.5 shadow-lg">
+            <Icon size={12} className="mr-2 text-nobel-gold" />
+            {tutorial.format}
+          </Badge>
+
+          <Badge className="absolute top-4 right-4 bg-transparent text-white border border-white/30 rounded-none uppercase tracking-widest text-[10px] font-bold px-2 py-1 backdrop-blur-md">
+            {tutorial.level}
+          </Badge>
+
+          {/* Conical Gradient Play Button Overlay on Hover */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+             <div className="w-16 h-16 rounded-full bg-[conic-gradient(from_90deg_at_50%_50%,_var(--tw-gradient-stops))] from-nobel-gold via-white to-nobel-gold p-[1px] animate-spin-slow">
+                <div className="w-full h-full bg-ui-dark rounded-full flex items-center justify-center">
+                   <Icon size={32} className="text-white fill-current" />
+                </div>
+             </div>
+          </div>
         </div>
 
-        <CardHeader className="p-6 pb-2">
-          <h3 className="font-serif text-xl font-bold text-ui-blue leading-tight line-clamp-2 group-hover:text-nobel-gold transition-colors">
-            {tutorial.title}
-          </h3>
-          {tutor && (
-            <div className="flex items-center gap-2 mt-3">
-              <div className="w-6 h-6 bg-slate-200 border border-slate-100 overflow-hidden">
-                <img src={tutor.avatar} alt={tutor.name} className="w-full h-full object-cover" />
-              </div>
-              <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">{tutor.name}</span>
-            </div>
-          )}
+        <CardHeader className="p-6 pb-2 space-y-2 flex-1 relative">
+           {/* Decorative Top Border Gradient */}
+           <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-nobel-gold/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+           <div className="flex items-center gap-2 text-nobel-gold text-xs font-bold tracking-widest uppercase mb-1">
+              <span className="w-2 h-2 bg-nobel-gold rounded-full inline-block" />
+              {tutorName}
+           </div>
+           <h3 className="font-serif text-xl font-bold text-ui-blue leading-tight group-hover:text-nobel-gold transition-colors line-clamp-2">
+             {tutorial.title}
+           </h3>
+           <p className="text-slate-500 text-xs line-clamp-2 leading-relaxed font-light mt-2">
+             {tutorial.description}
+           </p>
         </CardHeader>
 
-        <CardContent className="p-6 pt-2 pb-4">
-          <p className="text-sm text-slate-500 line-clamp-2 font-light leading-relaxed">{tutorial.description}</p>
-        </CardContent>
-
-        <CardFooter className="p-6 pt-0 flex justify-between items-center text-xs text-slate-400 border-t border-slate-50 mt-auto">
-          <div className="flex items-center gap-1 mt-4">
-            <Star size={12} className="text-nobel-gold fill-current" />
-            <span className="font-bold text-slate-700">{tutorial.rating}</span>
-            <span className="mx-2 text-slate-300">|</span>
-            <span>{tutorial.studentsCount} students</span>
+        <CardFooter className="p-6 pt-4 border-t border-slate-100/50 flex items-center justify-between text-xs text-slate-400 font-medium">
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1.5 hover:text-ui-blue transition-colors">
+              <Clock size={14} className="text-nobel-gold" />
+              {/* Calculate duration roughly or from modules if needed, or use mock */}
+              {tutorial.modules.length * 10} mins
+            </span>
+            <span className="flex items-center gap-1.5 hover:text-ui-blue transition-colors">
+               <BarChart size={14} className="text-nobel-gold" />
+               {tutorial.studentsCount}
+            </span>
           </div>
-          <div className="mt-4 font-mono text-[10px] uppercase">
+          <div className="font-mono text-[10px] uppercase text-slate-300 group-hover:text-ui-blue transition-colors">
             {tutorial.modules.length} modules
           </div>
         </CardFooter>

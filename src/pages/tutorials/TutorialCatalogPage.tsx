@@ -21,25 +21,29 @@ const TutorialCatalogPage = () => {
   });
 
   return (
-    <div className="space-y-8">
-      <div className="border-b border-slate-200 pb-8">
+    <div className="space-y-8 pb-12">
+      <div className="border-b border-slate-200/60 pb-8 relative">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-ui-blue/5 rounded-full blur-3xl -z-10 pointer-events-none" />
         <h1 className="text-4xl font-serif font-bold text-ui-blue mb-3">Browse Catalog</h1>
-        <p className="text-slate-500 font-light text-lg">Find the perfect tutorial for your needs from our extensive library.</p>
+        <p className="text-slate-500 font-light text-lg max-w-2xl">Find the perfect tutorial for your needs from our extensive library of academic and practical resources.</p>
       </div>
 
-      {/* Filters & Search */}
-      <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between bg-white p-6 border border-slate-200 shadow-sm">
-        <div className="relative w-full md:w-96 group">
+      {/* Filters & Search - Glassmorphic Container */}
+      <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between bg-white/60 backdrop-blur-md p-6 border border-white/40 shadow-lg relative overflow-hidden rounded-none">
+        {/* Subtle decorative gradient line */}
+        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-nobel-gold/50 to-transparent opacity-50" />
+
+        <div className="relative w-full md:w-96 group z-10">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-nobel-gold transition-colors" size={18} />
           <Input
             placeholder="Search tutorials..."
-            className="pl-12 border-slate-200 bg-slate-50 rounded-none h-12 focus-visible:ring-1 focus-visible:ring-nobel-gold focus-visible:border-nobel-gold transition-all font-light"
+            className="pl-12 border-slate-200/80 bg-white/50 rounded-none h-12 focus-visible:ring-1 focus-visible:ring-nobel-gold focus-visible:border-nobel-gold transition-all font-light placeholder:text-slate-400 text-slate-700 hover:bg-white"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 z-10">
            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 mr-2">
              <Filter size={14} />
              <span>Filters</span>
@@ -48,7 +52,11 @@ const TutorialCatalogPage = () => {
              <Badge
                key={fmt}
                variant={selectedFormat === fmt ? "default" : "outline"}
-               className={`cursor-pointer rounded-none px-4 py-2 text-[10px] uppercase tracking-wider font-bold transition-all ${selectedFormat === fmt ? 'bg-ui-blue hover:bg-ui-dark' : 'hover:bg-slate-50 hover:border-nobel-gold'}`}
+               className={`cursor-pointer rounded-none px-4 py-2 text-[10px] uppercase tracking-wider font-bold transition-all border ${
+                 selectedFormat === fmt
+                   ? 'bg-ui-blue text-white border-ui-blue shadow-md hover:bg-ui-dark'
+                   : 'bg-white/50 border-slate-200 hover:border-nobel-gold hover:text-ui-blue hover:bg-white'
+               }`}
                onClick={() => setSelectedFormat(selectedFormat === fmt ? null : fmt)}
              >
                {fmt}
@@ -65,7 +73,7 @@ const TutorialCatalogPage = () => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-24 bg-white border border-slate-200 border-dashed">
+        <div className="text-center py-24 bg-white/40 backdrop-blur-sm border border-slate-200/60 border-dashed">
           <div className="text-slate-300 mb-6 flex justify-center"><Search size={64} /></div>
           <p className="text-slate-500 text-lg mb-4 font-light">No tutorials found matching your criteria.</p>
           <Button variant="link" className="text-nobel-gold uppercase tracking-widest font-bold text-xs" onClick={() => { setSearchQuery(''); setSelectedFormat(null); setSelectedCategory(null); }}>
