@@ -68,7 +68,7 @@ const StudentFigure = () => {
             </mesh>
             <mesh position={[0, 1, 0]} scale={0.5}>
                 <sphereGeometry args={[1, 16, 16]} />
-                <meshStandardMaterial color="#003366" />
+                <meshStandardMaterial color="#705CD7" />
             </mesh>
         </group>
     )

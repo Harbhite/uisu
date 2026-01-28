@@ -68,7 +68,7 @@ const ProfileCardPage = () => {
                 onContactClick={() => console.log("Contact clicked")}
                 avatarUrl="/screenshots/index.png" // Using a placeholder for now
                 miniAvatarUrl="/uisu-logo.png"
-                innerGradient="linear-gradient(135deg, #002244 0%, #003366 100%)"
+                innerGradient="linear-gradient(135deg, #002244 0%, #705CD7 100%)"
                 behindGlowColor="#C5A059"
             />
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 
-const DEFAULT_INNER_GRADIENT = 'linear-gradient(145deg, #002244 0%, #003366 100%)'; // Adjusted to UI dark/blue
+const DEFAULT_INNER_GRADIENT = 'linear-gradient(145deg, #002244 0%, #705CD7 100%)'; // Adjusted to UI dark/blue
 
 const ANIMATION_CONFIG = {
   INITIAL_DURATION: 1200,

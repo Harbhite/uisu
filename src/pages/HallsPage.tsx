@@ -122,7 +122,7 @@ const HallsPage = () => {
                                 whileHover={{ y: -6, scale: 1.02 }}
                                 className="relative overflow-hidden group cursor-pointer h-full shadow-lg hover:shadow-2xl transition-all duration-500"
                                 style={{
-                                    backgroundColor: hall.color || '#003366',
+                                    backgroundColor: hall.color || '#705CD7',
                                 }}
                             >
                                 <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-transparent to-black/30"></div>

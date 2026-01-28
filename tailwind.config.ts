@@ -24,7 +24,7 @@ export default {
           cream: '#F9F8F4',
         },
         ui: {
-          blue: '#003366',
+          blue: '#705CD7',
           dark: '#002244',
         },
         border: "hsl(var(--border))",

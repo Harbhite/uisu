@@ -160,7 +160,7 @@ const StyleGuidePage: React.FC = () => {
     const styleContent = [
       '/* UISU Archive Design System - Exported Stylesheet */',
       ':root {',
-      '  --ui-blue: #003366;',
+      '  --ui-blue: #705CD7;',
       '  --nobel-gold: #C5A059;',
       '  --ui-dark: #001F3D;',
       '  --nobel-cream: #FAF9F7;',
@@ -206,7 +206,7 @@ const StyleGuidePage: React.FC = () => {
       '    <section style="margin-bottom: 3rem;">',
       '      <h2 class="font-serif text-primary" style="font-size: 1.5rem; margin-bottom: 1rem;">Colors</h2>',
       '      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">',
-      '        <div class="card"><div style="height: 80px; background: var(--ui-blue);"></div><p class="font-serif">UI Blue #003366</p></div>',
+      '        <div class="card"><div style="height: 80px; background: var(--ui-blue);"></div><p class="font-serif">UI Blue #705CD7</p></div>',
       '        <div class="card"><div style="height: 80px; background: var(--nobel-gold);"></div><p class="font-serif">Nobel Gold #C5A059</p></div>',
       '        <div class="card"><div style="height: 80px; background: var(--ui-dark);"></div><p class="font-serif">UI Dark #001F3D</p></div>',
       '        <div class="card"><div style="height: 80px; background: var(--nobel-cream); border: 1px solid var(--slate-200);"></div><p class="font-serif">Nobel Cream #FAF9F7</p></div>',
@@ -284,7 +284,7 @@ const StyleGuidePage: React.FC = () => {
     { name: 'Electoral', value: 20 }
   ]);
 
-  const pieColors = ['#003366', '#C5A059', '#1E293B', '#64748b'];
+  const pieColors = ['#705CD7', '#C5A059', '#1E293B', '#64748b'];
 
   return (
     <div className="min-h-screen bg-slate-50 selection:bg-accent selection:text-white print:bg-white">
@@ -360,11 +360,11 @@ const StyleGuidePage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-24">
             <ColorBox 
               name="UI Blue" 
-              hex="#003366" 
+              hex="#705CD7"
               usage="Primary Framework, Navigation, High-Hierarchy Text"
               variants={[
                 { name: "Blue Dark", hex: "#002244" },
-                { name: "Blue Soft", hex: "#003366CC" }
+                { name: "Blue Soft", hex: "#705CD7CC" }
               ]}
             />
             <ColorBox 
@@ -571,10 +571,10 @@ const data = [
     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
     <XAxis dataKey="n" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
     <Tooltip 
-      contentStyle={{ background: '#003366', border: 'none', color: '#C5A059' }}
+      contentStyle={{ background: '#705CD7', border: 'none', color: '#C5A059' }}
       labelStyle={{ color: '#fff' }}
     />
-    <Bar dataKey="v" fill="#003366" cursor="pointer" />
+    <Bar dataKey="v" fill="#705CD7" cursor="pointer" />
   </BarChart>
 </ResponsiveContainer>`}>
               <div className="h-64 w-full">
@@ -583,10 +583,10 @@ const data = [
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
                     <XAxis dataKey="n" tick={{fontSize: 10, fill: '#64748b'}} axisLine={false} tickLine={false} />
                     <Tooltip 
-                      contentStyle={{ background: '#003366', border: 'none', color: '#C5A059', fontSize: 12 }}
+                      contentStyle={{ background: '#705CD7', border: 'none', color: '#C5A059', fontSize: 12 }}
                       labelStyle={{ color: '#fff', fontWeight: 'bold' }}
                     />
-                    <Bar dataKey="v" fill="#003366" cursor="pointer" onClick={(data: any) => alert(`Year: ${data.n}, Value: ${data.v}`)} />
+                    <Bar dataKey="v" fill="#705CD7" cursor="pointer" onClick={(data: any) => alert(`Year: ${data.n}, Value: ${data.v}`)} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -611,7 +611,7 @@ const data = [
       dataKey="v" 
       stroke="#C5A059" 
       strokeWidth={3} 
-      dot={{ fill: '#003366', strokeWidth: 2, r: 6, cursor: 'pointer' }}
+      dot={{ fill: '#705CD7', strokeWidth: 2, r: 6, cursor: 'pointer' }}
       activeDot={{ r: 8, fill: '#C5A059' }}
     />
   </LineChart>
@@ -628,7 +628,7 @@ const data = [
                       dataKey="v" 
                       stroke="#C5A059" 
                       strokeWidth={3} 
-                      dot={{fill:'#003366', strokeWidth:2, r:6, cursor: 'pointer'}} 
+                      dot={{fill:'#705CD7', strokeWidth:2, r:6, cursor: 'pointer'}}
                       activeDot={{ r: 8, fill: '#C5A059' }}
                     />
                     <XAxis dataKey="n" tick={{fontSize: 10, fill: '#64748b'}} axisLine={false} tickLine={false} />
@@ -646,7 +646,7 @@ const data = [
   { name: 'Judicial', value: 20 },
   { name: 'Electoral', value: 20 }
 ];
-const COLORS = ['#003366', '#C5A059', '#1E293B', '#64748b'];
+const COLORS = ['#705CD7', '#C5A059', '#1E293B', '#64748b'];
 
 <ResponsiveContainer width="100%" height={256}>
   <PieChart>
@@ -670,7 +670,7 @@ const COLORS = ['#003366', '#C5A059', '#1E293B', '#64748b'];
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Tooltip 
-                      contentStyle={{ background: '#003366', border: 'none', color: '#fff', fontSize: 12 }}
+                      contentStyle={{ background: '#705CD7', border: 'none', color: '#fff', fontSize: 12 }}
                     />
                     <Pie
                       data={pieData}
@@ -707,8 +707,8 @@ const data = [
     <Area 
       type="monotone" 
       dataKey="v" 
-      stroke="#003366" 
-      fill="#003366" 
+      stroke="#705CD7"
+      fill="#705CD7"
       fillOpacity={0.2}
     />
   </AreaChart>
@@ -719,10 +719,10 @@ const data = [
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
                     <XAxis dataKey="n" tick={{fontSize: 10, fill: '#64748b'}} axisLine={false} tickLine={false} />
                     <Tooltip 
-                      contentStyle={{ background: '#003366', border: 'none', color: '#C5A059', fontSize: 12 }}
+                      contentStyle={{ background: '#705CD7', border: 'none', color: '#C5A059', fontSize: 12 }}
                       labelStyle={{ color: '#fff', fontWeight: 'bold' }}
                     />
-                    <Area type="monotone" dataKey="v" stroke="#003366" fill="#003366" fillOpacity={0.2} />
+                    <Area type="monotone" dataKey="v" stroke="#705CD7" fill="#705CD7" fillOpacity={0.2} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>

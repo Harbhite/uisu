@@ -55,7 +55,7 @@ const CampusMapPage = () => {
       {/* Hero Section */}
       <section className="pt-16 pb-12 px-6 lg:px-12 bg-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-5 pointer-events-none" style={{
-          backgroundImage: 'radial-gradient(#003366 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(#705CD7 1px, transparent 1px)',
           backgroundSize: '30px 30px'
         }}></div>
         
