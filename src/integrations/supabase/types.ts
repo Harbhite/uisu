@@ -1136,6 +1136,340 @@ export type Database = {
         }
         Relationships: []
       }
+      tutor_applications: {
+        Row: {
+          bio: string
+          created_at: string | null
+          expertise: string[]
+          id: string
+          name: string
+          portfolio_url: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          bio: string
+          created_at?: string | null
+          expertise: string[]
+          id?: string
+          name: string
+          portfolio_url?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          bio?: string
+          created_at?: string | null
+          expertise?: string[]
+          id?: string
+          name?: string
+          portfolio_url?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tutorial_bookmarks: {
+        Row: {
+          created_at: string | null
+          id: string
+          tutorial_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          tutorial_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          tutorial_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutorial_bookmarks_tutorial_id_fkey"
+            columns: ["tutorial_id"]
+            isOneToOne: false
+            referencedRelation: "tutorials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tutorial_enrollments: {
+        Row: {
+          completed_at: string | null
+          enrolled_at: string | null
+          id: string
+          tutorial_id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          enrolled_at?: string | null
+          id?: string
+          tutorial_id: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          enrolled_at?: string | null
+          id?: string
+          tutorial_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutorial_enrollments_tutorial_id_fkey"
+            columns: ["tutorial_id"]
+            isOneToOne: false
+            referencedRelation: "tutorials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tutorial_modules: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          duration: string | null
+          id: string
+          is_locked: boolean | null
+          sort_order: number | null
+          title: string
+          tutorial_id: string
+          type: Database["public"]["Enums"]["tutorial_format"]
+          updated_at: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          duration?: string | null
+          id?: string
+          is_locked?: boolean | null
+          sort_order?: number | null
+          title: string
+          tutorial_id: string
+          type?: Database["public"]["Enums"]["tutorial_format"]
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          duration?: string | null
+          id?: string
+          is_locked?: boolean | null
+          sort_order?: number | null
+          title?: string
+          tutorial_id?: string
+          type?: Database["public"]["Enums"]["tutorial_format"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutorial_modules_tutorial_id_fkey"
+            columns: ["tutorial_id"]
+            isOneToOne: false
+            referencedRelation: "tutorials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tutorial_progress: {
+        Row: {
+          completed_at: string | null
+          id: string
+          module_id: string
+          tutorial_id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string
+          module_id: string
+          tutorial_id: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string
+          module_id?: string
+          tutorial_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutorial_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "tutorial_modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tutorial_progress_tutorial_id_fkey"
+            columns: ["tutorial_id"]
+            isOneToOne: false
+            referencedRelation: "tutorials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tutorial_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          id: string
+          rating: number
+          tutorial_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          rating: number
+          tutorial_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          rating?: number
+          tutorial_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutorial_reviews_tutorial_id_fkey"
+            columns: ["tutorial_id"]
+            isOneToOne: false
+            referencedRelation: "tutorials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tutorials: {
+        Row: {
+          cover_image: string | null
+          created_at: string | null
+          description: string | null
+          format: Database["public"]["Enums"]["tutorial_format"]
+          id: string
+          is_approved: boolean | null
+          is_published: boolean | null
+          level: Database["public"]["Enums"]["tutorial_level"]
+          rating: number | null
+          ratings_count: number | null
+          students_count: number | null
+          tags: string[] | null
+          title: string
+          tutor_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          cover_image?: string | null
+          created_at?: string | null
+          description?: string | null
+          format?: Database["public"]["Enums"]["tutorial_format"]
+          id?: string
+          is_approved?: boolean | null
+          is_published?: boolean | null
+          level?: Database["public"]["Enums"]["tutorial_level"]
+          rating?: number | null
+          ratings_count?: number | null
+          students_count?: number | null
+          tags?: string[] | null
+          title: string
+          tutor_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          cover_image?: string | null
+          created_at?: string | null
+          description?: string | null
+          format?: Database["public"]["Enums"]["tutorial_format"]
+          id?: string
+          is_approved?: boolean | null
+          is_published?: boolean | null
+          level?: Database["public"]["Enums"]["tutorial_level"]
+          rating?: number | null
+          ratings_count?: number | null
+          students_count?: number | null
+          tags?: string[] | null
+          title?: string
+          tutor_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutorials_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tutors: {
+        Row: {
+          avatar: string | null
+          bio: string | null
+          courses_count: number | null
+          created_at: string | null
+          id: string
+          is_verified: boolean | null
+          name: string
+          rating: number | null
+          students_count: number | null
+          tier: Database["public"]["Enums"]["tutor_tier"]
+          updated_at: string | null
+          user_id: string | null
+          verification_requested_at: string | null
+        }
+        Insert: {
+          avatar?: string | null
+          bio?: string | null
+          courses_count?: number | null
+          created_at?: string | null
+          id?: string
+          is_verified?: boolean | null
+          name: string
+          rating?: number | null
+          students_count?: number | null
+          tier?: Database["public"]["Enums"]["tutor_tier"]
+          updated_at?: string | null
+          user_id?: string | null
+          verification_requested_at?: string | null
+        }
+        Update: {
+          avatar?: string | null
+          bio?: string | null
+          courses_count?: number | null
+          created_at?: string | null
+          id?: string
+          is_verified?: boolean | null
+          name?: string
+          rating?: number | null
+          students_count?: number | null
+          tier?: Database["public"]["Enums"]["tutor_tier"]
+          updated_at?: string | null
+          user_id?: string | null
+          verification_requested_at?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -1184,6 +1518,9 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      tutor_tier: "Official" | "Verified" | "Community"
+      tutorial_format: "Video" | "Audio" | "Text" | "Essay"
+      tutorial_level: "Beginner" | "Intermediate" | "Advanced"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1312,6 +1649,9 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      tutor_tier: ["Official", "Verified", "Community"],
+      tutorial_format: ["Video", "Audio", "Text", "Essay"],
+      tutorial_level: ["Beginner", "Intermediate", "Advanced"],
     },
   },
 } as const
