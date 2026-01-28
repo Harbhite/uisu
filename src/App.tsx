@@ -55,6 +55,7 @@ const UploadTutorialPage = lazy(() => import("./pages/tutorials/UploadTutorialPa
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
 const UnsubscribePage = lazy(() => import("./pages/UnsubscribePage"));
+const NewsletterPage = lazy(() => import("./pages/NewsletterPage"));
 const queryClient = new QueryClient();
 
 const LoadingFallback = () => (
@@ -129,6 +130,7 @@ const AppRoutes = () => {
         
         {/* Newsletter */}
         <Route path="/unsubscribe" element={<PageWrapper><UnsubscribePage /></PageWrapper>} />
+        <Route path="/newsletter" element={<NewsletterPage />} />
 
         {/* Tutorials Ecosystem (Standalone Subdomain feel) */}
         <Route path="/tutorials" element={<TutorialsLayout />}>

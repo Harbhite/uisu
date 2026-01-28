@@ -17,6 +17,8 @@ interface PoetryCoverGeneratorProps {
   authorName: string;
   coverImage?: string | null;
   onGenerated?: (imageDataUrl: string) => void;
+  onSaveCover?: (blob: Blob) => Promise<void>;
+  isSaving?: boolean;
   className?: string;
 }
 
@@ -72,6 +74,8 @@ export const PoetryCoverGenerator: React.FC<PoetryCoverGeneratorProps> = ({
   authorName,
   coverImage,
   onGenerated,
+  onSaveCover,
+  isSaving = false,
   className
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -545,6 +549,7 @@ export const PoetryCoverGenerator: React.FC<PoetryCoverGeneratorProps> = ({
           type="button"
           onClick={downloadCover}
           disabled={generating}
+          variant="outline"
           className="flex-1"
         >
           {generating ? (
@@ -552,14 +557,37 @@ export const PoetryCoverGenerator: React.FC<PoetryCoverGeneratorProps> = ({
           ) : (
             <Download size={16} className="mr-2" />
           )}
-          Download Cover
+          Download
         </Button>
+        {onSaveCover && (
+          <Button
+            type="button"
+            onClick={async () => {
+              const canvas = canvasRef.current;
+              if (!canvas) return;
+              const blob = await new Promise<Blob | null>(resolve => 
+                canvas.toBlob(resolve, 'image/png')
+              );
+              if (blob) {
+                await onSaveCover(blob);
+              }
+            }}
+            disabled={isSaving}
+            className="flex-1"
+          >
+            {isSaving ? (
+              <Loader2 size={16} className="mr-2 animate-spin" />
+            ) : (
+              <Sparkles size={16} className="mr-2" />
+            )}
+            Save as Cover
+          </Button>
+        )}
         <Button
           type="button"
           variant="outline"
           onClick={copyToClipboard}
         >
-          <Sparkles size={16} className="mr-2" />
           Copy
         </Button>
       </div>

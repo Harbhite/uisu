@@ -1,6 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense, useCallback, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, Eye, Trash2, ImagePlus, X, BookOpen, ChevronDown, Clock, FileText, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Eye, Trash2, ImagePlus, X, BookOpen, ChevronDown, Clock, FileText, Image as ImageIcon, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,6 +18,8 @@ import { InkPreviewModal } from '@/components/InkPreviewModal';
 import { PoetryLayoutSelector, PoetryLayout } from '@/components/PoetryLayoutSelector';
 import { PoetryEditor, PoetryStanza } from '@/components/PoetryEditor';
 import { PoetryCoverGenerator } from '@/components/PoetryCoverGenerator';
+import { PoetryStanzaTemplates } from '@/components/PoetryStanzaTemplates';
+import { PoetryReaderPreview } from '@/components/PoetryReaderPreview';
 
 const EditorJSComponent = lazy(() => import('@/components/EditorJS'));
 
@@ -72,10 +74,13 @@ const InkEditorPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [savingCover, setSavingCover] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [showReaderPreview, setShowReaderPreview] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [user, setUser] = useState<any>(null);
   const [editorContent, setEditorContent] = useState<OutputData>(emptyContent);
+  const [poetryStanzas, setPoetryStanzas] = useState<PoetryStanza[]>([]);
   const [editorKey, setEditorKey] = useState(0);
   const [pieceId, setPieceId] = useState<string | null>(id || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -266,6 +271,36 @@ const InkEditorPage: React.FC = () => {
     setFormData({ ...formData, cover_image: null });
   };
 
+  // Handle saving generated cover image
+  const handleSaveCover = async (blob: Blob) => {
+    if (!user) return;
+    
+    setSavingCover(true);
+    try {
+      const fileName = `${user.id}/${Date.now()}-cover.png`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(`ink-covers/${fileName}`, blob, {
+          contentType: 'image/png'
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('documents')
+        .getPublicUrl(`ink-covers/${fileName}`);
+
+      setFormData(prev => ({ ...prev, cover_image: publicUrl }));
+      toast.success('Cover image saved!');
+    } catch (error) {
+      console.error('Cover save error:', error);
+      toast.error('Failed to save cover image');
+    } finally {
+      setSavingCover(false);
+    }
+  };
+
   const handleSave = async (publish = false) => {
     if (!formData.title.trim()) {
       toast.error('Title is required');
@@ -369,6 +404,21 @@ const InkEditorPage: React.FC = () => {
         formData={formData}
         content={editorContent}
       />
+
+      {/* Poetry Reader Preview */}
+      {formData.type === 'Poetry' && (
+        <PoetryReaderPreview
+          isOpen={showReaderPreview}
+          onClose={() => setShowReaderPreview(false)}
+          title={formData.title}
+          authorName={formData.author_name}
+          summary={formData.summary}
+          stanzas={poetryStanzas}
+          layout={formData.poetry_layout}
+          coverImage={formData.cover_image}
+          tags={formData.tags.split(',').map(t => t.trim()).filter(Boolean)}
+        />
+      )}
       
       {/* Sticky Header Bar */}
       <div className="fixed top-16 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border">
@@ -577,6 +627,11 @@ const InkEditorPage: React.FC = () => {
                 {/* Poetry Layout Selector - Only show for Poetry type */}
                 {formData.type === 'Poetry' && (
                   <div className="pt-4 border-t border-border space-y-6">
+                    {/* Stanza Templates */}
+                    <PoetryStanzaTemplates
+                      onApplyTemplate={(stanzas) => setPoetryStanzas(stanzas)}
+                    />
+                    
                     <div>
                       <Label className="text-xs font-medium text-muted-foreground mb-3 block">Poetry Layout</Label>
                       <PoetryLayoutSelector
@@ -584,6 +639,18 @@ const InkEditorPage: React.FC = () => {
                         onChange={(layout) => setFormData({ ...formData, poetry_layout: layout })}
                       />
                     </div>
+                    
+                    {/* Preview as Reader */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowReaderPreview(true)}
+                      className="w-full"
+                    >
+                      <Eye size={14} className="mr-2" />
+                      Preview as Reader
+                    </Button>
                     
                     {/* Cover Image Generator */}
                     <div className="pt-4 border-t border-border">
@@ -602,10 +669,11 @@ const InkEditorPage: React.FC = () => {
                             title={formData.title || 'Untitled'}
                             authorName={formData.author_name || 'Anonymous'}
                             coverImage={formData.cover_image}
-                            onGenerated={(url) => {
-                              // Could save to storage and set as cover_image if needed
+                            onGenerated={() => {
                               toast.success('Cover generated!');
                             }}
+                            onSaveCover={handleSaveCover}
+                            isSaving={savingCover}
                           />
                         </DialogContent>
                       </Dialog>
