@@ -6,6 +6,7 @@ import { Json } from '@/integrations/supabase/types';
 import { SocialShare } from '@/components/SocialShare';
 import { InkComments } from '@/components/InkComments';
 import { PoetryLayout } from './PoetryLayoutSelector';
+import { cn } from '@/lib/utils';
 
 interface PoetryPiece {
   id: string;
@@ -36,6 +37,43 @@ const AuthorLink = ({ userId, authorName, className = '' }: { userId: string | n
       {authorName}
     </Link>
   );
+};
+
+// Helper to render stanza-based content with alignment
+const renderStanzaContent = (content: Json, baseClassName?: string) => {
+  if (!content || typeof content !== 'object') return null;
+  
+  const data = content as { blocks?: Array<{ type: string; data?: { text?: string; alignment?: string; emphasis?: string; spacing?: string; stanzas?: Array<{ text: string; alignment: string; emphasis?: string; spacing?: string }> } }> };
+  
+  if (!Array.isArray(data.blocks)) return null;
+  
+  return data.blocks.map((block, index) => {
+    if (block.type === 'paragraph' && block.data?.text) {
+      const alignment = block.data.alignment || 'center';
+      const emphasis = block.data.emphasis || 'normal';
+      const spacing = block.data.spacing || 'normal';
+      
+      return (
+        <p 
+          key={index}
+          className={cn(
+            "whitespace-pre-wrap",
+            baseClassName,
+            alignment === 'left' && 'text-left',
+            alignment === 'center' && 'text-center',
+            alignment === 'right' && 'text-right',
+            emphasis === 'bold' && 'font-bold',
+            emphasis === 'italic' && 'italic',
+            spacing === 'tight' && 'leading-tight mb-2',
+            spacing === 'normal' && 'leading-relaxed mb-4',
+            spacing === 'loose' && 'leading-loose mb-6'
+          )}
+          dangerouslySetInnerHTML={{ __html: block.data.text }}
+        />
+      );
+    }
+    return null;
+  });
 };
 
 // Classic Layout - Centered elegant poetry
