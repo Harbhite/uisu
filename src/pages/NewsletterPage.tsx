@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, Loader2, Check, ArrowRight } from "lucide-react";
+import { Loader2, Check, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,7 +49,7 @@ const NewsletterPage = () => {
       {/* Header */}
       <header className="px-6 md:px-12 pt-8 md:pt-12">
         <div className="flex items-center gap-2 text-ui-blue">
-          <Sparkles size={14} />
+          <img src="/newsletter-logo.png" alt="UISU" className="h-4 w-auto object-contain" />
           <span className="text-xs font-bold uppercase tracking-widest">Newsletter</span>
         </div>
       </header>
@@ -105,12 +105,12 @@ const NewsletterPage = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="flex-1 rounded-full sm:rounded-r-none bg-ui-blue/5 border-ui-blue/20 text-ui-blue placeholder:text-ui-blue/40 h-14 px-6 focus-visible:ring-ui-blue text-base"
+                  className="flex-1 rounded-full sm:rounded-r-none bg-ui-blue/5 border-ui-blue/20 text-ui-blue placeholder:text-ui-blue/40 h-16 px-6 focus-visible:ring-ui-blue text-base"
                 />
                 <Button 
                   type="submit"
                   disabled={isLoading}
-                  className="rounded-full sm:rounded-l-none h-14 px-8 bg-ui-blue hover:bg-ui-blue/90 text-white font-bold tracking-wide transition-colors disabled:opacity-70 whitespace-nowrap"
+                  className="rounded-full sm:rounded-l-none h-12 sm:h-16 sm:self-center px-8 bg-ui-blue hover:bg-ui-blue/90 text-white font-bold tracking-wide transition-colors disabled:opacity-70 whitespace-nowrap"
                 >
                   {isLoading ? (
                     <>

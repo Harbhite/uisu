@@ -47,11 +47,11 @@ export const Footer = () => {
               <img src="/uisu-logo.png" alt="UISU Logo" className="h-10 w-auto object-contain brightness-0 invert" />
               <div className="flex flex-col">
                 <span className="font-serif font-bold text-xl tracking-tight text-white">UISU</span>
-                <span className="text-[0.6rem] font-bold uppercase tracking-widest text-slate-400 leading-none">Archive</span>
+                <span className="text-[0.6rem] font-bold uppercase tracking-widest text-nobel-gold leading-none">SPACE</span>
               </div>
             </Link>
             <p className="text-sm text-slate-300 leading-relaxed max-w-xs">
-              Preserving the history, culture, and intellectual heritage of the University of Ibadan Students' Union. First and Best.
+              Your digital space for the history, culture, and intellectual heritage of the University of Ibadan Students' Union. First and Best.
             </p>
           </div>
 

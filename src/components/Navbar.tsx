@@ -61,8 +61,8 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
           <Link to="/" className="flex items-center gap-3 group">
             <img src="/uisu-logo.png" alt="UISU Logo" className="h-10 w-auto object-contain brightness-0 invert group-hover:scale-110 transition-transform duration-300" />
             <div className="flex flex-col">
-              <span className="font-serif font-bold text-xl tracking-tight text-white">UISU</span>
-              <span className="text-[0.6rem] font-bold uppercase tracking-widest text-slate-300 leading-none">Archive</span>
+              <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-white leading-tight">University of Ibadan</span>
+              <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-nobel-gold leading-tight">Students' Union</span>
             </div>
           </Link>
 
