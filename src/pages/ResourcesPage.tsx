@@ -117,6 +117,7 @@ const ResourcesPage = () => {
       <SEO
         title="Student Resources"
         description="Access a wealth of resources including academic materials, career tips, scholarships, and more."
+        image="/og/pages-screenshot/resources.png"
       />
 
       <div className="container mx-auto px-6 lg:px-12 max-w-6xl">

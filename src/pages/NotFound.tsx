@@ -183,7 +183,7 @@ const NotFound = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground overflow-hidden relative">
-      <SEO title="Page Not Found - UISU SPACE" description="The page you are looking for does not exist." />
+      <SEO title="Page Not Found - UISU SPACE" description="The page you are looking for does not exist." image="/og/pages-screenshot/not-found.png" />
       
       {/* Animated gradient background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">

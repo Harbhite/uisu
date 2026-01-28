@@ -200,7 +200,7 @@ const StyleGuidePage: React.FC = () => {
       '<body>',
       '  <div style="max-width: 1200px; margin: 0 auto; padding: 2rem;">',
       '    <header style="text-align: center; margin-bottom: 4rem; padding: 3rem; background: var(--ui-blue); color: white;">',
-      '      <h1 class="font-serif" style="font-size: 2.5rem; margin-bottom: 0.5rem;">UISU Archive</h1>',
+      '      <h1 class="font-serif" style="font-size: 2.5rem; margin-bottom: 0.5rem;">UISU SPACE</h1>',
       '      <p style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.2em; opacity: 0.7;">Design System v2.4.0</p>',
       '    </header>',
       '    <section style="margin-bottom: 3rem;">',
@@ -290,7 +290,8 @@ const StyleGuidePage: React.FC = () => {
     <div className="min-h-screen bg-slate-50 selection:bg-accent selection:text-white print:bg-white">
       <SEO
         title="Visual Registry & Aluta Protocol"
-        description="The comprehensive design manual and component registry for the UISU Archive platform."
+        description="The comprehensive design manual and component registry for the UISU SPACE platform."
+        image="/og/pages-screenshot/style-guide.png"
       />
 
       {/* Table of Contents Sidebar */}

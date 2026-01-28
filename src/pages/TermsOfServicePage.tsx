@@ -10,7 +10,7 @@ const TermsOfServicePage = () => {
       icon: CheckCircle,
       title: "Acceptance of Terms",
       content: [
-        "By accessing or using the UISU Archive, you agree to be bound by these Terms of Service",
+        "By accessing or using UISU SPACE, you agree to be bound by these Terms of Service",
         "If you do not agree to these terms, you may not access or use our services",
         "We reserve the right to modify these terms at any time with notice to users",
         "Continued use after changes constitutes acceptance of the modified terms"
@@ -31,7 +31,7 @@ const TermsOfServicePage = () => {
       title: "Content Guidelines",
       content: [
         "You retain ownership of content you submit, but grant us license to display and distribute it",
-        "Content must be accurate, respectful, and relevant to the UISU Archive mission",
+        "Content must be accurate, respectful, and relevant to the UISU SPACE mission",
         "Submissions must not infringe on any third-party intellectual property rights",
         "We reserve the right to remove content that violates these guidelines",
         "Historical documents must be submitted in good faith with proper attribution"
@@ -53,7 +53,7 @@ const TermsOfServicePage = () => {
       icon: Scale,
       title: "Intellectual Property",
       content: [
-        "The UISU Archive name, logo, and original content are protected by intellectual property laws",
+        "The UISU SPACE name, logo, and original content are protected by intellectual property laws",
         "Historical documents in the archive may have various ownership and usage rights",
         "Users must respect copyright and attribution requirements for all materials",
         "Fair use principles apply to educational and research purposes"
@@ -75,9 +75,9 @@ const TermsOfServicePage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO 
-        title="Terms of Service | UISU Archive"
-        description="Read the terms and conditions for using UISU Archive. Understand your rights and responsibilities as a user of our platform."
-        url="https://uisu.lovable.app/terms-of-service"
+        title="Terms of Service | UISU SPACE"
+        description="Read the terms and conditions for using UISU SPACE. Understand your rights and responsibilities as a user of our platform."
+        image="/og/pages-screenshot/terms-of-service.png"
       />
       
       <main className="pt-24 pb-20">
@@ -106,7 +106,7 @@ const TermsOfServicePage = () => {
             </div>
             <h1 className="font-serif text-4xl md:text-5xl text-foreground mb-4">Terms of Service</h1>
             <p className="text-muted-foreground text-lg leading-relaxed">
-              These terms govern your use of the UISU Archive platform. Please read them carefully before using our services.
+              These terms govern your use of the UISU SPACE platform. Please read them carefully before using our services.
             </p>
             <p className="text-sm text-muted-foreground mt-4">
               Effective date: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
@@ -150,7 +150,7 @@ const TermsOfServicePage = () => {
           >
             <h3 className="font-serif text-lg text-foreground mb-3">Agreement</h3>
             <p className="text-muted-foreground mb-4">
-              By creating an account or using the UISU Archive, you acknowledge that you have read, understood, 
+              By creating an account or using UISU SPACE, you acknowledge that you have read, understood, 
               and agree to be bound by these Terms of Service and our Privacy Policy.
             </p>
             <div className="flex flex-wrap gap-4">

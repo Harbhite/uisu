@@ -87,8 +87,9 @@ const ConstitutionPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-nobel-cream selection:bg-nobel-gold selection:text-ui-blue print:bg-white">
       <SEO
-        title="The Constitution | UISU Archive"
+        title="The Constitution | UISU SPACE"
         description="The Supreme Constitution of the University of Ibadan Students' Union. Digital Legislative Registry."
+        image="/og/pages-screenshot/constitution.png"
       />
 
       {/* Reading Progress Bar */}
@@ -334,7 +335,7 @@ const ConstitutionPage: React.FC = () => {
 
       {/* Print Footer style */}
       <div className="hidden print:block fixed bottom-0 left-0 w-full text-center p-4 border-t border-black text-[10px]">
-        UISU Archive • Official Constitution Document • Printed from uisu.org
+        UISU SPACE • Official Constitution Document • Printed from uisu.space
       </div>
 
     </div>

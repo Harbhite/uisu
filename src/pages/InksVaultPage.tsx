@@ -719,7 +719,7 @@ const InksVaultPage = () => {
       <SEO
         title="Inks Vault"
         description="Explore articles, essays, poetry, and reports from the University of Ibadan Students' Union. A collection of student voices and intellectual discourse."
-        image="/screenshots/inks-vault.png"
+        image="/og/pages-screenshot/inks-vault.png"
       />
       
       <div className="container mx-auto px-6">

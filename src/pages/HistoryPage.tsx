@@ -44,7 +44,7 @@ const HistoryPage: React.FC = () => {
       <SEO
         title="History - University of Ibadan Students' Union"
         description="The evolution of student unionism from global origins to the University of Ibadan."
-        image="/og/og-home.png"
+        image="/og/pages-screenshot/history.png"
       />
       <VisionSection />
       <TimelineJourney />

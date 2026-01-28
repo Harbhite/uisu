@@ -10,7 +10,7 @@ const DocumentsPage = () => {
       <SEO
         title="Documents Library | UISU Constitution & Historical Records"
         description="Access the complete archive of UI Students' Union documents: constitutions, manifestos, election results, speeches, and policy papers from 1948 to present. Download PDFs free."
-        image="/og/og-documents.png"
+        image="/og/pages-screenshot/documents.png"
       />
       <DocumentLibraryContent onBack={() => navigate("/")} />
     </>

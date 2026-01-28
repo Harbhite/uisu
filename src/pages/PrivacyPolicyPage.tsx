@@ -20,7 +20,7 @@ const PrivacyPolicyPage = () => {
       icon: Eye,
       title: "How We Use Your Information",
       content: [
-        "To provide and maintain the UISU Archive services",
+        "To provide and maintain UISU SPACE services",
         "To communicate with you about updates, announcements, and newsletters",
         "To improve our services and develop new features",
         "To ensure the security and integrity of our platform",
@@ -72,9 +72,9 @@ const PrivacyPolicyPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO 
-        title="Privacy Policy | UISU Archive"
-        description="Learn how UISU Archive collects, uses, and protects your personal information. Our commitment to your privacy and data security."
-        url="https://uisu.lovable.app/privacy-policy"
+        title="Privacy Policy | UISU SPACE"
+        description="Learn how UISU SPACE collects, uses, and protects your personal information. Our commitment to your privacy and data security."
+        image="/og/pages-screenshot/privacy-policy.png"
       />
       
       <main className="pt-24 pb-20">
@@ -103,7 +103,7 @@ const PrivacyPolicyPage = () => {
             </div>
             <h1 className="font-serif text-4xl md:text-5xl text-foreground mb-4">Privacy Policy</h1>
             <p className="text-muted-foreground text-lg leading-relaxed">
-              Your privacy is important to us. This policy explains how we collect, use, and protect your personal information when you use the UISU Archive.
+              Your privacy is important to us. This policy explains how we collect, use, and protect your personal information when you use UISU SPACE.
             </p>
             <p className="text-sm text-muted-foreground mt-4">
               Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
@@ -146,7 +146,7 @@ const PrivacyPolicyPage = () => {
             className="mt-12 p-6 bg-muted border border-border text-center"
           >
             <p className="text-muted-foreground">
-              By using UISU Archive, you agree to the terms outlined in this Privacy Policy. 
+              By using UISU SPACE, you agree to the terms outlined in this Privacy Policy. 
               We may update this policy from time to time, and will notify you of any significant changes.
             </p>
           </motion.div>
