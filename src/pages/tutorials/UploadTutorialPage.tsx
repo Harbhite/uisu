@@ -168,7 +168,7 @@ const UploadTutorialPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="format" className="text-xs uppercase tracking-widest font-bold text-slate-500">Format</Label>
-                <Select value={format} onValueChange={(v: any) => setFormat(v)}>
+                <Select value={format} onValueChange={(v: 'Video' | 'Audio' | 'Text' | 'Essay') => setFormat(v)}>
                   <SelectTrigger className="rounded-none bg-slate-50 border-slate-200 h-12">
                     <SelectValue placeholder="Select format" />
                   </SelectTrigger>
@@ -183,7 +183,7 @@ const UploadTutorialPage = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="level" className="text-xs uppercase tracking-widest font-bold text-slate-500">Difficulty Level</Label>
-                <Select value={level} onValueChange={(v: any) => setLevel(v)}>
+                <Select value={level} onValueChange={(v: 'Beginner' | 'Intermediate' | 'Advanced') => setLevel(v)}>
                   <SelectTrigger className="rounded-none bg-slate-50 border-slate-200 h-12">
                     <SelectValue placeholder="Select level" />
                   </SelectTrigger>
@@ -269,7 +269,7 @@ const UploadTutorialPage = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Select value={module.type} onValueChange={(v: any) => handleModuleChange(index, 'type', v)}>
+                      <Select value={module.type} onValueChange={(v: 'Video' | 'Audio' | 'Text' | 'Essay') => handleModuleChange(index, 'type', v)}>
                         <SelectTrigger className="bg-white border-slate-200">
                           <SelectValue />
                         </SelectTrigger>

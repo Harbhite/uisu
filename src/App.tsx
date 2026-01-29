@@ -53,6 +53,7 @@ const TutorialDetailPage = lazy(() => import("./pages/tutorials/TutorialDetailPa
 const TutorProfilePage = lazy(() => import("./pages/tutorials/TutorProfilePage"));
 const UploadTutorialPage = lazy(() => import("./pages/tutorials/UploadTutorialPage"));
 const TutorDashboardPage = lazy(() => import("./pages/tutorials/TutorDashboardPage"));
+const BecomeTutorPage = lazy(() => import("./pages/tutorials/BecomeTutorPage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
 const UnsubscribePage = lazy(() => import("./pages/UnsubscribePage"));
@@ -141,6 +142,7 @@ const AppRoutes = () => {
           <Route path="tutor/:id" element={<TutorProfilePage />} />
           <Route path="upload" element={<UploadTutorialPage />} />
           <Route path="dashboard" element={<TutorDashboardPage />} />
+          <Route path="become-tutor" element={<BecomeTutorPage />} />
         </Route>
 
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

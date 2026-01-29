@@ -5,6 +5,10 @@ import { useEffect, useState } from 'react';
 
 // Check if online
 const useOnlineStatus = () => {
+  // Forced to false to use sql.js backend as requested
+  return false;
+
+  /*
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   
   useEffect(() => {
@@ -21,6 +25,7 @@ const useOnlineStatus = () => {
   }, []);
   
   return isOnline;
+  */
 };
 
 // Types matching our database schema

@@ -34,14 +34,15 @@ const TutorialDetailPage = () => {
     rating: Number(dbTutorial.rating) || 0,
     studentsCount: dbTutorial.students_count || 0,
     createdAt: dbTutorial.created_at || '',
-    modules: (dbTutorial.modules || []).map((m: any) => ({
+    modules: (dbTutorial.modules || []).map((m) => ({
       id: m.id,
       title: m.title,
-      type: m.type,
+      type: m.type as 'video' | 'audio' | 'text' | 'quiz' | 'essay',
       content: m.content || '',
       duration: m.duration || '',
       isLocked: m.is_locked || false,
-    })).sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0)),
+      sort_order: m.sort_order || 0,
+    })).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)),
   } : staticTutorial;
 
   const tutor = dbTutorial?.tutor ? {

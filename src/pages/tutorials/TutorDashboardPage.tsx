@@ -4,7 +4,7 @@ import { useTutorials, useTutors } from '@/hooks/useTutorials';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
-import { Plus, BookOpen, Users, Star, Loader2, ArrowLeft, Edit2 } from 'lucide-react';
+import { Plus, BookOpen, Users, Star, Loader2, ArrowLeft, Edit2, Eye } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { Badge } from '@/components/ui/badge';
 

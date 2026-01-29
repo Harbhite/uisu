@@ -130,12 +130,13 @@ const seedOfflineData = (database: Database) => {
   const existing = database.exec("SELECT COUNT(*) FROM tutors");
   if (existing[0]?.values[0][0] as number > 0) return;
   
-  // Seed tutors
+  // Seed tutors (Enhanced)
   const tutors = [
     { id: 't-official', name: 'Union Academic Committee', tier: 'Official', bio: 'The official academic body of the Student Union.', avatar: '/placeholder.svg' },
     { id: 't-verified-1', name: 'Prof. David West', tier: 'Verified', bio: 'Senior Lecturer in Computer Science.', avatar: '/placeholder.svg' },
     { id: 't-verified-2', name: 'Sarah "Scholar" O.', tier: 'Verified', bio: 'First Class Graduate of Economics.', avatar: '/placeholder.svg' },
     { id: 't-comm-1', name: 'CodeWithEmeka', tier: 'Community', bio: 'Just a 200L guy sharing what I know about Python.', avatar: '/placeholder.svg' },
+    { id: 't-comm-2', name: 'Campus Beats', tier: 'Community', bio: 'Curated playlists and audio sessions for studying.', avatar: '/placeholder.svg' },
   ];
   
   tutors.forEach(t => {
@@ -145,32 +146,62 @@ const seedOfflineData = (database: Database) => {
     );
   });
   
-  // Seed tutorials
+  // Seed tutorials (Diverse Formats)
   const tutorials = [
-    { id: 'tut-1', title: 'GST 101: Use of English Masterclass', description: 'A comprehensive guide to mastering GST 101.', tutor_id: 't-official', format: 'Video', level: 'Beginner', tags: JSON.stringify(['GST', 'Academic']), is_published: 1, is_approved: 1 },
-    { id: 'tut-2', title: 'Python for Data Science', description: 'Learn Python from scratch with a focus on data analysis.', tutor_id: 't-verified-1', format: 'Video', level: 'Intermediate', tags: JSON.stringify(['Tech', 'Coding']), is_published: 1, is_approved: 1 },
-    { id: 'tut-3', title: 'Surviving UI: A Fresher\'s Guide', description: 'Essential tips for navigating campus life.', tutor_id: 't-official', format: 'Audio', level: 'Beginner', tags: JSON.stringify(['Lifestyle', 'Guide']), is_published: 1, is_approved: 1 },
+    // Video
+    { id: 'tut-1', title: 'GST 101: Use of English Masterclass', description: 'A comprehensive guide to mastering GST 101. Covers parts of speech, concord, and common errors.', tutor_id: 't-official', format: 'Video', level: 'Beginner', tags: JSON.stringify(['GST', 'Academic']), is_published: 1, is_approved: 1, cover_image: '/og/tutorials/gst101.png' },
+    { id: 'tut-2', title: 'Python for Data Science', description: 'Learn Python from scratch with a focus on data analysis. Perfect for beginners.', tutor_id: 't-verified-1', format: 'Video', level: 'Intermediate', tags: JSON.stringify(['Tech', 'Coding']), is_published: 1, is_approved: 1, cover_image: '/og/tutorials/python.png' },
+
+    // Audio
+    { id: 'tut-3', title: 'Surviving UI: A Fresher\'s Guide', description: 'Essential tips for navigating campus life, from registration to accommodation.', tutor_id: 't-official', format: 'Audio', level: 'Beginner', tags: JSON.stringify(['Lifestyle', 'Guide']), is_published: 1, is_approved: 1, cover_image: '/og/tutorials/freshers.png' },
+    { id: 'tut-4', title: 'Deep Focus Study Session', description: '1 hour of ambient noise and lo-fi beats to help you concentrate during exam week.', tutor_id: 't-comm-2', format: 'Audio', level: 'All Levels', tags: JSON.stringify(['Music', 'Study', 'Focus']), is_published: 1, is_approved: 1, cover_image: '/og/tutorials/lofi.png' },
+
+    // Essay / Article
+    { id: 'tut-5', title: 'The Art of Academic Essay Writing', description: 'A structured approach to writing A-grade essays in the humanities and social sciences.', tutor_id: 't-verified-2', format: 'Essay', level: 'Intermediate', tags: JSON.stringify(['Academic', 'Writing']), is_published: 1, is_approved: 1, cover_image: '/og/tutorials/writing.png' },
+    { id: 'tut-6', title: 'History of the Student Union (1948-2024)', description: 'A detailed text-based course exploring the rich history and evolution of our union.', tutor_id: 't-official', format: 'Text', level: 'Advanced', tags: JSON.stringify(['History', 'Politics']), is_published: 1, is_approved: 1, cover_image: '/og/tutorials/history.png' },
   ];
   
   tutorials.forEach(t => {
     database.run(
-      "INSERT INTO tutorials (id, title, description, tutor_id, format, level, tags, is_published, is_approved) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [t.id, t.title, t.description, t.tutor_id, t.format, t.level, t.tags, t.is_published, t.is_approved]
+      "INSERT INTO tutorials (id, title, description, tutor_id, format, level, cover_image, tags, is_published, is_approved) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [t.id, t.title, t.description, t.tutor_id, t.format, t.level, t.cover_image, t.tags, t.is_published, t.is_approved]
     );
   });
   
   // Seed modules
   const modules = [
-    { id: 'm-1-1', tutorial_id: 'tut-1', title: 'Introduction to Parts of Speech', type: 'Video', duration: '15 mins', sort_order: 1 },
-    { id: 'm-1-2', tutorial_id: 'tut-1', title: 'Concord and Agreement', type: 'Video', duration: '20 mins', sort_order: 2 },
-    { id: 'm-2-1', tutorial_id: 'tut-2', title: 'Setup and Installation', type: 'Video', duration: '10 mins', sort_order: 1 },
-    { id: 'm-2-2', tutorial_id: 'tut-2', title: 'Variables and Data Types', type: 'Video', duration: '25 mins', sort_order: 2 },
+    // GST 101 (Video)
+    { id: 'm-1-1', tutorial_id: 'tut-1', title: 'Introduction to Parts of Speech', type: 'Video', duration: '15 mins', sort_order: 1, content: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+    { id: 'm-1-2', tutorial_id: 'tut-1', title: 'Concord and Agreement Rules', type: 'Video', duration: '20 mins', sort_order: 2, content: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+    { id: 'm-1-3', tutorial_id: 'tut-1', title: 'Common Grammatical Errors', type: 'Video', duration: '18 mins', sort_order: 3, content: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+
+    // Python (Video)
+    { id: 'm-2-1', tutorial_id: 'tut-2', title: 'Environment Setup (Anaconda)', type: 'Video', duration: '10 mins', sort_order: 1, content: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+    { id: 'm-2-2', tutorial_id: 'tut-2', title: 'Variables and Data Types', type: 'Video', duration: '25 mins', sort_order: 2, content: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+    { id: 'm-2-3', tutorial_id: 'tut-2', title: 'Control Structures: Loops', type: 'Video', duration: '30 mins', sort_order: 3, content: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+
+    // Surviving UI (Audio)
+    { id: 'm-3-1', tutorial_id: 'tut-3', title: 'Episode 1: The Registration Maze', type: 'Audio', duration: '12 mins', sort_order: 1, content: '/audio/episode1.mp3' },
+    { id: 'm-3-2', tutorial_id: 'tut-3', title: 'Episode 2: Finding Accommodation', type: 'Audio', duration: '15 mins', sort_order: 2, content: '/audio/episode2.mp3' },
+
+    // Focus Beats (Audio)
+    { id: 'm-4-1', tutorial_id: 'tut-4', title: 'Rainy Day Study Mix', type: 'Audio', duration: '30 mins', sort_order: 1, content: '/audio/rainy.mp3' },
+    { id: 'm-4-2', tutorial_id: 'tut-4', title: 'Late Night Library Ambience', type: 'Audio', duration: '30 mins', sort_order: 2, content: '/audio/library.mp3' },
+
+    // Essay Writing (Essay)
+    { id: 'm-5-1', tutorial_id: 'tut-5', title: 'Understanding the Prompt', type: 'Essay', duration: '10 mins read', sort_order: 1, content: '<h1>Understanding the Prompt</h1><p>Before writing a single word, you must deconstruct the question...</p>' },
+    { id: 'm-5-2', tutorial_id: 'tut-5', title: 'Crafting a Thesis Statement', type: 'Essay', duration: '15 mins read', sort_order: 2, content: '<h1>The Thesis Statement</h1><p>Your thesis is the anchor of your essay. It should be arguable and specific...</p>' },
+    { id: 'm-5-3', tutorial_id: 'tut-5', title: 'Structure: The Burger Method', type: 'Essay', duration: '12 mins read', sort_order: 3, content: '<h1>The Burger Method</h1><p>Introduction (Top Bun), Body Paragraphs (Meat/Veg), Conclusion (Bottom Bun)...</p>' },
+
+    // History (Text)
+    { id: 'm-6-1', tutorial_id: 'tut-6', title: 'The Founding Fathers (1948)', type: 'Text', duration: '20 mins read', sort_order: 1, content: 'The University of Ibadan Students Union was established in 1948, coinciding with the founding of the university college...' },
+    { id: 'm-6-2', tutorial_id: 'tut-6', title: 'The Golden Era (1960-1975)', type: 'Text', duration: '25 mins read', sort_order: 2, content: 'During the post-independence era, the union played a pivotal role in national discourse...' },
   ];
   
   modules.forEach(m => {
     database.run(
-      "INSERT INTO tutorial_modules (id, tutorial_id, title, type, duration, sort_order) VALUES (?, ?, ?, ?, ?, ?)",
-      [m.id, m.tutorial_id, m.title, m.type, m.duration, m.sort_order]
+      "INSERT INTO tutorial_modules (id, tutorial_id, title, type, content, duration, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [m.id, m.tutorial_id, m.title, m.type, m.content, m.duration, m.sort_order]
     );
   });
 };
