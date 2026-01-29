@@ -889,7 +889,6 @@ const CalculatorSuitePage = () => {
       <SEO 
         title="Calculator Suite - Resources" 
         description="A comprehensive collection of calculators for everyday calculations." 
-        image="/og/pages-screenshot/resources_calculator-suite.png"
       />
 
       <div className="container mx-auto px-6 lg:px-12 max-w-6xl">
