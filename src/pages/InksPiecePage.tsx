@@ -326,7 +326,7 @@ const InksPiecePage = () => {
       <SEO
         title={piece.title}
         description={piece.summary || `Read ${piece.title} by ${piece.author_name} in the Inks Vault.`}
-        image={imageUrl || '/og/pages-screenshot/inks-piece.png'}
+        image={imageUrl || '/og/pages-screenshot/inks-vault.png'}
         type="article"
         author={piece.author_name}
         publishedTime={piece.created_at}

@@ -26,8 +26,8 @@ interface AuditLog {
   action: string;
   table_name: string;
   record_id: string | null;
-  old_data: Record<string, unknown>;
-  new_data: Record<string, unknown>;
+  old_data: any;
+  new_data: any;
   created_at: string;
   user_id: string | null;
   user_email?: string;
@@ -160,7 +160,7 @@ const AcademicBankPage = () => {
 
       // Fetch user emails for the logs
       const userIds = [...new Set((data || []).map(log => log.user_id).filter(Boolean))];
-      const userEmailMap: Record<string, string> = {};
+      let userEmailMap: Record<string, string> = {};
       
       if (userIds.length > 0) {
         const { data: profiles } = await supabase
@@ -428,7 +428,7 @@ const AcademicBankPage = () => {
     return `${baseDir}/${uniquePrefix}-${sanitizedFileName}`;
   };
 
-  const uploadOneFile = useCallback(async (item: UploadItem) => {
+  const uploadOneFile = async (item: UploadItem) => {
     // Update status to uploading
     setUploadQueue(prev => prev.map(i => i.id === item.id ? { ...i, status: 'uploading', progress: 0 } : i));
 
@@ -482,7 +482,7 @@ const AcademicBankPage = () => {
       console.error('Upload error:', error);
       setUploadQueue(prev => prev.map(i => i.id === item.id ? { ...i, status: 'error', progress: 0, error: error.message || 'Failed' } : i));
     }
-  }, [currentFolderId]);
+  };
 
   // Queue Processor Effect
   useEffect(() => {
@@ -498,7 +498,7 @@ const AcademicBankPage = () => {
     };
 
     processQueue();
-  }, [uploadQueue, uploadOneFile]); // Depend on queue changes to trigger next processing
+  }, [uploadQueue]); // Depend on queue changes to trigger next processing
 
   const addToQueue = (files: File[], parentId: string | null, relativePaths: Record<string, string> = {}) => {
     const newItems: UploadItem[] = files.map(file => ({
@@ -768,6 +768,7 @@ const AcademicBankPage = () => {
       <SEO
         title="Academic Bank - Resources"
         description="Access lecture notes, past questions, and academic materials from all 13 faculties of University of Ibadan."
+        image="/og/pages-screenshot/resources_academic-bank.png"
       />
 
       {/* Hero Section */}

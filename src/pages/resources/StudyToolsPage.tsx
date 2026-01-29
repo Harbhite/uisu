@@ -343,6 +343,7 @@ const StudyToolsPage = () => {
       <SEO 
         title="Study Tools - Resources" 
         description="Discover the best apps and tools to boost your academic productivity." 
+        image="/og/pages-screenshot/resources_study-tools.png"
       />
 
       <div className="container mx-auto px-6">
