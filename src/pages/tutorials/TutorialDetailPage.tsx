@@ -41,7 +41,8 @@ const TutorialDetailPage = () => {
       content: m.content || '',
       duration: m.duration || '',
       isLocked: m.is_locked || false,
-    })).sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0)),
+      sort_order: m.sort_order || 0,
+    })).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)),
   } : staticTutorial;
 
   const tutor = dbTutorial?.tutor ? {

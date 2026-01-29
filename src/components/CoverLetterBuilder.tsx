@@ -110,7 +110,7 @@ I am a quick learner, highly motivated, and committed to delivering quality work
       opening: 'I am excited to apply for the Technology Internship position at your company. As a computer science student passionate about building innovative solutions, I am eager to contribute to your technical team and learn from industry professionals.',
       body: `My technical skills include proficiency in programming languages such as Python, JavaScript, and Java. I have completed several projects that demonstrate my ability to develop functional applications, including [project examples]. Additionally, I am familiar with version control systems, agile methodologies, and collaborative development practices.
 
-I am particularly interested in your company\'s work on [specific technology or product], and I believe my background in [relevant coursework or experience] would allow me to make meaningful contributions while growing as a developer.
+I am particularly interested in your company's work on [specific technology or product], and I believe my background in [relevant coursework or experience] would allow me to make meaningful contributions while growing as a developer.
 
 Beyond technical skills, I bring strong problem-solving abilities, attention to detail, and a passion for continuous learning. I stay current with emerging technologies and industry trends through online courses and personal projects.`,
       closing: 'I am confident that this internship would be mutually beneficial. Thank you for considering my application, and I look forward to the opportunity to discuss how I can contribute to your team.'
@@ -142,7 +142,7 @@ What attracts me to your institution is your reputation for excellence and commi
 
 I am proficient in digital marketing tools and platforms, including social media analytics, content management systems, and basic graphic design with Canva and Adobe Creative Suite. I stay current with marketing trends and have a keen eye for what captures audience attention.
 
-Your company\'s recent campaign for [specific campaign or initiative] particularly impressed me, demonstrating the kind of creative and impactful work I aspire to be part of. I am eager to contribute fresh ideas while learning from your experienced marketing team.`,
+Your company's recent campaign for [specific campaign or initiative] particularly impressed me, demonstrating the kind of creative and impactful work I aspire to be part of. I am eager to contribute fresh ideas while learning from your experienced marketing team.`,
       closing: 'I am excited about the possibility of contributing to your marketing efforts. Thank you for considering my application, and I look forward to discussing how I can add value to your team.'
     }
   },

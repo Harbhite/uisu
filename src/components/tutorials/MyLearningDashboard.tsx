@@ -9,6 +9,31 @@ import { Loader2, BookOpen, Bookmark, GraduationCap, PlayCircle, Clock } from 'l
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
+interface Enrollment {
+  id: string;
+  completed_at: string | null;
+  tutorial: {
+    id: string;
+    title: string;
+    cover_image: string;
+    format: string;
+    tutor: {
+      name: string;
+    };
+    modules: { id: string }[];
+  };
+}
+
+interface Bookmark {
+  id: string;
+  tutorial: {
+    id: string;
+    title: string;
+    cover_image: string;
+    format: string;
+  };
+}
+
 const MyLearningDashboard = () => {
   const [userId, setUserId] = useState<string | null>(null);
   
@@ -18,8 +43,11 @@ const MyLearningDashboard = () => {
     });
   }, []);
   
-  const { data: enrollments = [], isLoading: loadingEnrollments } = useUserEnrollments(userId || undefined);
-  const { data: bookmarks = [], isLoading: loadingBookmarks } = useUserBookmarks(userId || undefined);
+  const { data: enrollmentsData, isLoading: loadingEnrollments } = useUserEnrollments(userId || undefined);
+  const { data: bookmarksData, isLoading: loadingBookmarks } = useUserBookmarks(userId || undefined);
+
+  const enrollments = (enrollmentsData || []) as unknown as Enrollment[];
+  const bookmarks = (bookmarksData || []) as unknown as Bookmark[];
   
   if (!userId) {
     return (
@@ -60,7 +88,7 @@ const MyLearningDashboard = () => {
             </div>
             <div>
               <p className="text-2xl font-bold text-slate-800">
-                {enrollments.filter((e: any) => e.completed_at).length}
+                {enrollments.filter((e) => e.completed_at).length}
               </p>
               <p className="text-xs uppercase tracking-widest text-slate-500">Completed</p>
             </div>
@@ -74,7 +102,7 @@ const MyLearningDashboard = () => {
             </div>
             <div>
               <p className="text-2xl font-bold text-slate-800">
-                {enrollments.filter((e: any) => !e.completed_at).length}
+                {enrollments.filter((e) => !e.completed_at).length}
               </p>
               <p className="text-xs uppercase tracking-widest text-slate-500">In Progress</p>
             </div>
@@ -122,7 +150,7 @@ const MyLearningDashboard = () => {
             </Card>
           ) : (
             <div className="space-y-3">
-              {enrollments.map((enrollment: any) => (
+              {enrollments.map((enrollment) => (
                 <EnrollmentCard key={enrollment.id} enrollment={enrollment} userId={userId} />
               ))}
             </div>
@@ -143,7 +171,7 @@ const MyLearningDashboard = () => {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {bookmarks.map((bookmark: any) => (
+              {bookmarks.map((bookmark) => (
                 <Link
                   key={bookmark.id}
                   to={`/tutorials/${bookmark.tutorial?.id}`}
@@ -172,7 +200,7 @@ const MyLearningDashboard = () => {
   );
 };
 
-const EnrollmentCard = ({ enrollment, userId }: { enrollment: any; userId: string }) => {
+const EnrollmentCard = ({ enrollment, userId }: { enrollment: Enrollment; userId: string }) => {
   const tutorial = enrollment.tutorial;
   const { data: completedModules = [] } = useProgress(tutorial?.id, userId);
   const moduleCount = tutorial?.modules?.length || 1;
