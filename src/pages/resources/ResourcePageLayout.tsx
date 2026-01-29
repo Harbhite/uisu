@@ -7,10 +7,12 @@ import { Button } from '@/components/ui/button';
 interface ResourcePageLayoutProps {
   title: string;
   description: string;
+  image?: string;
+  url?: string;
   children: React.ReactNode;
 }
 
-const ResourcePageLayout: React.FC<ResourcePageLayoutProps> = ({ title, description, children }) => {
+const ResourcePageLayout: React.FC<ResourcePageLayoutProps> = ({ title, description, image, url, children }) => {
   const navigate = useNavigate();
 
   return (
@@ -18,7 +20,8 @@ const ResourcePageLayout: React.FC<ResourcePageLayoutProps> = ({ title, descript
       <SEO 
         title={`${title} - Resources`} 
         description={description} 
-        image="/og/pages-screenshot/resources.png" 
+        image={image || "/og/pages-screenshot/resources.png"}
+        url={url}
         breadcrumbs={[
           { name: 'Home', url: '/' },
           { name: 'Resources', url: '/resources' },

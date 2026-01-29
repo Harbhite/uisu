@@ -768,6 +768,7 @@ const AcademicBankPage = () => {
       <SEO
         title="Academic Bank - Resources"
         description="Access lecture notes, past questions, and academic materials from all 13 faculties of University of Ibadan."
+        image="/og/pages-screenshot/resources_academic-bank.png"
       />
 
       {/* Hero Section */}

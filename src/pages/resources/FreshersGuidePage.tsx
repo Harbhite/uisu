@@ -155,6 +155,7 @@ const FreshersGuidePage = () => {
       <SEO 
         title="Fresher's Guide - Resources" 
         description="Everything you need to know as a new student at the University of Ibadan." 
+        image="/og/pages-screenshot/resources_freshers-guide.png"
         breadcrumbs={[
           { name: 'Home', url: '/' },
           { name: 'Resources', url: '/resources' },
