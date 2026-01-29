@@ -7,6 +7,7 @@ const CampusHealthPage = () => {
     <ResourcePageLayout
       title="Campus Health"
       description="Clinic schedules, emergency contacts, and physical health resources."
+      image="/og/pages-screenshot/resources_campus-health.png"
     >
       <div className="space-y-8">
         <div className="bg-red-50 p-8 rounded-2xl border border-red-100 flex flex-col md:flex-row gap-8 items-center">

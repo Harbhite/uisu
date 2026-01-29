@@ -14,6 +14,7 @@ const StudentMartPage = () => {
     <ResourcePageLayout
       title="Student Mart"
       description="Buy and sell textbooks, gadgets, and hostel essentials within the campus."
+      image="/og/pages-screenshot/resources_student-mart.png"
     >
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {items.map(item => (
