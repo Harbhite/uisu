@@ -232,7 +232,6 @@ const CareerPathfinderPage = () => {
       <SEO 
         title="Career Pathfinder - Resources" 
         description="Explore career paths and alumni journeys from the University of Ibadan." 
-        image="/og/pages-screenshot/resources_career-pathfinder.png"
       />
 
       <div className="container mx-auto px-6">

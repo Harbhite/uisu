@@ -420,7 +420,6 @@ const SkillUpPage = () => {
       <SEO 
         title="Skill Up - Resources" 
         description="Free YouTube tutorials and courses to build valuable skills." 
-        image="/og/pages-screenshot/resources_skill-up.png"
       />
 
       <div className="container mx-auto px-6">

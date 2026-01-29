@@ -2,7 +2,6 @@ import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Coins, Scale, FileText, Heart, Trophy, Globe, Briefcase, Building2, Users, Calendar, CheckCircle2, User, UserCheck } from 'lucide-react';
-import { SEO } from '@/components/SEO';
 
 // Replicating data here for lookup (In a full refactor, this should move to src/lib/data.ts)
 const committeesData = [
@@ -181,12 +180,6 @@ const CommitteeDetailPage = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 pt-32 pb-16">
-            <SEO
-                title={`${committee.title} - Governance`}
-                description={committee.desc}
-                image={`/og/pages-screenshot/committee_${committee.slug}.png`}
-                url={`/committee/${id}`}
-            />
             <div className="container mx-auto px-6 max-w-4xl">
                 <Link
                     to="/governance"

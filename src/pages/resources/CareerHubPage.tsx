@@ -605,7 +605,6 @@ const CareerHubPage = () => {
       <SEO 
         title="Career Hub - Resources" 
         description="Find jobs, internships, and career resources for UI students." 
-        image="/og/pages-screenshot/resources_career-hub.png"
       />
 
       <div className="container mx-auto px-6">
