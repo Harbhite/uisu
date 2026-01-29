@@ -115,10 +115,9 @@ const ResourcesPage = () => {
   return (
     <div className="min-h-screen bg-slate-50 pt-28 pb-16">
       <SEO
-        title="Student Resources | UISU SPACE"
+        title="Student Resources"
         description="Access a wealth of resources including academic materials, career tips, scholarships, and more."
         image="/og/pages-screenshot/resources.png"
-        url="/resources"
         breadcrumbs={[
           { name: 'Home', url: '/' },
           { name: 'Resources', url: '/resources' }

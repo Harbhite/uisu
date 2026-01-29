@@ -4,7 +4,6 @@ import TutorialCard from '@/components/tutorials/TutorialCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, CheckCircle2, Users, BookOpen, Star } from 'lucide-react';
-import { SEO } from '@/components/SEO';
 
 const TutorProfilePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,12 +23,6 @@ const TutorProfilePage = () => {
 
   return (
     <div className="space-y-12">
-      <SEO
-        title={`${tutor.name} | UISU Tutor`}
-        description={tutor.bio || `Explore tutorials by ${tutor.name} on UISU SPACE.`}
-        image={tutor.avatar !== '/placeholder.svg' ? tutor.avatar : '/og/pages-screenshot/tutorials.png'}
-        url={`/tutorials/tutor/${id}`}
-      />
       <Link to="/tutorials" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-ui-blue transition-colors group">
         <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back to Dashboard
       </Link>

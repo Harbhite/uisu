@@ -29,7 +29,6 @@ const CampusMapPage = () => {
         title="Campus Map | UI Halls of Residence & Locations"
         description="Interactive map of University of Ibadan campus. Navigate 12+ halls of residence (Kuti, Tedder, Queen's), academic buildings, and landmarks. Find your way around Nigeria's premier university."
         image="/og/pages-screenshot/campus-map.png"
-        url="/campus-map"
       />
       
       {/* Header */}

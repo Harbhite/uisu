@@ -60,7 +60,6 @@ const HallsPage = () => {
         title="The Republics - Halls of Residence"
         description="Explore the Halls of Residence of the University of Ibadan. The autonomous republics within the union."
         image="/og/pages-screenshot/halls.png"
-        url="/halls"
       />
       <div className="container mx-auto px-6">
         <button

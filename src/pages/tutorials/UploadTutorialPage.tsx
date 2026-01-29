@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Upload, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { SEO } from '@/components/SEO';
 
 const UploadTutorialPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,12 +25,6 @@ const UploadTutorialPage = () => {
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
-      <SEO
-        title="Upload Tutorial | UISU SPACE"
-        description="Share your knowledge with the Union. Upload tutorials and help fellow students learn and grow."
-        image="/og/pages-screenshot/tutorials_upload.png"
-        url="/tutorials/upload"
-      />
       <Link to="/tutorials" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-ui-blue transition-colors group">
         <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back to Dashboard
       </Link>

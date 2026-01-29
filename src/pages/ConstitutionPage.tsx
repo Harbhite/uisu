@@ -90,7 +90,6 @@ const ConstitutionPage: React.FC = () => {
         title="The Constitution | UISU SPACE"
         description="The Supreme Constitution of the University of Ibadan Students' Union. Digital Legislative Registry."
         image="/og/pages-screenshot/constitution.png"
-        url="/constitution"
       />
 
       {/* Reading Progress Bar */}

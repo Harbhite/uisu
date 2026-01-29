@@ -557,7 +557,6 @@ const ScholarshipPage = () => {
       <SEO 
         title="Scholarship Finder - Resources" 
         description="Find local and international scholarships available to University of Ibadan students." 
-        image="/og/pages-screenshot/resources_scholarships.png"
       />
 
       <div className="container mx-auto px-6">

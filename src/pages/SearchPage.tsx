@@ -190,7 +190,7 @@ const SearchPage = () => {
 
   return (
     <div className="min-h-screen bg-background pt-32 pb-20">
-      <SEO title="Search" description="Search across leaders, documents, events, and more." image="/og/pages-screenshot/search.png" url="/search" />
+      <SEO title="Search" description="Search across leaders, documents, events, and more." image="/og/pages-screenshot/search.png" />
       
       <div className="container mx-auto px-6 max-w-4xl">
         {/* Back Button */}

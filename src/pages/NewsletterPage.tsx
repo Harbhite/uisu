@@ -44,7 +44,6 @@ const NewsletterPage = () => {
         title="The Dispatch | UISU Newsletter"
         description="Piping hot updates from the Union—history, drama, and everything in between. No spam, just substance. Join 2,000+ Uites."
         image="/og/pages-screenshot/newsletter.png"
-        url="/newsletter"
       />
 
       {/* Header */}

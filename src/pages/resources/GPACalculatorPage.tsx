@@ -294,7 +294,6 @@ const GPACalculatorPage = () => {
       <SEO 
         title="GPA Calculator - Resources" 
         description="Calculate your semester and cumulative GPA with our easy-to-use tool. Supports both 4.0 and 5.0 grading scales." 
-        image="/og/pages-screenshot/resources_gpa-calculator.png"
       />
 
       <div className="container mx-auto px-6 lg:px-12 max-w-5xl">

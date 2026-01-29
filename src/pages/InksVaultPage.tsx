@@ -720,7 +720,6 @@ const InksVaultPage = () => {
         title="Inks Vault"
         description="Explore articles, essays, poetry, and reports from the University of Ibadan Students' Union. A collection of student voices and intellectual discourse."
         image="/og/pages-screenshot/inks-vault.png"
-        url="/inks-vault"
       />
       
       <div className="container mx-auto px-6">

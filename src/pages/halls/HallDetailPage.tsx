@@ -304,9 +304,8 @@ const HallDetailPage = () => {
     <div className="min-h-screen bg-slate-50">
       <SEO
         title={`${hall.name} - UISU SPACE`}
-        description={hall.description || `Explore ${hall.name} - history, traditions, and leadership at the University of Ibadan.`}
-        image={hall.image_url || `/og/pages-screenshot/governance_hall_${hall.slug}.png`}
-        url={`/governance/hall/${hall.slug}`}
+        description={hall.description || ''}
+        image="/og/pages-screenshot/hall-detail.png"
       />
 
       {/* Hero Section */}

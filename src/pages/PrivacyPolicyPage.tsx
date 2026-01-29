@@ -75,7 +75,6 @@ const PrivacyPolicyPage = () => {
         title="Privacy Policy | UISU SPACE"
         description="Learn how UISU SPACE collects, uses, and protects your personal information. Our commitment to your privacy and data security."
         image="/og/pages-screenshot/privacy-policy.png"
-        url="/privacy-policy"
         breadcrumbs={[
           { name: 'Home', url: '/' },
           { name: 'Privacy Policy', url: '/privacy-policy' }

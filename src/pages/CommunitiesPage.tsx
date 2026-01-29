@@ -22,7 +22,6 @@ const CommunitiesPage = () => {
         title="Student Clubs & Societies | UI Campus Communities"
         description="Explore 50+ student organizations at University of Ibadan: departmental associations, religious groups, press clubs, and cultural societies. Find your community and join student life."
         image="/og/pages-screenshot/communities.png"
-        url="/communities"
         breadcrumbs={[
           { name: 'Home', url: '/' },
           { name: 'Communities', url: '/communities' }

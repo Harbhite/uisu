@@ -71,8 +71,6 @@ const UnsubscribePage = () => {
       <SEO 
         title="Unsubscribe — UISU SPACE"
         description="Unsubscribe from the UISU SPACE newsletter"
-        image="/og/pages-screenshot/unsubscribe.png"
-        url="/unsubscribe"
       />
       
       <div className="max-w-md w-full">
