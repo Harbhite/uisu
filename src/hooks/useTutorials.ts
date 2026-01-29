@@ -264,17 +264,21 @@ export const useCreateTutorial = () => {
 
       const { data: newTutorial, error: tutorialError } = await supabase
         .from('tutorials')
-        .insert(tutorial)
+        .insert(tutorial as any)
         .select()
         .single();
 
       if (tutorialError) throw tutorialError;
 
       if (modules.length > 0) {
-        const modulesWithId = modules.map(m => ({ ...m, tutorial_id: newTutorial.id }));
+        const modulesWithId = modules.map(m => ({ 
+          ...m, 
+          tutorial_id: newTutorial.id,
+          title: m.title || 'Untitled Module'
+        }));
         const { error: modulesError } = await supabase
           .from('tutorial_modules')
-          .insert(modulesWithId);
+          .insert(modulesWithId as any);
 
         if (modulesError) throw modulesError;
       }

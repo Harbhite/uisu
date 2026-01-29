@@ -250,6 +250,7 @@ const MentalWellnessPage = () => {
       <SEO 
         title="Mental Wellness - Resources" 
         description="Mental health resources and support for University of Ibadan students." 
+        image="/og/pages-screenshot/resources_mental-wellness.png"
       />
 
       <div className="container mx-auto px-6">
