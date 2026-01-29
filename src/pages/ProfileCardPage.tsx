@@ -33,7 +33,8 @@ const ProfileCardPage = () => {
       <SEO
         title="Profile Card | UISU"
         description="Digital Profile Card Showcase for the University of Ibadan Students' Union."
-        image="/screenshots/index.png"
+        image="/og/pages-screenshot/profile-card.png"
+        url="/profile-card"
       />
 
       <Navbar

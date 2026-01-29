@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Star, Users, Clock, Loader2 } from 'lucide-react';
 import { tutorials as staticTutorials, tutors as staticTutors } from '@/lib/tutorials-data';
+import { SEO } from '@/components/SEO';
 
 const TutorialDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -98,6 +99,12 @@ const TutorialDetailPage = () => {
 
   return (
     <div className="space-y-8">
+      <SEO
+        title={`${tutorial.title} | UISU Tutorials`}
+        description={tutorial.description || `Learn ${tutorial.title} with our ${tutorial.format.toLowerCase()} tutorial.`}
+        image={tutorial.coverImage !== '/placeholder.svg' ? tutorial.coverImage : '/og/pages-screenshot/tutorials.png'}
+        url={`/tutorials/${id}`}
+      />
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <Link to="/tutorials/catalog" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-purple-600 transition-colors">

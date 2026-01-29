@@ -292,6 +292,7 @@ const StyleGuidePage: React.FC = () => {
         title="Visual Registry & Aluta Protocol"
         description="The comprehensive design manual and component registry for the UISU SPACE platform."
         image="/og/pages-screenshot/style-guide.png"
+        url="/style-guide"
       />
 
       {/* Table of Contents Sidebar */}

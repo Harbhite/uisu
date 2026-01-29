@@ -11,6 +11,7 @@ import { ArrowRight, BookOpen, GraduationCap, UserPlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import { SEO } from '@/components/SEO';
 
 const WavePattern = () => {
   return (
@@ -147,6 +148,12 @@ const TutorialsLandingPage = () => {
 
   return (
     <div className="space-y-8 pb-12">
+      <SEO
+        title="Tutorials | UISU SPACE"
+        description="Learn and grow with tutorials created by verified tutors and fellow students. From academic excellence to practical skills at the University of Ibadan."
+        image="/og/pages-screenshot/tutorials.png"
+        url="/tutorials"
+      />
       {/* Hero Section */}
       <section className="relative overflow-hidden min-h-[480px] bg-[#6E5494] flex items-center shadow-2xl -mx-8 -mt-8">
         <div className="container mx-auto px-8 md:px-16 flex flex-col md:flex-row items-center h-full relative z-10">
