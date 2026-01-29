@@ -30,6 +30,7 @@ const GovernancePage = () => {
         title="Governance Structure | UISU Executive & Legislature"
         description="Learn how UI Students' Union operates: Executive Council, Students' Representative Council (SRC), Judicial Council, and committee structures. Understand the first student union in Nigeria."
         image="/og/pages-screenshot/governance.png"
+        url="/governance"
         breadcrumbs={[
           { name: 'Home', url: '/' },
           { name: 'Governance', url: '/governance' }

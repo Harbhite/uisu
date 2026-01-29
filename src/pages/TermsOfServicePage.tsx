@@ -78,6 +78,7 @@ const TermsOfServicePage = () => {
         title="Terms of Service | UISU SPACE"
         description="Read the terms and conditions for using UISU SPACE. Understand your rights and responsibilities as a user of our platform."
         image="/og/pages-screenshot/terms-of-service.png"
+        url="/terms-of-service"
       />
       
       <main className="pt-24 pb-20">
