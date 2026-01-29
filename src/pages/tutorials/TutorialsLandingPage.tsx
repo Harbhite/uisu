@@ -2,16 +2,18 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { tutors as staticTutors, tutorials as staticTutorials, categories } from '@/lib/tutorials-data';
+import { offlineDb } from '@/lib/tutorials-db';
 import TutorialCard from '@/components/tutorials/TutorialCard';
 import TutorCard from '@/components/tutorials/TutorCard';
 import MyLearningDashboard from '@/components/tutorials/MyLearningDashboard';
 import TutorApplicationForm from '@/components/tutorials/TutorApplicationForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowRight, BookOpen, GraduationCap, UserPlus } from 'lucide-react';
+import { ArrowRight, BookOpen, GraduationCap, UserPlus, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { SEO } from '@/components/SEO';
+import { toast } from '@/hooks/use-toast';
 
 const WavePattern = () => {
   return (
@@ -38,6 +40,7 @@ const WavePattern = () => {
 const TutorialsLandingPage = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('discover');
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -50,6 +53,35 @@ const TutorialsLandingPage = () => {
     
     return () => subscription.unsubscribe();
   }, []);
+
+  const handleExportDatabase = async () => {
+    setIsExporting(true);
+    try {
+      const data = await offlineDb.exportData();
+      const blob = new Blob([data], { type: 'application/x-sqlite3' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `uisu-tutorials-backup-${new Date().toISOString().split('T')[0]}.db`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({
+        title: "Export successful",
+        description: "Your tutorials database has been downloaded.",
+      });
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast({
+        title: "Export failed",
+        description: "Could not export the database. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   // Fetch tutors from database
   const { data: dbTutors } = useQuery({
@@ -170,12 +202,21 @@ const TutorialsLandingPage = () => {
               From academic excellence to practical skills, explore tutorials created by verified tutors and your fellow students.
             </p>
 
-            <div className="flex gap-4">
+            <div className="flex gap-4 flex-wrap">
               <Link to="/tutorials/catalog">
                 <Button className="bg-white text-[#6E5494] hover:bg-purple-50 font-bold px-8 py-6 rounded-none tracking-wide transition-all">
                   START LEARNING
                 </Button>
               </Link>
+              <Button 
+                variant="outline" 
+                onClick={handleExportDatabase}
+                disabled={isExporting}
+                className="bg-transparent border-white/50 text-white hover:bg-white/10 font-bold px-6 py-6 rounded-none tracking-wide transition-all"
+              >
+                <Download size={16} className="mr-2" />
+                {isExporting ? 'Exporting...' : 'Export Backup'}
+              </Button>
             </div>
           </div>
 
