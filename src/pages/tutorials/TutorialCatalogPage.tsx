@@ -1,13 +1,10 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { tutorials as staticTutorials, tutors as staticTutors, categories } from '@/lib/tutorials-data';
+import { useTutorials } from '@/hooks/useTutorials';
+import { tutorials as staticTutorials, tutors as staticTutors } from '@/lib/tutorials-data';
 import TutorialCard from '@/components/tutorials/TutorialCard';
 import TutorialFilters from '@/components/tutorials/TutorialFilters';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, Loader2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Search, Loader2 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 
 const TutorialCatalogPage = () => {
@@ -15,56 +12,36 @@ const TutorialCatalogPage = () => {
   const [selectedFormat, setSelectedFormat] = useState<string | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
 
-  // Fetch tutorials from database
-  const { data: dbTutorials, isLoading } = useQuery({
-    queryKey: ['tutorials-catalog'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tutorials')
-        .select(`
-          *,
-          tutors (*),
-          tutorial_modules (id, title, type, duration, sort_order)
-        `)
-        .eq('is_published', true)
-        .eq('is_approved', true)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
-    },
-  });
+  // Fetch tutorials using hook
+  // Note: We fetch all published tutorials and filter client-side because we need to
+  // combine them with static/simulated data. The dataset is currently small enough
+  // for this to be performant.
+  const { data: dbTutorials, isLoading } = useTutorials();
 
   // Convert DB tutorials to display format
-  const dbTutorialsFormatted = (dbTutorials || []).map((t: any) => ({
+  const dbTutorialsFormatted = (dbTutorials || []).map((t) => ({
     id: t.id,
     title: t.title,
     description: t.description || '',
     tutorId: t.tutor_id,
-    format: t.format as 'Video' | 'Audio' | 'Text' | 'Essay',
-    level: t.level as 'Beginner' | 'Intermediate' | 'Advanced',
+    format: t.format,
+    level: t.level,
     coverImage: t.cover_image || '/placeholder.svg',
     tags: t.tags || [],
     rating: Number(t.rating) || 0,
     studentsCount: t.students_count || 0,
     createdAt: t.created_at || '',
-    modules: (t.tutorial_modules || []).map((m: any) => ({
-      id: m.id,
-      title: m.title,
-      type: m.type,
-      content: '',
-      duration: m.duration || '',
-    })).sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0)),
-    tutor: t.tutors ? {
-      id: t.tutors.id,
-      name: t.tutors.name,
-      tier: t.tutors.tier,
-      bio: t.tutors.bio || '',
-      avatar: t.tutors.avatar || '/placeholder.svg',
+    modules: [], // Modules data usually fetched separately on detail page
+    tutor: t.tutor ? {
+      id: t.tutor.id,
+      name: t.tutor.name,
+      tier: t.tutor.tier,
+      bio: t.tutor.bio || '',
+      avatar: t.tutor.avatar || '/placeholder.svg',
       metrics: {
-        courses: t.tutors.courses_count || 0,
-        students: t.tutors.students_count || 0,
-        rating: Number(t.tutors.rating) || 0,
+        courses: t.tutor.courses_count || 0,
+        students: t.tutor.students_count || 0,
+        rating: Number(t.tutor.rating) || 0,
       },
     } : null,
   }));
