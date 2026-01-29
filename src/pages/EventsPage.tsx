@@ -11,6 +11,7 @@ const EventsPage = () => {
         title="Events Calendar | UISU Activities & Campus Happenings"
         description="Discover upcoming UI Students' Union events, academic calendar dates, cultural activities, and campus happenings. RSVP to lectures, concerts, and student-led initiatives at Ibadan."
         image="/og/pages-screenshot/events.png"
+        url="/events"
       />
       <EventsCalendar onBack={() => navigate("/")} />
     </>

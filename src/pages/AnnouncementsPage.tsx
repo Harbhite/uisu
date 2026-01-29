@@ -11,6 +11,7 @@ const AnnouncementsPage = () => {
         title="Official Announcements | UISU News & Updates"
         description="Get the latest official news from UI Students' Union: policy updates, election notices, academic calendar changes, and important campus announcements. Stay informed, Uite."
         image="/og/pages-screenshot/announcements.png"
+        url="/announcements"
       />
       <AnnouncementsComponent onBack={() => navigate("/")} />
     </>

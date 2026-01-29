@@ -203,6 +203,7 @@ const AuthPage = () => {
         title="Sign In"
         description="Sign in or create an account to access UISU SPACE features, contribute to the Inks Vault, and stay connected with the student union."
         image="/og/pages-screenshot/auth.png"
+        url="/auth"
       />
       <div className="container mx-auto px-6">
         <button 

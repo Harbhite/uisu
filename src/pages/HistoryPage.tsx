@@ -45,6 +45,7 @@ const HistoryPage: React.FC = () => {
         title="History - University of Ibadan Students' Union"
         description="The evolution of student unionism from global origins to the University of Ibadan."
         image="/og/pages-screenshot/history.png"
+        url="/history"
       />
       <VisionSection />
       <TimelineJourney />

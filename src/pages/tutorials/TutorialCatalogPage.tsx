@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, Filter, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { SEO } from '@/components/SEO';
 
 const TutorialCatalogPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -95,6 +96,12 @@ const TutorialCatalogPage = () => {
 
   return (
     <div className="space-y-8 pb-12">
+      <SEO
+        title="Tutorial Catalog | UISU SPACE"
+        description="Browse our catalog of tutorials from verified tutors and community contributors. Video, audio, text, and essay formats available."
+        image="/og/pages-screenshot/tutorials_catalog.png"
+        url="/tutorials/catalog"
+      />
       <div className="border-b border-purple-200/60 pb-8 relative">
         <div className="absolute top-0 right-0 w-64 h-64 bg-purple-200/20 rounded-full blur-3xl -z-10 pointer-events-none" />
         <h1 className="text-4xl font-serif font-bold text-[#2D1B4E] mb-3">Browse Catalog</h1>
