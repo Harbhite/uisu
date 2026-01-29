@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
-import { useTutorial } from '@/hooks/useTutorials';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import CoursePlayer from '@/components/tutorials/CoursePlayer';
 import EnrollButton from '@/components/tutorials/EnrollButton';
 import BookmarkButton from '@/components/tutorials/BookmarkButton';
@@ -14,10 +15,27 @@ import { SEO } from '@/components/SEO';
 const TutorialDetailPage = () => {
   const { id } = useParams<{ id: string }>();
 
-  // Fetch tutorial using hook
-  const { data: dbTutorial, isLoading: tutorialLoading } = useTutorial(id || '');
+  // Fetch tutorial from database
+  const { data: dbTutorial, isLoading: tutorialLoading } = useQuery({
+    queryKey: ['tutorial', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tutorials')
+        .select(`
+          *,
+          tutors (*),
+          tutorial_modules (*)
+        `)
+        .eq('id', id!)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id && id.includes('-'), // Only for UUID format
+  });
 
-  // Fallback to static data for old string IDs (or if offline DB empty but ID matches static)
+  // Fallback to static data for old string IDs
   const staticTutorial = staticTutorials.find(t => t.id === id);
   const staticTutor = staticTutorial ? staticTutors.find(t => t.id === staticTutorial.tutorId) : null;
 
@@ -33,8 +51,8 @@ const TutorialDetailPage = () => {
     tags: dbTutorial.tags || [],
     rating: Number(dbTutorial.rating) || 0,
     studentsCount: dbTutorial.students_count || 0,
-    createdAt: (dbTutorial as any).created_at || '',
-    modules: (dbTutorial.modules || []).map((m: any) => ({
+    createdAt: dbTutorial.created_at || '',
+    modules: (dbTutorial.tutorial_modules || []).map((m: any) => ({
       id: m.id,
       title: m.title,
       type: m.type as 'Video' | 'Audio' | 'Text' | 'Essay',
@@ -44,16 +62,16 @@ const TutorialDetailPage = () => {
     })).sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0)),
   } : staticTutorial;
 
-  const tutor = dbTutorial?.tutor ? {
-    id: dbTutorial.tutor.id,
-    name: dbTutorial.tutor.name,
-    tier: dbTutorial.tutor.tier,
-    bio: dbTutorial.tutor.bio || '',
-    avatar: dbTutorial.tutor.avatar || '/placeholder.svg',
+  const tutor = dbTutorial?.tutors ? {
+    id: dbTutorial.tutors.id,
+    name: dbTutorial.tutors.name,
+    tier: dbTutorial.tutors.tier as 'Official' | 'Verified' | 'Community',
+    bio: dbTutorial.tutors.bio || '',
+    avatar: dbTutorial.tutors.avatar || '/placeholder.svg',
     metrics: {
-      courses: dbTutorial.tutor.courses_count || 0,
-      students: dbTutorial.tutor.students_count || 0,
-      rating: Number(dbTutorial.tutor.rating) || 0,
+      courses: dbTutorial.tutors.courses_count || 0,
+      students: dbTutorial.tutors.students_count || 0,
+      rating: Number(dbTutorial.tutors.rating) || 0,
     },
   } : staticTutor;
 
@@ -77,7 +95,7 @@ const TutorialDetailPage = () => {
     );
   }
 
-  const isDbTutorial = id?.includes('-') || !!dbTutorial;
+  const isDbTutorial = id?.includes('-');
 
   return (
     <div className="space-y-8">

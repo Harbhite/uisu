@@ -29,18 +29,6 @@ export const initOfflineDb = async (): Promise<Database> => {
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
     
-    CREATE TABLE IF NOT EXISTS tutor_applications (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL,
-      name TEXT NOT NULL,
-      bio TEXT NOT NULL,
-      expertise TEXT NOT NULL, -- JSON array
-      portfolio_url TEXT,
-      status TEXT DEFAULT 'pending', -- pending, approved, rejected
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-    );
-
     CREATE TABLE IF NOT EXISTS tutorials (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
@@ -54,7 +42,6 @@ export const initOfflineDb = async (): Promise<Database> => {
       ratings_count INTEGER DEFAULT 0,
       students_count INTEGER DEFAULT 0,
       is_published INTEGER DEFAULT 0,
-      is_approved INTEGER DEFAULT 0,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (tutor_id) REFERENCES tutors(id)
@@ -94,7 +81,6 @@ export const initOfflineDb = async (): Promise<Database> => {
     CREATE TABLE IF NOT EXISTS reviews (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
-      user_name TEXT,
       tutorial_id TEXT NOT NULL,
       rating INTEGER NOT NULL,
       comment TEXT,
@@ -147,15 +133,15 @@ const seedOfflineData = (database: Database) => {
   
   // Seed tutorials
   const tutorials = [
-    { id: 'tut-1', title: 'GST 101: Use of English Masterclass', description: 'A comprehensive guide to mastering GST 101.', tutor_id: 't-official', format: 'Video', level: 'Beginner', tags: JSON.stringify(['GST', 'Academic']), is_published: 1, is_approved: 1 },
-    { id: 'tut-2', title: 'Python for Data Science', description: 'Learn Python from scratch with a focus on data analysis.', tutor_id: 't-verified-1', format: 'Video', level: 'Intermediate', tags: JSON.stringify(['Tech', 'Coding']), is_published: 1, is_approved: 1 },
-    { id: 'tut-3', title: 'Surviving UI: A Fresher\'s Guide', description: 'Essential tips for navigating campus life.', tutor_id: 't-official', format: 'Audio', level: 'Beginner', tags: JSON.stringify(['Lifestyle', 'Guide']), is_published: 1, is_approved: 1 },
+    { id: 'tut-1', title: 'GST 101: Use of English Masterclass', description: 'A comprehensive guide to mastering GST 101.', tutor_id: 't-official', format: 'Video', level: 'Beginner', tags: JSON.stringify(['GST', 'Academic']), is_published: 1 },
+    { id: 'tut-2', title: 'Python for Data Science', description: 'Learn Python from scratch with a focus on data analysis.', tutor_id: 't-verified-1', format: 'Video', level: 'Intermediate', tags: JSON.stringify(['Tech', 'Coding']), is_published: 1 },
+    { id: 'tut-3', title: 'Surviving UI: A Fresher\'s Guide', description: 'Essential tips for navigating campus life.', tutor_id: 't-official', format: 'Audio', level: 'Beginner', tags: JSON.stringify(['Lifestyle', 'Guide']), is_published: 1 },
   ];
   
   tutorials.forEach(t => {
     database.run(
-      "INSERT INTO tutorials (id, title, description, tutor_id, format, level, tags, is_published, is_approved) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [t.id, t.title, t.description, t.tutor_id, t.format, t.level, t.tags, t.is_published, t.is_approved]
+      "INSERT INTO tutorials (id, title, description, tutor_id, format, level, tags, is_published) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [t.id, t.title, t.description, t.tutor_id, t.format, t.level, t.tags, t.is_published]
     );
   });
   
@@ -215,156 +201,27 @@ export const offlineDb = {
       is_verified: Boolean(row[9]),
     };
   },
-
-  // Tutor Applications
-  submitTutorApplication: async (userId: string, name: string, bio: string, expertise: string[], portfolioUrl?: string) => {
-    const database = await initOfflineDb();
-    const id = generateUUID();
-    database.run(
-      "INSERT INTO tutor_applications (id, user_id, name, bio, expertise, portfolio_url) VALUES (?, ?, ?, ?, ?, ?)",
-      [id, userId, name, bio, JSON.stringify(expertise), portfolioUrl || null]
-    );
-    return { id, user_id: userId, name, bio, expertise, portfolio_url: portfolioUrl, status: 'pending' };
-  },
-
-  getTutorApplication: async (userId: string) => {
-    const database = await initOfflineDb();
-    const result = database.exec("SELECT * FROM tutor_applications WHERE user_id = ? ORDER BY created_at DESC LIMIT 1", [userId]);
-    if (!result[0]?.values[0]) return null;
-    const row = result[0].values[0];
-    return {
-      id: row[0] as string,
-      user_id: row[1] as string,
-      name: row[2] as string,
-      bio: row[3] as string,
-      expertise: JSON.parse(row[4] as string),
-      portfolio_url: row[5] as string | null,
-      status: row[6] as string,
-      created_at: row[7] as string,
-    };
-  },
-
-  getAllTutorApplications: async (status?: string) => {
-    const database = await initOfflineDb();
-    let query = "SELECT * FROM tutor_applications";
-    const params: string[] = [];
-    if (status) {
-      query += " WHERE status = ?";
-      params.push(status);
-    }
-    query += " ORDER BY created_at DESC";
-    const result = database.exec(query, params);
-    return result[0]?.values.map(row => ({
-      id: row[0] as string,
-      user_id: row[1] as string,
-      name: row[2] as string,
-      bio: row[3] as string,
-      expertise: JSON.parse(row[4] as string),
-      portfolio_url: row[5] as string | null,
-      status: row[6] as string,
-      created_at: row[7] as string,
-    })) || [];
-  },
-
-  updateTutorApplicationStatus: async (id: string, status: string) => {
-    const database = await initOfflineDb();
-    database.run("UPDATE tutor_applications SET status = ? WHERE id = ?", [status, id]);
-
-    // If approved, create a tutor profile
-    if (status === 'approved') {
-      const appResult = database.exec("SELECT * FROM tutor_applications WHERE id = ?", [id]);
-      if (appResult[0]?.values[0]) {
-        const app = appResult[0].values[0];
-        const userId = app[1] as string;
-        const name = app[2] as string;
-        const bio = app[3] as string;
-
-        // Check if tutor already exists
-        const existing = database.exec("SELECT 1 FROM tutors WHERE user_id = ?", [userId]);
-        if (!existing[0]?.values.length) {
-          const tutorId = generateUUID();
-          database.run(
-            "INSERT INTO tutors (id, user_id, name, bio, tier, is_verified) VALUES (?, ?, ?, ?, 'Verified', 1)",
-            [tutorId, userId, name, bio]
-          );
-        }
-      }
-    }
-  },
   
   // Tutorials
-  createTutorial: async (tutorial: {
-    title: string;
-    description: string;
-    tutor_id: string;
-    format: string;
-    level: string;
-    cover_image?: string;
-    tags: string[];
-  }) => {
+  getTutorials: async (filters?: { format?: string; level?: string; search?: string }) => {
     const database = await initOfflineDb();
-    const id = generateUUID();
-    database.run(
-      "INSERT INTO tutorials (id, title, description, tutor_id, format, level, cover_image, tags, is_published, is_approved) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [
-        id,
-        tutorial.title,
-        tutorial.description,
-        tutorial.tutor_id,
-        tutorial.format,
-        tutorial.level,
-        tutorial.cover_image || null,
-        JSON.stringify(tutorial.tags),
-        0, // Not published by default
-        0  // Not approved by default
-      ]
-    );
-    return { id, ...tutorial };
-  },
-
-  createModule: async (moduleId: string, tutorialId: string, moduleData: { title: string; type: string; content?: string; duration?: string; sort_order: number }) => {
-    const database = await initOfflineDb();
-    database.run(
-      "INSERT INTO tutorial_modules (id, tutorial_id, title, type, content, duration, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [moduleId, tutorialId, moduleData.title, moduleData.type, moduleData.content || null, moduleData.duration || null, moduleData.sort_order]
-    );
-  },
-
-  updateTutorialStatus: async (id: string, isPublished: boolean, isApproved: boolean) => {
-    const database = await initOfflineDb();
-    database.run(
-      "UPDATE tutorials SET is_published = ?, is_approved = ? WHERE id = ?",
-      [isPublished ? 1 : 0, isApproved ? 1 : 0, id]
-    );
-  },
-
-  getTutorials: async (filters?: { format?: string; level?: string; search?: string; tutorId?: string; includeUnapproved?: boolean }) => {
-    const database = await initOfflineDb();
-    let query = "SELECT t.*, tu.name as tutor_name, tu.avatar as tutor_avatar, tu.tier as tutor_tier FROM tutorials t LEFT JOIN tutors tu ON t.tutor_id = tu.id WHERE 1=1";
+    let query = "SELECT * FROM tutorials WHERE is_published = 1";
     const params: (string | number)[] = [];
     
-    if (!filters?.includeUnapproved) {
-      query += " AND t.is_published = 1 AND t.is_approved = 1";
-    }
-
     if (filters?.format) {
-      query += " AND t.format = ?";
+      query += " AND format = ?";
       params.push(filters.format);
     }
     if (filters?.level) {
-      query += " AND t.level = ?";
+      query += " AND level = ?";
       params.push(filters.level);
     }
-    if (filters?.tutorId) {
-      query += " AND t.tutor_id = ?";
-      params.push(filters.tutorId);
-    }
     if (filters?.search) {
-      query += " AND (t.title LIKE ? OR t.description LIKE ?)";
+      query += " AND (title LIKE ? OR description LIKE ?)";
       params.push(`%${filters.search}%`, `%${filters.search}%`);
     }
     
-    query += " ORDER BY t.created_at DESC";
+    query += " ORDER BY created_at DESC";
     
     const result = database.exec(query, params);
     return result[0]?.values.map(row => ({
@@ -380,14 +237,7 @@ export const offlineDb = {
       ratings_count: row[9] as number,
       students_count: row[10] as number,
       is_published: Boolean(row[11]),
-      is_approved: Boolean(row[12]),
-      created_at: row[13] as string,
-      tutor: {
-        id: row[3] as string,
-        name: row[15] as string,
-        avatar: row[16] as string,
-        tier: row[17] as string,
-      }
+      created_at: row[12] as string,
     })) || [];
   },
   
@@ -409,7 +259,6 @@ export const offlineDb = {
       ratings_count: row[9] as number,
       students_count: row[10] as number,
       is_published: Boolean(row[11]),
-      is_approved: Boolean(row[12]),
     };
   },
   
@@ -462,7 +311,7 @@ export const offlineDb = {
   getEnrollments: async (userId: string) => {
     const database = await initOfflineDb();
     const result = database.exec(
-      "SELECT e.*, t.title, t.cover_image, t.tutor_id, tu.name FROM enrollments e JOIN tutorials t ON e.tutorial_id = t.id JOIN tutors tu ON t.tutor_id = tu.id WHERE e.user_id = ?",
+      "SELECT e.*, t.title, t.cover_image FROM enrollments e JOIN tutorials t ON e.tutorial_id = t.id WHERE e.user_id = ?",
       [userId]
     );
     return result[0]?.values.map(row => ({
@@ -471,14 +320,8 @@ export const offlineDb = {
       tutorial_id: row[2] as string,
       enrolled_at: row[3] as string,
       completed_at: row[4] as string | null,
-      // Nested structure to mimic Supabase
-      tutorial: {
-        title: row[5] as string,
-        cover_image: row[6] as string,
-        tutor: {
-          name: row[8] as string
-        }
-      }
+      tutorial_title: row[5] as string,
+      tutorial_cover: row[6] as string,
     })) || [];
   },
   
@@ -512,12 +355,12 @@ export const offlineDb = {
   },
   
   // Reviews
-  addReview: async (userId: string, tutorialId: string, rating: number, comment?: string, userName?: string) => {
+  addReview: async (userId: string, tutorialId: string, rating: number, comment?: string) => {
     const database = await initOfflineDb();
     const id = generateUUID();
     database.run(
-      "INSERT OR REPLACE INTO reviews (id, user_id, tutorial_id, rating, comment, user_name) VALUES (?, ?, ?, ?, ?, ?)",
-      [id, userId, tutorialId, rating, comment || null, userName || null]
+      "INSERT OR REPLACE INTO reviews (id, user_id, tutorial_id, rating, comment) VALUES (?, ?, ?, ?, ?)",
+      [id, userId, tutorialId, rating, comment || null]
     );
     // Update tutorial rating
     const avgResult = database.exec(
@@ -531,7 +374,7 @@ export const offlineDb = {
         [avgRating, count, tutorialId]
       );
     }
-    return { id, user_id: userId, tutorial_id: tutorialId, rating, comment, user_name: userName };
+    return { id, user_id: userId, tutorial_id: tutorialId, rating, comment };
   },
   
   getReviews: async (tutorialId: string) => {
@@ -543,15 +386,10 @@ export const offlineDb = {
     return result[0]?.values.map(row => ({
       id: row[0] as string,
       user_id: row[1] as string,
-      user_name: row[2] as string | null, // Added user_name column
-      tutorial_id: row[3] as string,
-      rating: row[4] as number,
-      comment: row[5] as string | null,
-      created_at: row[6] as string,
-      profile: {
-        full_name: row[2] as string || 'Unknown User',
-        avatar_url: null
-      }
+      tutorial_id: row[2] as string,
+      rating: row[3] as number,
+      comment: row[4] as string | null,
+      created_at: row[5] as string,
     })) || [];
   },
   

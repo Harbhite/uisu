@@ -76,7 +76,6 @@ export interface TutorialEnrollment {
   tutorial_id: string;
   enrolled_at: string;
   completed_at: string | null;
-  tutorial?: Tutorial;
 }
 
 export interface TutorialProgress {
@@ -90,7 +89,6 @@ export interface TutorialProgress {
 export interface TutorialReview {
   id: string;
   user_id: string;
-  user_name?: string | null;
   tutorial_id: string;
   rating: number;
   comment: string | null;
@@ -106,18 +104,6 @@ export interface TutorialBookmark {
   id: string;
   user_id: string;
   tutorial_id: string;
-  created_at: string;
-  tutorial?: Tutorial;
-}
-
-export interface TutorApplication {
-  id: string;
-  user_id: string;
-  name: string;
-  bio: string;
-  expertise: string[];
-  portfolio_url: string | null;
-  status: 'pending' | 'approved' | 'rejected';
   created_at: string;
 }
 
@@ -168,7 +154,7 @@ export const useTutor = (id: string) => {
   });
 };
 
-// Hook to fetch tutorials with filters (Public View)
+// Hook to fetch tutorials with filters
 export const useTutorials = (filters?: { format?: string; level?: string; search?: string; tutorId?: string }) => {
   const isOnline = useOnlineStatus();
   
@@ -203,112 +189,6 @@ export const useTutorials = (filters?: { format?: string; level?: string; search
       if (error) throw error;
       return data as Tutorial[];
     },
-  });
-};
-
-// Hook to fetch all tutorials (Admin View)
-export const useAllTutorials = (filters?: { search?: string; status?: string }) => {
-  const isOnline = useOnlineStatus();
-
-  return useQuery({
-    queryKey: ['all-tutorials', filters],
-    queryFn: async () => {
-      if (!isOnline) {
-        const all = await offlineDb.getTutorials({ ...filters, includeUnapproved: true });
-        if (filters?.status === 'pending') {
-          return all.filter(t => !t.is_approved);
-        }
-        return all;
-      }
-
-      let query = supabase
-        .from('tutorials')
-        .select('*, tutor:tutors(*)')
-        .order('created_at', { ascending: false });
-
-      if (filters?.search) {
-        query = query.or(`title.ilike.%${filters.search}%`);
-      }
-
-      if (filters?.status === 'pending') {
-        query = query.eq('is_approved', false);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as Tutorial[];
-    }
-  });
-};
-
-// Hook to create a tutorial
-export const useCreateTutorial = () => {
-  const queryClient = useQueryClient();
-  const isOnline = useOnlineStatus();
-
-  return useMutation({
-    mutationFn: async ({ tutorial, modules }: { tutorial: Partial<Tutorial>; modules: Partial<TutorialModule>[] }) => {
-      if (!isOnline) {
-        const newTutorial = await offlineDb.createTutorial(tutorial as any);
-        for (const module of modules) {
-          const moduleId = crypto.randomUUID();
-          await offlineDb.createModule(moduleId, newTutorial.id, module as any);
-        }
-        return newTutorial;
-      }
-
-      const { data: newTutorial, error: tutorialError } = await supabase
-        .from('tutorials')
-        .insert(tutorial as any)
-        .select()
-        .single();
-
-      if (tutorialError) throw tutorialError;
-
-      if (modules.length > 0) {
-        const modulesWithId = modules.map(m => ({ 
-          ...m, 
-          tutorial_id: newTutorial.id,
-          title: m.title || 'Untitled Module'
-        }));
-        const { error: modulesError } = await supabase
-          .from('tutorial_modules')
-          .insert(modulesWithId as any);
-
-        if (modulesError) throw modulesError;
-      }
-
-      return newTutorial;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tutorials'] });
-      queryClient.invalidateQueries({ queryKey: ['all-tutorials'] });
-    }
-  });
-};
-
-// Hook to update tutorial status (Approve/Reject)
-export const useUpdateTutorialStatus = () => {
-  const queryClient = useQueryClient();
-  const isOnline = useOnlineStatus();
-
-  return useMutation({
-    mutationFn: async ({ id, isPublished, isApproved }: { id: string; isPublished: boolean; isApproved: boolean }) => {
-      if (!isOnline) {
-        return await offlineDb.updateTutorialStatus(id, isPublished, isApproved);
-      }
-
-      const { error } = await supabase
-        .from('tutorials')
-        .update({ is_published: isPublished, is_approved: isApproved })
-        .eq('id', id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tutorials'] });
-      queryClient.invalidateQueries({ queryKey: ['all-tutorials'] });
-    }
   });
 };
 
@@ -464,8 +344,7 @@ export const useUserEnrollments = (userId?: string) => {
       if (!userId) return [];
       
       if (!isOnline) {
-        const enrollments = await offlineDb.getEnrollments(userId);
-        return enrollments as unknown as TutorialEnrollment[];
+        return await offlineDb.getEnrollments(userId);
       }
       
       const { data, error } = await supabase
@@ -576,9 +455,9 @@ export const useAddReview = () => {
   const isOnline = useOnlineStatus();
   
   return useMutation({
-    mutationFn: async ({ tutorialId, userId, rating, comment, userName }: { tutorialId: string; userId: string; rating: number; comment?: string; userName?: string }) => {
+    mutationFn: async ({ tutorialId, userId, rating, comment }: { tutorialId: string; userId: string; rating: number; comment?: string }) => {
       if (!isOnline) {
-        return await offlineDb.addReview(userId, tutorialId, rating, comment, userName);
+        return await offlineDb.addReview(userId, tutorialId, rating, comment);
       }
       
       const { data, error } = await supabase
@@ -667,8 +546,7 @@ export const useUserBookmarks = (userId?: string) => {
       if (!userId) return [];
       
       if (!isOnline) {
-        const bookmarks = await offlineDb.getBookmarks(userId);
-        return bookmarks as unknown as TutorialBookmark[];
+        return await offlineDb.getBookmarks(userId);
       }
       
       const { data, error } = await supabase
@@ -687,7 +565,6 @@ export const useUserBookmarks = (userId?: string) => {
 // Hook to submit tutor application
 export const useSubmitTutorApplication = () => {
   const queryClient = useQueryClient();
-  const isOnline = useOnlineStatus();
   
   return useMutation({
     mutationFn: async ({ userId, name, bio, expertise, portfolioUrl }: { 
@@ -697,10 +574,6 @@ export const useSubmitTutorApplication = () => {
       expertise: string[]; 
       portfolioUrl?: string 
     }) => {
-      if (!isOnline) {
-        return await offlineDb.submitTutorApplication(userId, name, bio, expertise, portfolioUrl);
-      }
-
       const { data, error } = await supabase
         .from('tutor_applications')
         .insert({ user_id: userId, name, bio, expertise, portfolio_url: portfolioUrl })
@@ -718,17 +591,11 @@ export const useSubmitTutorApplication = () => {
 
 // Hook to get user's tutor application status
 export const useTutorApplicationStatus = (userId?: string) => {
-  const isOnline = useOnlineStatus();
-
   return useQuery({
     queryKey: ['tutor-application', userId],
     queryFn: async () => {
       if (!userId) return null;
       
-      if (!isOnline) {
-        return await offlineDb.getTutorApplication(userId);
-      }
-
       const { data, error } = await supabase
         .from('tutor_applications')
         .select('*')
@@ -741,57 +608,5 @@ export const useTutorApplicationStatus = (userId?: string) => {
       return data;
     },
     enabled: !!userId,
-  });
-};
-
-// Hook to fetch all tutor applications (Admin)
-export const useTutorApplications = (status?: string) => {
-  const isOnline = useOnlineStatus();
-
-  return useQuery({
-    queryKey: ['tutor-applications', status],
-    queryFn: async () => {
-      if (!isOnline) {
-        return await offlineDb.getAllTutorApplications(status);
-      }
-
-      let query = supabase
-        .from('tutor_applications')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (status) {
-        query = query.eq('status', status);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as TutorApplication[];
-    }
-  });
-};
-
-// Hook to update tutor application status
-export const useUpdateTutorApplication = () => {
-  const queryClient = useQueryClient();
-  const isOnline = useOnlineStatus();
-
-  return useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      if (!isOnline) {
-        return await offlineDb.updateTutorApplicationStatus(id, status);
-      }
-
-      const { error } = await supabase
-        .from('tutor_applications')
-        .update({ status })
-        .eq('id', id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tutor-applications'] });
-      queryClient.invalidateQueries({ queryKey: ['tutors'] });
-    }
   });
 };
