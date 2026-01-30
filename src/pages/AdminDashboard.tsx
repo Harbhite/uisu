@@ -181,7 +181,7 @@ const AdminDashboard = () => {
   const [sendingNewsletter, setSendingNewsletter] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [testEmail, setTestEmail] = useState("");
-  const [selectedTemplate, setSelectedTemplate] = useState<"classic" | "minimal" | "announcement" | "newspaper">("classic");
+  const [selectedTemplate, setSelectedTemplate] = useState<"classic" | "minimal" | "announcement" | "newspaper" | "longform" | "telegram" | "artdeco" | "gradient">("classic");
   const [scheduleDate, setScheduleDate] = useState("");
   const [scheduleTime, setScheduleTime] = useState("");
   const [isScheduling, setIsScheduling] = useState(false);
@@ -1268,7 +1268,7 @@ const AdminDashboard = () => {
             <div style="font-size: 16px; line-height: 1.9; color: #475569; text-align: left;">${content}</div>
             <div style="margin-top: 40px;"><a href="#" style="color: #C5A059; font-size: 14px; border-bottom: 1px solid #C5A059;">Explore the Archive →</a></div>
             <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #F1F5F9;">
-              <p style="font-size: 18px; font-style: italic; color: #C5A059; margin: 0 0 4px 0;">First and Best</p>
+              <p style="font-size: 18px; font-style: italic; color: #C5A059; margin: 0 0 4px 0;">Father of Intellectual Unionism</p>
               <p style="font-size: 11px; color: #94A3B8; margin: 0;">UISU Archive • University of Ibadan</p>
             </div>
           </div>
@@ -1289,7 +1289,7 @@ const AdminDashboard = () => {
             </div>
             <div style="margin-top: 32px;"><a href="#" style="display: inline-block; background-color: #C5A059; color: #0F172A; padding: 16px 40px; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; text-decoration: none;">Read More</a></div>
             <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #334155;">
-              <p style="font-size: 18px; font-style: italic; color: #C5A059; margin: 0 0 8px 0;">First and Best</p>
+              <p style="font-size: 18px; font-style: italic; color: #C5A059; margin: 0 0 8px 0;">Father of Intellectual Unionism</p>
               <p style="font-size: 12px; color: #64748B; margin: 0;">UISU Archive • University of Ibadan Students' Union</p>
             </div>
           </div>
@@ -1317,8 +1317,110 @@ const AdminDashboard = () => {
             </div>
             <div style="padding: 24px 32px; text-align: center; border-top: 1px solid #E5E2D9;">
               ${goldLogo}
-              <p style="font-size: 16px; font-style: italic; color: #C5A059; margin: 12px 0 4px 0;">First and Best</p>
+              <p style="font-size: 16px; font-style: italic; color: #C5A059; margin: 12px 0 4px 0;">Father of Intellectual Unionism</p>
               <p style="font-size: 11px; color: #94A3B8; margin: 0;">UISU Archive • Est. 1948</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    if (selectedTemplate === 'longform') {
+      const readTime = Math.max(1, Math.ceil(composeContent.split(/\s+/).length / 200));
+      return `
+        <div style="font-family: Georgia, serif; background-color: #FAFAF8; padding: 48px 20px;">
+          <div style="max-width: 680px; margin: 0 auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 24px; border-bottom: 1px solid #E2E8F0; margin-bottom: 40px;">
+              <div>
+                <p style="font-size: 18px; font-weight: 600; color: #0F172A; margin: 0;">UISU Archive</p>
+                <p style="font-size: 12px; color: #94A3B8; margin: 4px 0 0 0;">The Longform Dispatch</p>
+              </div>
+              <span style="background-color: #FEF9E7; color: #C5A059; padding: 6px 12px; font-size: 11px; font-weight: 600; border-radius: 4px;">${readTime} min read</span>
+            </div>
+            <h1 style="font-size: 36px; font-weight: 700; color: #0F172A; line-height: 1.25; margin: 0 0 16px 0;">${subject}</h1>
+            <p style="font-size: 12px; color: #94A3B8; text-transform: uppercase; letter-spacing: 2px; margin: 0 0 40px 0;">Deep Dive Edition</p>
+            <div style="font-size: 18px; line-height: 1.9; color: #334155; margin-bottom: 40px;">${content}</div>
+            <div style="border-left: 4px solid #C5A059; padding-left: 24px; margin: 32px 0; font-size: 20px; font-style: italic; color: #64748B;">"Preserving our legacy, one story at a time."</div>
+            <div style="text-align: center; padding-top: 32px; border-top: 1px solid #E2E8F0;">
+              <p style="font-size: 18px; font-style: italic; color: #C5A059; margin: 0 0 8px 0;">Father of Intellectual Unionism</p>
+              <p style="font-size: 11px; color: #94A3B8; margin: 0;">University of Ibadan Students' Union • Est. 1948</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    if (selectedTemplate === 'telegram') {
+      const telegramDate = new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
+      return `
+        <div style="font-family: 'Courier New', monospace; background-color: #F5F0E1; padding: 40px 20px;">
+          <div style="max-width: 540px; margin: 0 auto; background-color: #FFFEF5; border: 2px solid #1A1A1A; box-shadow: 4px 4px 0 #1A1A1A;">
+            <div style="background-color: #C5A059; padding: 12px; text-align: center;">
+              <p style="margin: 0; font-size: 10px; color: #0F172A; text-transform: uppercase; letter-spacing: 4px; font-weight: 700;">★ OFFICIAL DISPATCH ★</p>
+            </div>
+            <div style="padding: 24px; border-bottom: 2px dashed #1A1A1A; text-align: center;">
+              <p style="font-size: 10px; color: #64748B; margin: 0;">DATE: ${telegramDate}</p>
+            </div>
+            <div style="padding: 20px;">
+              <p style="font-size: 10px; color: #64748B; text-transform: uppercase; letter-spacing: 2px; margin: 0 0 8px 0;">RE:</p>
+              <h1 style="font-size: 20px; font-weight: 700; color: #1A1A1A; text-transform: uppercase; letter-spacing: 1px; line-height: 1.4; margin: 0;">${subject}</h1>
+            </div>
+            <div style="padding: 0 20px 24px;">
+              <div style="font-size: 13px; line-height: 1.8; color: #374151;">${content}</div>
+            </div>
+            <div style="background-color: #1A1A1A; padding: 16px; text-align: center;">
+              <p style="font-size: 14px; font-style: italic; color: #C5A059; margin: 0 0 4px 0;">Father of Intellectual Unionism</p>
+              <p style="font-size: 10px; color: #64748B; letter-spacing: 2px; margin: 0;">EST. 1948</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    if (selectedTemplate === 'artdeco') {
+      return `
+        <div style="font-family: Georgia, serif; background-color: #0A0A0A; padding: 48px 20px;">
+          <div style="max-width: 580px; margin: 0 auto; background-color: #0F0F0F; border: 1px solid #C5A059;">
+            <div style="padding: 32px; text-align: center; background: linear-gradient(180deg, #151515 0%, #0F0F0F 100%);">
+              <p style="font-size: 10px; color: #C5A059; text-transform: uppercase; letter-spacing: 6px; margin: 0;">The Archive</p>
+            </div>
+            <div style="padding: 0 32px;">
+              <div style="height: 1px; background: linear-gradient(to right, transparent 0%, #C5A059 20%, #C5A059 80%, transparent 100%);"></div>
+            </div>
+            <div style="padding: 32px; text-align: center;">
+              <h1 style="font-size: 28px; font-weight: 400; color: #FFFFFF; line-height: 1.3; letter-spacing: 1px; margin: 0 0 16px 0;">${subject}</h1>
+              <span style="font-size: 16px; color: #C5A059;">◆ ◇ ◆</span>
+            </div>
+            <div style="padding: 0 32px 32px;">
+              <div style="font-size: 16px; line-height: 1.9; color: #D1D5DB;">${content}</div>
+            </div>
+            <div style="padding: 24px 32px; text-align: center; border-top: 1px solid #1F1F1F;">
+              <p style="font-size: 18px; font-style: italic; color: #C5A059; margin: 0 0 8px 0;">Father of Intellectual Unionism</p>
+              <p style="font-size: 10px; color: #64748B; letter-spacing: 3px; margin: 0;">UNIVERSITY OF IBADAN • EST. 1948</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    if (selectedTemplate === 'gradient') {
+      return `
+        <div style="font-family: -apple-system, sans-serif; background-color: #0F172A; padding: 48px 20px;">
+          <div style="max-width: 560px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #1E3A5F 0%, #0F172A 50%, #2D1B4E 100%); border-radius: 16px 16px 0 0; padding: 40px; text-align: center;">
+              <p style="font-size: 11px; color: #C5A059; text-transform: uppercase; letter-spacing: 4px; font-weight: 600; margin: 0;">UISU Archive Dispatch</p>
+            </div>
+            <div style="background-color: #1E293B; padding: 32px;">
+              <h1 style="font-size: 26px; font-weight: 700; color: #FFFFFF; line-height: 1.3; margin: 0 0 12px 0;">${subject}</h1>
+              <div style="width: 60px; height: 3px; background: linear-gradient(90deg, #C5A059 0%, #E8D5A3 100%); border-radius: 2px; margin-bottom: 24px;"></div>
+              <div style="font-size: 15px; line-height: 1.85; color: #CBD5E1;">${content}</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #C5A059 0%, #D4AF37 50%, #E8D5A3 100%); padding: 24px; text-align: center;">
+              <a href="#" style="display: inline-block; background-color: #0F172A; color: #FFFFFF; padding: 14px 32px; text-decoration: none; font-weight: 600; font-size: 13px; border-radius: 8px;">Explore the Archive</a>
+            </div>
+            <div style="background-color: #0F172A; border-radius: 0 0 16px 16px; padding: 24px; text-align: center;">
+              <p style="font-size: 18px; font-style: italic; color: #C5A059; margin: 0 0 8px 0;">Father of Intellectual Unionism</p>
+              <p style="font-size: 11px; color: #64748B; margin: 0;">University of Ibadan Students' Union • Est. 1948</p>
             </div>
           </div>
         </div>
@@ -1345,7 +1447,7 @@ const AdminDashboard = () => {
             <a href="#" style="display: inline-block; background-color: #C5A059; color: #FFFFFF; padding: 16px 40px; font-weight: 600; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; text-decoration: none;">Visit the Archive</a>
           </div>
           <div style="border-top: 1px solid #E2E8F0; padding-top: 24px; text-align: center;">
-            <p style="font-size: 20px; font-style: italic; color: #C5A059; margin: 0 0 8px 0;">First and Best</p>
+            <p style="font-size: 20px; font-style: italic; color: #C5A059; margin: 0 0 8px 0;">Father of Intellectual Unionism</p>
             <p style="font-size: 12px; color: #64748B; margin: 0;">UISU Archive • Est. 1948</p>
           </div>
         </div>
@@ -1720,6 +1822,10 @@ const AdminDashboard = () => {
                           { id: 'minimal', name: 'Minimal', desc: 'Clean and modern' },
                           { id: 'announcement', name: 'Announcement', desc: 'Bold dark theme' },
                           { id: 'newspaper', name: 'Newspaper', desc: 'Traditional masthead' },
+                          { id: 'longform', name: 'Longform', desc: 'Magazine style for essays' },
+                          { id: 'telegram', name: 'Telegram', desc: 'Vintage dispatch style' },
+                          { id: 'artdeco', name: 'Art Deco', desc: 'Elegant dark luxury' },
+                          { id: 'gradient', name: 'Gradient', desc: 'Modern pulse effect' },
                         ].map((tmpl) => (
                           <button
                             key={tmpl.id}

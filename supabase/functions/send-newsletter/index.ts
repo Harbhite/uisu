@@ -154,7 +154,7 @@ const generateClassicTemplate = (content: string, subject: string, email: string
                   <table role="presentation" width="100%">
                     <tr>
                       <td style="text-align: center;">
-                        <p style="margin: 0 0 8px 0; font-size: 20px; font-style: italic; color: #C5A059; font-family: Georgia, serif;">First and Best</p>
+                        <p style="margin: 0 0 8px 0; font-size: 20px; font-style: italic; color: #C5A059; font-family: Georgia, serif;">Father of Intellectual Unionism</p>
                         <p style="margin: 0 0 16px 0; font-size: 12px; color: #64748B;">UISU Archive • Est. 1948</p>
                       </td>
                     </tr>
@@ -230,7 +230,7 @@ const generateMinimalTemplate = (content: string, subject: string, email: string
               <!-- Footer -->
               <tr>
                 <td style="text-align: center; padding-top: 32px; border-top: 1px solid #F1F5F9;">
-                  <p style="margin: 0 0 4px 0; font-size: 18px; font-style: italic; color: #C5A059;">First and Best</p>
+                  <p style="margin: 0 0 4px 0; font-size: 18px; font-style: italic; color: #C5A059;">Father of Intellectual Unionism</p>
                   <p style="margin: 0; font-size: 11px; color: #94A3B8;">UISU Archive • University of Ibadan</p>
                 </td>
               </tr>
@@ -322,7 +322,7 @@ const generateAnnouncementTemplate = (content: string, subject: string, email: s
               <!-- Footer -->
               <tr>
                 <td style="text-align: center; border-top: 1px solid #334155; padding-top: 32px;">
-                  <p style="margin: 0 0 8px 0; font-size: 20px; font-style: italic; color: #C5A059;">First and Best</p>
+                  <p style="margin: 0 0 8px 0; font-size: 20px; font-style: italic; color: #C5A059;">Father of Intellectual Unionism</p>
                   <p style="margin: 0; font-size: 12px; color: #64748B;">UISU Archive • University of Ibadan Students' Union</p>
                 </td>
               </tr>
@@ -413,13 +413,430 @@ const generateNewspaperTemplate = (content: string, subject: string, email: stri
               <!-- Footer -->
               <tr>
                 <td style="padding: 24px 32px; text-align: center; border-top: 1px solid #E5E2D9;">
-                  <p style="margin: 0 0 4px 0; font-size: 16px; font-style: italic; color: #C5A059;">First and Best</p>
+                  <p style="margin: 0 0 4px 0; font-size: 16px; font-style: italic; color: #C5A059;">Father of Intellectual Unionism</p>
                   <p style="margin: 0; font-size: 11px; color: #94A3B8;">UISU Archive • Est. 1948</p>
                 </td>
               </tr>
               
               <!-- Unsubscribe Footer -->
               ${generateUnsubscribeFooter(email)}
+              
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+};
+
+// Template: Longform Magazine (optimized for long-form content)
+const generateLongformTemplate = (content: string, subject: string, email: string) => {
+  const htmlContent = convertMarkdown(content);
+  const readTime = Math.max(1, Math.ceil(content.split(/\s+/).length / 200));
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Charter', Georgia, serif; background-color: #FAFAF8;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #FAFAF8;">
+        <tr>
+          <td align="center" style="padding: 48px 20px;">
+            <table role="presentation" width="100%" style="max-width: 720px;">
+              
+              <!-- Masthead -->
+              <tr>
+                <td style="padding-bottom: 40px; border-bottom: 1px solid #E2E8F0;">
+                  <table role="presentation" width="100%">
+                    <tr>
+                      <td style="width: 56px;">
+                        <img src="${logoUrl}" alt="UISU" width="48" height="48" style="display: block;" />
+                      </td>
+                      <td style="padding-left: 16px;">
+                        <p style="margin: 0; font-size: 18px; font-weight: 600; color: #0F172A; font-family: Georgia, serif;">UISU Archive</p>
+                        <p style="margin: 4px 0 0 0; font-size: 12px; color: #94A3B8;">The Longform Dispatch</p>
+                      </td>
+                      <td style="text-align: right;">
+                        <span style="display: inline-block; background-color: #FEF9E7; color: #C5A059; padding: 6px 12px; font-size: 11px; font-weight: 600; border-radius: 4px;">
+                          ${readTime} min read
+                        </span>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              
+              <!-- Hero Title -->
+              <tr>
+                <td style="padding: 56px 0 32px;">
+                  <h1 style="margin: 0; font-size: 40px; font-weight: 700; color: #0F172A; line-height: 1.25; font-family: Georgia, serif; letter-spacing: -0.5px;">
+                    ${subject}
+                  </h1>
+                  <p style="margin: 20px 0 0 0; font-size: 13px; color: #94A3B8; text-transform: uppercase; letter-spacing: 2px;">
+                    Deep Dive Edition
+                  </p>
+                </td>
+              </tr>
+              
+              <!-- Drop Cap Content -->
+              <tr>
+                <td style="padding-bottom: 48px;">
+                  <div style="font-size: 19px; line-height: 1.9; color: #334155; font-family: 'Charter', Georgia, serif;">
+                    ${htmlContent}
+                  </div>
+                </td>
+              </tr>
+              
+              <!-- Pull Quote Divider -->
+              <tr>
+                <td style="padding: 32px 0; border-top: 1px solid #E2E8F0; border-bottom: 1px solid #E2E8F0;">
+                  <table role="presentation" width="100%">
+                    <tr>
+                      <td style="width: 4px; background-color: #C5A059;"></td>
+                      <td style="padding-left: 24px;">
+                        <p style="margin: 0; font-size: 22px; font-style: italic; color: #64748B; font-family: Georgia, serif; line-height: 1.5;">
+                          "Preserving our legacy, one story at a time."
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              
+              <!-- CTA Section -->
+              <tr>
+                <td style="padding: 48px 0;">
+                  <table role="presentation" width="100%" style="background-color: #0F172A; border-radius: 8px;">
+                    <tr>
+                      <td style="padding: 32px; text-align: center;">
+                        <p style="margin: 0 0 16px 0; font-size: 16px; color: #E2E8F0;">Continue exploring the Archive</p>
+                        <a href="https://uisu.lovable.app" style="display: inline-block; background-color: #C5A059; color: #0F172A; padding: 14px 32px; text-decoration: none; font-weight: 600; font-size: 13px; letter-spacing: 1px; border-radius: 4px;">
+                          Visit UISU SPACE
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              
+              <!-- Footer -->
+              <tr>
+                <td style="text-align: center; padding-top: 24px; border-top: 1px solid #E2E8F0;">
+                  <p style="margin: 0 0 8px 0; font-size: 18px; font-style: italic; color: #C5A059;">Father of Intellectual Unionism</p>
+                  <p style="margin: 0; font-size: 11px; color: #94A3B8;">University of Ibadan Students' Union • Est. 1948</p>
+                </td>
+              </tr>
+              
+              <!-- Unsubscribe Footer -->
+              ${generateUnsubscribeFooter(email)}
+              
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+};
+
+// Template: Vintage Telegram
+const generateTelegramTemplate = (content: string, subject: string, email: string) => {
+  const htmlContent = convertMarkdown(content);
+  const today = new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; background-color: #F5F0E1;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #F5F0E1;">
+        <tr>
+          <td align="center" style="padding: 40px 20px;">
+            <table role="presentation" width="100%" style="max-width: 580px; background-color: #FFFEF5; border: 2px solid #1A1A1A; box-shadow: 4px 4px 0 #1A1A1A;">
+              
+              <!-- Header Strip -->
+              <tr>
+                <td style="background-color: #C5A059; padding: 12px 24px; text-align: center;">
+                  <p style="margin: 0; font-size: 11px; color: #0F172A; text-transform: uppercase; letter-spacing: 4px; font-weight: 700;">
+                    ★ OFFICIAL DISPATCH ★
+                  </p>
+                </td>
+              </tr>
+              
+              <!-- Logo & Date -->
+              <tr>
+                <td style="padding: 24px 32px; border-bottom: 2px dashed #1A1A1A;">
+                  <table role="presentation" width="100%">
+                    <tr>
+                      <td style="text-align: center;">
+                        <img src="${logoUrl}" alt="UISU" width="64" height="64" style="display: block; margin: 0 auto 12px; filter: sepia(20%);" />
+                        <p style="margin: 0; font-size: 10px; color: #64748B;">DATE: ${today}</p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              
+              <!-- Subject Line -->
+              <tr>
+                <td style="padding: 24px 32px 16px;">
+                  <p style="margin: 0 0 8px 0; font-size: 10px; color: #64748B; text-transform: uppercase; letter-spacing: 2px;">RE:</p>
+                  <h1 style="margin: 0; font-size: 22px; font-weight: 700; color: #1A1A1A; text-transform: uppercase; letter-spacing: 1px; line-height: 1.4;">
+                    ${subject}
+                  </h1>
+                </td>
+              </tr>
+              
+              <!-- Message Body -->
+              <tr>
+                <td style="padding: 16px 32px 32px;">
+                  <div style="font-size: 14px; line-height: 1.8; color: #374151; font-family: 'Courier New', monospace;">
+                    ${htmlContent}
+                  </div>
+                </td>
+              </tr>
+              
+              <!-- Signature -->
+              <tr>
+                <td style="padding: 24px 32px; border-top: 2px dashed #1A1A1A;">
+                  <p style="margin: 0 0 8px 0; font-size: 12px; color: #1A1A1A;">TRANSMITTED BY:</p>
+                  <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 700; color: #1A1A1A;">UISU ARCHIVE OFFICE</p>
+                  <p style="margin: 0; font-size: 11px; color: #64748B;">University of Ibadan Students' Union</p>
+                </td>
+              </tr>
+              
+              <!-- CTA -->
+              <tr>
+                <td style="padding: 0 32px 32px; text-align: center;">
+                  <a href="https://uisu.lovable.app" style="display: inline-block; background-color: #1A1A1A; color: #C5A059; padding: 14px 32px; text-decoration: none; font-weight: 700; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; border: 2px solid #1A1A1A;">
+                    ▸ ACCESS ARCHIVE ◂
+                  </a>
+                </td>
+              </tr>
+              
+              <!-- Footer -->
+              <tr>
+                <td style="background-color: #1A1A1A; padding: 20px 32px; text-align: center;">
+                  <p style="margin: 0 0 4px 0; font-size: 14px; font-style: italic; color: #C5A059; font-family: Georgia, serif;">Father of Intellectual Unionism</p>
+                  <p style="margin: 0; font-size: 10px; color: #64748B; letter-spacing: 2px;">EST. 1948</p>
+                </td>
+              </tr>
+              
+              <!-- Unsubscribe Footer -->
+              <tr>
+                <td style="padding: 20px 32px; text-align: center;">
+                  <p style="margin: 0; font-size: 10px; color: #94A3B8; font-family: 'Courier New', monospace;">
+                    You're receiving this telegram because you subscribed.
+                  </p>
+                  <p style="margin: 8px 0 0 0; font-size: 10px;">
+                    <a href="${getUnsubscribeUrl(email)}" style="color: #64748B; text-decoration: underline;">Unsubscribe</a>
+                    <span style="color: #CBD5E1; margin: 0 8px;">|</span>
+                    <a href="https://uisu.lovable.app/privacy-policy" style="color: #64748B; text-decoration: none;">Privacy</a>
+                  </p>
+                </td>
+              </tr>
+              
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+};
+
+// Template: Art Deco Elegance
+const generateArtDecoTemplate = (content: string, subject: string, email: string) => {
+  const htmlContent = convertMarkdown(content);
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Georgia, 'Times New Roman', serif; background-color: #0A0A0A;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #0A0A0A;">
+        <tr>
+          <td align="center" style="padding: 48px 20px;">
+            <table role="presentation" width="100%" style="max-width: 620px; background-color: #0F0F0F; border: 1px solid #C5A059;">
+              
+              <!-- Art Deco Header -->
+              <tr>
+                <td style="padding: 40px 40px 32px; text-align: center; background: linear-gradient(180deg, #151515 0%, #0F0F0F 100%);">
+                  <!-- Deco Lines -->
+                  <div style="margin-bottom: 20px;">
+                    <span style="display: inline-block; width: 60px; height: 2px; background-color: #C5A059; vertical-align: middle;"></span>
+                    <span style="display: inline-block; width: 8px; height: 8px; background-color: #C5A059; margin: 0 12px; transform: rotate(45deg); vertical-align: middle;"></span>
+                    <span style="display: inline-block; width: 60px; height: 2px; background-color: #C5A059; vertical-align: middle;"></span>
+                  </div>
+                  <img src="${logoUrl}" alt="UISU" width="72" height="72" style="display: block; margin: 0 auto 16px;" />
+                  <p style="margin: 0; font-size: 10px; color: #C5A059; text-transform: uppercase; letter-spacing: 6px; font-weight: 400;">The Archive</p>
+                </td>
+              </tr>
+              
+              <!-- Gold Border -->
+              <tr>
+                <td style="padding: 0 40px;">
+                  <div style="height: 1px; background: linear-gradient(to right, transparent 0%, #C5A059 20%, #C5A059 80%, transparent 100%);"></div>
+                </td>
+              </tr>
+              
+              <!-- Title Section -->
+              <tr>
+                <td style="padding: 40px 48px 24px; text-align: center;">
+                  <h1 style="margin: 0; font-size: 32px; font-weight: 400; color: #FFFFFF; line-height: 1.3; font-family: Georgia, serif; letter-spacing: 1px;">
+                    ${subject}
+                  </h1>
+                </td>
+              </tr>
+              
+              <!-- Decorative Divider -->
+              <tr>
+                <td style="padding: 0 48px 32px; text-align: center;">
+                  <span style="display: inline-block; font-size: 18px; color: #C5A059;">◆ ◇ ◆</span>
+                </td>
+              </tr>
+              
+              <!-- Content -->
+              <tr>
+                <td style="padding: 0 48px 40px;">
+                  <div style="font-size: 17px; line-height: 1.9; color: #D1D5DB; font-family: Georgia, serif; text-align: left;">
+                    ${htmlContent}
+                  </div>
+                </td>
+              </tr>
+              
+              <!-- CTA Button -->
+              <tr>
+                <td style="padding: 0 48px 48px; text-align: center;">
+                  <a href="https://uisu.lovable.app" style="display: inline-block; border: 2px solid #C5A059; color: #C5A059; padding: 16px 40px; text-decoration: none; font-weight: 400; font-size: 12px; letter-spacing: 4px; text-transform: uppercase; transition: all 0.3s;">
+                    Enter the Archive
+                  </a>
+                </td>
+              </tr>
+              
+              <!-- Bottom Deco -->
+              <tr>
+                <td style="padding: 0 40px;">
+                  <div style="height: 1px; background: linear-gradient(to right, transparent 0%, #C5A059 20%, #C5A059 80%, transparent 100%);"></div>
+                </td>
+              </tr>
+              
+              <!-- Footer -->
+              <tr>
+                <td style="padding: 32px 48px; text-align: center;">
+                  <p style="margin: 0 0 8px 0; font-size: 18px; font-style: italic; color: #C5A059; font-family: Georgia, serif;">Father of Intellectual Unionism</p>
+                  <p style="margin: 0 0 16px 0; font-size: 11px; color: #64748B; letter-spacing: 3px;">UNIVERSITY OF IBADAN • EST. 1948</p>
+                  <!-- Bottom Deco Lines -->
+                  <div style="margin-top: 16px;">
+                    <span style="display: inline-block; width: 40px; height: 1px; background-color: #C5A059; vertical-align: middle;"></span>
+                    <span style="display: inline-block; width: 6px; height: 6px; background-color: #C5A059; margin: 0 10px; transform: rotate(45deg); vertical-align: middle;"></span>
+                    <span style="display: inline-block; width: 40px; height: 1px; background-color: #C5A059; vertical-align: middle;"></span>
+                  </div>
+                </td>
+              </tr>
+              
+              <!-- Unsubscribe Footer (dark) -->
+              <tr>
+                <td style="padding: 24px 48px; text-align: center; border-top: 1px solid #1F1F1F;">
+                  <p style="margin: 0; font-size: 10px; color: #4B5563;">
+                    You're receiving this because you subscribed to the UISU Archive newsletter.
+                  </p>
+                  <p style="margin: 8px 0 0 0; font-size: 10px;">
+                    <a href="${getUnsubscribeUrl(email)}" style="color: #6B7280; text-decoration: underline;">Unsubscribe</a>
+                    <span style="color: #374151; margin: 0 8px;">|</span>
+                    <a href="https://uisu.lovable.app/privacy-policy" style="color: #6B7280; text-decoration: none;">Privacy</a>
+                    <span style="color: #374151; margin: 0 8px;">|</span>
+                    <a href="https://uisu.lovable.app/terms-of-service" style="color: #6B7280; text-decoration: none;">Terms</a>
+                  </p>
+                </td>
+              </tr>
+              
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+};
+
+// Template: Gradient Pulse
+const generateGradientTemplate = (content: string, subject: string, email: string) => {
+  const htmlContent = convertMarkdown(content);
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0F172A;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #0F172A;">
+        <tr>
+          <td align="center" style="padding: 48px 20px;">
+            <table role="presentation" width="100%" style="max-width: 600px;">
+              
+              <!-- Gradient Header -->
+              <tr>
+                <td style="background: linear-gradient(135deg, #1E3A5F 0%, #0F172A 50%, #2D1B4E 100%); border-radius: 16px 16px 0 0; padding: 48px 40px; text-align: center;">
+                  <img src="${logoUrl}" alt="UISU" width="64" height="64" style="display: block; margin: 0 auto 20px;" />
+                  <p style="margin: 0; font-size: 11px; color: #C5A059; text-transform: uppercase; letter-spacing: 4px; font-weight: 600;">UISU Archive Dispatch</p>
+                </td>
+              </tr>
+              
+              <!-- Title Card -->
+              <tr>
+                <td style="background-color: #1E293B; padding: 40px;">
+                  <h1 style="margin: 0 0 16px 0; font-size: 28px; font-weight: 700; color: #FFFFFF; line-height: 1.3;">
+                    ${subject}
+                  </h1>
+                  <div style="width: 60px; height: 3px; background: linear-gradient(90deg, #C5A059 0%, #E8D5A3 100%); border-radius: 2px;"></div>
+                </td>
+              </tr>
+              
+              <!-- Content -->
+              <tr>
+                <td style="background-color: #1E293B; padding: 0 40px 40px;">
+                  <div style="font-size: 16px; line-height: 1.85; color: #CBD5E1;">
+                    ${htmlContent}
+                  </div>
+                </td>
+              </tr>
+              
+              <!-- CTA Section -->
+              <tr>
+                <td style="background: linear-gradient(135deg, #C5A059 0%, #D4AF37 50%, #E8D5A3 100%); padding: 32px 40px; text-align: center;">
+                  <a href="https://uisu.lovable.app" style="display: inline-block; background-color: #0F172A; color: #FFFFFF; padding: 16px 40px; text-decoration: none; font-weight: 600; font-size: 14px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                    Explore the Archive
+                  </a>
+                </td>
+              </tr>
+              
+              <!-- Footer -->
+              <tr>
+                <td style="background-color: #0F172A; border-radius: 0 0 16px 16px; padding: 32px 40px; text-align: center; border-top: 1px solid #1E293B;">
+                  <p style="margin: 0 0 8px 0; font-size: 18px; font-style: italic; color: #C5A059; font-family: Georgia, serif;">Father of Intellectual Unionism</p>
+                  <p style="margin: 0 0 20px 0; font-size: 11px; color: #64748B;">University of Ibadan Students' Union • Est. 1948</p>
+                  
+                  <p style="margin: 0; font-size: 10px; color: #475569;">
+                    You're receiving this because you subscribed.
+                  </p>
+                  <p style="margin: 8px 0 0 0; font-size: 10px;">
+                    <a href="${getUnsubscribeUrl(email)}" style="color: #64748B; text-decoration: underline;">Unsubscribe</a>
+                    <span style="color: #334155; margin: 0 8px;">|</span>
+                    <a href="https://uisu.lovable.app/privacy-policy" style="color: #64748B; text-decoration: none;">Privacy</a>
+                    <span style="color: #334155; margin: 0 8px;">|</span>
+                    <a href="https://uisu.lovable.app/terms-of-service" style="color: #64748B; text-decoration: none;">Terms</a>
+                  </p>
+                </td>
+              </tr>
               
             </table>
           </td>
@@ -450,6 +867,14 @@ const generateNewsletterHtml = (content: string, subject: string, template: stri
       return generateAnnouncementTemplate(content, subject, email);
     case 'newspaper':
       return generateNewspaperTemplate(content, subject, email);
+    case 'longform':
+      return generateLongformTemplate(content, subject, email);
+    case 'telegram':
+      return generateTelegramTemplate(content, subject, email);
+    case 'artdeco':
+      return generateArtDecoTemplate(content, subject, email);
+    case 'gradient':
+      return generateGradientTemplate(content, subject, email);
     case 'classic':
     default:
       return generateClassicTemplate(content, subject, email);
