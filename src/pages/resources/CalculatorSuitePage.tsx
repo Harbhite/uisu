@@ -128,7 +128,7 @@ const ScientificCalculator = () => {
       case 'cube': result = num * num * num; break;
       case 'inverse': result = 1 / num; break;
       case 'factorial': 
-        result = num < 0 ? NaN : num <= 1 ? 1 : num * parseFloat(String([...Array(Math.floor(num))].reduce((a, _, i) => a * (i + 1), 1)));
+        result = num < 0 ? NaN : num <= 1 ? 1 : parseFloat(String([...Array(Math.floor(num))].reduce((a, _, i) => a * (i + 1), 1)));
         break;
       case 'pi': result = Math.PI; break;
       case 'e': result = Math.E; break;
@@ -217,7 +217,7 @@ const PercentageCalculator = () => {
       case 'of': return ((p / 100) * v).toFixed(2);
       case 'increase': return (v + (v * p / 100)).toFixed(2);
       case 'decrease': return (v - (v * p / 100)).toFixed(2);
-      case 'what': return ((v / p) * 100).toFixed(2) + '%';
+      case 'what': return ((p / v) * 100).toFixed(2) + '%';
       default: return '—';
     }
   };
@@ -909,9 +909,9 @@ const CalculatorSuitePage = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-12"
+          className="mb-12 text-center"
         >
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center justify-center gap-3 mb-4">
             <Calculator size={16} className="text-nobel-gold" />
             <span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-400">Utility Tool</span>
           </div>
@@ -920,74 +920,56 @@ const CalculatorSuitePage = () => {
             Calculator <span className="italic text-slate-400">Suite</span>
           </h1>
           
-          <p className="text-slate-500 max-w-xl text-lg leading-relaxed">
+          <p className="text-slate-500 max-w-xl mx-auto text-lg leading-relaxed">
             A comprehensive collection of 10 calculators for all your everyday mathematical needs.
           </p>
         </motion.div>
 
-        {/* Calculator Grid */}
-        <div className="grid lg:grid-cols-4 gap-8">
-          {/* Sidebar */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-            className="lg:col-span-1"
-          >
-            <div className="bg-white border border-slate-200 p-4 sticky top-28">
-              <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 mb-4">Calculators</h2>
-              <div className="space-y-1">
+        {/* Main Calculator Area */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          {/* Calculator Selector */}
+          <div className="max-w-md mx-auto mb-8 relative z-10">
+            <Select value={activeCalc} onValueChange={setActiveCalc}>
+              <SelectTrigger className="w-full bg-white/60 backdrop-blur-md border-slate-200 h-12">
+                <SelectValue placeholder="Select a calculator" />
+              </SelectTrigger>
+              <SelectContent className="bg-white/80 backdrop-blur-md max-h-[300px]">
                 {calculators.map((calc) => {
                   const Icon = calc.icon;
                   return (
-                    <button
-                      key={calc.id}
-                      onClick={() => setActiveCalc(calc.id)}
-                      className={`w-full flex items-center gap-3 p-3 text-left transition-all ${
-                        activeCalc === calc.id 
-                          ? 'bg-ui-blue text-white' 
-                          : 'hover:bg-slate-50 text-slate-600'
-                      }`}
-                    >
-                      <Icon size={18} />
-                      <div>
-                        <p className="text-sm font-medium">{calc.name}</p>
-                        <p className={`text-xs ${activeCalc === calc.id ? 'text-white/70' : 'text-slate-400'}`}>
-                          {calc.description}
-                        </p>
+                    <SelectItem key={calc.id} value={calc.id}>
+                      <div className="flex items-center gap-2">
+                        <Icon size={16} className="text-slate-500" />
+                        <span>{calc.name}</span>
                       </div>
-                    </button>
+                    </SelectItem>
                   );
                 })}
-              </div>
-            </div>
-          </motion.div>
+              </SelectContent>
+            </Select>
+          </div>
 
-          {/* Main Calculator Area */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="lg:col-span-3"
-          >
-            <div className="mb-6">
-              <h2 className="text-2xl font-serif text-ui-blue mb-2">{activeCalculator?.name} Calculator</h2>
-              <p className="text-slate-500">{activeCalculator?.description}</p>
-            </div>
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-serif text-ui-blue mb-2">{activeCalculator?.name} Calculator</h2>
+            <p className="text-slate-500">{activeCalculator?.description}</p>
+          </div>
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeCalc}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.2 }}
-              >
-                {renderCalculator()}
-              </motion.div>
-            </AnimatePresence>
-          </motion.div>
-        </div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeCalc}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              {renderCalculator()}
+            </motion.div>
+          </AnimatePresence>
+        </motion.div>
       </div>
     </div>
   );
