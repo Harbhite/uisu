@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { 
   ArrowLeft, Star, Plus, Trash2, Edit2, Calendar, FileText, 
   Megaphone, X, Upload, Loader2, Check, Users, Award, ShieldAlert,
-  ArrowUpDown, History, Search, Download, Filter, Eye, Mail, BookOpen, Inbox, Send
+  ArrowUpDown, History, Search, Download, Filter, Eye, Mail, BookOpen, Inbox, Send, FlaskConical
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
@@ -16,6 +16,8 @@ import InviteStaffModal from "@/components/InviteStaffModal";
 import PendingSubmissions from "@/components/PendingSubmissions";
 import { inksPieces } from "@/lib/data";
 import { SEO } from "@/components/SEO";
+import { SubscriberImport } from "@/components/admin/SubscriberImport";
+import { ABTestingSection } from "@/components/admin/ABTestingSection";
 
 // Validation schemas
 const eventSchema = z.object({
@@ -187,6 +189,10 @@ const AdminDashboard = () => {
   const [isScheduling, setIsScheduling] = useState(false);
   const [sendingTest, setSendingTest] = useState(false);
   
+  // A/B Testing state
+  const [abEnabled, setAbEnabled] = useState(false);
+  const [abVariantA, setAbVariantA] = useState("classic");
+  const [abVariantB, setAbVariantB] = useState("minimal");
   // Audit log filters
   const [auditSearchQuery, setAuditSearchQuery] = useState("");
   const [auditActionFilter, setAuditActionFilter] = useState<string>("all");
@@ -1102,8 +1108,11 @@ const AdminDashboard = () => {
           body: { 
             subject: composeSubject.trim(), 
             content: composeContent.trim(),
-            template: selectedTemplate,
+            template: abEnabled ? undefined : selectedTemplate,
             scheduledAt: scheduledDateTime.toISOString(),
+            abEnabled,
+            abVariantA: abEnabled ? abVariantA : undefined,
+            abVariantB: abEnabled ? abVariantB : undefined,
           },
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
@@ -1146,7 +1155,10 @@ const AdminDashboard = () => {
         body: { 
           subject: composeSubject.trim(), 
           content: composeContent.trim(),
-          template: selectedTemplate,
+          template: abEnabled ? undefined : selectedTemplate,
+          abEnabled,
+          abVariantA: abEnabled ? abVariantA : undefined,
+          abVariantB: abEnabled ? abVariantB : undefined,
         },
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
@@ -1844,6 +1856,16 @@ const AdminDashboard = () => {
                       </div>
                     </div>
 
+                    {/* A/B Testing Section */}
+                    <ABTestingSection
+                      enabled={abEnabled}
+                      onToggle={setAbEnabled}
+                      variantA={abVariantA}
+                      variantB={abVariantB}
+                      onVariantAChange={setAbVariantA}
+                      onVariantBChange={setAbVariantB}
+                    />
+
                     {/* Scheduling Section */}
                     <div className="border border-border rounded-lg p-4 bg-muted/30">
                       <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Schedule for Later</p>
@@ -1990,6 +2012,9 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Subscriber Import */}
+                <SubscriberImport onImportComplete={fetchData} />
 
                 {/* Subscribers Header with Export */}
                 <div className="bg-card border border-border p-6">
