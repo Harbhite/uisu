@@ -411,6 +411,7 @@ export type Database = {
       }
       email_tracking: {
         Row: {
+          ab_variant: string | null
           campaign_id: string | null
           created_at: string
           event_type: string
@@ -421,6 +422,7 @@ export type Database = {
           user_agent: string | null
         }
         Insert: {
+          ab_variant?: string | null
           campaign_id?: string | null
           created_at?: string
           event_type: string
@@ -431,6 +433,7 @@ export type Database = {
           user_agent?: string | null
         }
         Update: {
+          ab_variant?: string | null
           campaign_id?: string | null
           created_at?: string
           event_type?: string
@@ -848,6 +851,15 @@ export type Database = {
       }
       newsletter_campaigns: {
         Row: {
+          ab_enabled: boolean | null
+          ab_variant_a_clicks: number | null
+          ab_variant_a_opens: number | null
+          ab_variant_a_sent: number | null
+          ab_variant_a_template: string | null
+          ab_variant_b_clicks: number | null
+          ab_variant_b_opens: number | null
+          ab_variant_b_sent: number | null
+          ab_variant_b_template: string | null
           click_count: number | null
           content: string
           created_at: string
@@ -868,6 +880,15 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ab_enabled?: boolean | null
+          ab_variant_a_clicks?: number | null
+          ab_variant_a_opens?: number | null
+          ab_variant_a_sent?: number | null
+          ab_variant_a_template?: string | null
+          ab_variant_b_clicks?: number | null
+          ab_variant_b_opens?: number | null
+          ab_variant_b_sent?: number | null
+          ab_variant_b_template?: string | null
           click_count?: number | null
           content: string
           created_at?: string
@@ -888,6 +909,15 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ab_enabled?: boolean | null
+          ab_variant_a_clicks?: number | null
+          ab_variant_a_opens?: number | null
+          ab_variant_a_sent?: number | null
+          ab_variant_a_template?: string | null
+          ab_variant_b_clicks?: number | null
+          ab_variant_b_opens?: number | null
+          ab_variant_b_sent?: number | null
+          ab_variant_b_template?: string | null
           click_count?: number | null
           content?: string
           created_at?: string

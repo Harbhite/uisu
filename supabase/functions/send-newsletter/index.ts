@@ -15,6 +15,10 @@ interface SendNewsletterRequest {
   template?: string;
   testEmail?: string;
   scheduledAt?: string;
+  // A/B Testing
+  abEnabled?: boolean;
+  abVariantA?: string;
+  abVariantB?: string;
 }
 
 // Hosted gold fist logo URL
@@ -916,7 +920,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const resend = new Resend(resendApiKey);
 
-    const { campaignId, subject, content, template = 'classic', testEmail, scheduledAt }: SendNewsletterRequest = await req.json();
+    const { campaignId, subject, content, template = 'classic', testEmail, scheduledAt, abEnabled, abVariantA, abVariantB }: SendNewsletterRequest = await req.json();
 
     if (!subject || !content) {
       throw new Error("Subject and content are required");
@@ -1005,10 +1009,13 @@ const handler = async (req: Request): Promise<Response> => {
         .insert({
           subject,
           content,
-          template,
+          template: abEnabled ? null : template,
           status: 'sending',
           recipients_count: subscribers.length,
           html_content: generateNewsletterHtml(content, subject, template, 'preview@example.com'),
+          ab_enabled: abEnabled || false,
+          ab_variant_a_template: abEnabled ? abVariantA : null,
+          ab_variant_b_template: abEnabled ? abVariantB : null,
         })
         .select()
         .single();
@@ -1023,11 +1030,24 @@ const handler = async (req: Request): Promise<Response> => {
     // Send to all subscribers with tracking
     let successCount = 0;
     let failCount = 0;
+    let variantASent = 0;
+    let variantBSent = 0;
 
-    for (const subscriber of subscribers) {
+    for (let i = 0; i < subscribers.length; i++) {
+      const subscriber = subscribers[i];
       try {
+        // Determine template - for A/B testing, alternate between variants
+        let emailTemplate = template;
+        let variant: 'A' | 'B' | null = null;
+        
+        if (abEnabled && abVariantA && abVariantB) {
+          // Randomly assign to A or B (50/50 split)
+          variant = Math.random() < 0.5 ? 'A' : 'B';
+          emailTemplate = variant === 'A' ? abVariantA : abVariantB;
+        }
+
         // Generate email with template
-        const baseHtml = generateNewsletterHtml(content, subject, template, subscriber.email);
+        const baseHtml = generateNewsletterHtml(content, subject, emailTemplate, subscriber.email);
         // Add tracking pixel and wrap links
         const trackedHtml = addTrackingToHtml(baseHtml, activeCampaignId, subscriber.email);
         
@@ -1038,6 +1058,20 @@ const handler = async (req: Request): Promise<Response> => {
           html: trackedHtml,
         });
         successCount++;
+        
+        // Track variant assignment
+        if (variant === 'A') variantASent++;
+        if (variant === 'B') variantBSent++;
+
+        // Store variant info in email_tracking for analytics
+        if (abEnabled && variant) {
+          await supabase.from("email_tracking").insert({
+            campaign_id: activeCampaignId,
+            subscriber_email: subscriber.email,
+            event_type: 'sent',
+            ab_variant: variant,
+          });
+        }
       } catch (error) {
         console.error(`Failed to send to ${subscriber.email}:`, error);
         failCount++;
@@ -1045,15 +1079,22 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Update campaign record with final stats
+    const updateData: Record<string, unknown> = {
+      status: 'sent',
+      sent_at: new Date().toISOString(),
+      recipients_count: subscribers.length,
+      successful_count: successCount,
+      failed_count: failCount,
+    };
+    
+    if (abEnabled) {
+      updateData.ab_variant_a_sent = variantASent;
+      updateData.ab_variant_b_sent = variantBSent;
+    }
+
     await supabase
       .from("newsletter_campaigns")
-      .update({
-        status: 'sent',
-        sent_at: new Date().toISOString(),
-        recipients_count: subscribers.length,
-        successful_count: successCount,
-        failed_count: failCount,
-      })
+      .update(updateData)
       .eq("id", activeCampaignId);
 
     return new Response(
@@ -1063,7 +1104,8 @@ const handler = async (req: Request): Promise<Response> => {
         recipientsCount: subscribers.length,
         successCount,
         failCount,
-        campaignId: activeCampaignId
+        campaignId: activeCampaignId,
+        abTesting: abEnabled ? { variantASent, variantBSent } : undefined
       }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
