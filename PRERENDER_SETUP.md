@@ -1,4 +1,4 @@
-# Prerender Setup for UISU SPACE
+# Prerendering Setup for UISU SPACE
 
 This guide explains how to set up prerendering for proper OG meta tags on social media.
 
@@ -9,6 +9,14 @@ Single Page Applications (SPAs) like UISU SPACE dynamically generate meta tags u
 ## Solution: Prerendering
 
 We've created a prerender edge function that serves static HTML with correct OG tags to crawlers.
+
+## Dynamic Content Support
+
+The prerender function now fetches real data from the database for:
+- **Leader profiles** (`/current-leaders/:id`) - Name, role, bio, and photo
+- **Ink pieces** (`/inks-vault/piece/:id`) - Title, author, summary, and cover image
+- **Committees** (`/committee/:slug`) - Title and description
+- **Halls** (`/governance/hall/:slug`) - Name, description, and image
 
 ### Edge Function Endpoint
 
