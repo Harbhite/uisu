@@ -1,6 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
+// Version for debugging deployments
+const VERSION = "v1.0.1";
+const DEPLOYED_AT = "2026-02-02T05:30:00Z";
+
 const SITE_URL = "https://uisu.space";
 const SITE_NAME = "UISU SPACE";
 const DEFAULT_DESCRIPTION = "The Digital Space of University of Ibadan Students' Union - connecting students, preserving history, and empowering the community.";
@@ -398,7 +402,9 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "GET, OPTIONS",
 };
 
-serve(async (req) => {
+serve(async (req: Request) => {
+  console.log(`[${VERSION}] Request received at ${new Date().toISOString()}`);
+  
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -407,6 +413,8 @@ serve(async (req) => {
     const url = new URL(req.url);
     const path = url.searchParams.get("path") || "/";
     const userAgent = req.headers.get("user-agent") || "";
+    
+    console.log(`[${VERSION}] Processing path: ${path}, UA: ${userAgent.substring(0, 50)}...`);
     
     // Check if it's a crawler
     const crawler = isCrawler(userAgent);
@@ -417,6 +425,8 @@ serve(async (req) => {
     // Generate HTML response
     const html = generateHtml(path, metadata);
     
+    console.log(`[${VERSION}] Successfully generated HTML for path: ${path}`);
+    
     return new Response(html, {
       status: 200,
       headers: {
@@ -424,12 +434,13 @@ serve(async (req) => {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "public, max-age=3600",
         "X-Prerender": crawler ? "true" : "false",
+        "X-Prerender-Version": VERSION,
       },
     });
   } catch (error) {
-    console.error("Prerender error:", error);
+    console.error(`[${VERSION}] Prerender error:`, error);
     return new Response(
-      JSON.stringify({ error: "Internal server error" }),
+      JSON.stringify({ error: "Internal server error", _version: VERSION }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

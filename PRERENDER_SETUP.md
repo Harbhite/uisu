@@ -36,41 +36,84 @@ https://zdxmmwqjvkedddcgucyz.supabase.co/functions/v1/prerender?path=/your-page
 
 If you use a custom domain with Cloudflare:
 
-1. Create a Cloudflare Worker with this code:
+1. **Create a Cloudflare Worker** with this code:
 
 ```javascript
+// UISU SPACE Prerender Worker
 const CRAWLER_PATTERNS = [
-  'facebookexternalhit', 'Twitterbot', 'LinkedInBot', 'WhatsApp',
-  'Slackbot', 'TelegramBot', 'Discordbot', 'Pinterest'
+  'facebookexternalhit',
+  'Facebot',
+  'Twitterbot',
+  'LinkedInBot',
+  'WhatsApp',
+  'Slackbot',
+  'TelegramBot',
+  'Discordbot',
+  'Pinterest',
+  'Googlebot',
+  'bingbot'
 ];
 
 const PRERENDER_URL = 'https://zdxmmwqjvkedddcgucyz.supabase.co/functions/v1/prerender';
+const VERSION = 'v1.0.1'; // Update this when making changes
 
-addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event.request));
-});
-
-async function handleRequest(request) {
-  const userAgent = request.headers.get('user-agent') || '';
-  const url = new URL(request.url);
-  
-  // Check if it's a crawler
-  const isCrawler = CRAWLER_PATTERNS.some(pattern => 
-    userAgent.toLowerCase().includes(pattern.toLowerCase())
-  );
-  
-  if (isCrawler) {
-    // Redirect to prerender function
-    const prerenderUrl = `${PRERENDER_URL}?path=${encodeURIComponent(url.pathname)}`;
-    return fetch(prerenderUrl);
+export default {
+  async fetch(request) {
+    const userAgent = request.headers.get('user-agent') || '';
+    const url = new URL(request.url);
+    
+    // Skip static assets
+    if (url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf)$/i)) {
+      return fetch(request);
+    }
+    
+    // Check if it's a crawler
+    const isCrawler = CRAWLER_PATTERNS.some(pattern => 
+      userAgent.toLowerCase().includes(pattern.toLowerCase())
+    );
+    
+    console.log(`[${VERSION}] Path: ${url.pathname}, UA: ${userAgent.substring(0, 50)}, Crawler: ${isCrawler}`);
+    
+    if (isCrawler) {
+      try {
+        // Fetch from prerender function
+        const prerenderUrl = `${PRERENDER_URL}?path=${encodeURIComponent(url.pathname)}`;
+        console.log(`[${VERSION}] Fetching prerender: ${prerenderUrl}`);
+        
+        const response = await fetch(prerenderUrl, {
+          headers: {
+            'User-Agent': userAgent
+          }
+        });
+        
+        if (!response.ok) {
+          console.error(`[${VERSION}] Prerender error: ${response.status}`);
+          return fetch(request);
+        }
+        
+        return response;
+      } catch (error) {
+        console.error(`[${VERSION}] Prerender failed:`, error);
+        return fetch(request);
+      }
+    }
+    
+    // Normal request - pass through to origin
+    return fetch(request);
   }
-  
-  // Normal request - pass through
-  return fetch(request);
-}
+};
 ```
 
-2. Set up a Worker Route for your domain
+2. **Set up a Worker Route:**
+   - Go to your domain in Cloudflare Dashboard
+   - Navigate to Workers Routes
+   - Add route: `uisu.space/*` → Your Worker
+   - Add route: `www.uisu.space/*` → Your Worker (if using www)
+
+3. **IMPORTANT: Custom Domain Configuration**
+   - Make sure your Worker is deployed
+   - The route must match your domain exactly
+   - Test with the debugging steps below
 
 ### Option 2: Prerender.io Integration
 
@@ -157,17 +200,55 @@ The prerender function supports all main routes:
 
 ## Troubleshooting
 
+### Step 1: Verify the Edge Function Works
+
+Test directly with curl:
+```bash
+curl "https://zdxmmwqjvkedddcgucyz.supabase.co/functions/v1/prerender?path=/"
+```
+
+You should see HTML with proper OG tags. Check the `X-Prerender-Version` header to confirm deployment.
+
+### Step 2: Test Cloudflare Worker
+
+1. **Check Worker Logs:**
+   - Go to Cloudflare Dashboard → Workers → Your Worker → Logs
+   - Look for logs showing `[v1.0.1] Path:` entries
+   
+2. **Test Worker Route:**
+   - Simulate a crawler request to your domain:
+   ```bash
+   curl -A "facebookexternalhit/1.1" "https://uisu.space/governance"
+   ```
+   - The response should contain proper OG tags
+
+3. **Common Issues:**
+   - **Worker not triggering**: Check if the route pattern matches your domain
+   - **404 errors**: Verify the prerender function is deployed
+   - **Old version showing**: Clear Cloudflare cache or wait for propagation
+
+### Step 3: Test with Social Media Debuggers
+
+After confirming the worker is working:
+
+1. **Facebook Sharing Debugger**: https://developers.facebook.com/tools/debug/
+2. **Twitter Card Validator**: https://cards-dev.twitter.com/validator
+3. **LinkedIn Post Inspector**: https://www.linkedin.com/post-inspector/
+
+Click "Scrape Again" or similar to clear their cache.
+
 ### OG tags not updating?
-- Social platforms cache OG data aggressively
+- Social platforms cache OG data aggressively (up to 7 days)
 - Use their debug tools to force a re-scrape
-- Allow up to 24 hours for cache to clear
+- Check Cloudflare cache settings (consider purging cache)
 
 ### Prerender not working?
-- Check the edge function logs in Supabase
+- Check the edge function logs in Cloud View
 - Verify the path parameter is being passed correctly
-- Test with curl using a crawler user agent
+- Test the prerender URL directly in your browser
 
 ### Images not loading?
 - Ensure images are publicly accessible
 - Use absolute URLs (starting with https://)
 - Check image dimensions (recommended: 1200x630)
+- Verify Storage bucket permissions allow public access
