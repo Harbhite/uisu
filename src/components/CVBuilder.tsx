@@ -1444,6 +1444,7 @@ const CVBuilder: React.FC = () => {
                     </div>
                     <div 
                       ref={printRef}
+                      data-cv-print
                       className="bg-white shadow-xl print:shadow-none"
                       dangerouslySetInnerHTML={{ __html: renderTemplate() }}
                     />
