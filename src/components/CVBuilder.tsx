@@ -3,13 +3,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FileText, Download, Eye, Check, ChevronLeft, ChevronRight,
   Briefcase, GraduationCap, Award, Phone, Mail, MapPin, Globe,
-  Linkedin, Github, User, Plus, Trash2, Sparkles
+  Linkedin, Github, User, Plus, Trash2, Sparkles, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface CVData {
   personalInfo: {
@@ -86,7 +88,11 @@ const templates: Template[] = [
   { id: 'scholar', name: 'Scholar', preview: '🎓', description: 'Academic focus with serif typography', color: '#8b5cf6' },
   { id: 'compact', name: 'Compact', preview: '📱', description: 'Single page optimized layout', color: '#f59e0b' },
   { id: 'bold', name: 'Bold', preview: '🦁', description: 'Strong headers and high contrast', color: '#111827' },
-  { id: 'grid', name: 'Grid', preview: '📰', description: 'Organized two-column structure', color: '#0ea5e9' }
+  { id: 'grid', name: 'Grid', preview: '📰', description: 'Organized two-column structure', color: '#0ea5e9' },
+  { id: 'noir', name: 'Noir', preview: '🌙', description: 'Dark elegant theme with gold accents', color: '#1a1a2e' },
+  { id: 'magazine', name: 'Magazine', preview: '📰', description: 'Editorial spread with typographic flair', color: '#b91c1c' },
+  { id: 'timeline', name: 'Timeline', preview: '⏳', description: 'Visual chronological journey layout', color: '#0d9488' },
+  { id: 'swiss', name: 'Swiss', preview: '🇨🇭', description: 'International modernist grid design', color: '#e11d48' },
 ];
 
 const CVBuilder: React.FC = () => {
@@ -95,6 +101,7 @@ const CVBuilder: React.FC = () => {
   const [cvData, setCVData] = useState<CVData>(defaultCVData);
   const [activeSection, setActiveSection] = useState<'personal' | 'education' | 'experience' | 'skills'>('personal');
   const [skillInput, setSkillInput] = useState('');
+  const [isDownloading, setIsDownloading] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
   const generateId = () => Math.random().toString(36).substring(2, 9);
@@ -186,73 +193,62 @@ const CVBuilder: React.FC = () => {
     setCVData(prev => ({ ...prev, certifications: prev.certifications.filter(c => c.id !== id) }));
   };
 
-  const handlePrint = () => {
+  const handleDownloadPDF = async () => {
     if (!cvData.personalInfo.fullName) {
       toast.error('Please fill in at least your name');
       return;
     }
 
-    const printContent = printRef.current;
-    if (!printContent) return;
+    const element = printRef.current;
+    if (!element) return;
 
-    // Use an iframe for printing to avoid popup blockers and ensure styles
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
-    iframe.style.border = '0';
-    document.body.appendChild(iframe);
+    setIsDownloading(true);
+    toast.info('Generating PDF...');
 
-    const doc = iframe.contentWindow?.document;
-    if (!doc) return;
+    try {
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+      });
 
-    doc.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>${cvData.personalInfo.fullName} - CV</title>
-          <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: 'Georgia', serif; font-size: 11pt; line-height: 1.5; color: #333; }
-            @page { size: A4; margin: 0.5in; }
-            @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
-          </style>
-        </head>
-        <body>
-          ${printContent.innerHTML}
-        </body>
-      </html>
-    `);
-    doc.close();
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-    // Wait for content to load then print
-    iframe.onload = () => {
-      setTimeout(() => {
-        iframe.contentWindow?.focus();
-        iframe.contentWindow?.print();
-        // Remove iframe after printing (with a small delay to ensure print dialog triggers)
-        setTimeout(() => {
-          document.body.removeChild(iframe);
-        }, 1000);
-      }, 500);
-    };
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgData = canvas.toDataURL('image/png');
 
-    // Fallback if onload doesn't trigger (e.g. cached/fast load)
-    if (iframe.contentWindow?.document.readyState === 'complete') {
-        iframe.contentWindow?.focus();
-        iframe.contentWindow?.print();
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      const filename = `${cvData.personalInfo.fullName.replace(/\s+/g, '_')}_CV.pdf`;
+      pdf.save(filename);
+      toast.success('PDF downloaded successfully!');
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast.error('Failed to generate PDF. Please try again.');
+    } finally {
+      setIsDownloading(false);
     }
-
-    toast.success('Preparing document...');
   };
 
   const renderTemplate = () => {
     const { personalInfo, education, experience, skills, certifications } = cvData;
     const color = selectedTemplate.color;
 
-    const commonStyles = {
+    const commonStyles: Record<string, string> = {
       classic: `
         <div style="font-family: Georgia, serif; max-width: 800px; margin: 0 auto; padding: 40px;">
           <div style="text-align: center; margin-bottom: 24px; border-bottom: 2px solid ${color}; padding-bottom: 16px;">
@@ -595,30 +591,25 @@ const CVBuilder: React.FC = () => {
         </div>
       `,
       tech: `
-        <div style="font-family: 'Courier New', monospace; max-width: 800px; margin: 0 auto; color: #333;">
+        <div style="font-family: 'Courier New', monospace; max-width: 800px; margin: 0 auto; color: #333; padding: 40px;">
           <div style="border-bottom: 2px solid ${color}; padding-bottom: 20px; margin-bottom: 30px;">
             <h1 style="font-size: 32px; color: ${color}; margin-bottom: 10px;">&lt;${personalInfo.fullName || 'Dev_Name'} /&gt;</h1>
             <div style="font-size: 12px;">
               ${[personalInfo.email, personalInfo.phone, personalInfo.location, personalInfo.github].filter(Boolean).map(item => `[ "${item}" ]`).join(' ')}
             </div>
           </div>
-
           ${personalInfo.summary ? `
             <div style="margin-bottom: 30px;">
               <h3 style="font-size: 16px; color: ${color}; font-weight: bold; margin-bottom: 10px;">// ABOUT_ME</h3>
               <p style="font-size: 12px; line-height: 1.6;">${personalInfo.summary}</p>
             </div>
           ` : ''}
-
           ${skills.length > 0 ? `
             <div style="margin-bottom: 30px;">
               <h3 style="font-size: 16px; color: ${color}; font-weight: bold; margin-bottom: 10px;">// TECH_STACK</h3>
-              <div style="font-size: 12px; line-height: 1.8;">
-                const skills = [ ${skills.map(s => `"${s}"`).join(', ')} ];
-              </div>
+              <div style="font-size: 12px; line-height: 1.8;">const skills = [ ${skills.map(s => `"${s}"`).join(', ')} ];</div>
             </div>
           ` : ''}
-
           ${experience.length > 0 ? `
             <div style="margin-bottom: 30px;">
               <h3 style="font-size: 16px; color: ${color}; font-weight: bold; margin-bottom: 15px;">// EXPERIENCE_LOG</h3>
@@ -631,7 +622,6 @@ const CVBuilder: React.FC = () => {
               `).join('')}
             </div>
           ` : ''}
-
           ${education.length > 0 ? `
             <div>
               <h3 style="font-size: 16px; color: ${color}; font-weight: bold; margin-bottom: 15px;">// EDUCATION_DATA</h3>
@@ -646,37 +636,33 @@ const CVBuilder: React.FC = () => {
         </div>
       `,
       scholar: `
-        <div style="font-family: Georgia, serif; max-width: 800px; margin: 0 auto; line-height: 1.6;">
+        <div style="font-family: Georgia, serif; max-width: 800px; margin: 0 auto; line-height: 1.6; padding: 40px;">
           <div style="text-align: center; margin-bottom: 40px;">
             <h1 style="font-size: 30px; font-weight: normal; margin-bottom: 10px; color: ${color};">${personalInfo.fullName || 'Your Name'}</h1>
             <div style="font-size: 12px; font-style: italic; color: #555;">
               ${[personalInfo.email, personalInfo.phone, personalInfo.location].filter(Boolean).join(' • ')}
             </div>
           </div>
-
           ${education.length > 0 ? `
             <div style="margin-bottom: 30px;">
               <h3 style="font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 15px; color: ${color};">Education</h3>
               ${education.map(edu => `
                 <div style="margin-bottom: 12px;">
                   <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 13px;">
-                    <span>${edu.institution}</span>
-                    <span>${edu.endYear}</span>
+                    <span>${edu.institution}</span><span>${edu.endYear}</span>
                   </div>
                   <div style="font-size: 13px; font-style: italic;">${edu.degree}${edu.field ? `, ${edu.field}` : ''}</div>
                 </div>
               `).join('')}
             </div>
           ` : ''}
-
           ${experience.length > 0 ? `
             <div style="margin-bottom: 30px;">
               <h3 style="font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 15px; color: ${color};">Professional History</h3>
               ${experience.map(exp => `
                 <div style="margin-bottom: 20px;">
                   <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 13px;">
-                    <span>${exp.company}</span>
-                    <span>${exp.startDate} – ${exp.current ? 'Present' : exp.endDate}</span>
+                    <span>${exp.company}</span><span>${exp.startDate} – ${exp.current ? 'Present' : exp.endDate}</span>
                   </div>
                   <div style="font-size: 13px; font-style: italic; margin-bottom: 5px;">${exp.position}</div>
                   ${exp.description ? `<div style="font-size: 12px; text-align: justify;">${exp.description}</div>` : ''}
@@ -684,18 +670,12 @@ const CVBuilder: React.FC = () => {
               `).join('')}
             </div>
           ` : ''}
-
           ${certifications.length > 0 ? `
             <div style="margin-bottom: 30px;">
               <h3 style="font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 15px; color: ${color};">Credentials</h3>
-              ${certifications.map(cert => `
-                <div style="font-size: 12px; margin-bottom: 5px;">
-                  <strong>${cert.name}</strong>, ${cert.issuer} (${cert.year})
-                </div>
-              `).join('')}
+              ${certifications.map(cert => `<div style="font-size: 12px; margin-bottom: 5px;"><strong>${cert.name}</strong>, ${cert.issuer} (${cert.year})</div>`).join('')}
             </div>
           ` : ''}
-
           ${skills.length > 0 ? `
             <div>
               <h3 style="font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 15px; color: ${color};">Competencies</h3>
@@ -708,21 +688,18 @@ const CVBuilder: React.FC = () => {
         <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; display: grid; grid-template-columns: 200px 1fr; gap: 20px;">
           <div style="background: #f5f5f5; padding: 20px; font-size: 11px;">
             <h1 style="font-size: 20px; color: ${color}; margin-bottom: 20px; line-height: 1.2;">${personalInfo.fullName || 'Name'}</h1>
-
             <div style="margin-bottom: 20px;">
               <strong style="display: block; margin-bottom: 5px;">CONTACT</strong>
               <div style="margin-bottom: 3px;">${personalInfo.email}</div>
               <div style="margin-bottom: 3px;">${personalInfo.phone}</div>
               <div>${personalInfo.location}</div>
             </div>
-
             ${skills.length > 0 ? `
               <div style="margin-bottom: 20px;">
                 <strong style="display: block; margin-bottom: 8px;">SKILLS</strong>
                 ${skills.map(s => `<div style="margin-bottom: 4px;">• ${s}</div>`).join('')}
               </div>
             ` : ''}
-
             ${education.length > 0 ? `
               <div>
                 <strong style="display: block; margin-bottom: 8px;">EDUCATION</strong>
@@ -736,7 +713,6 @@ const CVBuilder: React.FC = () => {
               </div>
             ` : ''}
           </div>
-
           <div style="padding: 20px 0;">
             ${personalInfo.summary ? `
               <div style="margin-bottom: 25px; font-size: 12px; line-height: 1.5;">
@@ -744,7 +720,6 @@ const CVBuilder: React.FC = () => {
                 ${personalInfo.summary}
               </div>
             ` : ''}
-
             ${experience.length > 0 ? `
               <div>
                 <strong style="font-size: 14px; color: ${color}; display: block; margin-bottom: 15px; border-bottom: 2px solid ${color}; padding-bottom: 3px;">EXPERIENCE</strong>
@@ -766,18 +741,11 @@ const CVBuilder: React.FC = () => {
             <h1 style="font-size: 48px; margin: 0; letter-spacing: 2px; line-height: 1;">${personalInfo.fullName?.split(' ')[0] || 'FIRST'}</h1>
             <h1 style="font-size: 48px; margin: 0; opacity: 0.8; letter-spacing: 2px; line-height: 1;">${personalInfo.fullName?.split(' ').slice(1).join(' ') || 'LAST'}</h1>
           </div>
-
           <div style="padding: 30px 40px; font-family: 'Arial', sans-serif;">
             <div style="display: flex; gap: 30px; margin-bottom: 40px; font-size: 12px; font-weight: bold; border-bottom: 4px solid #000; padding-bottom: 20px;">
               ${[personalInfo.email, personalInfo.phone, personalInfo.location].filter(Boolean).map(item => `<span>${item}</span>`).join('')}
             </div>
-
-            ${personalInfo.summary ? `
-              <div style="margin-bottom: 40px;">
-                <p style="font-size: 18px; font-weight: bold; line-height: 1.4;">${personalInfo.summary}</p>
-              </div>
-            ` : ''}
-
+            ${personalInfo.summary ? `<div style="margin-bottom: 40px;"><p style="font-size: 18px; font-weight: bold; line-height: 1.4;">${personalInfo.summary}</p></div>` : ''}
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
               <div>
                 <h3 style="background: #000; color: white; display: inline-block; padding: 5px 10px; margin-bottom: 20px; font-size: 14px;">EXPERIENCE</h3>
@@ -789,7 +757,6 @@ const CVBuilder: React.FC = () => {
                   </div>
                 `).join('')}
               </div>
-
               <div>
                 ${education.length > 0 ? `
                   <div style="margin-bottom: 30px;">
@@ -802,7 +769,6 @@ const CVBuilder: React.FC = () => {
                     `).join('')}
                   </div>
                 ` : ''}
-
                 ${skills.length > 0 ? `
                   <div>
                     <h3 style="background: #000; color: white; display: inline-block; padding: 5px 10px; margin-bottom: 20px; font-size: 14px;">SKILLS</h3>
@@ -822,7 +788,6 @@ const CVBuilder: React.FC = () => {
             <div>
               <h1 style="font-size: 36px; margin-bottom: 5px; color: #333;">${personalInfo.fullName || 'Name'}</h1>
               <p style="color: ${color}; font-size: 14px; margin-bottom: 30px;">${personalInfo.summary || 'Professional Title'}</p>
-
               ${experience.length > 0 ? `
                 <div style="margin-bottom: 30px;">
                   <h3 style="color: ${color}; font-size: 12px; letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase;">Work Experience</h3>
@@ -836,18 +801,13 @@ const CVBuilder: React.FC = () => {
                 </div>
               ` : ''}
             </div>
-
             <div style="text-align: right;">
               <div style="margin-bottom: 30px;">
                 <h3 style="color: ${color}; font-size: 12px; letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase;">Contact</h3>
                 <div style="font-size: 11px; color: #444; line-height: 1.8;">
-                  <div>${personalInfo.email}</div>
-                  <div>${personalInfo.phone}</div>
-                  <div>${personalInfo.location}</div>
-                  ${personalInfo.website ? `<div>${personalInfo.website}</div>` : ''}
+                  <div>${personalInfo.email}</div><div>${personalInfo.phone}</div><div>${personalInfo.location}</div>
                 </div>
               </div>
-
               ${education.length > 0 ? `
                 <div style="margin-bottom: 30px;">
                   <h3 style="color: ${color}; font-size: 12px; letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase;">Education</h3>
@@ -855,27 +815,289 @@ const CVBuilder: React.FC = () => {
                     <div style="margin-bottom: 15px;">
                       <div style="font-weight: bold; font-size: 12px;">${edu.degree}</div>
                       <div style="font-size: 11px; color: #666;">${edu.institution}</div>
-                      <div style="font-size: 11px; color: #999;">${edu.endYear}</div>
                     </div>
                   `).join('')}
                 </div>
               ` : ''}
-
               ${skills.length > 0 ? `
                 <div>
                   <h3 style="color: ${color}; font-size: 12px; letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase;">Skills</h3>
-                  <div style="font-size: 11px; color: #444;">
-                    ${skills.map(s => `<div style="margin-bottom: 4px;">${s}</div>`).join('')}
-                  </div>
+                  <div style="font-size: 11px; color: #444;">${skills.map(s => `<div style="margin-bottom: 4px;">${s}</div>`).join('')}</div>
                 </div>
               ` : ''}
             </div>
           </div>
         </div>
-      `
+      `,
+
+      noir: `
+        <div style="font-family: 'Georgia', serif; max-width: 800px; margin: 0 auto; background: #1a1a2e; color: #e0e0e0; min-height: 600px;">
+          <div style="padding: 50px 40px 30px;">
+            <div style="border-bottom: 1px solid #c9a84c; padding-bottom: 20px; margin-bottom: 30px;">
+              <h1 style="font-size: 38px; color: #c9a84c; margin: 0 0 8px; font-weight: 400; letter-spacing: 6px; text-transform: uppercase;">${personalInfo.fullName || 'Your Name'}</h1>
+              <div style="font-size: 12px; color: #888; letter-spacing: 2px;">
+                ${[personalInfo.email, personalInfo.phone, personalInfo.location].filter(Boolean).join('  ·  ')}
+              </div>
+            </div>
+
+            ${personalInfo.summary ? `
+              <div style="margin-bottom: 30px; padding: 20px; border-left: 3px solid #c9a84c; background: rgba(201,168,76,0.05);">
+                <p style="font-size: 13px; color: #bbb; line-height: 1.8; margin: 0; font-style: italic;">${personalInfo.summary}</p>
+              </div>
+            ` : ''}
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+              <div>
+                ${experience.length > 0 ? `
+                  <h2 style="font-size: 11px; color: #c9a84c; text-transform: uppercase; letter-spacing: 4px; margin-bottom: 20px;">Experience</h2>
+                  ${experience.map(exp => `
+                    <div style="margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #2a2a3e;">
+                      <div style="font-size: 14px; color: #fff; font-weight: 600;">${exp.position}</div>
+                      <div style="font-size: 11px; color: #c9a84c; margin: 4px 0;">${exp.company}</div>
+                      <div style="font-size: 10px; color: #666;">${exp.startDate} — ${exp.current ? 'Present' : exp.endDate}</div>
+                      ${exp.description ? `<p style="font-size: 11px; color: #999; margin-top: 8px; line-height: 1.6;">${exp.description}</p>` : ''}
+                    </div>
+                  `).join('')}
+                ` : ''}
+              </div>
+              <div>
+                ${education.length > 0 ? `
+                  <h2 style="font-size: 11px; color: #c9a84c; text-transform: uppercase; letter-spacing: 4px; margin-bottom: 20px;">Education</h2>
+                  ${education.map(edu => `
+                    <div style="margin-bottom: 16px;">
+                      <div style="font-size: 13px; color: #fff;">${edu.degree}${edu.field ? ` — ${edu.field}` : ''}</div>
+                      <div style="font-size: 11px; color: #888;">${edu.institution} · ${edu.endYear}</div>
+                    </div>
+                  `).join('')}
+                ` : ''}
+                ${skills.length > 0 ? `
+                  <h2 style="font-size: 11px; color: #c9a84c; text-transform: uppercase; letter-spacing: 4px; margin: 30px 0 16px;">Skills</h2>
+                  <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                    ${skills.map(skill => `<span style="padding: 5px 12px; border: 1px solid #c9a84c; color: #c9a84c; font-size: 10px; letter-spacing: 1px;">${skill}</span>`).join('')}
+                  </div>
+                ` : ''}
+                ${certifications.length > 0 ? `
+                  <h2 style="font-size: 11px; color: #c9a84c; text-transform: uppercase; letter-spacing: 4px; margin: 30px 0 16px;">Certifications</h2>
+                  ${certifications.map(cert => `
+                    <div style="margin-bottom: 8px; font-size: 11px; color: #bbb;">
+                      <span style="color: #c9a84c;">▸</span> ${cert.name} — ${cert.issuer} (${cert.year})
+                    </div>
+                  `).join('')}
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      `,
+
+      magazine: `
+        <div style="font-family: 'Georgia', serif; max-width: 800px; margin: 0 auto; position: relative;">
+          <div style="background: ${color}; padding: 60px 40px 30px; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -30px; right: -20px; font-size: 200px; color: rgba(255,255,255,0.08); font-weight: 900; line-height: 1;">CV</div>
+            <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 6px; color: rgba(255,255,255,0.6); margin-bottom: 12px;">Curriculum Vitae</div>
+            <h1 style="font-size: 52px; color: white; margin: 0; line-height: 1; font-weight: 900; font-style: italic;">${personalInfo.fullName || 'Your Name'}</h1>
+            <div style="height: 3px; background: white; width: 60px; margin: 16px 0;"></div>
+            <div style="font-size: 12px; color: rgba(255,255,255,0.8);">
+              ${[personalInfo.email, personalInfo.phone, personalInfo.location].filter(Boolean).join('  |  ')}
+            </div>
+          </div>
+          <div style="padding: 35px 40px;">
+            ${personalInfo.summary ? `
+              <div style="margin-bottom: 30px; columns: 2; column-gap: 30px;">
+                <p style="font-size: 13px; color: #444; line-height: 1.8; text-align: justify;">${personalInfo.summary}</p>
+              </div>
+            ` : ''}
+            <div style="display: grid; grid-template-columns: 3fr 2fr; gap: 40px;">
+              <div>
+                ${experience.length > 0 ? `
+                  <div style="margin-bottom: 30px;">
+                    <h2 style="font-size: 18px; color: ${color}; margin-bottom: 5px; font-style: italic;">Experience</h2>
+                    <div style="height: 2px; background: ${color}; width: 40px; margin-bottom: 20px;"></div>
+                    ${experience.map(exp => `
+                      <div style="margin-bottom: 20px;">
+                        <div style="font-size: 15px; font-weight: bold; color: #222;">${exp.position}</div>
+                        <div style="font-size: 12px; color: ${color}; font-weight: bold; margin: 2px 0;">${exp.company}</div>
+                        <div style="font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 1px;">${exp.startDate} — ${exp.current ? 'Present' : exp.endDate}</div>
+                        ${exp.description ? `<p style="font-size: 12px; color: #555; margin-top: 8px; line-height: 1.6; text-align: justify;">${exp.description}</p>` : ''}
+                      </div>
+                    `).join('')}
+                  </div>
+                ` : ''}
+              </div>
+              <div style="border-left: 1px solid #eee; padding-left: 30px;">
+                ${education.length > 0 ? `
+                  <div style="margin-bottom: 25px;">
+                    <h2 style="font-size: 16px; color: ${color}; margin-bottom: 5px; font-style: italic;">Education</h2>
+                    <div style="height: 2px; background: ${color}; width: 30px; margin-bottom: 16px;"></div>
+                    ${education.map(edu => `
+                      <div style="margin-bottom: 14px;">
+                        <div style="font-size: 13px; font-weight: bold; color: #333;">${edu.degree}</div>
+                        <div style="font-size: 11px; color: #666;">${edu.institution}</div>
+                        <div style="font-size: 10px; color: #999;">${edu.startYear}–${edu.endYear}</div>
+                      </div>
+                    `).join('')}
+                  </div>
+                ` : ''}
+                ${skills.length > 0 ? `
+                  <div style="margin-bottom: 25px;">
+                    <h2 style="font-size: 16px; color: ${color}; margin-bottom: 5px; font-style: italic;">Expertise</h2>
+                    <div style="height: 2px; background: ${color}; width: 30px; margin-bottom: 16px;"></div>
+                    ${skills.map(skill => `<div style="font-size: 12px; color: #444; padding: 6px 0; border-bottom: 1px dotted #ddd;">${skill}</div>`).join('')}
+                  </div>
+                ` : ''}
+                ${certifications.length > 0 ? `
+                  <div>
+                    <h2 style="font-size: 16px; color: ${color}; margin-bottom: 5px; font-style: italic;">Awards</h2>
+                    <div style="height: 2px; background: ${color}; width: 30px; margin-bottom: 16px;"></div>
+                    ${certifications.map(cert => `<div style="font-size: 11px; color: #555; margin-bottom: 8px;"><strong>${cert.name}</strong><br/><span style="color: #888;">${cert.issuer}, ${cert.year}</span></div>`).join('')}
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      `,
+
+      timeline: `
+        <div style="font-family: 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 40px;">
+          <div style="text-align: center; margin-bottom: 40px;">
+            <h1 style="font-size: 34px; color: #222; margin: 0 0 6px; font-weight: 700;">${personalInfo.fullName || 'Your Name'}</h1>
+            <div style="display: inline-flex; gap: 16px; font-size: 12px; color: #666; padding: 8px 20px; border: 1px solid #ddd; background: #fafafa;">
+              ${[personalInfo.email, personalInfo.phone, personalInfo.location].filter(Boolean).join(' · ')}
+            </div>
+          </div>
+
+          ${personalInfo.summary ? `
+            <div style="text-align: center; margin-bottom: 40px; max-width: 550px; margin-left: auto; margin-right: auto;">
+              <p style="font-size: 14px; color: #555; line-height: 1.7;">${personalInfo.summary}</p>
+            </div>
+          ` : ''}
+
+          <div style="position: relative; padding-left: 30px; border-left: 3px solid ${color};">
+            ${experience.length > 0 ? `
+              <div style="margin-bottom: 10px;">
+                <div style="position: absolute; left: -8px; width: 13px; height: 13px; background: ${color}; border-radius: 50%;"></div>
+                <h2 style="font-size: 10px; text-transform: uppercase; letter-spacing: 3px; color: ${color}; margin-bottom: 16px; margin-left: 10px;">Career Journey</h2>
+              </div>
+              ${experience.map(exp => `
+                <div style="margin-bottom: 24px; margin-left: 10px; position: relative;">
+                  <div style="position: absolute; left: -44px; top: 4px; width: 9px; height: 9px; background: white; border: 2px solid ${color}; border-radius: 50%;"></div>
+                  <div style="font-size: 10px; color: white; background: ${color}; display: inline-block; padding: 2px 10px; margin-bottom: 6px;">${exp.startDate} — ${exp.current ? 'Present' : exp.endDate}</div>
+                  <div style="font-size: 15px; font-weight: 700; color: #222;">${exp.position}</div>
+                  <div style="font-size: 12px; color: ${color}; font-weight: 600;">${exp.company}${exp.location ? `, ${exp.location}` : ''}</div>
+                  ${exp.description ? `<p style="font-size: 12px; color: #666; margin-top: 6px; line-height: 1.6;">${exp.description}</p>` : ''}
+                </div>
+              `).join('')}
+            ` : ''}
+
+            ${education.length > 0 ? `
+              <div style="margin-bottom: 10px; margin-top: 20px;">
+                <div style="position: absolute; left: -8px; width: 13px; height: 13px; background: ${color}; border-radius: 50%;"></div>
+                <h2 style="font-size: 10px; text-transform: uppercase; letter-spacing: 3px; color: ${color}; margin-bottom: 16px; margin-left: 10px;">Education</h2>
+              </div>
+              ${education.map(edu => `
+                <div style="margin-bottom: 18px; margin-left: 10px; position: relative;">
+                  <div style="position: absolute; left: -44px; top: 4px; width: 9px; height: 9px; background: white; border: 2px solid ${color}; border-radius: 50%;"></div>
+                  <div style="font-size: 10px; color: white; background: ${color}; display: inline-block; padding: 2px 10px; margin-bottom: 6px;">${edu.startYear} — ${edu.endYear}</div>
+                  <div style="font-size: 14px; font-weight: 700; color: #222;">${edu.degree}${edu.field ? ` in ${edu.field}` : ''}</div>
+                  <div style="font-size: 12px; color: #666;">${edu.institution}</div>
+                </div>
+              `).join('')}
+            ` : ''}
+          </div>
+
+          ${skills.length > 0 ? `
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+              <h2 style="font-size: 10px; text-transform: uppercase; letter-spacing: 3px; color: ${color}; margin-bottom: 14px;">Skills & Tools</h2>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                ${skills.map(skill => `<span style="padding: 6px 16px; background: ${color}10; color: ${color}; font-size: 11px; border-radius: 20px; border: 1px solid ${color}30;">${skill}</span>`).join('')}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `,
+
+      swiss: `
+        <div style="font-family: 'Helvetica Neue', 'Arial', sans-serif; max-width: 800px; margin: 0 auto; padding: 0;">
+          <div style="display: grid; grid-template-columns: 250px 1fr; min-height: 600px;">
+            <div style="background: ${color}; color: white; padding: 40px 25px;">
+              <div style="font-size: 72px; font-weight: 900; line-height: 0.9; margin-bottom: 30px; opacity: 0.2;">CV</div>
+              <div style="margin-bottom: 30px;">
+                <div style="font-size: 9px; text-transform: uppercase; letter-spacing: 3px; opacity: 0.6; margin-bottom: 10px;">Contact</div>
+                <div style="font-size: 11px; line-height: 2;">
+                  ${personalInfo.email ? `<div>${personalInfo.email}</div>` : ''}
+                  ${personalInfo.phone ? `<div>${personalInfo.phone}</div>` : ''}
+                  ${personalInfo.location ? `<div>${personalInfo.location}</div>` : ''}
+                  ${personalInfo.linkedin ? `<div>${personalInfo.linkedin}</div>` : ''}
+                  ${personalInfo.github ? `<div>${personalInfo.github}</div>` : ''}
+                </div>
+              </div>
+              ${skills.length > 0 ? `
+                <div style="margin-bottom: 30px;">
+                  <div style="font-size: 9px; text-transform: uppercase; letter-spacing: 3px; opacity: 0.6; margin-bottom: 10px;">Skills</div>
+                  ${skills.map(skill => `
+                    <div style="font-size: 11px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">${skill}</div>
+                  `).join('')}
+                </div>
+              ` : ''}
+              ${certifications.length > 0 ? `
+                <div>
+                  <div style="font-size: 9px; text-transform: uppercase; letter-spacing: 3px; opacity: 0.6; margin-bottom: 10px;">Certifications</div>
+                  ${certifications.map(cert => `
+                    <div style="font-size: 11px; margin-bottom: 10px;">
+                      <div style="font-weight: 600;">${cert.name}</div>
+                      <div style="opacity: 0.7; font-size: 10px;">${cert.issuer} · ${cert.year}</div>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : ''}
+            </div>
+            <div style="padding: 40px 35px;">
+              <h1 style="font-size: 40px; font-weight: 900; color: #111; margin: 0 0 4px; line-height: 1;">${personalInfo.fullName || 'Your Name'}</h1>
+              <div style="height: 4px; background: ${color}; width: 50px; margin: 12px 0 20px;"></div>
+              ${personalInfo.summary ? `<p style="font-size: 13px; color: #555; line-height: 1.7; margin-bottom: 30px;">${personalInfo.summary}</p>` : ''}
+
+              ${experience.length > 0 ? `
+                <div style="margin-bottom: 30px;">
+                  <h2 style="font-size: 10px; text-transform: uppercase; letter-spacing: 4px; color: ${color}; margin-bottom: 18px; font-weight: 700;">Experience</h2>
+                  ${experience.map(exp => `
+                    <div style="display: grid; grid-template-columns: 100px 1fr; gap: 15px; margin-bottom: 20px;">
+                      <div style="font-size: 10px; color: #999; padding-top: 2px; text-align: right; border-right: 2px solid #eee; padding-right: 12px;">
+                        ${exp.startDate}<br/>${exp.current ? 'Present' : exp.endDate}
+                      </div>
+                      <div>
+                        <div style="font-size: 14px; font-weight: 700; color: #111;">${exp.position}</div>
+                        <div style="font-size: 12px; color: ${color}; font-weight: 600;">${exp.company}</div>
+                        ${exp.description ? `<p style="font-size: 11px; color: #666; margin-top: 6px; line-height: 1.6;">${exp.description}</p>` : ''}
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : ''}
+
+              ${education.length > 0 ? `
+                <div>
+                  <h2 style="font-size: 10px; text-transform: uppercase; letter-spacing: 4px; color: ${color}; margin-bottom: 18px; font-weight: 700;">Education</h2>
+                  ${education.map(edu => `
+                    <div style="display: grid; grid-template-columns: 100px 1fr; gap: 15px; margin-bottom: 16px;">
+                      <div style="font-size: 10px; color: #999; padding-top: 2px; text-align: right; border-right: 2px solid #eee; padding-right: 12px;">
+                        ${edu.startYear}<br/>${edu.endYear}
+                      </div>
+                      <div>
+                        <div style="font-size: 13px; font-weight: 700; color: #111;">${edu.degree}${edu.field ? ` — ${edu.field}` : ''}</div>
+                        <div style="font-size: 11px; color: #666;">${edu.institution}</div>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `,
     };
 
-    return commonStyles[selectedTemplate.id as keyof typeof commonStyles] || commonStyles.classic;
+    return commonStyles[selectedTemplate.id] || commonStyles.classic;
   };
 
   return (
@@ -907,8 +1129,17 @@ const CVBuilder: React.FC = () => {
               </Button>
             )}
             {step === 'preview' && (
-              <Button size="sm" onClick={handlePrint} className="bg-nobel-gold hover:bg-nobel-gold/90 text-white h-8 px-2 md:h-9 md:px-4 rounded-none">
-                <Download size={16} className="md:mr-1" /> <span className="hidden md:inline">Download</span>
+              <Button 
+                size="sm" 
+                onClick={handleDownloadPDF} 
+                disabled={isDownloading}
+                className="bg-nobel-gold hover:bg-nobel-gold/90 text-white h-8 px-2 md:h-9 md:px-4 rounded-none"
+              >
+                {isDownloading ? (
+                  <><Loader2 size={16} className="md:mr-1 animate-spin" /> <span className="hidden md:inline">Generating...</span></>
+                ) : (
+                  <><Download size={16} className="md:mr-1" /> <span className="hidden md:inline">Download PDF</span></>
+                )}
               </Button>
             )}
           </div>
@@ -926,7 +1157,7 @@ const CVBuilder: React.FC = () => {
                 className="p-4 md:p-6"
               >
                 <h3 className="font-serif text-xl md:text-2xl mb-2">Choose a template</h3>
-                <p className="text-slate-500 mb-6 text-sm md:text-base">Select a design that matches your industry and style</p>
+                <p className="text-muted-foreground mb-6 text-sm md:text-base">Select a design that matches your industry and style</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pb-20 md:pb-0">
                   {templates.map(template => (
                     <motion.div
@@ -937,7 +1168,7 @@ const CVBuilder: React.FC = () => {
                       className={`cursor-pointer border-2 p-4 md:p-6 transition-all rounded-none ${
                         selectedTemplate.id === template.id
                           ? 'border-ui-blue bg-ui-blue/5'
-                          : 'border-slate-200 hover:border-slate-300'
+                          : 'border-border hover:border-muted-foreground/30'
                       }`}
                     >
                       <div
@@ -948,8 +1179,8 @@ const CVBuilder: React.FC = () => {
                       </div>
                       <div className="flex items-center justify-between">
                         <div>
-                          <h4 className="font-bold text-slate-800 text-sm md:text-base">{template.name}</h4>
-                          <p className="text-[10px] md:text-xs text-slate-500">{template.description}</p>
+                          <h4 className="font-bold text-foreground text-sm md:text-base">{template.name}</h4>
+                          <p className="text-[10px] md:text-xs text-muted-foreground">{template.description}</p>
                         </div>
                         {selectedTemplate.id === template.id && (
                           <div className="w-5 h-5 md:w-6 md:h-6 bg-ui-blue flex items-center justify-center rounded-none">
@@ -977,7 +1208,7 @@ const CVBuilder: React.FC = () => {
                 className="flex flex-col md:flex-row items-start"
               >
                 {/* Sidebar */}
-                <div className="w-full md:w-48 border-b md:border-b-0 md:border-r bg-slate-50 p-2 md:p-4 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-visible shrink-0 md:sticky md:top-0">
+                <div className="w-full md:w-48 border-b md:border-b-0 md:border-r bg-secondary/50 p-2 md:p-4 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-visible shrink-0 md:sticky md:top-0">
                   {[
                     { id: 'personal', label: 'Personal Info', icon: User },
                     { id: 'education', label: 'Education', icon: GraduationCap },
@@ -990,7 +1221,7 @@ const CVBuilder: React.FC = () => {
                       className={`flex items-center gap-2 md:gap-3 px-3 py-2 md:py-2.5 text-left text-xs md:text-sm transition-all whitespace-nowrap rounded-none ${
                         activeSection === section.id
                           ? 'bg-ui-blue text-white'
-                          : 'text-slate-600 hover:bg-slate-100'
+                          : 'text-muted-foreground hover:bg-secondary'
                       }`}
                     >
                       <section.icon size={14} className="md:w-4 md:h-4" />
@@ -1008,68 +1239,31 @@ const CVBuilder: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="md:col-span-2">
                             <Label>Full Name *</Label>
-                            <Input
-                              value={cvData.personalInfo.fullName}
-                              onChange={e => setCVData(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, fullName: e.target.value } }))}
-                              placeholder="John Doe"
-                              className="rounded-none"
-                            />
+                            <Input value={cvData.personalInfo.fullName} onChange={e => setCVData(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, fullName: e.target.value } }))} placeholder="John Doe" className="rounded-none" />
                           </div>
                           <div>
                             <Label>Email *</Label>
-                            <Input
-                              type="email"
-                              value={cvData.personalInfo.email}
-                              onChange={e => setCVData(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, email: e.target.value } }))}
-                              placeholder="john@email.com"
-                              className="rounded-none"
-                            />
+                            <Input type="email" value={cvData.personalInfo.email} onChange={e => setCVData(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, email: e.target.value } }))} placeholder="john@email.com" className="rounded-none" />
                           </div>
                           <div>
                             <Label>Phone</Label>
-                            <Input
-                              value={cvData.personalInfo.phone}
-                              onChange={e => setCVData(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, phone: e.target.value } }))}
-                              placeholder="+234 xxx xxx xxxx"
-                              className="rounded-none"
-                            />
+                            <Input value={cvData.personalInfo.phone} onChange={e => setCVData(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, phone: e.target.value } }))} placeholder="+234 xxx xxx xxxx" className="rounded-none" />
                           </div>
                           <div className="md:col-span-2">
                             <Label>Location</Label>
-                            <Input
-                              value={cvData.personalInfo.location}
-                              onChange={e => setCVData(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, location: e.target.value } }))}
-                              placeholder="Lagos, Nigeria"
-                              className="rounded-none"
-                            />
+                            <Input value={cvData.personalInfo.location} onChange={e => setCVData(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, location: e.target.value } }))} placeholder="Lagos, Nigeria" className="rounded-none" />
                           </div>
                           <div>
                             <Label>LinkedIn URL</Label>
-                            <Input
-                              value={cvData.personalInfo.linkedin}
-                              onChange={e => setCVData(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, linkedin: e.target.value } }))}
-                              placeholder="linkedin.com/in/johndoe"
-                              className="rounded-none"
-                            />
+                            <Input value={cvData.personalInfo.linkedin} onChange={e => setCVData(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, linkedin: e.target.value } }))} placeholder="linkedin.com/in/johndoe" className="rounded-none" />
                           </div>
                           <div>
                             <Label>GitHub URL</Label>
-                            <Input
-                              value={cvData.personalInfo.github}
-                              onChange={e => setCVData(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, github: e.target.value } }))}
-                              placeholder="github.com/johndoe"
-                              className="rounded-none"
-                            />
+                            <Input value={cvData.personalInfo.github} onChange={e => setCVData(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, github: e.target.value } }))} placeholder="github.com/johndoe" className="rounded-none" />
                           </div>
                           <div className="md:col-span-2">
                             <Label>Professional Summary</Label>
-                            <Textarea
-                              value={cvData.personalInfo.summary}
-                              onChange={e => setCVData(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, summary: e.target.value } }))}
-                              placeholder="Brief overview of your professional background and career objectives..."
-                              rows={4}
-                              className="rounded-none"
-                            />
+                            <Textarea value={cvData.personalInfo.summary} onChange={e => setCVData(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, summary: e.target.value } }))} placeholder="Brief overview of your professional background and career objectives..." rows={4} className="rounded-none" />
                           </div>
                         </div>
                       </div>
@@ -1079,69 +1273,20 @@ const CVBuilder: React.FC = () => {
                       <div className="space-y-4 max-w-xl">
                         <div className="flex items-center justify-between mb-4">
                           <h3 className="font-serif text-xl">Education</h3>
-                          <Button size="sm" variant="outline" onClick={addEducation} className="rounded-none">
-                            <Plus size={14} className="mr-1" /> Add
-                          </Button>
+                          <Button size="sm" variant="outline" onClick={addEducation} className="rounded-none"><Plus size={14} className="mr-1" /> Add</Button>
                         </div>
                         {cvData.education.length === 0 && (
-                          <p className="text-slate-400 text-sm py-8 text-center border border-dashed rounded-none">
-                            No education added yet. Click "Add" to get started.
-                          </p>
+                          <p className="text-muted-foreground text-sm py-8 text-center border border-dashed rounded-none">No education added yet. Click "Add" to get started.</p>
                         )}
-                        {cvData.education.map((edu, idx) => (
+                        {cvData.education.map((edu) => (
                           <div key={edu.id} className="border p-4 relative rounded-none">
-                            <button
-                              onClick={() => removeEducation(edu.id)}
-                              className="absolute top-2 right-2 text-slate-300 hover:text-red-500"
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                            <button onClick={() => removeEducation(edu.id)} className="absolute top-2 right-2 text-muted-foreground/40 hover:text-destructive"><Trash2 size={16} /></button>
                             <div className="grid grid-cols-2 gap-3">
-                              <div className="col-span-2">
-                                <Label className="text-xs">Institution</Label>
-                                <Input
-                                  value={edu.institution}
-                                  onChange={e => updateEducation(edu.id, 'institution', e.target.value)}
-                                  placeholder="University of Ibadan"
-                                  className="h-9 rounded-none"
-                                />
-                              </div>
-                              <div>
-                                <Label className="text-xs">Degree</Label>
-                                <Input
-                                  value={edu.degree}
-                                  onChange={e => updateEducation(edu.id, 'degree', e.target.value)}
-                                  placeholder="Bachelor's"
-                                  className="h-9 rounded-none"
-                                />
-                              </div>
-                              <div>
-                                <Label className="text-xs">Field of Study</Label>
-                                <Input
-                                  value={edu.field}
-                                  onChange={e => updateEducation(edu.id, 'field', e.target.value)}
-                                  placeholder="Computer Science"
-                                  className="h-9 rounded-none"
-                                />
-                              </div>
-                              <div>
-                                <Label className="text-xs">Start Year</Label>
-                                <Input
-                                  value={edu.startYear}
-                                  onChange={e => updateEducation(edu.id, 'startYear', e.target.value)}
-                                  placeholder="2020"
-                                  className="h-9 rounded-none"
-                                />
-                              </div>
-                              <div>
-                                <Label className="text-xs">End Year</Label>
-                                <Input
-                                  value={edu.endYear}
-                                  onChange={e => updateEducation(edu.id, 'endYear', e.target.value)}
-                                  placeholder="2024"
-                                  className="h-9 rounded-none"
-                                />
-                              </div>
+                              <div className="col-span-2"><Label className="text-xs">Institution</Label><Input value={edu.institution} onChange={e => updateEducation(edu.id, 'institution', e.target.value)} placeholder="University of Ibadan" className="h-9 rounded-none" /></div>
+                              <div><Label className="text-xs">Degree</Label><Input value={edu.degree} onChange={e => updateEducation(edu.id, 'degree', e.target.value)} placeholder="Bachelor's" className="h-9 rounded-none" /></div>
+                              <div><Label className="text-xs">Field of Study</Label><Input value={edu.field} onChange={e => updateEducation(edu.id, 'field', e.target.value)} placeholder="Computer Science" className="h-9 rounded-none" /></div>
+                              <div><Label className="text-xs">Start Year</Label><Input value={edu.startYear} onChange={e => updateEducation(edu.id, 'startYear', e.target.value)} placeholder="2020" className="h-9 rounded-none" /></div>
+                              <div><Label className="text-xs">End Year</Label><Input value={edu.endYear} onChange={e => updateEducation(edu.id, 'endYear', e.target.value)} placeholder="2024" className="h-9 rounded-none" /></div>
                             </div>
                           </div>
                         ))}
@@ -1152,71 +1297,20 @@ const CVBuilder: React.FC = () => {
                       <div className="space-y-4 max-w-xl">
                         <div className="flex items-center justify-between mb-4">
                           <h3 className="font-serif text-xl">Work Experience</h3>
-                          <Button size="sm" variant="outline" onClick={addExperience} className="rounded-none">
-                            <Plus size={14} className="mr-1" /> Add
-                          </Button>
+                          <Button size="sm" variant="outline" onClick={addExperience} className="rounded-none"><Plus size={14} className="mr-1" /> Add</Button>
                         </div>
                         {cvData.experience.length === 0 && (
-                          <p className="text-slate-400 text-sm py-8 text-center border border-dashed rounded-none">
-                            No experience added yet. Click "Add" to get started.
-                          </p>
+                          <p className="text-muted-foreground text-sm py-8 text-center border border-dashed rounded-none">No experience added yet. Click "Add" to get started.</p>
                         )}
                         {cvData.experience.map((exp) => (
                           <div key={exp.id} className="border p-4 relative rounded-none">
-                            <button
-                              onClick={() => removeExperience(exp.id)}
-                              className="absolute top-2 right-2 text-slate-300 hover:text-red-500"
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                            <button onClick={() => removeExperience(exp.id)} className="absolute top-2 right-2 text-muted-foreground/40 hover:text-destructive"><Trash2 size={16} /></button>
                             <div className="grid grid-cols-2 gap-3">
-                              <div>
-                                <Label className="text-xs">Position</Label>
-                                <Input
-                                  value={exp.position}
-                                  onChange={e => updateExperience(exp.id, 'position', e.target.value)}
-                                  placeholder="Software Engineer"
-                                  className="h-9 rounded-none"
-                                />
-                              </div>
-                              <div>
-                                <Label className="text-xs">Company</Label>
-                                <Input
-                                  value={exp.company}
-                                  onChange={e => updateExperience(exp.id, 'company', e.target.value)}
-                                  placeholder="Tech Corp"
-                                  className="h-9 rounded-none"
-                                />
-                              </div>
-                              <div>
-                                <Label className="text-xs">Start Date</Label>
-                                <Input
-                                  value={exp.startDate}
-                                  onChange={e => updateExperience(exp.id, 'startDate', e.target.value)}
-                                  placeholder="Jan 2022"
-                                  className="h-9 rounded-none"
-                                />
-                              </div>
-                              <div>
-                                <Label className="text-xs">End Date</Label>
-                                <Input
-                                  value={exp.endDate}
-                                  onChange={e => updateExperience(exp.id, 'endDate', e.target.value)}
-                                  placeholder="Present"
-                                  disabled={exp.current}
-                                  className="h-9 rounded-none"
-                                />
-                              </div>
-                              <div className="col-span-2">
-                                <Label className="text-xs">Description</Label>
-                                <Textarea
-                                  value={exp.description}
-                                  onChange={e => updateExperience(exp.id, 'description', e.target.value)}
-                                  placeholder="Key responsibilities and achievements..."
-                                  rows={2}
-                                  className="rounded-none"
-                                />
-                              </div>
+                              <div><Label className="text-xs">Position</Label><Input value={exp.position} onChange={e => updateExperience(exp.id, 'position', e.target.value)} placeholder="Software Engineer" className="h-9 rounded-none" /></div>
+                              <div><Label className="text-xs">Company</Label><Input value={exp.company} onChange={e => updateExperience(exp.id, 'company', e.target.value)} placeholder="Tech Corp" className="h-9 rounded-none" /></div>
+                              <div><Label className="text-xs">Start Date</Label><Input value={exp.startDate} onChange={e => updateExperience(exp.id, 'startDate', e.target.value)} placeholder="Jan 2022" className="h-9 rounded-none" /></div>
+                              <div><Label className="text-xs">End Date</Label><Input value={exp.endDate} onChange={e => updateExperience(exp.id, 'endDate', e.target.value)} placeholder="Present" disabled={exp.current} className="h-9 rounded-none" /></div>
+                              <div className="col-span-2"><Label className="text-xs">Description</Label><Textarea value={exp.description} onChange={e => updateExperience(exp.id, 'description', e.target.value)} placeholder="Key responsibilities and achievements..." rows={2} className="rounded-none" /></div>
                             </div>
                           </div>
                         ))}
@@ -1228,73 +1322,30 @@ const CVBuilder: React.FC = () => {
                         <div>
                           <h3 className="font-serif text-xl mb-4">Skills</h3>
                           <div className="flex gap-2 mb-3">
-                            <Input
-                              value={skillInput}
-                              onChange={e => setSkillInput(e.target.value)}
-                              onKeyPress={e => e.key === 'Enter' && addSkill()}
-                              placeholder="Add a skill..."
-                              className="flex-1 rounded-none"
-                            />
+                            <Input value={skillInput} onChange={e => setSkillInput(e.target.value)} onKeyPress={e => e.key === 'Enter' && addSkill()} placeholder="Add a skill..." className="flex-1 rounded-none" />
                             <Button onClick={addSkill} size="sm" className="rounded-none">Add</Button>
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {cvData.skills.map(skill => (
-                              <span
-                                key={skill}
-                                className="px-3 py-1.5 bg-ui-blue/10 text-ui-blue text-sm rounded-none flex items-center gap-2"
-                              >
+                              <span key={skill} className="px-3 py-1.5 bg-ui-blue/10 text-ui-blue text-sm rounded-none flex items-center gap-2">
                                 {skill}
-                                <button onClick={() => removeSkill(skill)} className="hover:text-red-500">
-                                  <Trash2 size={12} />
-                                </button>
+                                <button onClick={() => removeSkill(skill)} className="hover:text-destructive"><Trash2 size={12} /></button>
                               </span>
                             ))}
                           </div>
                         </div>
-
                         <div>
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="font-serif text-xl">Certifications</h3>
-                            <Button size="sm" variant="outline" onClick={addCertification} className="rounded-none">
-                              <Plus size={14} className="mr-1" /> Add
-                            </Button>
+                            <Button size="sm" variant="outline" onClick={addCertification} className="rounded-none"><Plus size={14} className="mr-1" /> Add</Button>
                           </div>
                           {cvData.certifications.map(cert => (
                             <div key={cert.id} className="border p-4 relative mb-3 rounded-none">
-                              <button
-                                onClick={() => removeCertification(cert.id)}
-                                className="absolute top-2 right-2 text-slate-300 hover:text-red-500"
-                              >
-                                <Trash2 size={16} />
-                              </button>
+                              <button onClick={() => removeCertification(cert.id)} className="absolute top-2 right-2 text-muted-foreground/40 hover:text-destructive"><Trash2 size={16} /></button>
                               <div className="grid grid-cols-3 gap-3">
-                                <div className="col-span-2">
-                                  <Label className="text-xs">Certification Name</Label>
-                                  <Input
-                                    value={cert.name}
-                                    onChange={e => updateCertification(cert.id, 'name', e.target.value)}
-                                    placeholder="AWS Certified"
-                                    className="h-9 rounded-none"
-                                  />
-                                </div>
-                                <div>
-                                  <Label className="text-xs">Year</Label>
-                                  <Input
-                                    value={cert.year}
-                                    onChange={e => updateCertification(cert.id, 'year', e.target.value)}
-                                    placeholder="2023"
-                                    className="h-9 rounded-none"
-                                  />
-                                </div>
-                                <div className="col-span-3">
-                                  <Label className="text-xs">Issuing Organization</Label>
-                                  <Input
-                                    value={cert.issuer}
-                                    onChange={e => updateCertification(cert.id, 'issuer', e.target.value)}
-                                    placeholder="Amazon Web Services"
-                                    className="h-9 rounded-none"
-                                  />
-                                </div>
+                                <div className="col-span-2"><Label className="text-xs">Certification Name</Label><Input value={cert.name} onChange={e => updateCertification(cert.id, 'name', e.target.value)} placeholder="AWS Certified" className="h-9 rounded-none" /></div>
+                                <div><Label className="text-xs">Year</Label><Input value={cert.year} onChange={e => updateCertification(cert.id, 'year', e.target.value)} placeholder="2023" className="h-9 rounded-none" /></div>
+                                <div className="col-span-3"><Label className="text-xs">Issuing Organization</Label><Input value={cert.issuer} onChange={e => updateCertification(cert.id, 'issuer', e.target.value)} placeholder="Amazon Web Services" className="h-9 rounded-none" /></div>
                               </div>
                             </div>
                           ))}
@@ -1311,11 +1362,11 @@ const CVBuilder: React.FC = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  className="p-6 bg-slate-100 min-h-screen"
+                  className="p-6 bg-secondary/50 min-h-screen"
                 >
                   <div className="max-w-4xl mx-auto">
                     <div className="mb-4 flex items-center justify-between">
-                      <p className="text-sm text-slate-500">
+                      <p className="text-sm text-muted-foreground">
                         Preview your CV. Click "Download PDF" to save.
                       </p>
                       <span 
