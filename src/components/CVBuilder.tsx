@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FileText, Download, Eye, Check, ChevronLeft, ChevronRight,
   Briefcase, GraduationCap, Award, Phone, Mail, MapPin, Globe,
-  Linkedin, Github, User, Plus, Trash2, Sparkles, Loader2
+  Linkedin, Github, User, Plus, Trash2, Sparkles, Loader2,
+  Printer, Palette
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -95,6 +96,12 @@ const templates: Template[] = [
   { id: 'swiss', name: 'Swiss', preview: '🇨🇭', description: 'International modernist grid design', color: '#e11d48' },
 ];
 
+const accentPresets = [
+  '#1e3a5f', '#6366f1', '#374151', '#0f766e', '#dc2626', '#7c3aed', 
+  '#10b981', '#f59e0b', '#0ea5e9', '#e11d48', '#1a1a2e', '#b91c1c',
+  '#0d9488', '#8b5cf6', '#d97706', '#111827', '#be185d', '#059669',
+];
+
 const CVBuilder: React.FC = () => {
   const [step, setStep] = useState<'template' | 'edit' | 'preview'>('template');
   const [selectedTemplate, setSelectedTemplate] = useState<Template>(templates[0]);
@@ -102,6 +109,7 @@ const CVBuilder: React.FC = () => {
   const [activeSection, setActiveSection] = useState<'personal' | 'education' | 'experience' | 'skills'>('personal');
   const [skillInput, setSkillInput] = useState('');
   const [isDownloading, setIsDownloading] = useState(false);
+  const [customColor, setCustomColor] = useState<string | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
 
   const generateId = () => Math.random().toString(36).substring(2, 9);
@@ -193,6 +201,14 @@ const CVBuilder: React.FC = () => {
     setCVData(prev => ({ ...prev, certifications: prev.certifications.filter(c => c.id !== id) }));
   };
 
+  const handleSavePDF = () => {
+    if (!cvData.personalInfo.fullName) {
+      toast.error('Please fill in at least your name');
+      return;
+    }
+    window.print();
+  };
+
   const handleDownloadPDF = async () => {
     if (!cvData.personalInfo.fullName) {
       toast.error('Please fill in at least your name');
@@ -213,8 +229,8 @@ const CVBuilder: React.FC = () => {
         backgroundColor: '#ffffff',
       });
 
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 297; // A4 height in mm
+      const imgWidth = 210;
+      const pageHeight = 297;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
       const pdf = new jsPDF('p', 'mm', 'a4');
@@ -246,7 +262,7 @@ const CVBuilder: React.FC = () => {
 
   const renderTemplate = () => {
     const { personalInfo, education, experience, skills, certifications } = cvData;
-    const color = selectedTemplate.color;
+    const color = customColor || selectedTemplate.color;
 
     const commonStyles: Record<string, string> = {
       classic: `
@@ -1129,18 +1145,28 @@ const CVBuilder: React.FC = () => {
               </Button>
             )}
             {step === 'preview' && (
-              <Button 
-                size="sm" 
-                onClick={handleDownloadPDF} 
-                disabled={isDownloading}
-                className="bg-nobel-gold hover:bg-nobel-gold/90 text-white h-8 px-2 md:h-9 md:px-4 rounded-none"
-              >
-                {isDownloading ? (
-                  <><Loader2 size={16} className="md:mr-1 animate-spin" /> <span className="hidden md:inline">Generating...</span></>
-                ) : (
-                  <><Download size={16} className="md:mr-1" /> <span className="hidden md:inline">Download PDF</span></>
-                )}
-              </Button>
+              <>
+                <Button 
+                  size="sm" 
+                  onClick={handleSavePDF} 
+                  variant="ghost"
+                  className="text-white hover:bg-white/20 h-8 px-2 md:h-9 md:px-4 rounded-none"
+                >
+                  <Printer size={16} className="md:mr-1" /> <span className="hidden md:inline">Print / Save</span>
+                </Button>
+                <Button 
+                  size="sm" 
+                  onClick={handleDownloadPDF} 
+                  disabled={isDownloading}
+                  className="bg-nobel-gold hover:bg-nobel-gold/90 text-white h-8 px-2 md:h-9 md:px-4 rounded-none"
+                >
+                  {isDownloading ? (
+                    <><Loader2 size={16} className="md:mr-1 animate-spin" /> <span className="hidden md:inline">Generating...</span></>
+                  ) : (
+                    <><Download size={16} className="md:mr-1" /> <span className="hidden md:inline">Download PDF</span></>
+                  )}
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -1365,20 +1391,60 @@ const CVBuilder: React.FC = () => {
                   className="p-6 bg-secondary/50 min-h-screen"
                 >
                   <div className="max-w-4xl mx-auto">
-                    <div className="mb-4 flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground">
-                        Preview your CV. Click "Download PDF" to save.
-                      </p>
-                      <span 
-                        className="px-3 py-1 text-xs rounded-none"
-                        style={{ background: `${selectedTemplate.color}20`, color: selectedTemplate.color }}
-                      >
-                        {selectedTemplate.name} Template
-                      </span>
+                    <div className="mb-4 flex flex-col gap-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-muted-foreground">
+                          Preview your CV. Use "Print / Save" for browser PDF or "Download PDF" for direct file.
+                        </p>
+                        <span 
+                          className="px-3 py-1 text-xs rounded-none shrink-0"
+                          style={{ background: `${customColor || selectedTemplate.color}20`, color: customColor || selectedTemplate.color }}
+                        >
+                          {selectedTemplate.name} Template
+                        </span>
+                      </div>
+                      {/* Color Picker */}
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Palette size={14} />
+                          <span>Accent:</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {accentPresets.map(c => (
+                            <button
+                              key={c}
+                              onClick={() => setCustomColor(c === selectedTemplate.color ? null : c)}
+                              className="w-6 h-6 border-2 transition-all hover:scale-110"
+                              style={{ 
+                                backgroundColor: c, 
+                                borderColor: (customColor || selectedTemplate.color) === c ? '#111' : 'transparent',
+                              }}
+                              title={c}
+                            />
+                          ))}
+                          <label className="w-6 h-6 border border-dashed border-muted-foreground/40 flex items-center justify-center cursor-pointer hover:scale-110 transition-all" title="Custom color">
+                            <span className="text-[10px]">+</span>
+                            <input 
+                              type="color" 
+                              className="sr-only" 
+                              value={customColor || selectedTemplate.color}
+                              onChange={e => setCustomColor(e.target.value)} 
+                            />
+                          </label>
+                        </div>
+                        {customColor && (
+                          <button 
+                            onClick={() => setCustomColor(null)} 
+                            className="text-[10px] text-muted-foreground underline hover:text-foreground"
+                          >
+                            Reset
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <div 
                       ref={printRef}
-                      className="bg-white shadow-xl"
+                      className="bg-white shadow-xl print:shadow-none"
                       dangerouslySetInnerHTML={{ __html: renderTemplate() }}
                     />
                   </div>
