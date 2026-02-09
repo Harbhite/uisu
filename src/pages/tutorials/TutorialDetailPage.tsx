@@ -1,14 +1,23 @@
 import { useParams, Link } from 'react-router-dom';
-import { tutorials } from '@/lib/tutorials-data';
+import { useTutorial, useTutor } from '@/hooks/useTutorials';
 import CoursePlayer from '@/components/tutorials/CoursePlayer';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 
 const TutorialDetailPage = () => {
   const { id } = useParams<{ id: string }>();
-  const tutorial = tutorials.find(t => t.id === id);
+  const { data: tutorial, isLoading, error } = useTutorial(id || '');
+  const { data: tutor } = useTutor(tutorial?.tutor_id || '');
 
-  if (!tutorial) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="animate-spin text-purple-500" size={32} />
+      </div>
+    );
+  }
+
+  if (!tutorial || error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
         <h2 className="text-2xl font-bold text-slate-800 mb-2">Tutorial Not Found</h2>
@@ -22,11 +31,11 @@ const TutorialDetailPage = () => {
 
   return (
     <div className="space-y-6">
-      <Link to="/tutorials/catalog" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-ui-blue transition-colors">
+      <Link to="/tutorials/catalog" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-purple-600 transition-colors">
         <ArrowLeft size={16} /> Back to Catalog
       </Link>
 
-      <CoursePlayer tutorial={tutorial} />
+      <CoursePlayer tutorial={tutorial} tutorName={tutor?.name} />
     </div>
   );
 };
