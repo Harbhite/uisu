@@ -183,7 +183,7 @@ const AdminDashboard = () => {
   const [sendingNewsletter, setSendingNewsletter] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [testEmail, setTestEmail] = useState("");
-  const [selectedTemplate, setSelectedTemplate] = useState<"classic" | "minimal" | "announcement" | "newspaper" | "longform" | "telegram" | "artdeco" | "gradient">("classic");
+  const [selectedTemplate, setSelectedTemplate] = useState<"classic" | "minimal" | "announcement" | "newspaper" | "longform" | "telegram" | "artdeco" | "blueprint" | "postbox" | "friendly" | "corporate">("classic");
   const [scheduleDate, setScheduleDate] = useState("");
   const [scheduleTime, setScheduleTime] = useState("");
   const [isScheduling, setIsScheduling] = useState(false);
@@ -1415,24 +1415,82 @@ const AdminDashboard = () => {
       `;
     }
     
-    if (selectedTemplate === 'gradient') {
+    if (selectedTemplate === 'blueprint') {
       return `
-        <div style="font-family: -apple-system, sans-serif; background-color: #0F172A; padding: 48px 20px;">
+        <div style="font-family: -apple-system, sans-serif; background-color: #EEF2F7; padding: 48px 20px;">
+          <div style="max-width: 560px; margin: 0 auto; background: #FFFFFF;">
+            <div style="background-color: #3B82F6; padding: 40px; text-align: center;">
+              <h1 style="font-size: 26px; font-weight: 800; color: #FFFFFF; margin: 0; font-family: Georgia, serif;">${subject}</h1>
+            </div>
+            <div style="padding: 32px;">
+              <div style="font-size: 15px; line-height: 1.8; color: #374151;">${content}</div>
+            </div>
+            <div style="padding: 0 32px 32px; text-align: center;">
+              <a href="#" style="display: inline-block; background-color: #3B82F6; color: #FFFFFF; padding: 12px 36px; text-decoration: none; font-weight: 600; border-radius: 24px; font-size: 13px;">Visit UISU Archive</a>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    if (selectedTemplate === 'postbox') {
+      return `
+        <div style="font-family: -apple-system, sans-serif; background-color: #EEF2F7; padding: 48px 20px;">
           <div style="max-width: 560px; margin: 0 auto;">
-            <div style="background: linear-gradient(135deg, #1E3A5F 0%, #0F172A 50%, #2D1B4E 100%); border-radius: 16px 16px 0 0; padding: 40px; text-align: center;">
-              <p style="font-size: 11px; color: #C5A059; text-transform: uppercase; letter-spacing: 4px; font-weight: 600; margin: 0;">UISU Archive Dispatch</p>
+            <div style="background-color: #4F6EF7; border-radius: 16px 16px 0 0; padding: 40px; text-align: center;">
+              <h1 style="font-size: 28px; font-weight: 800; color: #FFFFFF; margin: 0 0 8px 0; font-family: Georgia, serif;">${subject}</h1>
+              <p style="margin: 0; font-size: 12px; color: rgba(255,255,255,0.75);">A dispatch from the Union Archive</p>
             </div>
-            <div style="background-color: #1E293B; padding: 32px;">
-              <h1 style="font-size: 26px; font-weight: 700; color: #FFFFFF; line-height: 1.3; margin: 0 0 12px 0;">${subject}</h1>
-              <div style="width: 60px; height: 3px; background: linear-gradient(90deg, #C5A059 0%, #E8D5A3 100%); border-radius: 2px; margin-bottom: 24px;"></div>
-              <div style="font-size: 15px; line-height: 1.85; color: #CBD5E1;">${content}</div>
+            <div style="background-color: #FFFFFF; padding: 32px;">
+              <div style="font-size: 15px; line-height: 1.85; color: #1F2937;">${content}</div>
             </div>
-            <div style="background: linear-gradient(135deg, #C5A059 0%, #D4AF37 50%, #E8D5A3 100%); padding: 24px; text-align: center;">
-              <a href="#" style="display: inline-block; background-color: #0F172A; color: #FFFFFF; padding: 14px 32px; text-decoration: none; font-weight: 600; font-size: 13px; border-radius: 8px;">Explore the Archive</a>
+            <div style="background-color: #4F6EF7; padding: 16px; text-align: center;">
+              <a href="#" style="color: #FFFFFF; text-decoration: none; font-weight: 700; font-size: 14px;">Explore the Archive →</a>
             </div>
-            <div style="background-color: #0F172A; border-radius: 0 0 16px 16px; padding: 24px; text-align: center;">
-              <p style="font-size: 18px; font-style: italic; color: #C5A059; margin: 0 0 8px 0;">Father of Intellectual Unionism</p>
-              <p style="font-size: 11px; color: #64748B; margin: 0;">University of Ibadan Students' Union • Est. 1948</p>
+            <div style="background: #FFFFFF; border-radius: 0 0 16px 16px; padding: 20px; text-align: center; border-top: 1px solid #E5E7EB;">
+              <p style="font-size: 12px; font-style: italic; color: #C5A059; margin: 0;">Father of Intellectual Unionism</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    if (selectedTemplate === 'friendly') {
+      return `
+        <div style="font-family: -apple-system, sans-serif; background-color: #F9FAFB; padding: 48px 20px;">
+          <div style="max-width: 560px; margin: 0 auto;">
+            <div style="background-color: #FFFFFF; border-radius: 8px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+              <h1 style="font-size: 24px; font-weight: 700; color: #111827; margin: 0 0 20px 0; font-family: Georgia, serif;">${subject}</h1>
+              <div style="font-size: 15px; line-height: 1.85; color: #4B5563;">${content}</div>
+              <p style="margin: 24px 0 0 0; font-size: 13px; color: #6B7280; font-style: italic;">— The UISU Archive Team</p>
+            </div>
+            <div style="background-color: #3B82F6; border-radius: 8px; margin-top: 12px; padding: 20px; text-align: center;">
+              <p style="margin: 0; font-size: 11px; font-weight: 600; color: #FFFFFF;">University of Ibadan Students' Union • Est. 1948</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    if (selectedTemplate === 'corporate') {
+      return `
+        <div style="font-family: Georgia, serif; background-color: #FFFFFF; padding: 32px 20px;">
+          <div style="max-width: 560px; margin: 0 auto;">
+            <div style="padding: 16px 0 20px; border-bottom: 2px solid #1E3A5F;">
+              <span style="font-size: 18px; font-weight: 700; color: #1E3A5F;">UISU SPACE</span>
+            </div>
+            <div style="padding: 28px 0 20px;">
+              <h1 style="font-size: 26px; font-weight: 700; color: #111827; margin: 0 0 12px 0;">${subject}</h1>
+              <div style="width: 48px; height: 3px; background-color: #C5A059;"></div>
+            </div>
+            <div style="padding: 0 0 28px;">
+              <div style="font-size: 15px; line-height: 1.85; color: #374151;">${content}</div>
+            </div>
+            <div style="text-align: center; padding-bottom: 28px;">
+              <a href="#" style="display: inline-block; background-color: #1E3A5F; color: #FFFFFF; padding: 12px 36px; text-decoration: none; font-weight: 600; font-size: 13px;">Visit the Archive</a>
+            </div>
+            <div style="border-top: 1px solid #E5E7EB; padding: 20px 0; text-align: center;">
+              <p style="font-size: 12px; font-style: italic; color: #C5A059; margin: 0;">Father of Intellectual Unionism</p>
             </div>
           </div>
         </div>
@@ -1837,7 +1895,10 @@ const AdminDashboard = () => {
                           { id: 'longform', name: 'Longform', desc: 'Magazine style for essays' },
                           { id: 'telegram', name: 'Telegram', desc: 'Vintage dispatch style' },
                           { id: 'artdeco', name: 'Art Deco', desc: 'Elegant dark luxury' },
-                          { id: 'gradient', name: 'Gradient', desc: 'Modern pulse effect' },
+                          { id: 'blueprint', name: 'Blueprint', desc: 'Blue header, clean body' },
+                          { id: 'postbox', name: 'Postbox', desc: 'Bold blue with sections' },
+                          { id: 'friendly', name: 'Friendly', desc: 'Casual card with blue footer' },
+                          { id: 'corporate', name: 'Corporate', desc: 'Formal serif layout' },
                         ].map((tmpl) => (
                           <button
                             key={tmpl.id}

@@ -16,7 +16,10 @@ const TEMPLATES: Template[] = [
   { id: 'longform', name: 'Longform', desc: 'Magazine style for essays' },
   { id: 'telegram', name: 'Telegram', desc: 'Vintage dispatch style' },
   { id: 'artdeco', name: 'Art Deco', desc: 'Elegant dark luxury' },
-  { id: 'gradient', name: 'Gradient', desc: 'Modern pulse effect' },
+  { id: 'blueprint', name: 'Blueprint', desc: 'Blue header, clean body' },
+  { id: 'postbox', name: 'Postbox', desc: 'Bold blue with sections' },
+  { id: 'friendly', name: 'Friendly', desc: 'Casual card with blue footer' },
+  { id: 'corporate', name: 'Corporate', desc: 'Formal serif layout' },
 ];
 
 interface ABTestingProps {
