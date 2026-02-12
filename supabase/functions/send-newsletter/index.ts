@@ -1045,8 +1045,12 @@ const generateCorporateTemplate = (content: string, subject: string, email: stri
   `;
 };
 
-// Helper to convert markdown to HTML
+// Helper to convert markdown to HTML (also handles pre-formatted HTML)
 const convertMarkdown = (content: string) => {
+  // If content already contains HTML tags, pass it through
+  if (/<[a-z][\s\S]*>/i.test(content)) {
+    return content;
+  }
   return content
     .replace(/\n\n/g, '</p><p style="margin: 0 0 20px 0;">')
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')

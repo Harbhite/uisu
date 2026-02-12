@@ -18,6 +18,7 @@ import { inksPieces } from "@/lib/data";
 import { SEO } from "@/components/SEO";
 import { SubscriberImport } from "@/components/admin/SubscriberImport";
 import { ABTestingSection } from "@/components/admin/ABTestingSection";
+import { NewsletterRichEditor } from "@/components/admin/NewsletterRichEditor";
 
 // Validation schemas
 const eventSchema = z.object({
@@ -1255,16 +1256,11 @@ const AdminDashboard = () => {
 
   // Generate preview HTML for display based on template
   const generatePreviewHtml = () => {
-    const htmlContent = composeContent
-      .replace(/\n\n/g, '</p><p style="margin: 0 0 20px 0;">')
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/\n/g, '<br>')
-      .replace(/^/, '<p style="margin: 0 0 20px 0;">')
-      .replace(/$/, '</p>');
+    // Content is now rich HTML from the editor, use directly
+    const htmlContent = composeContent || '';
     
     const subject = composeSubject || 'Newsletter Subject';
-    const content = htmlContent || 'Your newsletter content will appear here...';
+    const content = htmlContent || '<p>Your newsletter content will appear here...</p>';
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     
     const goldLogo = `<svg width="48" height="48" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="45" fill="none" stroke="#C5A059" stroke-width="3"/><circle cx="50" cy="50" r="35" fill="none" stroke="#C5A059" stroke-width="2"/><text x="50" y="58" font-family="Georgia, serif" font-size="24" font-weight="bold" fill="#C5A059" text-anchor="middle">UI</text><text x="50" y="75" font-family="Georgia, serif" font-size="10" fill="#C5A059" text-anchor="middle">SU</text></svg>`;
@@ -1419,14 +1415,14 @@ const AdminDashboard = () => {
       return `
         <div style="font-family: -apple-system, sans-serif; background-color: #EEF2F7; padding: 48px 20px;">
           <div style="max-width: 560px; margin: 0 auto; background: #FFFFFF;">
-            <div style="background-color: #3B82F6; padding: 40px; text-align: center;">
+            <div style="background-color: #003366; padding: 40px; text-align: center;">
               <h1 style="font-size: 26px; font-weight: 800; color: #FFFFFF; margin: 0; font-family: Georgia, serif;">${subject}</h1>
             </div>
             <div style="padding: 32px;">
               <div style="font-size: 15px; line-height: 1.8; color: #374151;">${content}</div>
             </div>
             <div style="padding: 0 32px 32px; text-align: center;">
-              <a href="#" style="display: inline-block; background-color: #3B82F6; color: #FFFFFF; padding: 12px 36px; text-decoration: none; font-weight: 600; border-radius: 24px; font-size: 13px;">Visit UISU Archive</a>
+              <a href="#" style="display: inline-block; background-color: #C5A059; color: #FFFFFF; padding: 12px 36px; text-decoration: none; font-weight: 600; border-radius: 24px; font-size: 13px;">Visit UISU Archive</a>
             </div>
           </div>
         </div>
@@ -1437,14 +1433,14 @@ const AdminDashboard = () => {
       return `
         <div style="font-family: -apple-system, sans-serif; background-color: #EEF2F7; padding: 48px 20px;">
           <div style="max-width: 560px; margin: 0 auto;">
-            <div style="background-color: #4F6EF7; border-radius: 16px 16px 0 0; padding: 40px; text-align: center;">
+            <div style="background-color: #003366; border-radius: 16px 16px 0 0; padding: 40px; text-align: center;">
               <h1 style="font-size: 28px; font-weight: 800; color: #FFFFFF; margin: 0 0 8px 0; font-family: Georgia, serif;">${subject}</h1>
               <p style="margin: 0; font-size: 12px; color: rgba(255,255,255,0.75);">A dispatch from the Union Archive</p>
             </div>
             <div style="background-color: #FFFFFF; padding: 32px;">
               <div style="font-size: 15px; line-height: 1.85; color: #1F2937;">${content}</div>
             </div>
-            <div style="background-color: #4F6EF7; padding: 16px; text-align: center;">
+            <div style="background-color: #C5A059; padding: 16px; text-align: center;">
               <a href="#" style="color: #FFFFFF; text-decoration: none; font-weight: 700; font-size: 14px;">Explore the Archive →</a>
             </div>
             <div style="background: #FFFFFF; border-radius: 0 0 16px 16px; padding: 20px; text-align: center; border-top: 1px solid #E5E7EB;">
@@ -1464,7 +1460,7 @@ const AdminDashboard = () => {
               <div style="font-size: 15px; line-height: 1.85; color: #4B5563;">${content}</div>
               <p style="margin: 24px 0 0 0; font-size: 13px; color: #6B7280; font-style: italic;">— The UISU Archive Team</p>
             </div>
-            <div style="background-color: #3B82F6; border-radius: 8px; margin-top: 12px; padding: 20px; text-align: center;">
+            <div style="background-color: #003366; border-radius: 8px; margin-top: 12px; padding: 20px; text-align: center;">
               <p style="margin: 0; font-size: 11px; font-weight: 600; color: #FFFFFF;">University of Ibadan Students' Union • Est. 1948</p>
             </div>
           </div>
@@ -1476,8 +1472,8 @@ const AdminDashboard = () => {
       return `
         <div style="font-family: Georgia, serif; background-color: #FFFFFF; padding: 32px 20px;">
           <div style="max-width: 560px; margin: 0 auto;">
-            <div style="padding: 16px 0 20px; border-bottom: 2px solid #1E3A5F;">
-              <span style="font-size: 18px; font-weight: 700; color: #1E3A5F;">UISU SPACE</span>
+            <div style="padding: 16px 0 20px; border-bottom: 2px solid #003366;">
+              <span style="font-size: 18px; font-weight: 700; color: #003366;">UISU SPACE</span>
             </div>
             <div style="padding: 28px 0 20px;">
               <h1 style="font-size: 26px; font-weight: 700; color: #111827; margin: 0 0 12px 0;">${subject}</h1>
@@ -1487,7 +1483,7 @@ const AdminDashboard = () => {
               <div style="font-size: 15px; line-height: 1.85; color: #374151;">${content}</div>
             </div>
             <div style="text-align: center; padding-bottom: 28px;">
-              <a href="#" style="display: inline-block; background-color: #1E3A5F; color: #FFFFFF; padding: 12px 36px; text-decoration: none; font-weight: 600; font-size: 13px;">Visit the Archive</a>
+              <a href="#" style="display: inline-block; background-color: #003366; color: #FFFFFF; padding: 12px 36px; text-decoration: none; font-weight: 600; font-size: 13px;">Visit the Archive</a>
             </div>
             <div style="border-top: 1px solid #E5E7EB; padding: 20px 0; text-align: center;">
               <p style="font-size: 12px; font-style: italic; color: #C5A059; margin: 0;">Father of Intellectual Unionism</p>
@@ -1871,16 +1867,10 @@ const AdminDashboard = () => {
                     </div>
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Content</label>
-                      <textarea
+                      <NewsletterRichEditor
                         value={composeContent}
-                        onChange={(e) => setComposeContent(e.target.value)}
-                        placeholder="Write your newsletter content here. Use **bold** for emphasis and *italic* for subtitles..."
-                        rows={8}
-                        className="w-full px-4 py-3 bg-background border border-border focus:border-nobel-gold focus:outline-none resize-none font-serif"
+                        onChange={setComposeContent}
                       />
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Tip: Use **text** for bold and *text* for italic formatting.
-                      </p>
                     </div>
 
                     {/* Template Selector */}
@@ -1895,9 +1885,9 @@ const AdminDashboard = () => {
                           { id: 'longform', name: 'Longform', desc: 'Magazine style for essays' },
                           { id: 'telegram', name: 'Telegram', desc: 'Vintage dispatch style' },
                           { id: 'artdeco', name: 'Art Deco', desc: 'Elegant dark luxury' },
-                          { id: 'blueprint', name: 'Blueprint', desc: 'Blue header, clean body' },
-                          { id: 'postbox', name: 'Postbox', desc: 'Bold blue with sections' },
-                          { id: 'friendly', name: 'Friendly', desc: 'Casual card with blue footer' },
+                          { id: 'blueprint', name: 'Blueprint', desc: 'Navy header, clean body' },
+                          { id: 'postbox', name: 'Postbox', desc: 'Navy with gold CTA band' },
+                          { id: 'friendly', name: 'Friendly', desc: 'Card with navy footer' },
                           { id: 'corporate', name: 'Corporate', desc: 'Formal serif layout' },
                         ].map((tmpl) => (
                           <button
