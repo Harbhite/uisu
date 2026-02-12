@@ -43,7 +43,7 @@ export const NotificationPrompt = () => {
         // Check if we have an active subscription
         try {
           const registration = await navigator.serviceWorker.ready;
-          const subscription = await registration.pushManager.getSubscription();
+          const subscription = await (registration as any).pushManager?.getSubscription();
           setIsSubscribed(!!subscription);
         } catch (error) {
           console.error('Error checking subscription:', error);
@@ -107,7 +107,7 @@ export const NotificationPrompt = () => {
       }
 
       // Subscribe to push notifications
-      const subscription = await registration.pushManager.subscribe({
+      const subscription = await (registration as any).pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
       });
