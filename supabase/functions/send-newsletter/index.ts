@@ -789,8 +789,8 @@ const generateBlueprintTemplate = (content: string, subject: string, email: stri
               
               <!-- Blue Header -->
               <tr>
-                <td style="background-color: #3B82F6; padding: 48px 40px; text-align: center;">
-                  <img src="${logoUrl}" alt="UISU" width="56" height="56" style="display: block; margin: 0 auto 16px; border-radius: 50%; background: rgba(255,255,255,0.2); padding: 8px;" />
+                <td style="background-color: #003366; padding: 48px 40px; text-align: center;">
+                   <img src="${logoUrl}" alt="UISU" width="56" height="56" style="display: block; margin: 0 auto 16px; border-radius: 50%; background: rgba(255,255,255,0.2); padding: 8px;" />
                   <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: #FFFFFF; line-height: 1.2; font-family: Georgia, serif;">
                     ${subject}
                   </h1>
@@ -809,9 +809,9 @@ const generateBlueprintTemplate = (content: string, subject: string, email: stri
               <!-- CTA -->
               <tr>
                 <td style="padding: 0 40px 40px; text-align: center;">
-                  <a href="https://uisu.lovable.app" style="display: inline-block; background-color: #3B82F6; color: #FFFFFF; padding: 14px 40px; text-decoration: none; font-weight: 600; font-size: 14px; border-radius: 24px;">
-                    Visit UISU Archive
-                  </a>
+                   <a href="https://uisu.lovable.app" style="display: inline-block; background-color: #C5A059; color: #FFFFFF; padding: 14px 40px; text-decoration: none; font-weight: 600; font-size: 14px; border-radius: 24px;">
+                     Visit UISU Archive
+                   </a>
                 </td>
               </tr>
               
@@ -855,7 +855,7 @@ const generatePostboxTemplate = (content: string, subject: string, email: string
               
               <!-- Blue Header with rounded top -->
               <tr>
-                <td style="background-color: #4F6EF7; border-radius: 16px 16px 0 0; padding: 48px 40px; text-align: center;">
+                <td style="background-color: #003366; border-radius: 16px 16px 0 0; padding: 48px 40px; text-align: center;">
                   <img src="${logoUrl}" alt="UISU" width="52" height="52" style="display: block; margin: 0 auto 16px;" />
                   <h1 style="margin: 0 0 8px 0; font-size: 32px; font-weight: 800; color: #FFFFFF; line-height: 1.2; font-family: Georgia, serif;">
                     ${subject}
@@ -875,10 +875,10 @@ const generatePostboxTemplate = (content: string, subject: string, email: string
               
               <!-- Full-width CTA band -->
               <tr>
-                <td style="background-color: #4F6EF7; padding: 20px 40px; text-align: center;">
-                  <a href="https://uisu.lovable.app" style="display: inline-block; color: #FFFFFF; padding: 14px 48px; text-decoration: none; font-weight: 700; font-size: 15px; letter-spacing: 0.5px;">
-                    Explore the Archive →
-                  </a>
+                <td style="background-color: #C5A059; padding: 20px 40px; text-align: center;">
+                   <a href="https://uisu.lovable.app" style="display: inline-block; color: #FFFFFF; padding: 14px 48px; text-decoration: none; font-weight: 700; font-size: 15px; letter-spacing: 0.5px;">
+                     Explore the Archive →
+                   </a>
                 </td>
               </tr>
               
@@ -924,7 +924,7 @@ const generateFriendlyTemplate = (content: string, subject: string, email: strin
               <tr>
                 <td style="padding: 16px 0;">
                   <img src="${logoUrl}" alt="UISU" width="40" height="40" style="display: inline-block;" />
-                  <span style="font-size: 16px; font-weight: 700; color: #1E3A5F; vertical-align: middle; margin-left: 8px; font-family: Georgia, serif;">UISU SPACE</span>
+                  <span style="font-size: 16px; font-weight: 700; color: #003366; vertical-align: middle; margin-left: 8px; font-family: Georgia, serif;">UISU SPACE</span>
                 </td>
               </tr>
               
@@ -943,7 +943,7 @@ const generateFriendlyTemplate = (content: string, subject: string, email: strin
               
               <!-- Blue footer band -->
               <tr>
-                <td style="background-color: #3B82F6; border-radius: 8px; margin-top: 16px; padding: 24px 40px; text-align: center;">
+                <td style="background-color: #003366; border-radius: 8px; margin-top: 16px; padding: 24px 40px; text-align: center;">
                   <p style="margin: 0 0 4px 0; font-size: 12px; font-weight: 600; color: #FFFFFF;">University of Ibadan Students' Union</p>
                   <p style="margin: 0; font-size: 10px; color: rgba(255,255,255,0.75);">Est. 1948 • Father of Intellectual Unionism</p>
                 </td>
@@ -987,9 +987,9 @@ const generateCorporateTemplate = (content: string, subject: string, email: stri
               
               <!-- Top logo -->
               <tr>
-                <td style="padding: 16px 0 24px; border-bottom: 2px solid #1E3A5F;">
-                  <img src="${logoUrl}" alt="UISU" width="44" height="44" style="display: inline-block; vertical-align: middle;" />
-                  <span style="font-size: 18px; font-weight: 700; color: #1E3A5F; vertical-align: middle; margin-left: 10px;">UISU SPACE</span>
+                <td style="padding: 16px 0 24px; border-bottom: 2px solid #003366;">
+                   <img src="${logoUrl}" alt="UISU" width="44" height="44" style="display: inline-block; vertical-align: middle;" />
+                   <span style="font-size: 18px; font-weight: 700; color: #003366; vertical-align: middle; margin-left: 10px;">UISU SPACE</span>
                 </td>
               </tr>
               
@@ -1015,9 +1015,9 @@ const generateCorporateTemplate = (content: string, subject: string, email: stri
               <!-- CTA -->
               <tr>
                 <td style="padding: 0 0 40px; text-align: center;">
-                  <a href="https://uisu.lovable.app" style="display: inline-block; background-color: #1E3A5F; color: #FFFFFF; padding: 14px 40px; text-decoration: none; font-weight: 600; font-size: 14px; font-family: -apple-system, sans-serif;">
-                    Visit the Archive
-                  </a>
+                   <a href="https://uisu.lovable.app" style="display: inline-block; background-color: #003366; color: #FFFFFF; padding: 14px 40px; text-decoration: none; font-weight: 600; font-size: 14px; font-family: -apple-system, sans-serif;">
+                     Visit the Archive
+                   </a>
                 </td>
               </tr>
               
