@@ -527,6 +527,145 @@ export type Database = {
         }
         Relationships: []
       }
+      form_fields: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          field_type: string
+          form_id: string
+          id: string
+          is_required: boolean | null
+          label: string
+          options: Json | null
+          placeholder: string | null
+          sort_order: number | null
+          updated_at: string | null
+          validation: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          field_type?: string
+          form_id: string
+          id?: string
+          is_required?: boolean | null
+          label: string
+          options?: Json | null
+          placeholder?: string | null
+          sort_order?: number | null
+          updated_at?: string | null
+          validation?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          field_type?: string
+          form_id?: string
+          id?: string
+          is_required?: boolean | null
+          label?: string
+          options?: Json | null
+          placeholder?: string | null
+          sort_order?: number | null
+          updated_at?: string | null
+          validation?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_fields_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      form_responses: {
+        Row: {
+          data: Json
+          form_id: string
+          id: string
+          respondent_email: string | null
+          respondent_id: string | null
+          respondent_name: string | null
+          submitted_at: string | null
+        }
+        Insert: {
+          data?: Json
+          form_id: string
+          id?: string
+          respondent_email?: string | null
+          respondent_id?: string | null
+          respondent_name?: string | null
+          submitted_at?: string | null
+        }
+        Update: {
+          data?: Json
+          form_id?: string
+          id?: string
+          respondent_email?: string | null
+          respondent_id?: string | null
+          respondent_name?: string | null
+          submitted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_responses_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forms: {
+        Row: {
+          accent_color: string | null
+          closed_at: string | null
+          cover_image: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          response_count: number | null
+          settings: Json | null
+          share_token: string | null
+          status: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          accent_color?: string | null
+          closed_at?: string | null
+          cover_image?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          response_count?: number | null
+          settings?: Json | null
+          share_token?: string | null
+          status?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          accent_color?: string | null
+          closed_at?: string | null
+          cover_image?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          response_count?: number | null
+          settings?: Json | null
+          share_token?: string | null
+          status?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       gpa_records: {
         Row: {
           academic_year: string
