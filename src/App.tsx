@@ -56,6 +56,10 @@ const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
 const UnsubscribePage = lazy(() => import("./pages/UnsubscribePage"));
 const NewsletterPage = lazy(() => import("./pages/NewsletterPage"));
+const FormsPage = lazy(() => import("./pages/FormsPage"));
+const FormBuilderPage = lazy(() => import("./pages/FormBuilderPage"));
+const FormSubmitPage = lazy(() => import("./pages/FormSubmitPage"));
+const FormResponsesPage = lazy(() => import("./pages/FormResponsesPage"));
 const queryClient = new QueryClient();
 
 const LoadingFallback = () => (
@@ -131,6 +135,12 @@ const AppRoutes = () => {
         {/* Newsletter */}
         <Route path="/unsubscribe" element={<PageWrapper><UnsubscribePage /></PageWrapper>} />
         <Route path="/newsletter" element={<NewsletterPage />} />
+
+        {/* Forms */}
+        <Route path="/forms" element={<PageWrapper><FormsPage /></PageWrapper>} />
+        <Route path="/forms/edit/:id" element={<FormBuilderPage />} />
+        <Route path="/forms/s/:token" element={<FormSubmitPage />} />
+        <Route path="/forms/responses/:id" element={<FormResponsesPage />} />
 
         {/* Tutorials Ecosystem (Standalone Subdomain feel) */}
         <Route path="/tutorials" element={<TutorialsLayout />}>
