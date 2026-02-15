@@ -56,6 +56,7 @@ const FormBuilderPage = () => {
   const [title, setTitle] = useState("Untitled Form");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("draft");
+  const [formType, setFormType] = useState("form");
   const [shareToken, setShareToken] = useState("");
   const [settings, setSettings] = useState<any>({
     require_login: false,
@@ -87,6 +88,7 @@ const FormBuilderPage = () => {
     setTitle(form.title);
     setDescription(form.description || "");
     setStatus(form.status);
+    setFormType(form.form_type || "form");
     setShareToken(form.share_token || "");
     if (form.settings) setSettings(form.settings as any);
 
@@ -162,7 +164,7 @@ const FormBuilderPage = () => {
       // Update form metadata
       const { error: formError } = await supabase
         .from("forms")
-        .update({ title, description, settings, status })
+        .update({ title, description, settings, status, form_type: formType })
         .eq("id", id!);
 
       if (formError) throw formError;
