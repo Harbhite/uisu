@@ -54,146 +54,156 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
   return (
     <>
       {/* --- DESKTOP NAVBAR --- */}
-      <nav className="hidden md:block fixed top-0 left-0 w-full z-50 bg-ui-dark/95 backdrop-blur-lg border-b border-white/10 shadow-lg transition-all duration-300 no-print">
-        <div className="container mx-auto px-6 h-20 flex items-center gap-2">
+      <nav className="hidden md:flex fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-50 justify-center transition-all duration-300 no-print">
+        <div className="w-full bg-ui-dark/90 backdrop-blur-md border border-white/10 shadow-2xl rounded-full px-6 h-16 grid grid-cols-[1fr_auto_1fr] items-center">
 
-          {/* Logo Section */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <img src="/uisu-logo.png" alt="UISU Logo" className="h-10 w-auto object-contain brightness-0 invert group-hover:scale-110 transition-transform duration-300" />
+          {/* Left Navigation */}
+          <div className="flex items-center justify-start">
+            <NavigationMenu>
+                <NavigationMenuList className="space-x-1">
+
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger className="bg-transparent text-white/90 hover:text-nobel-gold hover:bg-white/10 focus:bg-white/10 focus:text-white px-3 text-xs lg:text-sm font-medium tracking-wide">The Union</NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
+                        <li className="row-span-3">
+                          <NavigationMenuLink asChild>
+                            <a
+                              className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-ui-blue/50 to-ui-blue p-6 no-underline outline-none focus:shadow-md"
+                              href="/governance"
+                            >
+                              <div className="mb-2 mt-4 text-lg font-medium text-white">
+                                Structure
+                              </div>
+                              <p className="text-sm leading-tight text-white/90">
+                                Understanding the Executive, Legislative, and Judiciary arms.
+                              </p>
+                            </a>
+                          </NavigationMenuLink>
+                        </li>
+                        <ListItem href="/governance" title="Governance">
+                          The constitution and legal framework.
+                        </ListItem>
+                        <ListItem href="/constitution" title="Constitution">
+                          The supreme law of the Union.
+                        </ListItem>
+                        <ListItem href="/past-leaders" title="Past Leaders">
+                          Archive of former student leaders.
+                        </ListItem>
+                        <ListItem href="/documents" title="Documents">
+                          Official records and publications.
+                        </ListItem>
+                      </ul>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+
+                  <NavigationMenuItem>
+                    <Link to="/current-leaders">
+                        <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "bg-transparent text-white/90 hover:text-nobel-gold hover:bg-white/10 focus:bg-white/10 focus:text-white cursor-pointer px-3 text-xs lg:text-sm font-medium tracking-wide")}>
+                            Leadership
+                        </NavigationMenuLink>
+                    </Link>
+                  </NavigationMenuItem>
+
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger className="bg-transparent text-white/90 hover:text-nobel-gold hover:bg-white/10 focus:bg-white/10 focus:text-white px-3 text-xs lg:text-sm font-medium tracking-wide">Resources</NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                        {resourceCategories.map((resource) => (
+                          <ListItem key={resource.id} href={resource.path} title={resource.title}>
+                            {resource.description}
+                          </ListItem>
+                        ))}
+                      </ul>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+
+                </NavigationMenuList>
+            </NavigationMenu>
+          </div>
+
+          {/* Center Logo */}
+          <Link to="/" className="flex items-center gap-2 group justify-center">
+            <img src="/uisu-logo.png" alt="UISU Logo" className="h-8 lg:h-10 w-auto object-contain brightness-0 invert group-hover:scale-110 transition-transform duration-300" />
             <div className="flex flex-col">
-              <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-white leading-tight">University of Ibadan</span>
-              <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-nobel-gold leading-tight">Students' Union</span>
+              <span className="text-[0.6rem] lg:text-[0.65rem] font-semibold uppercase tracking-wide text-white leading-tight">University of Ibadan</span>
+              <span className="text-[0.6rem] lg:text-[0.65rem] font-semibold uppercase tracking-wide text-nobel-gold leading-tight">Students' Union</span>
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <NavigationMenu>
-              <NavigationMenuList className="space-x-0">
+          {/* Right Navigation & Actions */}
+          <div className="flex items-center justify-end gap-2 lg:gap-4">
+              <NavigationMenu>
+                  <NavigationMenuList className="space-x-1">
+                    <NavigationMenuItem>
+                      <NavigationMenuTrigger className="bg-transparent text-white/90 hover:text-nobel-gold hover:bg-white/10 focus:bg-white/10 focus:text-white px-3 text-xs lg:text-sm font-medium tracking-wide">Community</NavigationMenuTrigger>
+                      <NavigationMenuContent>
+                        <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
+                          <ListItem href="/communities" title="Communities">
+                            Student clubs, societies, and organizations.
+                          </ListItem>
+                          <ListItem href="/campus-map" title="Campus Map">
+                            Navigate the halls and landmarks.
+                          </ListItem>
+                          <ListItem href="/halls" title="Halls of Residence">
+                            The Republics within the University.
+                          </ListItem>
+                          <ListItem href="/events" title="Events">
+                            Upcoming programs and activities.
+                          </ListItem>
+                        </ul>
+                      </NavigationMenuContent>
+                    </NavigationMenuItem>
 
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-white/90 hover:text-nobel-gold hover:bg-white/10 focus:bg-white/10 focus:text-white px-2">The Union</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
-                      <li className="row-span-3">
-                        <NavigationMenuLink asChild>
-                          <a
-                            className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-ui-blue/50 to-ui-blue p-6 no-underline outline-none focus:shadow-md"
-                            href="/governance"
-                          >
-                            <div className="mb-2 mt-4 text-lg font-medium text-white">
-                              Structure
-                            </div>
-                            <p className="text-sm leading-tight text-white/90">
-                              Understanding the Executive, Legislative, and Judiciary arms.
-                            </p>
-                          </a>
-                        </NavigationMenuLink>
-                      </li>
-                      <ListItem href="/governance" title="Governance">
-                        The constitution and legal framework.
-                      </ListItem>
-                      <ListItem href="/constitution" title="Constitution">
-                        The supreme law of the Union.
-                      </ListItem>
-                      <ListItem href="/past-leaders" title="Past Leaders">
-                        Archive of former student leaders.
-                      </ListItem>
-                      <ListItem href="/documents" title="Documents">
-                        Official records and publications.
-                      </ListItem>
-                    </ul>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
+                    <NavigationMenuItem>
+                      <NavigationMenuTrigger className="bg-transparent text-white/90 hover:text-nobel-gold hover:bg-white/10 focus:bg-white/10 focus:text-white px-3 text-xs lg:text-sm font-medium tracking-wide">Editorial</NavigationMenuTrigger>
+                      <NavigationMenuContent>
+                        <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
+                          <ListItem href="/inks-vault" title="Inks Vault">
+                            Creative writing, essays, and reports.
+                          </ListItem>
+                          <ListItem href="/announcements" title="Announcements">
+                            Official news and updates.
+                          </ListItem>
+                        </ul>
+                      </NavigationMenuContent>
+                    </NavigationMenuItem>
+                  </NavigationMenuList>
+              </NavigationMenu>
 
-                <NavigationMenuItem>
-                  <Link to="/current-leaders">
-                      <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "bg-transparent text-white/90 hover:text-nobel-gold hover:bg-white/10 focus:bg-white/10 focus:text-white cursor-pointer px-2")}>
-                          Leadership
-                      </NavigationMenuLink>
+              {/* Action Buttons */}
+              <div className="flex items-center gap-3 pl-3 border-l border-white/20">
+                 {/* Search Button */}
+                 <button
+                   onClick={() => navigate('/search')}
+                   className="p-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                   aria-label="Search"
+                 >
+                   <Search size={16} className="lg:w-[18px] lg:h-[18px]" />
+                 </button>
+
+                 {user && (
+                  <Link to="/admin" className="text-[10px] lg:text-xs font-bold uppercase tracking-widest text-slate-300 hover:text-white transition-colors hidden xl:block">
+                    Admin
                   </Link>
-                </NavigationMenuItem>
+                )}
+                {user ? (
+                   <button onClick={handleLogout} className="flex items-center gap-2 text-[10px] lg:text-xs font-bold uppercase tracking-widest text-slate-300 hover:text-red-400 transition-colors">
+                    <LogOut size={14} />
+                  </button>
+                ) : (
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => navigate('/auth')}
+                        className="bg-nobel-gold text-ui-blue px-4 lg:px-6 py-2 rounded-full text-[10px] lg:text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-ui-blue transition-colors shadow-sm"
+                    >
+                        Enter
+                    </motion.button>
+                )}
+              </div>
+          </div>
 
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-white/90 hover:text-nobel-gold hover:bg-white/10 focus:bg-white/10 focus:text-white px-2">Resources</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                      {resourceCategories.map((resource) => (
-                        <ListItem key={resource.id} href={resource.path} title={resource.title}>
-                          {resource.description}
-                        </ListItem>
-                      ))}
-                    </ul>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-white/90 hover:text-nobel-gold hover:bg-white/10 focus:bg-white/10 focus:text-white px-2">Community</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                      <ListItem href="/communities" title="Communities">
-                        Student clubs, societies, and organizations.
-                      </ListItem>
-                      <ListItem href="/campus-map" title="Campus Map">
-                        Navigate the halls and landmarks.
-                      </ListItem>
-                      <ListItem href="/halls" title="Halls of Residence">
-                        The Republics within the University.
-                      </ListItem>
-                      <ListItem href="/events" title="Events">
-                        Upcoming programs and activities.
-                      </ListItem>
-                    </ul>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-white/90 hover:text-nobel-gold hover:bg-white/10 focus:bg-white/10 focus:text-white px-2">Editorial</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                      <ListItem href="/inks-vault" title="Inks Vault">
-                        Creative writing, essays, and reports.
-                      </ListItem>
-                      <ListItem href="/announcements" title="Announcements">
-                        Official news and updates.
-                      </ListItem>
-                    </ul>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-
-              </NavigationMenuList>
-            </NavigationMenu>
-
-            {/* Action Button */}
-            <div className="flex items-center gap-4 pl-4 border-l border-white/20 ml-auto">
-               {/* Search Button */}
-               <button 
-                 onClick={() => navigate('/search')}
-                 className="p-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-full transition-colors"
-                 aria-label="Search"
-               >
-                 <Search size={18} />
-               </button>
-               
-               {user && (
-                <Link to="/admin" className="text-xs font-bold uppercase tracking-widest text-slate-300 hover:text-white transition-colors">
-                  Admin
-                </Link>
-              )}
-              {user ? (
-                 <button onClick={handleLogout} className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-300 hover:text-red-400 transition-colors">
-                  <LogOut size={14} />
-                </button>
-              ) : (
-                  <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => navigate('/auth')}
-                      className="bg-nobel-gold text-ui-blue px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-ui-blue transition-colors shadow-sm"
-                  >
-                      Enter
-                  </motion.button>
-              )}
-            </div>
         </div>
       </nav>
 
