@@ -529,6 +529,7 @@ export type Database = {
       }
       form_fields: {
         Row: {
+          conditions: Json | null
           created_at: string | null
           description: string | null
           field_type: string
@@ -543,6 +544,7 @@ export type Database = {
           validation: Json | null
         }
         Insert: {
+          conditions?: Json | null
           created_at?: string | null
           description?: string | null
           field_type?: string
@@ -557,6 +559,7 @@ export type Database = {
           validation?: Json | null
         }
         Update: {
+          conditions?: Json | null
           created_at?: string | null
           description?: string | null
           field_type?: string
@@ -622,12 +625,17 @@ export type Database = {
         Row: {
           accent_color: string | null
           closed_at: string | null
+          closes_at: string | null
           cover_image: string | null
           created_at: string | null
           created_by: string
           description: string | null
           form_type: string
           id: string
+          max_responses: number | null
+          notify_emails: string[] | null
+          notify_on_submit: boolean | null
+          opens_at: string | null
           response_count: number | null
           settings: Json | null
           share_token: string | null
@@ -638,12 +646,17 @@ export type Database = {
         Insert: {
           accent_color?: string | null
           closed_at?: string | null
+          closes_at?: string | null
           cover_image?: string | null
           created_at?: string | null
           created_by: string
           description?: string | null
           form_type?: string
           id?: string
+          max_responses?: number | null
+          notify_emails?: string[] | null
+          notify_on_submit?: boolean | null
+          opens_at?: string | null
           response_count?: number | null
           settings?: Json | null
           share_token?: string | null
@@ -654,12 +667,17 @@ export type Database = {
         Update: {
           accent_color?: string | null
           closed_at?: string | null
+          closes_at?: string | null
           cover_image?: string | null
           created_at?: string | null
           created_by?: string
           description?: string | null
           form_type?: string
           id?: string
+          max_responses?: number | null
+          notify_emails?: string[] | null
+          notify_on_submit?: boolean | null
+          opens_at?: string | null
           response_count?: number | null
           settings?: Json | null
           share_token?: string | null

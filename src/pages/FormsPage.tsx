@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Plus, FileText, Users, ExternalLink, Copy, Trash2, BarChart3, Search,
-  ClipboardList, UserPlus, FlaskConical, GraduationCap, LayoutTemplate, ShieldAlert
+  ClipboardList, UserPlus, FlaskConical, GraduationCap, LayoutTemplate, ShieldAlert, CopyPlus
 } from "lucide-react";
 import { format } from "date-fns";
 import { SEO } from "@/components/SEO";
@@ -183,6 +183,44 @@ const FormsPage = () => {
     toast({ title: "Link copied to clipboard" });
   };
 
+  const duplicateForm = async (formId: string) => {
+    if (!user) return;
+    const original = forms.find(f => f.id === formId);
+    if (!original) return;
+    const { data: newForm, error } = await supabase
+      .from("forms")
+      .insert({
+        title: `${original.title} (Copy)`,
+        description: original.description,
+        created_by: user.id,
+        form_type: original.form_type || "form",
+        settings: original.settings,
+        accent_color: original.accent_color,
+      })
+      .select()
+      .single();
+    if (error || !newForm) { toast({ title: "Error duplicating form", variant: "destructive" }); return; }
+    // Duplicate fields
+    const { data: originalFields } = await supabase.from("form_fields").select("*").eq("form_id", formId).order("sort_order");
+    if (originalFields && originalFields.length > 0) {
+      const newFields = originalFields.map(f => ({
+        form_id: newForm.id,
+        field_type: f.field_type,
+        label: f.label,
+        description: f.description,
+        placeholder: f.placeholder,
+        is_required: f.is_required,
+        sort_order: f.sort_order,
+        options: f.options,
+        validation: f.validation,
+        conditions: (f as any).conditions,
+      }));
+      await supabase.from("form_fields").insert(newFields as any);
+    }
+    toast({ title: "Form duplicated!" });
+    fetchForms();
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/");
@@ -320,6 +358,9 @@ const FormsPage = () => {
                         </Button>
                       </>
                     )}
+                    <Button variant="outline" size="sm" onClick={() => duplicateForm(form.id)} title="Duplicate">
+                      <CopyPlus className="w-3.5 h-3.5 mr-1" /> Duplicate
+                    </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">

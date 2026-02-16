@@ -1,4 +1,4 @@
-import { useState, useEffect, ReactNode } from "react";
+import { useState, useEffect, ReactNode, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -9,8 +9,9 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Star, FileText } from "lucide-react";
+import { Star, FileText, Clock, AlertTriangle } from "lucide-react";
 import { SEO } from "@/components/SEO";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   ClassicTemplate, NewsletterTemplate, AdminTemplate, MinimalTemplate, ElegantTemplate,
   SuccessScreen, ErrorScreen,
@@ -36,6 +37,26 @@ const FormSubmitPage = () => {
       .from("forms").select("*").eq("share_token", token!).eq("status", "published").limit(1);
     if (formError || !forms || forms.length === 0) { setError("This form is not available."); setLoading(false); return; }
     const form = forms[0];
+
+    // Check scheduled availability
+    const now = new Date();
+    if ((form as any).opens_at && new Date((form as any).opens_at) > now) {
+      setError("This form is not yet open for submissions.");
+      setLoading(false);
+      return;
+    }
+    if ((form as any).closes_at && new Date((form as any).closes_at) < now) {
+      setError("This form is closed.");
+      setLoading(false);
+      return;
+    }
+    // Check max responses
+    if ((form as any).max_responses && (form.response_count || 0) >= (form as any).max_responses) {
+      setError("This form has reached the maximum number of responses.");
+      setLoading(false);
+      return;
+    }
+
     setForm(form);
     const { data: fieldsData } = await supabase.from("form_fields").select("*").eq("form_id", form.id).order("sort_order");
     if (fieldsData) setFields(fieldsData);
@@ -49,8 +70,30 @@ const FormSubmitPage = () => {
     updateResponse(fieldId, current.includes(option) ? current.filter((o: string) => o !== option) : [...current, option]);
   };
 
+  // Conditional logic: determine which fields are visible
+  const visibleFields = useMemo(() => {
+    return fields.filter(field => {
+      const conditions = (field as any).conditions;
+      if (!conditions || !conditions.field_id) return true;
+      const sourceValue = responses[conditions.field_id];
+      switch (conditions.operator) {
+        case "equals":
+          return String(sourceValue) === String(conditions.value);
+        case "not_equals":
+          return String(sourceValue) !== String(conditions.value);
+        case "contains":
+          if (Array.isArray(sourceValue)) return sourceValue.includes(conditions.value);
+          return String(sourceValue || "").includes(String(conditions.value));
+        case "is_answered":
+          return sourceValue !== undefined && sourceValue !== null && sourceValue !== "" && (!Array.isArray(sourceValue) || sourceValue.length > 0);
+        default:
+          return true;
+      }
+    });
+  }, [fields, responses]);
+
   const validate = (): boolean => {
-    for (const field of fields) {
+    for (const field of visibleFields) {
       if (field.is_required) {
         const val = responses[field.id];
         if (val === undefined || val === null || val === "" || (Array.isArray(val) && val.length === 0)) {
@@ -69,15 +112,31 @@ const FormSubmitPage = () => {
       form_id: form.id, respondent_email: respondentEmail || null, respondent_name: respondentName || null, data: responses,
     });
     if (submitError) { toast({ title: "Submission failed", description: submitError.message, variant: "destructive" }); setSubmitting(false); return; }
+
+    // Send notification if enabled
+    if ((form as any).notify_on_submit && ((form as any).notify_emails || []).length > 0) {
+      try {
+        await supabase.functions.invoke("notify-form-submission", {
+          body: {
+            formTitle: form.title,
+            formId: form.id,
+            respondentName: respondentName || null,
+            respondentEmail: respondentEmail || null,
+            notifyEmails: (form as any).notify_emails,
+          },
+        });
+      } catch (e) { /* notification failure shouldn't block submission */ }
+    }
+
     setSubmitted(true);
     setSubmitting(false);
   };
 
-  const answeredCount = fields.filter(f => {
+  const answeredCount = visibleFields.filter(f => {
     const v = responses[f.id];
     return v !== undefined && v !== null && v !== "" && (!Array.isArray(v) || v.length > 0);
   }).length;
-  const progress = fields.length > 0 ? (answeredCount / fields.length) * 100 : 0;
+  const progress = visibleFields.length > 0 ? (answeredCount / visibleFields.length) * 100 : 0;
   const options = (field: any) => Array.isArray(field.options) ? field.options as string[] : [];
 
   if (loading) return (
@@ -85,7 +144,26 @@ const FormSubmitPage = () => {
       <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
     </div>
   );
-  if (error) return <ErrorScreen />;
+  if (error) return (
+    <>
+      <SEO title="Form Unavailable" description={error} />
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <Card className="max-w-md w-full text-center py-12">
+          <CardContent>
+            {error.includes("not yet open") ? (
+              <Clock className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+            ) : error.includes("maximum") ? (
+              <AlertTriangle className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+            ) : (
+              <AlertTriangle className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+            )}
+            <h2 className="text-xl font-semibold text-foreground mb-2">Form Unavailable</h2>
+            <p className="text-muted-foreground">{error}</p>
+          </CardContent>
+        </Card>
+      </div>
+    </>
+  );
 
   const template: string = form?.settings?.template || "classic";
 
@@ -179,7 +257,7 @@ const FormSubmitPage = () => {
   };
 
   const templateProps = {
-    form, fields, respondentName, respondentEmail, setRespondentName, setRespondentEmail,
+    form, fields: visibleFields, respondentName, respondentEmail, setRespondentName, setRespondentEmail,
     progress, answeredCount, submitting, onSubmit: handleSubmit, renderField,
   };
 
