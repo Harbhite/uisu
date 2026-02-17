@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ArrowLeft, QrCode, CheckCircle2, XCircle, Users, Loader2, Search, UserCheck } from 'lucide-react';
+import { ArrowLeft, QrCode, CheckCircle2, XCircle, Users, Loader2, Search, UserCheck, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SEO } from '@/components/SEO';
 import { Badge } from '@/components/ui/badge';
+import QRScanner from '@/components/QRScanner';
 
 interface CheckinRecord {
   id: string;
@@ -26,6 +27,7 @@ const EventCheckinPage = () => {
   const [lastResult, setLastResult] = useState<{ success: boolean; message: string } | null>(null);
   const [checkins, setCheckins] = useState<CheckinRecord[]>([]);
   const [rsvpCount, setRsvpCount] = useState(0);
+  const [showScanner, setShowScanner] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -61,6 +63,7 @@ const EventCheckinPage = () => {
     if (!qrToken || !eventId) return;
     setProcessing(true);
     setLastResult(null);
+    setShowScanner(false);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -108,8 +111,9 @@ const EventCheckinPage = () => {
       setLastResult({ success: true, message: 'Check-in successful!' });
       setCheckins(prev => [{ id: crypto.randomUUID(), user_id: rsvp.user_id, checked_in_at: new Date().toISOString(), method: 'qr_scan' }, ...prev]);
       toast.success('Attendee checked in!');
-    } catch (err: any) {
-      setLastResult({ success: false, message: err.message || 'Check-in failed' });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Check-in failed';
+      setLastResult({ success: false, message: errorMessage });
     } finally {
       setScanInput('');
       setProcessing(false);
@@ -128,6 +132,14 @@ const EventCheckinPage = () => {
   return (
     <div className="min-h-screen bg-slate-50 pt-24 pb-16">
       <SEO title={`Check-In: ${event?.title || 'Event'}`} description="Staff QR code check-in scanner" />
+
+      {showScanner && (
+        <QRScanner
+          onScan={(decodedText) => processCheckin(decodedText)}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
+
       <div className="container mx-auto px-4 max-w-2xl">
         <button onClick={() => navigate(-1)} className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-primary transition-colors mb-8">
           <div className="p-2 border border-border rounded-full group-hover:border-primary transition-colors"><ArrowLeft size={14} /></div>
@@ -155,9 +167,20 @@ const EventCheckinPage = () => {
 
         {/* Scanner Input */}
         <div className="bg-white rounded-xl border border-border p-6 mb-6">
-          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3 block">
-            <QrCode size={14} className="inline mr-2" /> Scan or Enter QR Token
-          </label>
+          <div className="flex justify-between items-center mb-3">
+            <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground block">
+              <QrCode size={14} className="inline mr-2" /> Scan or Enter QR Token
+            </label>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs gap-2"
+              onClick={() => setShowScanner(true)}
+            >
+              <Camera size={14} />
+              Open Camera
+            </Button>
+          </div>
           <div className="flex gap-2">
             <Input
               ref={inputRef}
