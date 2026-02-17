@@ -60,6 +60,8 @@ const FormsPage = lazy(() => import("./pages/FormsPage"));
 const FormBuilderPage = lazy(() => import("./pages/FormBuilderPage"));
 const FormSubmitPage = lazy(() => import("./pages/FormSubmitPage"));
 const FormResponsesPage = lazy(() => import("./pages/FormResponsesPage"));
+const PollsPage = lazy(() => import("./pages/PollsPage"));
+const EventCheckinPage = lazy(() => import("./pages/EventCheckinPage"));
 const queryClient = new QueryClient();
 
 const LoadingFallback = () => (
@@ -141,6 +143,12 @@ const AppRoutes = () => {
         <Route path="/forms/edit/:id" element={<FormBuilderPage />} />
         <Route path="/forms/s/:token" element={<FormSubmitPage />} />
         <Route path="/forms/responses/:id" element={<FormResponsesPage />} />
+
+        {/* Polls & Voting */}
+        <Route path="/polls" element={<PageWrapper><PollsPage /></PageWrapper>} />
+
+        {/* Event Check-in (Staff) */}
+        <Route path="/events/checkin/:eventId" element={<PageWrapper><EventCheckinPage /></PageWrapper>} />
 
         {/* Tutorials Ecosystem (Standalone Subdomain feel) */}
         <Route path="/tutorials" element={<TutorialsLayout />}>

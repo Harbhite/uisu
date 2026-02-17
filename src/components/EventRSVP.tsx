@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
+import { EventQRCode } from '@/components/EventQRCode';
 
 type RSVPStatus = 'going' | 'maybe' | 'not_going' | null;
 
@@ -189,21 +190,24 @@ END:VCALENDAR`;
         </button>
       </div>
 
-      {/* Stats & Calendar */}
-      <div className="flex items-center justify-between">
+      {/* Stats, QR & Calendar */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Users size={14} className="text-green-600" />
           <span>{goingCount} going</span>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={generateICS}
-          className="text-xs h-8 px-3"
-        >
-          <CalendarPlus size={14} className="mr-1" />
-          Add to Calendar
-        </Button>
+        <div className="flex items-center gap-2">
+          <EventQRCode eventId={eventId} eventTitle={eventTitle} rsvpStatus={status} />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={generateICS}
+            className="text-xs h-8 px-3"
+          >
+            <CalendarPlus size={14} className="mr-1" />
+            Add to Calendar
+          </Button>
+        </div>
       </div>
     </div>
   );

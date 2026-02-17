@@ -453,11 +453,57 @@ export type Database = {
           },
         ]
       }
+      event_checkins: {
+        Row: {
+          checked_in_at: string
+          checked_in_by: string | null
+          event_id: string
+          id: string
+          method: string | null
+          rsvp_id: string
+          user_id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          checked_in_by?: string | null
+          event_id: string
+          id?: string
+          method?: string | null
+          rsvp_id: string
+          user_id: string
+        }
+        Update: {
+          checked_in_at?: string
+          checked_in_by?: string | null
+          event_id?: string
+          id?: string
+          method?: string | null
+          rsvp_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_checkins_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_checkins_rsvp_id_fkey"
+            columns: ["rsvp_id"]
+            isOneToOne: false
+            referencedRelation: "event_rsvps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_rsvps: {
         Row: {
           created_at: string | null
           event_id: string
           id: string
+          qr_token: string | null
           status: string
           updated_at: string | null
           user_id: string
@@ -466,6 +512,7 @@ export type Database = {
           created_at?: string | null
           event_id: string
           id?: string
+          qr_token?: string | null
           status?: string
           updated_at?: string | null
           user_id: string
@@ -474,6 +521,7 @@ export type Database = {
           created_at?: string | null
           event_id?: string
           id?: string
+          qr_token?: string | null
           status?: string
           updated_at?: string | null
           user_id?: string
@@ -1009,6 +1057,60 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_listings: {
+        Row: {
+          category: string
+          condition: string | null
+          contact_info: string | null
+          contact_method: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          photos: string[] | null
+          price: number
+          price_type: string
+          status: string
+          title: string
+          updated_at: string | null
+          user_id: string
+          views_count: number | null
+        }
+        Insert: {
+          category?: string
+          condition?: string | null
+          contact_info?: string | null
+          contact_method?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          photos?: string[] | null
+          price?: number
+          price_type?: string
+          status?: string
+          title: string
+          updated_at?: string | null
+          user_id: string
+          views_count?: number | null
+        }
+        Update: {
+          category?: string
+          condition?: string | null
+          contact_info?: string | null
+          contact_method?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          photos?: string[] | null
+          price?: number
+          price_type?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+          views_count?: number | null
+        }
+        Relationships: []
+      }
       newsletter_campaigns: {
         Row: {
           ab_enabled: boolean | null
@@ -1120,6 +1222,137 @@ export type Database = {
           is_active?: boolean
           source?: string | null
           subscribed_at?: string
+        }
+        Relationships: []
+      }
+      poll_options: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          label: string
+          poll_id: string
+          sort_order: number | null
+          vote_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          label: string
+          poll_id: string
+          sort_order?: number | null
+          vote_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          label?: string
+          poll_id?: string
+          sort_order?: number | null
+          vote_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_options_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      poll_votes: {
+        Row: {
+          created_at: string | null
+          id: string
+          option_id: string
+          poll_id: string
+          rank: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          option_id: string
+          poll_id: string
+          rank?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          option_id?: string
+          poll_id?: string
+          rank?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_votes_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "poll_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poll_votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      polls: {
+        Row: {
+          allow_comments: boolean | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          ends_at: string | null
+          id: string
+          is_anonymous: boolean | null
+          max_choices: number | null
+          poll_type: string
+          show_results_before_close: boolean | null
+          starts_at: string | null
+          status: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          allow_comments?: boolean | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          max_choices?: number | null
+          poll_type?: string
+          show_results_before_close?: boolean | null
+          starts_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          allow_comments?: boolean | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          max_choices?: number | null
+          poll_type?: string
+          show_results_before_close?: boolean | null
+          starts_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
