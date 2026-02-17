@@ -318,8 +318,16 @@ const StudentMartPage = () => {
                 </div>
                 {/* Contact */}
                 {selectedListing.contact_method === 'whatsapp' && selectedListing.contact_info && (
-                  <a href={`https://wa.me/${selectedListing.contact_info.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer">
-                    <Button className="w-full bg-green-600 hover:bg-green-700"><MessageCircle size={16} className="mr-2" /> WhatsApp Seller</Button>
+                  <a
+                    href={`https://wa.me/${selectedListing.contact_info.replace(/\D/g, '')}?text=${encodeURIComponent(
+                      `Hi, I would like to buy ${selectedListing.title} listed on UI'SU Space student mart`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button className="w-full bg-green-600 hover:bg-green-700">
+                      <MessageCircle size={16} className="mr-2" /> WhatsApp Seller
+                    </Button>
                   </a>
                 )}
                 {selectedListing.contact_method === 'phone' && selectedListing.contact_info && (
