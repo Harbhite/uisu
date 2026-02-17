@@ -2,12 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ArrowLeft, QrCode, CheckCircle2, XCircle, Users, Loader2, Search, UserCheck, Camera } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle, Users, Loader2, Search, UserCheck, Camera, Upload, Keyboard, Scan } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SEO } from '@/components/SEO';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import QRScanner from '@/components/QRScanner';
+import { Html5Qrcode } from 'html5-qrcode';
 
 interface CheckinRecord {
   id: string;
@@ -28,7 +30,9 @@ const EventCheckinPage = () => {
   const [checkins, setCheckins] = useState<CheckinRecord[]>([]);
   const [rsvpCount, setRsvpCount] = useState(0);
   const [showScanner, setShowScanner] = useState(false);
+  const [isScanningFile, setIsScanningFile] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -117,7 +121,40 @@ const EventCheckinPage = () => {
     } finally {
       setScanInput('');
       setProcessing(false);
-      inputRef.current?.focus();
+      // Only focus manual input if on that tab? For now, we'll let user re-engage.
+      if (inputRef.current) inputRef.current.focus();
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsScanningFile(true);
+    setLastResult(null);
+
+    const readerId = "reader-hidden";
+    // Ensure the element exists before initializing
+    if (!document.getElementById(readerId)) {
+        console.error("Reader element not found");
+        setIsScanningFile(false);
+        return;
+    }
+
+    try {
+      const html5QrCode = new Html5Qrcode(readerId, { verbose: false });
+
+      const decodedText = await html5QrCode.scanFile(file, false);
+      html5QrCode.clear();
+
+      processCheckin(decodedText);
+    } catch (err) {
+      console.error("Error scanning file", err);
+      setLastResult({ success: false, message: 'Could not read QR code from image.' });
+    } finally {
+      setIsScanningFile(false);
+      // Reset file input
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -139,6 +176,9 @@ const EventCheckinPage = () => {
           onClose={() => setShowScanner(false)}
         />
       )}
+
+      {/* Hidden container for file scanning */}
+      <div id="reader-hidden" className="hidden"></div>
 
       <div className="container mx-auto px-4 max-w-2xl">
         <button onClick={() => navigate(-1)} className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-primary transition-colors mb-8">
@@ -165,43 +205,97 @@ const EventCheckinPage = () => {
           </div>
         </div>
 
-        {/* Scanner Input */}
-        <div className="bg-white rounded-xl border border-border p-6 mb-6">
-          <div className="flex justify-between items-center mb-3">
-            <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground block">
-              <QrCode size={14} className="inline mr-2" /> Scan or Enter QR Token
-            </label>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 text-xs gap-2"
-              onClick={() => setShowScanner(true)}
-            >
-              <Camera size={14} />
-              Open Camera
-            </Button>
-          </div>
-          <div className="flex gap-2">
-            <Input
-              ref={inputRef}
-              value={scanInput}
-              onChange={e => setScanInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && processCheckin()}
-              placeholder="Paste or scan QR token..."
-              autoFocus
-            />
-            <Button onClick={() => processCheckin()} disabled={processing || !scanInput.trim()}>
-              {processing ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
-            </Button>
-          </div>
-
-          {/* Result Feedback */}
-          {lastResult && (
-            <div className={`mt-4 p-4 rounded-lg flex items-center gap-3 ${lastResult.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-              {lastResult.success ? <CheckCircle2 size={24} /> : <XCircle size={24} />}
-              <span className="font-medium">{lastResult.message}</span>
+        {/* Check-in Station Card */}
+        <div className="bg-white rounded-xl border border-border overflow-hidden mb-6">
+            <div className="p-4 bg-muted/30 border-b border-border">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-foreground flex items-center gap-2">
+                    <Scan size={16} /> Check-in Station
+                </h3>
             </div>
-          )}
+
+            <Tabs defaultValue="scan" className="w-full">
+                <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent p-0 h-auto">
+                    <TabsTrigger value="scan" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-4">
+                        <Camera size={16} className="mr-2" /> Camera
+                    </TabsTrigger>
+                    <TabsTrigger value="upload" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-4">
+                        <Upload size={16} className="mr-2" /> Upload
+                    </TabsTrigger>
+                    <TabsTrigger value="manual" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-4">
+                        <Keyboard size={16} className="mr-2" /> Manual
+                    </TabsTrigger>
+                </TabsList>
+
+                <div className="p-6">
+                    <TabsContent value="scan" className="mt-0 space-y-4">
+                        <div className="text-center py-8 border-2 border-dashed border-border rounded-xl bg-slate-50">
+                             <div className="mb-4 flex justify-center">
+                                 <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                                     <Camera size={32} />
+                                 </div>
+                             </div>
+                             <h4 className="font-medium mb-1">Camera Check-in</h4>
+                             <p className="text-sm text-muted-foreground mb-6">Use your device camera to scan tickets</p>
+                             <Button onClick={() => setShowScanner(true)} size="lg" className="w-full max-w-xs">
+                                Open Camera
+                             </Button>
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="upload" className="mt-0 space-y-4">
+                        <div className="text-center py-8 border-2 border-dashed border-border rounded-xl bg-slate-50 relative">
+                             <input
+                                type="file"
+                                accept="image/*"
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                onChange={handleFileUpload}
+                                ref={fileInputRef}
+                                disabled={isScanningFile}
+                             />
+                             <div className="mb-4 flex justify-center">
+                                 <div className="h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+                                     {isScanningFile ? <Loader2 size={32} className="animate-spin" /> : <Upload size={32} />}
+                                 </div>
+                             </div>
+                             <h4 className="font-medium mb-1">{isScanningFile ? "Scanning..." : "Upload QR Image"}</h4>
+                             <p className="text-sm text-muted-foreground mb-6">Click or drag a QR code image here</p>
+                             <Button variant="outline" className="w-full max-w-xs pointer-events-none">
+                                {isScanningFile ? "Processing..." : "Select File"}
+                             </Button>
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="manual" className="mt-0 space-y-4">
+                        <div className="space-y-4">
+                            <div className="text-center mb-6">
+                                <p className="text-sm text-muted-foreground">Enter the alphanumeric code from the ticket</p>
+                            </div>
+                            <div className="flex flex-col gap-3">
+                                <Input
+                                    ref={inputRef}
+                                    value={scanInput}
+                                    onChange={e => setScanInput(e.target.value)}
+                                    onKeyDown={e => e.key === 'Enter' && processCheckin()}
+                                    placeholder="e.g. EVT-123456"
+                                    className="text-center text-lg h-14 tracking-widest font-mono uppercase"
+                                />
+                                <Button size="lg" onClick={() => processCheckin()} disabled={processing || !scanInput.trim()} className="h-12">
+                                    {processing ? <Loader2 size={16} className="animate-spin mr-2" /> : <Search size={16} className="mr-2" />}
+                                    Check In
+                                </Button>
+                            </div>
+                        </div>
+                    </TabsContent>
+                </div>
+            </Tabs>
+
+            {/* Result Feedback */}
+            {lastResult && (
+                <div className={`border-t p-4 flex items-center justify-center gap-3 animate-in slide-in-from-top-2 ${lastResult.success ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
+                    {lastResult.success ? <CheckCircle2 size={24} /> : <XCircle size={24} />}
+                    <span className="font-medium">{lastResult.message}</span>
+                </div>
+            )}
         </div>
 
         {/* Recent Check-ins */}
