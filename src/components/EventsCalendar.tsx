@@ -5,8 +5,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Calendar, Clock, MapPin, ChevronLeft, ChevronRight, Users, Award, FileText, Megaphone, Loader2, Filter, Share2 } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, MapPin, ChevronLeft, ChevronRight, Users, Award, FileText, Megaphone, Loader2, Filter, Share2, QrCode } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, isToday, parseISO } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
+import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { supabase } from "@/integrations/supabase/client";
 import { EventRSVP } from "@/components/EventRSVP";
 
@@ -32,6 +34,9 @@ const eventTypeConfig = {
 };
 
 export const EventsCalendar: React.FC<EventsCalendarProps> = ({ onBack }) => {
+  const navigate = useNavigate();
+  const { isAdmin, isModerator } = useAdminCheck();
+  const isStaff = isAdmin || isModerator;
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [activeFilter, setActiveFilter] = useState<string>('all');
@@ -291,7 +296,7 @@ export const EventsCalendar: React.FC<EventsCalendarProps> = ({ onBack }) => {
                                   </div>
                                 )}
 
-                                <div className="pt-6 border-t border-slate-100">
+                                <div className="pt-6 border-t border-slate-100 space-y-3">
                                   <EventRSVP
                                     eventId={event.id}
                                     eventTitle={event.title}
@@ -299,6 +304,14 @@ export const EventsCalendar: React.FC<EventsCalendarProps> = ({ onBack }) => {
                                     eventTime={event.time}
                                     eventLocation={event.location}
                                   />
+                                  {isStaff && (
+                                    <button
+                                      onClick={() => navigate(`/events/checkin/${event.id}`)}
+                                      className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
+                                    >
+                                      <QrCode size={14} /> Staff Check-in Scanner
+                                    </button>
+                                  )}
                                 </div>
                               </div>
                             </div>
