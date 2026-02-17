@@ -320,7 +320,7 @@ const StudentMartPage = () => {
                 {selectedListing.contact_method === 'whatsapp' && selectedListing.contact_info && (
                   <a
                     href={`https://wa.me/${selectedListing.contact_info.replace(/\D/g, '')}?text=${encodeURIComponent(
-                      `Hi, I would like to buy ${selectedListing.title} listed on UI'SU Space student mart`
+                      `Hello, I would like to Get "${selectedListing.title}" listed on UI'SU Space Students' Mart`
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
