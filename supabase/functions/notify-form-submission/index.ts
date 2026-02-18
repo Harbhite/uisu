@@ -50,6 +50,6 @@ serve(async (req) => {
     const result = await res.json();
     return new Response(JSON.stringify(result), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: corsHeaders });
+    return new Response(JSON.stringify({ error: (error as Error).message }), { status: 500, headers: corsHeaders });
   }
 });

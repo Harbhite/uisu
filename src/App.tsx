@@ -62,6 +62,10 @@ const FormSubmitPage = lazy(() => import("./pages/FormSubmitPage"));
 const FormResponsesPage = lazy(() => import("./pages/FormResponsesPage"));
 const PollsPage = lazy(() => import("./pages/PollsPage"));
 const EventCheckinPage = lazy(() => import("./pages/EventCheckinPage"));
+const LostFoundPage = lazy(() => import("./pages/LostFoundPage"));
+const AcademicCalendarPage = lazy(() => import("./pages/AcademicCalendarPage"));
+const ComplaintsPage = lazy(() => import("./pages/ComplaintsPage"));
+const BudgetTrackerPage = lazy(() => import("./pages/BudgetTrackerPage"));
 const queryClient = new QueryClient();
 
 const LoadingFallback = () => (
@@ -149,6 +153,12 @@ const AppRoutes = () => {
 
         {/* Event Check-in (Staff) */}
         <Route path="/events/checkin/:eventId" element={<PageWrapper><EventCheckinPage /></PageWrapper>} />
+
+        {/* Community Features */}
+        <Route path="/lost-found" element={<PageWrapper><LostFoundPage /></PageWrapper>} />
+        <Route path="/academic-calendar" element={<PageWrapper><AcademicCalendarPage /></PageWrapper>} />
+        <Route path="/complaints" element={<PageWrapper><ComplaintsPage /></PageWrapper>} />
+        <Route path="/budget" element={<PageWrapper><BudgetTrackerPage /></PageWrapper>} />
 
         {/* Tutorials Ecosystem (Standalone Subdomain feel) */}
         <Route path="/tutorials" element={<TutorialsLayout />}>
