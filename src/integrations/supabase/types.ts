@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      academic_calendar: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          event_date: string
+          event_type: string
+          id: string
+          is_important: boolean | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          event_date: string
+          event_type?: string
+          id?: string
+          is_important?: boolean | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          event_date?: string
+          event_type?: string
+          id?: string
+          is_important?: boolean | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       academic_resources: {
         Row: {
           created_at: string | null
@@ -166,6 +205,39 @@ export type Database = {
         }
         Relationships: []
       }
+      budget_entries: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string | null
+          description: string | null
+          entry_date: string
+          entry_type: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          entry_date?: string
+          entry_type?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          entry_date?: string
+          entry_type?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       clubs: {
         Row: {
           acronym: string | null
@@ -283,6 +355,83 @@ export type Database = {
           title?: string
           type?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      complaint_upvotes: {
+        Row: {
+          complaint_id: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          complaint_id: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          complaint_id?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "complaint_upvotes_complaint_id_fkey"
+            columns: ["complaint_id"]
+            isOneToOne: false
+            referencedRelation: "complaints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      complaints: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          created_at: string | null
+          description: string
+          id: string
+          is_anonymous: boolean | null
+          priority: string | null
+          resolution: string | null
+          status: string
+          title: string
+          updated_at: string | null
+          upvotes: number | null
+          user_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string | null
+          description: string
+          id?: string
+          is_anonymous?: boolean | null
+          priority?: string | null
+          resolution?: string | null
+          status?: string
+          title: string
+          updated_at?: string | null
+          upvotes?: number | null
+          user_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          is_anonymous?: boolean | null
+          priority?: string | null
+          resolution?: string | null
+          status?: string
+          title?: string
+          updated_at?: string | null
+          upvotes?: number | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -771,6 +920,47 @@ export type Database = {
         }
         Relationships: []
       }
+      hall_posts: {
+        Row: {
+          content: string
+          created_at: string | null
+          hall_id: string
+          id: string
+          likes_count: number | null
+          post_type: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          hall_id: string
+          id?: string
+          likes_count?: number | null
+          post_type?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          hall_id?: string
+          id?: string
+          likes_count?: number | null
+          post_type?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hall_posts_hall_id_fkey"
+            columns: ["hall_id"]
+            isOneToOne: false
+            referencedRelation: "halls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       halls: {
         Row: {
           alias: string | null
@@ -1054,6 +1244,51 @@ export type Database = {
           socials?: Json | null
           sort_order?: number | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      lost_found_items: {
+        Row: {
+          category: string
+          contact_info: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          item_type: string
+          location: string | null
+          photos: string[] | null
+          status: string
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          contact_info?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          item_type?: string
+          location?: string | null
+          photos?: string[] | null
+          status?: string
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          contact_info?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          item_type?: string
+          location?: string | null
+          photos?: string[] | null
+          status?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }

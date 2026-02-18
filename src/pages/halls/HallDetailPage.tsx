@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Users, History, Shield, Edit2, Save, X, Loader2, Plus, Trash2, Upload, Image as ImageIcon } from 'lucide-react';
+import HallCommunityFeed from '@/components/HallCommunityFeed';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -499,6 +500,13 @@ const HallDetailPage = () => {
                   className="min-h-[100px]"
                   placeholder="Brief description of the hall..."
                 />
+              </motion.div>
+            )}
+
+            {/* Community Feed */}
+            {!isEditing && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+                <HallCommunityFeed hallId={hall.id} hallColor={hallColor} />
               </motion.div>
             )}
 
