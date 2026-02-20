@@ -17,3 +17,9 @@ verify_jwt = false
 
 [functions.prerender]
 verify_jwt = false
+
+[functions.send-form-confirmation]
+verify_jwt = false
+
+[functions.notify-form-submission]
+verify_jwt = false

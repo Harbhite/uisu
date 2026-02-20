@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { 
   ArrowLeft, Star, Plus, Trash2, Edit2, Calendar, FileText, 
   Megaphone, X, Upload, Loader2, Check, Users, Award, ShieldAlert,
-  ArrowUpDown, History, Search, Download, Filter, Eye, Mail, BookOpen, Inbox, Send, FlaskConical
+  ArrowUpDown, History, Search, Download, Filter, Eye, Mail, BookOpen, Inbox, Send, FlaskConical, MessageSquareWarning
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
@@ -72,7 +72,7 @@ const administrationSchema = z.object({
   })).optional(),
 });
 
-type TabType = "events" | "announcements" | "documents" | "clubs" | "administrations" | "admins" | "audit" | "publications" | "submissions" | "newsletter";
+type TabType = "events" | "announcements" | "documents" | "clubs" | "administrations" | "admins" | "audit" | "publications" | "submissions" | "newsletter" | "complaints";
 
 interface AuditLog {
   id: string;
@@ -175,6 +175,7 @@ const AdminDashboard = () => {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [newsletterSubscribers, setNewsletterSubscribers] = useState<any[]>([]);
   const [newsletterCampaigns, setNewsletterCampaigns] = useState<any[]>([]);
+  const [adminComplaints, setAdminComplaints] = useState<any[]>([]);
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [newUserRole, setNewUserRole] = useState<"admin" | "moderator">("moderator");
   
@@ -378,6 +379,13 @@ const AdminDashboard = () => {
         if (subsResult.error) throw subsResult.error;
         setNewsletterSubscribers(subsResult.data || []);
         setNewsletterCampaigns(campaignsResult.data || []);
+      } else if (activeTab === "complaints") {
+        const { data, error } = await supabase
+          .from("complaints")
+          .select("*")
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        setAdminComplaints(data || []);
       }
     } catch (error: any) {
       toast({
@@ -754,7 +762,8 @@ const AdminDashboard = () => {
         admins: "user_roles",
         audit: "audit_logs",
         submissions: "job_listings",
-        newsletter: "newsletter_subscribers"
+        newsletter: "newsletter_subscribers",
+        complaints: "complaints",
       };
       
       const tableName = tableMap[activeTab];
@@ -799,6 +808,7 @@ const AdminDashboard = () => {
     { id: "clubs" as TabType, label: "Clubs", icon: Users },
     { id: "administrations" as TabType, label: "Leaders", icon: Award },
     { id: "submissions" as TabType, label: "Submissions", icon: Inbox },
+    { id: "complaints" as TabType, label: "Complaints", icon: MessageSquareWarning },
     ...(isAdmin ? [
       { id: "newsletter" as TabType, label: "Newsletter", icon: Mail },
       { id: "admins" as TabType, label: "Staff", icon: ShieldAlert },
@@ -1606,6 +1616,69 @@ const AdminDashboard = () => {
         ) : (
           <div className="space-y-4">
             {activeTab === "submissions" && <PendingSubmissions />}
+
+            {activeTab === "complaints" && (
+              <div className="space-y-3">
+                {adminComplaints.length === 0 ? (
+                  <div className="text-center py-16 text-muted-foreground">
+                    <MessageSquareWarning className="w-12 h-12 mx-auto mb-3 opacity-40" />
+                    <p className="text-sm">No complaints have been submitted yet.</p>
+                  </div>
+                ) : adminComplaints.map((c) => (
+                  <motion.div key={c.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                    className="bg-card border border-border p-5 hover:border-primary/30 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                          <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${
+                            c.status === 'resolved' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
+                            c.status === 'in_progress' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' :
+                            c.status === 'dismissed' ? 'bg-muted text-muted-foreground' :
+                            'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
+                          }`}>{c.status?.replace('_', ' ')}</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-2 py-0.5 bg-muted rounded-full">{c.category}</span>
+                          {c.priority === 'high' && <span className="text-[10px] font-bold uppercase text-destructive">⚑ High</span>}
+                          {c.is_anonymous && <span className="text-[10px] text-muted-foreground italic">Anonymous</span>}
+                        </div>
+                        <h3 className="text-sm font-semibold text-foreground truncate">{c.title}</h3>
+                        <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{c.description}</p>
+                        <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                          <span>{new Date(c.created_at).toLocaleDateString()}</span>
+                          <span>↑ {c.upvotes || 0} upvotes</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <select
+                          value={c.status}
+                          onChange={async (e) => {
+                            const newStatus = e.target.value;
+                            await supabase.from("complaints").update({ status: newStatus }).eq("id", c.id);
+                            await logAuditAction('update', 'complaints', c.id, { status: c.status }, { status: newStatus });
+                            fetchData();
+                            toast({ title: `Complaint ${newStatus === 'resolved' ? 'resolved' : 'updated'}` });
+                          }}
+                          className="text-xs bg-background border border-border px-2 py-1.5 focus:outline-none focus:border-primary"
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="in_progress">In Progress</option>
+                          <option value="resolved">Resolved</option>
+                          <option value="dismissed">Dismissed</option>
+                        </select>
+                        <button onClick={() => handleDelete(c.id)} className="p-1.5 text-muted-foreground hover:text-destructive transition-colors">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                    {c.resolution && (
+                      <div className="mt-3 pt-3 border-t border-border">
+                        <p className="text-xs text-muted-foreground"><strong>Resolution:</strong> {c.resolution}</p>
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+            )}
             
             {activeTab === "publications" && publications.map((pub) => (
               <motion.div

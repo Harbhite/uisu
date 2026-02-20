@@ -9,13 +9,62 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Star, FileText, Clock, AlertTriangle } from "lucide-react";
+import { Star, FileText, Clock, AlertTriangle, Upload, X, Loader2 } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   ClassicTemplate, NewsletterTemplate, AdminTemplate, MinimalTemplate, ElegantTemplate,
   SuccessScreen, ErrorScreen,
 } from "@/components/forms/FormSubmitTemplates";
+
+const FileUploadField = ({ fieldId, value, onChange }: { fieldId: string; value: string | null; onChange: (url: string | null) => void }) => {
+  const [uploading, setUploading] = useState(false);
+  const [fileName, setFileName] = useState<string | null>(null);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) { alert("File must be under 10MB"); return; }
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${fieldId}/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("form-uploads").upload(path, file);
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from("form-uploads").getPublicUrl(path);
+      onChange(publicUrl);
+      setFileName(file.name);
+    } catch (err: any) {
+      alert("Upload failed: " + err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemove = () => { onChange(null); setFileName(null); };
+
+  if (value) {
+    return (
+      <div className="flex items-center gap-2 p-3 bg-muted/50 border border-border rounded-sm">
+        <FileText className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+        <span className="text-sm text-foreground truncate flex-1">{fileName || "Uploaded file"}</span>
+        <button type="button" onClick={handleRemove} className="p-1 hover:bg-destructive/10 rounded-sm"><X className="w-4 h-4 text-destructive" /></button>
+      </div>
+    );
+  }
+
+  return (
+    <label className="border-2 border-dashed border-border rounded-sm p-6 text-center cursor-pointer hover:border-primary/40 transition-colors block">
+      {uploading ? (
+        <Loader2 className="w-8 h-8 mx-auto text-muted-foreground mb-2 animate-spin" />
+      ) : (
+        <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+      )}
+      <p className="text-sm text-muted-foreground">{uploading ? "Uploading..." : "Click to upload a file (max 10MB)"}</p>
+      <input type="file" className="hidden" onChange={handleUpload} disabled={uploading} />
+    </label>
+  );
+};
 
 const FormSubmitPage = () => {
   const { token } = useParams();
@@ -113,7 +162,7 @@ const FormSubmitPage = () => {
     });
     if (submitError) { toast({ title: "Submission failed", description: submitError.message, variant: "destructive" }); setSubmitting(false); return; }
 
-    // Send notification if enabled
+    // Send staff notification if enabled
     if ((form as any).notify_on_submit && ((form as any).notify_emails || []).length > 0) {
       try {
         await supabase.functions.invoke("notify-form-submission", {
@@ -126,6 +175,20 @@ const FormSubmitPage = () => {
           },
         });
       } catch (e) { /* notification failure shouldn't block submission */ }
+    }
+
+    // Send confirmation email to respondent
+    if (respondentEmail) {
+      try {
+        await supabase.functions.invoke("send-form-confirmation", {
+          body: {
+            formTitle: form.title,
+            respondentName: respondentName || null,
+            respondentEmail,
+            confirmationMessage: form.settings?.confirmation_message || "Thank you for your response!",
+          },
+        });
+      } catch (e) { /* confirmation failure shouldn't block submission */ }
     }
 
     setSubmitted(true);
@@ -245,12 +308,7 @@ const FormSubmitPage = () => {
           </div>
         );
       case "file_upload":
-        return (
-          <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
-            <FileText className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">File upload coming soon</p>
-          </div>
-        );
+        return <FileUploadField fieldId={field.id} value={responses[field.id]} onChange={(url) => updateResponse(field.id, url)} />;
       default:
         return null;
     }
