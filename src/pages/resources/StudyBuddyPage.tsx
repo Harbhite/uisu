@@ -9,6 +9,7 @@ import {
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 type Mode = 'explainer' | 'planner' | 'synthesizer' | 'examiner';
 
@@ -70,7 +71,7 @@ const StudyBuddyPage = () => {
 
   const currentMode = modes.find(m => m.id === activeMode)!;
 
-  const STUDY_BUDDY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/study-buddy`;
+  const STUDY_BUDDY_URL = `${import.meta.env.VITE_SUPABASE_URL?.replace(/\/$/, '')}/functions/v1/study-buddy`;
 
   const handleSubmit = useCallback(async () => {
     if (!topic.trim() && !material.trim()) {
@@ -87,7 +88,7 @@ const StudyBuddyPage = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({ mode: activeMode, topic: topic.trim(), material: material.trim() }),
       });
@@ -179,7 +180,7 @@ const StudyBuddyPage = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({
           mode: activeMode,

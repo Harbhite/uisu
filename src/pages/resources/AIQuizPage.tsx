@@ -10,6 +10,7 @@ import {
 import { SEO } from '@/components/SEO';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { parseFile } from '@/utils/fileParser';
 
 interface Question {
   question: string;
@@ -49,17 +50,13 @@ const AIQuizPage = () => {
   };
 
   const readFileAsText = async (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      if (file.type.startsWith('image/')) {
-        // For images, we just send the name since edge function can't process raw image bytes
-        resolve(`[Image file: ${file.name}]`);
-      } else {
-        reader.readAsText(file);
-      }
-    });
+    try {
+      return await parseFile(file);
+    } catch (error) {
+      console.error('File parsing error:', error);
+      toast.error('Failed to parse file. Please try a text file.');
+      throw error;
+    }
   };
 
   const generateQuiz = async () => {
