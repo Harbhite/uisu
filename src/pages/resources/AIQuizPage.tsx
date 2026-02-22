@@ -1,0 +1,475 @@
+import React, { useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import {
+  BrainCircuit, Upload, FileText, ImageIcon,
+  ChevronRight, CheckCircle2, XCircle, Clock,
+  Trophy, RefreshCcw, Download, Loader2, Sparkles,
+  Sliders, Trash2, File as FileIcon, ArrowLeft
+} from 'lucide-react';
+import { SEO } from '@/components/SEO';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Question {
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
+type Rigidity = 'Standard' | 'Strict' | 'Rigid';
+
+const AIQuizPage = () => {
+  const navigate = useNavigate();
+  const [step, setStep] = useState<'upload' | 'generating' | 'quiz' | 'result'>('upload');
+  const [rigidity, setRigidity] = useState<Rigidity>('Strict');
+  const [inputText, setInputText] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [userAnswers, setUserAnswers] = useState<number[]>([]);
+  const [timeElapsed, setTimeElapsed] = useState(0);
+  const timerRef = useRef<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File too large. Max 10MB.');
+      return;
+    }
+    setSelectedFile(file);
+  };
+
+  const removeFile = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const readFileAsText = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      if (file.type.startsWith('image/')) {
+        // For images, we just send the name since edge function can't process raw image bytes
+        resolve(`[Image file: ${file.name}]`);
+      } else {
+        reader.readAsText(file);
+      }
+    });
+  };
+
+  const generateQuiz = async () => {
+    if (!inputText.trim() && !selectedFile) {
+      toast.error('Please provide study material (text or file) to generate the quiz.');
+      return;
+    }
+
+    setStep('generating');
+
+    try {
+      let fileContent = '';
+      let fileName = '';
+      if (selectedFile) {
+        fileContent = await readFileAsText(selectedFile);
+        fileName = selectedFile.name;
+      }
+
+      const { data, error } = await supabase.functions.invoke('ai-quiz', {
+        body: {
+          material: inputText.trim(),
+          rigidity,
+          fileContent: fileContent || undefined,
+          fileName: fileName || undefined,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) {
+        if (data.error.includes('Rate limit')) toast.error('Rate limit reached. Please wait.');
+        else if (data.error.includes('credits')) toast.error('AI credits exhausted.');
+        else toast.error(data.error);
+        setStep('upload');
+        return;
+      }
+
+      if (!data?.questions || !Array.isArray(data.questions) || data.questions.length === 0) {
+        throw new Error('No questions generated. Try providing more detailed material.');
+      }
+
+      setQuestions(data.questions.slice(0, 25));
+      setUserAnswers([]);
+      setCurrentIdx(0);
+      setStep('quiz');
+      startTimer();
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || 'Quiz generation failed. Please try again.');
+      setStep('upload');
+    }
+  };
+
+  const startTimer = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setTimeElapsed(0);
+    timerRef.current = window.setInterval(() => {
+      setTimeElapsed(prev => prev + 1);
+    }, 1000);
+  };
+
+  const stopTimer = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+  };
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const handleAnswer = (idx: number) => {
+    const newAnswers = [...userAnswers];
+    newAnswers[currentIdx] = idx;
+    setUserAnswers(newAnswers);
+
+    if (currentIdx < questions.length - 1) {
+      setTimeout(() => setCurrentIdx(currentIdx + 1), 400);
+    } else {
+      stopTimer();
+      setTimeout(() => setStep('result'), 400);
+    }
+  };
+
+  const score = userAnswers.reduce((acc, val, i) => (val === questions[i]?.correctIndex ? acc + 1 : acc), 0);
+
+  const resetQuiz = () => {
+    setStep('upload');
+    setQuestions([]);
+    setUserAnswers([]);
+    setInputText('');
+    setSelectedFile(null);
+    setCurrentIdx(0);
+    stopTimer();
+    setTimeElapsed(0);
+  };
+
+  // ── UPLOAD VIEW ──
+  const UploadView = () => (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-5xl mx-auto">
+      <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*,.pdf,.docx,.doc,.txt,.xlsx,.xls,.pptx,.ppt" />
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-8 space-y-4">
+          <div className="bg-card border border-border p-5 md:p-7">
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Material Input</label>
+            <textarea
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              placeholder="Paste lecture transcript, study notes, textbook excerpts..."
+              className="w-full h-48 md:h-56 bg-muted/30 p-4 border border-border outline-none font-serif text-sm md:text-base focus:border-accent transition-all resize-none"
+            />
+
+            <AnimatePresence>
+              {selectedFile && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-4 p-4 bg-primary text-primary-foreground flex items-center justify-between border-l-4 border-accent"
+                >
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    {selectedFile.type.startsWith('image/') ? <ImageIcon size={16} className="text-accent" /> : <FileIcon size={16} className="text-accent" />}
+                    <div className="overflow-hidden">
+                      <div className="text-[9px] font-bold uppercase tracking-widest">Attached Material</div>
+                      <div className="text-[10px] font-mono truncate max-w-[200px] md:max-w-none">{selectedFile.name}</div>
+                    </div>
+                  </div>
+                  <button onClick={removeFile} className="p-2 hover:bg-destructive transition-colors text-primary-foreground/50 hover:text-primary-foreground">
+                    <Trash2 size={14} />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="mt-4">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-2 px-4 py-3 border border-border text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:border-accent transition-all"
+              >
+                <Upload size={14} /> Attach File
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="lg:col-span-4 space-y-4">
+          <div className="bg-primary text-primary-foreground p-5 md:p-6 border-l-4 border-accent">
+            <div className="flex items-center gap-3 mb-5">
+              <Sliders size={16} className="text-accent" />
+              <h3 className="font-serif text-lg italic">Rigidity Level</h3>
+            </div>
+            <div className="space-y-2">
+              {(['Standard', 'Strict', 'Rigid'] as Rigidity[]).map((level) => (
+                <button
+                  key={level}
+                  onClick={() => setRigidity(level)}
+                  className={`w-full text-left p-3.5 border transition-all flex justify-between items-center ${
+                    rigidity === level ? 'bg-accent text-accent-foreground border-accent' : 'border-primary-foreground/10 hover:bg-primary-foreground/5'
+                  }`}
+                >
+                  <span className="text-[10px] font-bold uppercase tracking-widest">{level}</span>
+                  {rigidity === level && <CheckCircle2 size={14} />}
+                </button>
+              ))}
+            </div>
+            <p className="text-[9px] text-primary-foreground/40 mt-4 leading-relaxed">
+              {rigidity === 'Standard' && 'Foundational concepts and direct recall.'}
+              {rigidity === 'Strict' && 'Application, critical thinking, nuanced relationships.'}
+              {rigidity === 'Rigid' && 'Advanced synthesis, edge cases, complex deductions.'}
+            </p>
+          </div>
+
+          <button
+            onClick={generateQuiz}
+            disabled={!inputText.trim() && !selectedFile}
+            className="w-full py-5 md:py-6 bg-accent text-accent-foreground font-bold uppercase tracking-[0.2em] text-xs border border-accent hover:bg-primary hover:text-primary-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg"
+          >
+            Initialize Protocol <ChevronRight size={16} />
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  // ── GENERATING VIEW ──
+  const GeneratingView = () => (
+    <div className="h-[60vh] flex flex-col items-center justify-center text-center px-6">
+      <motion.div animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: 'linear' }} className="mb-8 text-accent">
+        <RefreshCcw size={64} strokeWidth={1} />
+      </motion.div>
+      <h2 className="font-serif text-3xl md:text-4xl text-primary mb-4">Generating Your Quiz</h2>
+      <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.3em]">Synthesizing 25 questions from your material...</p>
+      <div className="w-48 h-1 bg-muted mt-10 overflow-hidden relative">
+        <motion.div initial={{ x: '-100%' }} animate={{ x: '100%' }} transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }} className="absolute inset-0 w-1/2 bg-primary" />
+      </div>
+    </div>
+  );
+
+  // ── QUIZ VIEW ──
+  const QuizView = () => {
+    const q = questions[currentIdx];
+    if (!q) return null;
+    const progress = ((currentIdx + 1) / questions.length) * 100;
+
+    return (
+      <div className="max-w-5xl mx-auto pb-20">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+          <div>
+            <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Examination</div>
+            <h2 className="font-serif text-2xl md:text-3xl text-primary">Quiz — {rigidity} Mode</h2>
+          </div>
+          <div className="flex items-center gap-3">
+            <Clock size={14} className="text-muted-foreground" />
+            <span className="text-xl font-mono text-primary">{formatTime(timeElapsed)}</span>
+          </div>
+        </div>
+
+        <div className="w-full h-1.5 bg-muted mb-10 overflow-hidden">
+          <motion.div animate={{ width: `${progress}%` }} className="h-full bg-accent" />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-8">
+            <AnimatePresence mode="wait">
+              <motion.div key={currentIdx} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
+                <div>
+                  <span className="text-[10px] font-bold text-accent uppercase tracking-[0.3em]">Question {currentIdx + 1} / {questions.length}</span>
+                  <h3 className="font-serif text-2xl md:text-3xl text-primary leading-tight mt-3 italic">"{q.question}"</h3>
+                </div>
+
+                <div className="space-y-3">
+                  {q.options.map((opt, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleAnswer(i)}
+                      disabled={userAnswers[currentIdx] !== undefined}
+                      className="w-full text-left p-4 md:p-5 bg-card border border-border hover:border-primary group transition-all flex items-center gap-4 shadow-sm hover:shadow-md disabled:opacity-70"
+                    >
+                      <div className="w-9 h-9 border border-border bg-muted/50 flex items-center justify-center font-bold text-xs text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-colors shrink-0">
+                        {String.fromCharCode(65 + i)}
+                      </div>
+                      <span className="text-sm md:text-base text-foreground font-light">{opt}</span>
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          <div className="lg:col-span-4 mt-4 lg:mt-0">
+            <div className="bg-primary text-primary-foreground p-5 md:p-6 border-l-4 border-accent relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-5"><BrainCircuit size={80} /></div>
+              <div className="relative z-10">
+                <h4 className="text-[9px] font-bold text-accent uppercase tracking-[0.4em] mb-5">Status</h4>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center border-b border-primary-foreground/10 pb-3">
+                    <span className="text-[9px] font-bold uppercase text-primary-foreground/40">Rigidity</span>
+                    <span className="text-xs font-bold uppercase text-accent">{rigidity}</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-primary-foreground/10 pb-3">
+                    <span className="text-[9px] font-bold uppercase text-primary-foreground/40">Progress</span>
+                    <span className="text-xs font-bold uppercase text-primary-foreground">{Math.round(progress)}%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] font-bold uppercase text-primary-foreground/40">Answered</span>
+                    <span className="text-xs font-bold text-primary-foreground">{userAnswers.filter(a => a !== undefined).length}/{questions.length}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ── RESULT VIEW ──
+  const ResultView = () => {
+    const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
+    const rank = percentage >= 80 ? 'Distinction' : percentage >= 60 ? 'Merit' : percentage >= 40 ? 'Pass' : 'Needs Review';
+
+    return (
+      <div className="max-w-5xl mx-auto pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Score Card */}
+          <div className="lg:col-span-4 lg:sticky lg:top-32 space-y-4">
+            <div className="bg-primary text-primary-foreground p-7 md:p-8 border-l-8 border-accent shadow-xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-10"><Trophy size={120} /></div>
+              <div className="relative z-10">
+                <div className="text-[9px] font-bold text-accent uppercase tracking-[0.4em] mb-6">Performance</div>
+                <div className="text-6xl md:text-7xl font-serif mb-2 leading-none">{percentage}<span className="text-xl text-accent/50">%</span></div>
+                <div className="text-[10px] font-bold text-primary-foreground/40 uppercase tracking-widest border-t border-primary-foreground/10 pt-5 mb-8">Score: {score}/{questions.length}</div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <div className="text-[8px] font-bold text-primary-foreground/30 uppercase tracking-widest mb-1">Rank</div>
+                    <div className="text-lg font-serif text-accent">{rank}</div>
+                  </div>
+                  <div>
+                    <div className="text-[8px] font-bold text-primary-foreground/30 uppercase tracking-widest mb-1">Time</div>
+                    <div className="text-lg font-serif text-accent">{formatTime(timeElapsed)}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={resetQuiz}
+              className="w-full py-4 bg-accent text-accent-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground border border-accent transition-all"
+            >
+              <RefreshCcw size={14} /> New Quiz
+            </button>
+          </div>
+
+          {/* Detailed Review */}
+          <div className="lg:col-span-8">
+            <div className="flex items-center justify-between mb-8 border-b border-border pb-4">
+              <h3 className="font-serif text-2xl text-primary italic">Detailed Review</h3>
+              <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">{questions.length} Questions</span>
+            </div>
+
+            <div className="space-y-6">
+              {questions.map((q, i) => {
+                const isCorrect = userAnswers[i] === q.correctIndex;
+                return (
+                  <div key={i} className="bg-card border border-border p-5 md:p-6">
+                    <div className="flex items-start gap-4">
+                      <div className={`shrink-0 w-10 h-10 flex items-center justify-center ${isCorrect ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
+                        {isCorrect ? <CheckCircle2 size={24} /> : <XCircle size={24} />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">Q{i + 1}</span>
+                        <h4 className="font-serif text-lg text-primary mb-4 leading-snug">{q.question}</h4>
+
+                        <div className="space-y-1.5 mb-5">
+                          {q.options.map((opt, optIdx) => {
+                            const isSelected = userAnswers[i] === optIdx;
+                            const isTrueCorrect = q.correctIndex === optIdx;
+                            return (
+                              <div
+                                key={optIdx}
+                                className={`p-3 text-sm flex justify-between items-center gap-2 ${
+                                  isTrueCorrect ? 'bg-emerald-50 text-emerald-800' : isSelected ? 'bg-red-50 text-red-800' : 'text-muted-foreground'
+                                }`}
+                              >
+                                <span>{String.fromCharCode(65 + optIdx)}. {opt}</span>
+                                {isTrueCorrect && <span className="text-[8px] font-bold uppercase tracking-widest bg-emerald-200 px-2 py-0.5 text-emerald-800 shrink-0">Correct</span>}
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        <div className="bg-muted/50 p-4 border-l-4 border-accent">
+                          <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-2">
+                            <Sparkles size={10} /> Explanation
+                          </div>
+                          <p className="text-sm text-muted-foreground leading-relaxed italic">{q.explanation}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SEO title="AI Quiz - Test Your Knowledge" description="Upload study materials and get 25 tailor-made quiz questions powered by AI." />
+
+      {/* Hero */}
+      <div className="bg-primary text-primary-foreground">
+        <div className="container mx-auto px-4 pt-28 pb-14 max-w-6xl">
+          <button
+            onClick={() => navigate('/resources')}
+            className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-primary-foreground/60 hover:text-accent transition-colors mb-8"
+          >
+            <div className="p-2 border border-primary-foreground/20 group-hover:border-accent transition-colors">
+              <ArrowLeft size={14} />
+            </div>
+            <span>Back to Resources</span>
+          </button>
+
+          <div className="flex items-center gap-3 mb-3">
+            <BrainCircuit size={16} className="text-accent" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary-foreground/50">AI-Powered Assessment</span>
+          </div>
+          <h1 className="text-4xl md:text-7xl font-serif font-bold mb-4 leading-tight">
+            AI Quiz
+          </h1>
+          <p className="text-primary-foreground/60 font-light max-w-xl text-lg">
+            Upload your study materials and face a custom 25-question examination batch, tailored to your rigidity level.
+          </p>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 max-w-6xl py-10">
+        <AnimatePresence mode="wait">
+          {step === 'upload' && <UploadView key="upload" />}
+          {step === 'generating' && <GeneratingView key="generating" />}
+          {step === 'quiz' && <QuizView key="quiz" />}
+          {step === 'result' && <ResultView key="result" />}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+};
+
+export default AIQuizPage;

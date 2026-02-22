@@ -1,0 +1,134 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    const { mode, topic, material, generateImage } = await req.json();
+
+    const modePrompts: Record<string, string> = {
+      explainer: `You are StudyBuddy Explainer — an elite academic tutor at the University of Ibadan. Break down the concept or material provided into clear, digestible parts using:
+- Real-world analogies and metaphors
+- Step-by-step logical breakdowns
+- Diagrams described in text (use ASCII art or structured text diagrams where helpful)
+- Mathematical notation when solving maths/engineering problems (use LaTeX-style notation)
+- Clear section headers with markdown
+
+You handle ALL fields: Law, Medicine, Engineering, Arts, Sciences, Social Sciences, etc.
+Be thorough, creative, and intellectually rigorous. Use markdown formatting extensively.`,
+
+      planner: `You are StudyBuddy Planner — a strategic academic advisor. Create a detailed 7-day study schedule for the topic/material provided. Include:
+- Day-by-day breakdown with specific time blocks
+- Key topics to cover each day
+- Review sessions and practice problems
+- Tips for retention and active recall
+- A motivational note for each day
+
+Format as a clean markdown table or structured plan. Be practical and realistic.`,
+
+      synthesizer: `You are StudyBuddy Synthesizer — an expert summarizer. Create a hierarchical brief of the provided material:
+- **Executive Summary** (2-3 sentences)
+- **Key Concepts** (bulleted, with brief explanations)
+- **Critical Details** (numbered, prioritized)
+- **Connections & Relationships** (how concepts link)
+- **Quick-Reference Glossary** (key terms defined)
+
+Be concise but comprehensive. Use markdown formatting.`,
+
+      examiner: `You are StudyBuddy Examiner — a flashcard generator. Create 15 high-quality flashcards from the material:
+- Mix of definition, application, and analysis questions
+- Each flashcard should have a FRONT (question) and BACK (answer)
+- Include difficulty ratings (Easy/Medium/Hard)
+- Cover the most exam-worthy content
+
+Format each as:
+### Flashcard [number] — [Difficulty]
+**Q:** [question]
+**A:** [answer]
+
+---`
+    };
+
+    const systemPrompt = modePrompts[mode] || modePrompts.explainer;
+
+    // If image generation requested, use nano banana
+    if (generateImage) {
+      const imageResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash-image",
+          messages: [
+            { role: "user", content: `Create a clear, educational diagram or illustration for the following academic concept. Make it clean, labeled, and suitable for studying: ${topic || material?.substring(0, 500)}` }
+          ],
+          modalities: ["image", "text"],
+        }),
+      });
+
+      if (!imageResponse.ok) {
+        const errText = await imageResponse.text();
+        console.error("Image generation error:", imageResponse.status, errText);
+        return new Response(JSON.stringify({ error: "Image generation failed", details: errText }), {
+          status: imageResponse.status === 429 ? 429 : imageResponse.status === 402 ? 402 : 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const imageData = await imageResponse.json();
+      return new Response(JSON.stringify(imageData), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Standard text completion with streaming
+    const userContent = topic
+      ? `Topic/Concept: ${topic}${material ? `\n\nAdditional Material:\n${material}` : ""}`
+      : material || "No material provided";
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userContent },
+        ],
+        stream: true,
+      }),
+    });
+
+    if (!response.ok) {
+      const t = await response.text();
+      console.error("AI gateway error:", response.status, t);
+      return new Response(JSON.stringify({ error: "AI gateway error" }), {
+        status: response.status === 429 ? 429 : response.status === 402 ? 402 : 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(response.body, {
+      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+    });
+  } catch (e) {
+    console.error("study-buddy error:", e);
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});

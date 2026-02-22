@@ -23,3 +23,9 @@ verify_jwt = false
 
 [functions.notify-form-submission]
 verify_jwt = false
+
+[functions.study-buddy]
+verify_jwt = false
+
+[functions.ai-quiz]
+verify_jwt = false
