@@ -395,17 +395,26 @@ const AIQuizPage = () => {
     setStep('generating');
     try {
       let fileName = '';
+      let fileContent = '';
+
       if (selectedFile) {
+        // Read file content if text
+        if (selectedFile.type.startsWith('text/') || selectedFile.name.endsWith('.txt') || selectedFile.name.endsWith('.md')) {
+          fileContent = await selectedFile.text();
+        }
+
         const fileExt = selectedFile.name.split('.').pop();
         fileName = `${Math.random().toString(36).substring(7)}.${fileExt}`;
         const { error: uploadError } = await supabase.storage.from('quiz-materials').upload(fileName, selectedFile);
         if (uploadError) throw uploadError;
       }
 
-      const { data, error } = await supabase.functions.invoke('generate-quiz', {
+      const { data, error } = await supabase.functions.invoke('ai-quiz', {
         body: {
-          text: inputText || undefined,
+          material: inputText || undefined,
+          rigidity: rigidity || 'Standard',
           fileName: fileName || undefined,
+          fileContent: fileContent || undefined,
         },
       });
 
@@ -427,9 +436,10 @@ const AIQuizPage = () => {
       setCurrentIdx(0);
       setStep('quiz');
       startTimer();
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
-      toast.error(error.message || 'Quiz generation failed. Please try again.');
+      const message = error instanceof Error ? error.message : 'Quiz generation failed. Please try again.';
+      toast.error(message);
       setStep('upload');
     }
   };
