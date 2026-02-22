@@ -108,6 +108,7 @@ const StudyBuddyPage = () => {
       const decoder = new TextDecoder();
       let textBuffer = '';
       let fullText = '';
+      let lastUpdate = 0;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -131,7 +132,11 @@ const StudyBuddyPage = () => {
             const content = parsed.choices?.[0]?.delta?.content as string | undefined;
             if (content) {
               fullText += content;
-              setResponse(fullText);
+              const now = Date.now();
+              if (now - lastUpdate > 100) {
+                setResponse(fullText);
+                lastUpdate = now;
+              }
             }
           } catch {
             textBuffer = line + '\n' + textBuffer;
@@ -139,6 +144,9 @@ const StudyBuddyPage = () => {
           }
         }
       }
+
+      // Ensure final content is set
+      setResponse(fullText);
 
       // Final flush
       if (textBuffer.trim()) {
