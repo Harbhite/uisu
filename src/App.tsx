@@ -41,6 +41,8 @@ const CareerPathfinderPage = lazy(() => import("./pages/resources/CareerPathfind
 const CampusHealthPage = lazy(() => import("./pages/resources/CampusHealthPage"));
 const GPACalculatorPage = lazy(() => import("./pages/resources/GPACalculatorPage"));
 const CalculatorSuitePage = lazy(() => import("./pages/resources/CalculatorSuitePage"));
+const StudyBuddyPage = lazy(() => import("./pages/resources/StudyBuddyPage"));
+const AIQuizPage = lazy(() => import("./pages/resources/AIQuizPage"));
 const StyleGuidePage = lazy(() => import("./pages/StyleGuidePage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 const HistoryPage = lazy(() => import("./pages/HistoryPage"));
@@ -118,6 +120,8 @@ const AppRoutes = () => {
         <Route path="/resources/campus-health" element={<PageWrapper><CampusHealthPage /></PageWrapper>} />
         <Route path="/resources/gpa-calculator" element={<PageWrapper><GPACalculatorPage /></PageWrapper>} />
         <Route path="/resources/calculator-suite" element={<PageWrapper><CalculatorSuitePage /></PageWrapper>} />
+        <Route path="/resources/study-buddy" element={<PageWrapper><StudyBuddyPage /></PageWrapper>} />
+        <Route path="/resources/ai-quiz" element={<PageWrapper><AIQuizPage /></PageWrapper>} />
 
         {/* Style Guide - only linked from footer */}
         <Route path="/style-guide" element={<PageWrapper><StyleGuidePage /></PageWrapper>} />

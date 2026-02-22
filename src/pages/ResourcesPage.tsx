@@ -23,7 +23,9 @@ const iconMap: { [key: string]: React.ElementType } = {
   alumni: Users,
   health: Activity,
   gpa: Calculator,
-  calculators: Grip
+  calculators: Grip,
+  studybuddy: Brain,
+  aiquiz: Brain
 };
 
 const colorMap: { [key: string]: string } = {
@@ -38,7 +40,9 @@ const colorMap: { [key: string]: string } = {
   alumni: 'bg-cyan-800',
   health: 'bg-red-800',
   gpa: 'bg-emerald-700',
-  calculators: 'bg-violet-700'
+  calculators: 'bg-violet-700',
+  studybuddy: 'bg-blue-800',
+  aiquiz: 'bg-rose-800'
 };
 
 interface ResourceCardProps {

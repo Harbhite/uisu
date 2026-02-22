@@ -419,6 +419,20 @@ export const resourceCategories: ResourceCategory[] = [
     description: 'A collection of 10 calculators: basic, scientific, percentage, unit converter, and more.',
     color: 'bg-violet-500',
     path: '/resources/calculator-suite'
+  },
+  {
+    id: 'studybuddy',
+    title: 'StudyBuddy AI',
+    description: 'AI-powered tool to explain concepts, plan study schedules, summarize materials, and generate flashcards.',
+    color: 'bg-blue-600',
+    path: '/resources/study-buddy'
+  },
+  {
+    id: 'aiquiz',
+    title: 'AI Quiz',
+    description: 'Upload study materials and get 25 tailor-made quiz questions at your chosen rigidity level.',
+    color: 'bg-rose-600',
+    path: '/resources/ai-quiz'
   }
 ];
 
