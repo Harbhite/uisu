@@ -69,13 +69,13 @@ const UploadView: React.FC<UploadViewProps> = ({
 
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <div className="lg:col-span-8 space-y-4">
-        <div className="bg-card border border-border p-5 md:p-7">
+        <div className="bg-card border border-border p-5 md:p-7 rounded-lg">
           <label className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Material Input</label>
           <textarea
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             placeholder="Paste lecture transcript, study notes, textbook excerpts..."
-            className="w-full h-48 md:h-56 bg-muted/30 p-4 border border-border outline-none font-serif text-sm md:text-base focus:border-accent transition-all resize-none"
+            className="w-full h-48 md:h-56 bg-muted/30 p-4 border border-border outline-none font-serif text-sm md:text-base focus:border-accent transition-all resize-none rounded-lg"
           />
 
           <AnimatePresence>
@@ -84,7 +84,7 @@ const UploadView: React.FC<UploadViewProps> = ({
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-4 p-4 bg-primary text-primary-foreground flex items-center justify-between border-l-4 border-accent"
+                className="mt-4 p-4 bg-primary text-primary-foreground flex items-center justify-between border-l-4 border-accent rounded-lg"
               >
                 <div className="flex items-center gap-3 overflow-hidden">
                   {selectedFile.type.startsWith('image/') ? <ImageIcon size={16} className="text-accent" /> : <FileIcon size={16} className="text-accent" />}
@@ -93,7 +93,7 @@ const UploadView: React.FC<UploadViewProps> = ({
                     <div className="text-[10px] font-mono truncate max-w-[200px] md:max-w-none">{selectedFile.name}</div>
                   </div>
                 </div>
-                <button onClick={removeFile} className="p-2 hover:bg-destructive transition-colors text-primary-foreground/50 hover:text-primary-foreground">
+                <button onClick={removeFile} className="p-2 hover:bg-destructive transition-colors text-primary-foreground/50 hover:text-primary-foreground rounded-full">
                   <Trash2 size={14} />
                 </button>
               </motion.div>
@@ -103,7 +103,7 @@ const UploadView: React.FC<UploadViewProps> = ({
           <div className="mt-4">
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 px-4 py-3 border border-border text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:border-accent transition-all"
+              className="flex items-center gap-2 px-4 py-3 border border-border text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:border-accent transition-all rounded-lg"
             >
               <Upload size={14} /> Attach File
             </button>
@@ -112,7 +112,7 @@ const UploadView: React.FC<UploadViewProps> = ({
       </div>
 
       <div className="lg:col-span-4 space-y-4">
-        <div className="bg-primary text-primary-foreground p-5 md:p-6 border-l-4 border-accent">
+        <div className="bg-primary text-primary-foreground p-5 md:p-6 border-l-4 border-accent rounded-lg">
           <div className="flex items-center gap-3 mb-5">
             <Sliders size={16} className="text-accent" />
             <h3 className="font-serif text-lg italic">Rigidity Level</h3>
@@ -122,7 +122,7 @@ const UploadView: React.FC<UploadViewProps> = ({
               <button
                 key={level}
                 onClick={() => setRigidity(level)}
-                className={`w-full text-left p-3.5 border transition-all flex justify-between items-center ${
+                className={`w-full text-left p-3.5 border transition-all flex justify-between items-center rounded-lg ${
                   rigidity === level ? 'bg-accent text-accent-foreground border-accent' : 'border-primary-foreground/10 hover:bg-primary-foreground/5'
                 }`}
               >
@@ -141,7 +141,7 @@ const UploadView: React.FC<UploadViewProps> = ({
         <button
           onClick={generateQuiz}
           disabled={!inputText.trim() && !selectedFile}
-          className="w-full py-5 md:py-6 bg-accent text-accent-foreground font-bold uppercase tracking-[0.2em] text-xs border border-accent hover:bg-primary hover:text-primary-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg"
+          className="w-full py-5 md:py-6 bg-accent text-accent-foreground font-bold uppercase tracking-[0.2em] text-xs border border-accent hover:bg-primary hover:text-primary-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg rounded-lg"
         >
           Initialize Protocol <ChevronRight size={16} />
         </button>
@@ -157,7 +157,7 @@ const GeneratingView: React.FC = () => (
     </motion.div>
     <h2 className="font-serif text-3xl md:text-4xl text-primary mb-4">Generating Your Quiz</h2>
     <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.3em]">Synthesizing 25 questions from your material...</p>
-    <div className="w-48 h-1 bg-muted mt-10 overflow-hidden relative">
+    <div className="w-48 h-1 bg-muted mt-10 overflow-hidden relative rounded-full">
       <motion.div initial={{ x: '-100%' }} animate={{ x: '100%' }} transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }} className="absolute inset-0 w-1/2 bg-primary" />
     </div>
   </div>
@@ -197,7 +197,7 @@ const QuizView: React.FC<QuizViewProps> = ({
         </div>
       </div>
 
-      <div className="w-full h-1.5 bg-muted mb-10 overflow-hidden">
+      <div className="w-full h-1.5 bg-muted mb-10 overflow-hidden rounded-full">
         <motion.div animate={{ width: `${progress}%` }} className="h-full bg-accent" />
       </div>
 
@@ -216,9 +216,9 @@ const QuizView: React.FC<QuizViewProps> = ({
                     key={i}
                     onClick={() => handleAnswer(i)}
                     disabled={userAnswers[currentIdx] !== undefined}
-                    className="w-full text-left p-4 md:p-5 bg-card border border-border hover:border-primary group transition-all flex items-center gap-4 shadow-sm hover:shadow-md disabled:opacity-70"
+                    className="w-full text-left p-4 md:p-5 bg-card border border-border hover:border-primary group transition-all flex items-center gap-4 shadow-sm hover:shadow-md disabled:opacity-70 rounded-lg"
                   >
-                    <div className="w-9 h-9 border border-border bg-muted/50 flex items-center justify-center font-bold text-xs text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-colors shrink-0">
+                    <div className="w-9 h-9 border border-border bg-muted/50 flex items-center justify-center font-bold text-xs text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-colors shrink-0 rounded-md">
                       {String.fromCharCode(65 + i)}
                     </div>
                     <span className="text-sm md:text-base text-foreground font-light">{opt}</span>
@@ -230,7 +230,7 @@ const QuizView: React.FC<QuizViewProps> = ({
         </div>
 
         <div className="lg:col-span-4 mt-4 lg:mt-0">
-          <div className="bg-primary text-primary-foreground p-5 md:p-6 border-l-4 border-accent relative overflow-hidden">
+          <div className="bg-primary text-primary-foreground p-5 md:p-6 border-l-4 border-accent relative overflow-hidden rounded-lg">
             <div className="absolute top-0 right-0 p-4 opacity-5"><BrainCircuit size={80} /></div>
             <div className="relative z-10">
               <h4 className="text-[9px] font-bold text-accent uppercase tracking-[0.4em] mb-5">Status</h4>
@@ -279,7 +279,7 @@ const ResultView: React.FC<ResultViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Score Card */}
         <div className="lg:col-span-4 lg:sticky lg:top-32 space-y-4">
-          <div className="bg-primary text-primary-foreground p-7 md:p-8 border-l-8 border-accent shadow-xl relative overflow-hidden">
+          <div className="bg-primary text-primary-foreground p-7 md:p-8 border-l-8 border-accent shadow-xl relative overflow-hidden rounded-lg">
             <div className="absolute top-0 right-0 p-4 opacity-10"><Trophy size={120} /></div>
             <div className="relative z-10">
               <div className="text-[9px] font-bold text-accent uppercase tracking-[0.4em] mb-6">Performance</div>
@@ -301,7 +301,7 @@ const ResultView: React.FC<ResultViewProps> = ({
 
           <button
             onClick={resetQuiz}
-            className="w-full py-4 bg-accent text-accent-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground border border-accent transition-all"
+            className="w-full py-4 bg-accent text-accent-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground border border-accent transition-all rounded-lg"
           >
             <RefreshCcw size={14} /> New Quiz
           </button>
@@ -318,9 +318,9 @@ const ResultView: React.FC<ResultViewProps> = ({
             {questions.map((q, i) => {
               const isCorrect = userAnswers[i] === q.correctIndex;
               return (
-                <div key={i} className="bg-card border border-border p-5 md:p-6">
+                <div key={i} className="bg-card border border-border p-5 md:p-6 rounded-lg">
                   <div className="flex items-start gap-4">
-                    <div className={`shrink-0 w-10 h-10 flex items-center justify-center ${isCorrect ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
+                    <div className={`shrink-0 w-10 h-10 flex items-center justify-center rounded-full ${isCorrect ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
                       {isCorrect ? <CheckCircle2 size={24} /> : <XCircle size={24} />}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -334,18 +334,18 @@ const ResultView: React.FC<ResultViewProps> = ({
                           return (
                             <div
                               key={optIdx}
-                              className={`p-3 text-sm flex justify-between items-center gap-2 ${
+                              className={`p-3 text-sm flex justify-between items-center gap-2 rounded-md ${
                                 isTrueCorrect ? 'bg-emerald-50 text-emerald-800' : isSelected ? 'bg-red-50 text-red-800' : 'text-muted-foreground'
                               }`}
                             >
                               <span>{String.fromCharCode(65 + optIdx)}. {opt}</span>
-                              {isTrueCorrect && <span className="text-[8px] font-bold uppercase tracking-widest bg-emerald-200 px-2 py-0.5 text-emerald-800 shrink-0">Correct</span>}
+                              {isTrueCorrect && <span className="text-[8px] font-bold uppercase tracking-widest bg-emerald-200 px-2 py-0.5 text-emerald-800 shrink-0 rounded">Correct</span>}
                             </div>
                           );
                         })}
                       </div>
 
-                      <div className="bg-muted/50 p-4 border-l-4 border-accent">
+                      <div className="bg-muted/50 p-4 border-l-4 border-accent rounded-r-lg">
                         <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-2">
                           <Sparkles size={10} /> Explanation
                         </div>
@@ -436,7 +436,7 @@ const AIQuizPage = () => {
       setCurrentIdx(0);
       setStep('quiz');
       startTimer();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       const message = error instanceof Error ? error.message : 'Quiz generation failed. Please try again.';
       toast.error(message);

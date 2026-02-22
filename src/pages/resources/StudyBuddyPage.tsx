@@ -278,7 +278,7 @@ const StudyBuddyPage = () => {
                 <button
                   key={mode.id}
                   onClick={() => { setActiveMode(mode.id); setResponse(''); setGeneratedImage(null); }}
-                  className={`p-4 md:p-5 border text-left transition-all group ${
+                  className={`p-4 md:p-5 border text-left transition-all group rounded-lg ${
                     isActive
                       ? 'bg-primary text-primary-foreground border-primary shadow-lg'
                       : 'bg-card border-border hover:border-accent hover:shadow-sm'
@@ -298,7 +298,7 @@ const StudyBuddyPage = () => {
         {/* Input Area */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-10">
           <div className="lg:col-span-8 space-y-4">
-            <div className="bg-card border border-border p-5 md:p-6">
+            <div className="bg-card border border-border p-5 md:p-6 rounded-lg">
               <label className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">
                 Topic or Question
               </label>
@@ -307,7 +307,7 @@ const StudyBuddyPage = () => {
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 placeholder={currentMode.placeholder}
-                className="w-full bg-muted/50 border border-border p-3 md:p-4 text-sm outline-none focus:border-accent transition-colors"
+                className="w-full bg-muted/50 border border-border p-3 md:p-4 text-sm outline-none focus:border-accent transition-colors rounded-lg"
                 onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSubmit()}
               />
 
@@ -318,13 +318,13 @@ const StudyBuddyPage = () => {
                 value={material}
                 onChange={(e) => setMaterial(e.target.value)}
                 placeholder="Paste lecture notes, textbook excerpts, or any study material..."
-                className="w-full bg-muted/50 border border-border p-3 md:p-4 text-sm outline-none focus:border-accent transition-colors resize-none h-32 md:h-40"
+                className="w-full bg-muted/50 border border-border p-3 md:p-4 text-sm outline-none focus:border-accent transition-colors resize-none h-32 md:h-40 rounded-lg"
               />
             </div>
           </div>
 
           <div className="lg:col-span-4 space-y-4">
-            <div className={`${currentMode.color} text-white p-5 md:p-6 border-l-4 border-accent`}>
+            <div className={`${currentMode.color} text-white p-5 md:p-6 border-l-4 border-accent rounded-lg`}>
               <div className="flex items-center gap-2 mb-4">
                 <currentMode.icon size={18} className="text-accent" />
                 <h3 className="font-serif text-lg italic">{currentMode.label} Mode</h3>
@@ -336,7 +336,7 @@ const StudyBuddyPage = () => {
             <button
               onClick={handleSubmit}
               disabled={isLoading || (!topic.trim() && !material.trim())}
-              className="w-full py-5 bg-accent text-accent-foreground font-bold uppercase tracking-[0.2em] text-xs border border-accent hover:bg-primary hover:text-primary-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+              className="w-full py-5 bg-accent text-accent-foreground font-bold uppercase tracking-[0.2em] text-xs border border-accent hover:bg-primary hover:text-primary-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 rounded-lg"
             >
               {isLoading ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : <><Send size={16} /> Generate</>}
             </button>
@@ -344,7 +344,7 @@ const StudyBuddyPage = () => {
             <button
               onClick={handleGenerateImage}
               disabled={isGeneratingImage || (!topic.trim() && !material.trim())}
-              className="w-full py-4 border border-border text-muted-foreground font-bold uppercase tracking-[0.2em] text-[10px] hover:border-accent hover:text-accent transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+              className="w-full py-4 border border-border text-muted-foreground font-bold uppercase tracking-[0.2em] text-[10px] hover:border-accent hover:text-accent transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 rounded-lg"
             >
               {isGeneratingImage ? <><Loader2 size={14} className="animate-spin" /> Generating Visual...</> : <><ImageIcon size={14} /> Generate Visual</>}
             </button>
@@ -370,14 +370,14 @@ const StudyBuddyPage = () => {
                   {response && (
                     <button
                       onClick={handleCopy}
-                      className="p-2 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-colors"
+                      className="p-2 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-colors rounded-lg"
                     >
                       {copied ? <Check size={14} /> : <Copy size={14} />}
                     </button>
                   )}
                   <button
                     onClick={handleReset}
-                    className="p-2 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-colors"
+                    className="p-2 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-colors rounded-lg"
                   >
                     <RefreshCcw size={14} />
                   </button>
@@ -386,17 +386,17 @@ const StudyBuddyPage = () => {
 
               {/* Generated Image */}
               {generatedImage && (
-                <div className="mb-8 bg-card border border-border p-4">
+                <div className="mb-8 bg-card border border-border p-4 rounded-lg">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-2">
                     <ImageIcon size={12} /> Generated Visual
                   </p>
-                  <img src={generatedImage} alt="AI-generated educational visual" className="max-w-full max-h-[500px] object-contain mx-auto" />
+                  <img src={generatedImage} alt="AI-generated educational visual" className="max-w-full max-h-[500px] object-contain mx-auto rounded-lg" />
                 </div>
               )}
 
               {/* Text Response */}
               {response && (
-                <div className="bg-card border border-border p-6 md:p-10">
+                <div className="bg-card border border-border p-6 md:p-10 rounded-lg">
                   <div className="prose prose-sm md:prose-base max-w-none prose-headings:font-serif prose-headings:text-primary prose-strong:text-foreground prose-p:text-muted-foreground prose-p:leading-relaxed prose-li:text-muted-foreground prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:text-xs prose-pre:bg-primary prose-pre:text-primary-foreground prose-hr:border-border prose-blockquote:border-accent prose-blockquote:text-muted-foreground prose-td:border-border prose-th:border-border prose-table:text-sm">
                     <ReactMarkdown>{response}</ReactMarkdown>
                   </div>
