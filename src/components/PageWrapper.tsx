@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ReactNode, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { useAppStore } from "@/stores/useAppStore";
 
 interface PageWrapperProps {
   children: ReactNode;
@@ -32,11 +33,13 @@ const pageTransition = {
 
 const PageWrapper = ({ children }: PageWrapperProps) => {
   const { pathname } = useLocation();
+  const setLastVisitedRoute = useAppStore((s) => s.setLastVisitedRoute);
 
-  // Scroll to top on route change
+  // Track last visited route & scroll to top on route change
   useEffect(() => {
+    setLastVisitedRoute(pathname);
     window.scrollTo({ top: 0, behavior: "instant" });
-  }, [pathname]);
+  }, [pathname, setLastVisitedRoute]);
 
   return (
     <motion.div
