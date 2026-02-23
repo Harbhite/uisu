@@ -4,6 +4,7 @@ import { X, Clock, Eye, Feather, FileText, Mic, Quote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { OutputData } from '@editorjs/editorjs';
 import { calculateWordCount, calculateReadingTime } from '@/hooks/useAutosave';
+import DOMPurify from 'dompurify';
 
 interface InkPreviewModalProps {
   isOpen: boolean;
@@ -33,7 +34,7 @@ const renderContent = (content: OutputData) => {
       }
       
       case 'paragraph':
-        return <p key={index} className="mb-4 leading-relaxed" dangerouslySetInnerHTML={{ __html: String(data.text || '') }} />;
+        return <p key={index} className="mb-4 leading-relaxed" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(String(data.text || '')) }} />;
       
       case 'list': {
         const ListTag = data.style === 'ordered' ? 'ol' : 'ul';
@@ -41,7 +42,7 @@ const renderContent = (content: OutputData) => {
         return (
           <ListTag key={index} className={`mb-4 ml-6 ${data.style === 'ordered' ? 'list-decimal' : 'list-disc'}`}>
             {items.map((item: unknown, i: number) => (
-              <li key={i} className="mb-1" dangerouslySetInnerHTML={{ __html: String(item) }} />
+              <li key={i} className="mb-1" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(String(item)) }} />
             ))}
           </ListTag>
         );
@@ -50,7 +51,7 @@ const renderContent = (content: OutputData) => {
       case 'quote':
         return (
           <blockquote key={index} className="border-l-4 border-accent pl-6 my-6 italic text-muted-foreground">
-            <p dangerouslySetInnerHTML={{ __html: String(data.text || '') }} />
+            <p dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(String(data.text || '')) }} />
             {data.caption && (
               <cite className="text-sm text-muted-foreground mt-2 block">— {String(data.caption)}</cite>
             )}
