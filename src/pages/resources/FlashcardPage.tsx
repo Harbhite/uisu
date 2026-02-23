@@ -78,6 +78,8 @@ const FlashcardPage = () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const [cardCount, setCardCount] = useState(20);
+
   const handleGenerate = useCallback(async () => {
     if (!topic.trim() && !material.trim() && !selectedFile) {
       toast.error('Enter a topic, paste material, or upload a file');
@@ -92,7 +94,7 @@ const FlashcardPage = () => {
         body: {
           topic: topic.trim(),
           material: material.trim() + (fileContent ? `\n\n--- UPLOADED FILE (${selectedFile?.name}) ---\n${fileContent}` : ''),
-          count: 20,
+          count: cardCount,
         },
       });
 
@@ -234,9 +236,26 @@ const FlashcardPage = () => {
                     <h3 className="font-serif text-lg italic">Flashcard Generator</h3>
                   </div>
                   <p className="text-xs text-primary-foreground/60 leading-relaxed mb-4">
-                    Generate 20 AI-powered flashcards with mixed difficulty levels. Tap to flip, swipe through, and mark cards as mastered.
+                    Generate AI-powered flashcards with mixed difficulty levels. Tap to flip, swipe through, and mark cards as mastered.
                   </p>
-                  <div className="text-[9px] font-bold uppercase tracking-widest text-primary-foreground/30">Ready for input</div>
+
+                  <label className="block text-[9px] font-bold uppercase tracking-widest text-primary-foreground/40 mb-2 mt-4">Number of Cards</label>
+                  <div className="flex items-center gap-2">
+                    {[10, 15, 20, 30].map(n => (
+                      <button
+                        key={n}
+                        onClick={() => setCardCount(n)}
+                        className={`flex-1 py-2.5 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all ${
+                          cardCount === n
+                            ? 'bg-accent text-accent-foreground'
+                            : 'border border-primary-foreground/10 text-primary-foreground/50 hover:bg-primary-foreground/5'
+                        }`}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="text-[9px] font-bold uppercase tracking-widest text-primary-foreground/30 mt-4">Ready for input</div>
                 </div>
 
                 <button

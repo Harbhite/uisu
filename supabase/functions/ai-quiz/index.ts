@@ -12,7 +12,8 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const { material, rigidity, fileContent, fileName } = await req.json();
+    const { material, rigidity, fileContent, fileName, count } = await req.json();
+    const questionCount = Math.min(Math.max(count || 25, 5), 40);
 
     if (!material && !fileContent) {
       return new Response(JSON.stringify({ error: "No study material provided" }), {
@@ -27,12 +28,12 @@ serve(async (req) => {
       Rigid: "Focus on advanced synthesis, edge cases, historical context, and highly complex logical deductions. Questions should challenge even top students.",
     };
 
-    const systemPrompt = `You are an elite professor at a prestigious university. Based on the provided study materials, generate an official examination batch of exactly 25 multiple-choice questions.
+    const systemPrompt = `You are an elite professor at a prestigious university. Based on the provided study materials, generate an official examination batch of exactly ${questionCount} multiple-choice questions.
 
 LEVEL OF RIGIDITY: ${rigidity || "Strict"}
 INSTRUCTION: ${rigidityPrompt[rigidity || "Strict"]}
 
-You MUST return a valid JSON array of exactly 25 objects. Each object MUST have:
+You MUST return a valid JSON array of exactly ${questionCount} objects. Each object MUST have:
 - "question": string (the question text)
 - "options": array of exactly 4 strings
 - "correctIndex": number (0-3, index of correct option)
@@ -61,7 +62,7 @@ Ensure intellectual depth, variety across the material, and strict adherence to 
             type: "function",
             function: {
               name: "generate_quiz",
-              description: "Generate 25 multiple-choice quiz questions from study material",
+              description: `Generate ${questionCount} multiple-choice quiz questions from study material`,
               parameters: {
                 type: "object",
                 properties: {
@@ -123,7 +124,7 @@ Ensure intellectual depth, variety across the material, and strict adherence to 
       throw new Error("No valid questions generated");
     }
 
-    return new Response(JSON.stringify({ questions: questions.slice(0, 25) }), {
+    return new Response(JSON.stringify({ questions: questions.slice(0, questionCount) }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

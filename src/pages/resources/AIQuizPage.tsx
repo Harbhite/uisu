@@ -59,6 +59,8 @@ interface UploadViewProps {
   removeFile: () => void;
   rigidity: Rigidity;
   setRigidity: (r: Rigidity) => void;
+  questionCount: number;
+  setQuestionCount: (n: number) => void;
   generateQuiz: () => void;
   navigate: (path: string) => void;
 }
@@ -72,6 +74,8 @@ const UploadView: React.FC<UploadViewProps> = ({
   removeFile,
   rigidity,
   setRigidity,
+  questionCount,
+  setQuestionCount,
   generateQuiz,
   navigate,
 }) => (
@@ -147,6 +151,23 @@ const UploadView: React.FC<UploadViewProps> = ({
             {rigidity === 'Strict' && 'Application, critical thinking, nuanced relationships.'}
             {rigidity === 'Rigid' && 'Advanced synthesis, edge cases, complex deductions.'}
           </p>
+
+          <label className="block text-[9px] font-bold uppercase tracking-widest text-primary-foreground/40 mb-2 mt-5">Number of Questions</label>
+          <div className="flex items-center gap-2">
+            {[10, 15, 20, 25].map(n => (
+              <button
+                key={n}
+                onClick={() => setQuestionCount(n)}
+                className={`flex-1 py-2.5 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all ${
+                  questionCount === n
+                    ? 'bg-accent text-accent-foreground'
+                    : 'border border-primary-foreground/10 text-primary-foreground/50 hover:bg-primary-foreground/5'
+                }`}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
         </div>
 
         <button
@@ -167,7 +188,7 @@ const GeneratingView: React.FC = () => (
       <RefreshCcw size={64} strokeWidth={1} />
     </motion.div>
     <h2 className="font-serif text-3xl md:text-4xl text-primary mb-4">Generating Your Quiz</h2>
-    <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.3em]">Synthesizing 25 questions from your material...</p>
+    <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.3em]">Synthesizing questions from your material...</p>
     <div className="w-48 h-1 bg-muted mt-10 overflow-hidden relative rounded-full">
       <motion.div initial={{ x: '-100%' }} animate={{ x: '100%' }} transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }} className="absolute inset-0 w-1/2 bg-primary" />
     </div>
@@ -477,6 +498,9 @@ const AIQuizPage = () => {
   const [rigidity, setRigidity] = useState<Rigidity>(() => {
     try { return JSON.parse(localStorage.getItem('aiquiz_state') || '{}').rigidity || 'Standard'; } catch { return 'Standard'; }
   });
+  const [questionCount, setQuestionCount] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('aiquiz_state') || '{}').questionCount || 25; } catch { return 25; }
+  });
   const [questions, setQuestions] = useState<Question[]>([]);
   const [userAnswers, setUserAnswers] = useState<number[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -486,9 +510,9 @@ const AIQuizPage = () => {
 
   // Persist state to localStorage
   useEffect(() => {
-    const state = { inputText, rigidity, step: step === 'generating' ? 'upload' : step };
+    const state = { inputText, rigidity, questionCount, step: step === 'generating' ? 'upload' : step };
     localStorage.setItem('aiquiz_state', JSON.stringify(state));
-  }, [inputText, rigidity, step]);
+  }, [inputText, rigidity, questionCount, step]);
 
   useEffect(() => {
     return () => stopTimer();
@@ -528,6 +552,7 @@ const AIQuizPage = () => {
           rigidity: rigidity || 'Standard',
           fileName: fileName || undefined,
           fileContent: fileContent || undefined,
+          count: questionCount,
         },
       });
 
@@ -544,7 +569,7 @@ const AIQuizPage = () => {
         throw new Error('No questions generated. Try providing more detailed material.');
       }
 
-      setQuestions(data.questions.slice(0, 25));
+      setQuestions(data.questions.slice(0, questionCount));
       setUserAnswers([]);
       setCurrentIdx(0);
       setStep('quiz');
@@ -625,6 +650,8 @@ const AIQuizPage = () => {
               removeFile={removeFile}
               rigidity={rigidity}
               setRigidity={setRigidity}
+              questionCount={questionCount}
+              setQuestionCount={setQuestionCount}
               generateQuiz={generateQuiz}
               navigate={navigate}
             />
