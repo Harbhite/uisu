@@ -153,12 +153,12 @@ const UploadView: React.FC<UploadViewProps> = ({
           </p>
 
           <label className="block text-[9px] font-bold uppercase tracking-widest text-primary-foreground/40 mb-2 mt-5">Number of Questions</label>
-          <div className="flex items-center gap-2">
-            {[10, 15, 20, 25].map(n => (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {[10, 25, 50, 75, 100, 120].map(n => (
               <button
                 key={n}
                 onClick={() => setQuestionCount(n)}
-                className={`flex-1 py-2.5 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all ${
+                className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all ${
                   questionCount === n
                     ? 'bg-accent text-accent-foreground'
                     : 'border border-primary-foreground/10 text-primary-foreground/50 hover:bg-primary-foreground/5'
@@ -167,6 +167,22 @@ const UploadView: React.FC<UploadViewProps> = ({
                 {n}
               </button>
             ))}
+            <input
+              type="number"
+              min={1}
+              max={200}
+              value={![10, 25, 50, 75, 100, 120].includes(questionCount) ? questionCount : ''}
+              placeholder="Custom"
+              onChange={(e) => {
+                const v = parseInt(e.target.value);
+                if (!isNaN(v) && v > 0 && v <= 200) setQuestionCount(v);
+              }}
+              className={`w-20 px-2 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all text-center outline-none ${
+                ![10, 25, 50, 75, 100, 120].includes(questionCount)
+                  ? 'bg-accent text-accent-foreground'
+                  : 'border border-primary-foreground/10 text-primary-foreground/50 bg-transparent placeholder:text-primary-foreground/30'
+              }`}
+            />
           </div>
         </div>
 
