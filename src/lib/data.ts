@@ -423,7 +423,7 @@ export const resourceCategories: ResourceCategory[] = [
   {
     id: 'studybuddy',
     title: 'StudyBuddy AI',
-    description: 'AI-powered tool to explain concepts, plan study schedules, summarize materials, and generate flashcards.',
+    description: 'AI-powered tool to explain concepts, plan study schedules, summarize materials, and debate topics.',
     color: 'bg-blue-600',
     path: '/resources/study-buddy'
   },
@@ -433,6 +433,13 @@ export const resourceCategories: ResourceCategory[] = [
     description: 'Upload study materials and get 25 tailor-made quiz questions at your chosen rigidity level.',
     color: 'bg-rose-600',
     path: '/resources/ai-quiz'
+  },
+  {
+    id: 'flashcards',
+    title: 'AI Flashcards',
+    description: 'Generate smart flashcards from any topic or material. Flip, shuffle, and master concepts.',
+    color: 'bg-amber-600',
+    path: '/resources/flashcards'
   }
 ];
 

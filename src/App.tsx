@@ -43,6 +43,7 @@ const GPACalculatorPage = lazy(() => import("./pages/resources/GPACalculatorPage
 const CalculatorSuitePage = lazy(() => import("./pages/resources/CalculatorSuitePage"));
 const StudyBuddyPage = lazy(() => import("./pages/resources/StudyBuddyPage"));
 const AIQuizPage = lazy(() => import("./pages/resources/AIQuizPage"));
+const FlashcardPage = lazy(() => import("./pages/resources/FlashcardPage"));
 const StyleGuidePage = lazy(() => import("./pages/StyleGuidePage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 const HistoryPage = lazy(() => import("./pages/HistoryPage"));
@@ -122,6 +123,7 @@ const AppRoutes = () => {
         <Route path="/resources/calculator-suite" element={<PageWrapper><CalculatorSuitePage /></PageWrapper>} />
         <Route path="/resources/study-buddy" element={<PageWrapper><StudyBuddyPage /></PageWrapper>} />
         <Route path="/resources/ai-quiz" element={<PageWrapper><AIQuizPage /></PageWrapper>} />
+        <Route path="/resources/flashcards" element={<PageWrapper><FlashcardPage /></PageWrapper>} />
 
         {/* Style Guide - only linked from footer */}
         <Route path="/style-guide" element={<PageWrapper><StyleGuidePage /></PageWrapper>} />
