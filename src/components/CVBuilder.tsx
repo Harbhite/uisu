@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FileText, Download, Eye, Check, ChevronLeft, ChevronRight,
@@ -103,14 +103,31 @@ const accentPresets = [
 ];
 
 const CVBuilder: React.FC = () => {
-  const [step, setStep] = useState<'template' | 'edit' | 'preview'>('template');
-  const [selectedTemplate, setSelectedTemplate] = useState<Template>(templates[0]);
-  const [cvData, setCVData] = useState<CVData>(defaultCVData);
+  const [step, setStep] = useState<'template' | 'edit' | 'preview'>(() => {
+    try { return (JSON.parse(localStorage.getItem('cvbuilder_state') || '{}').step as any) || 'template'; } catch { return 'template'; }
+  });
+  const [selectedTemplate, setSelectedTemplate] = useState<Template>(() => {
+    try {
+      const savedId = JSON.parse(localStorage.getItem('cvbuilder_state') || '{}').templateId;
+      return templates.find(t => t.id === savedId) || templates[0];
+    } catch { return templates[0]; }
+  });
+  const [cvData, setCVData] = useState<CVData>(() => {
+    try { return JSON.parse(localStorage.getItem('cvbuilder_state') || '{}').cvData || defaultCVData; } catch { return defaultCVData; }
+  });
   const [activeSection, setActiveSection] = useState<'personal' | 'education' | 'experience' | 'skills'>('personal');
   const [skillInput, setSkillInput] = useState('');
   const [isDownloading, setIsDownloading] = useState(false);
-  const [customColor, setCustomColor] = useState<string | null>(null);
+  const [customColor, setCustomColor] = useState<string | null>(() => {
+    try { return JSON.parse(localStorage.getItem('cvbuilder_state') || '{}').customColor || null; } catch { return null; }
+  });
   const printRef = useRef<HTMLDivElement>(null);
+
+  // Persist CV state to localStorage
+  useEffect(() => {
+    const state = { step, templateId: selectedTemplate.id, cvData, customColor };
+    localStorage.setItem('cvbuilder_state', JSON.stringify(state));
+  }, [step, selectedTemplate, cvData, customColor]);
 
   const generateId = () => Math.random().toString(36).substring(2, 9);
 
