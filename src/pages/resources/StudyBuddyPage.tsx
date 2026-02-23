@@ -3,14 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import {
-  ArrowLeft, BookOpen, CalendarDays, Layers, CreditCard,
+  ArrowLeft, BookOpen, CalendarDays, Layers, Swords,
   Send, Loader2, Sparkles, ImageIcon, RefreshCcw, Copy, Check,
   Upload, FileIcon, Trash2
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { toast } from 'sonner';
 
-type Mode = 'explainer' | 'planner' | 'synthesizer' | 'examiner';
+type Mode = 'explainer' | 'planner' | 'synthesizer' | 'debater';
 
 interface ModeConfig {
   id: Mode;
@@ -47,11 +47,11 @@ const modes: ModeConfig[] = [
     color: 'bg-violet-800',
   },
   {
-    id: 'examiner',
-    label: 'Examiner',
-    icon: CreditCard,
-    description: 'Generates 15 flashcards from your material',
-    placeholder: 'Paste material to generate flashcards from... e.g. lecture notes, chapter summaries',
+    id: 'debater',
+    label: 'Debater',
+    icon: Swords,
+    description: 'Presents arguments for and against a position to sharpen critical thinking',
+    placeholder: 'Enter a topic to debate... e.g. "Should AI replace doctors?" or "Is capitalism sustainable?"',
     color: 'bg-amber-800',
   },
 ];
@@ -294,29 +294,24 @@ const StudyBuddyPage = () => {
         description="AI-powered study companion that explains, plans, summarizes, and creates flashcards across all fields of knowledge."
       />
 
-      {/* Hero */}
+      {/* Compact header */}
       <div className="bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4 pt-28 pb-14 max-w-6xl">
-          <button
-            onClick={() => navigate('/resources')}
-            className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-primary-foreground/60 hover:text-accent transition-colors mb-8"
-          >
-            <div className="p-2 border border-primary-foreground/20 group-hover:border-accent transition-colors">
+        <div className="container mx-auto px-4 pt-24 pb-6 max-w-6xl">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate('/resources')}
+              className="p-2 border border-primary-foreground/20 hover:border-accent transition-colors rounded-sm"
+            >
               <ArrowLeft size={14} />
+            </button>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Sparkles size={14} className="text-accent" fill="currentColor" />
+                <span className="text-[9px] font-bold uppercase tracking-[0.4em] text-primary-foreground/50">AI-Powered</span>
+              </div>
+              <h1 className="text-xl md:text-2xl font-serif font-bold">StudyBuddy</h1>
             </div>
-            <span>Back to Resources</span>
-          </button>
-
-          <div className="flex items-center gap-3 mb-3">
-            <Sparkles size={16} className="text-accent" fill="currentColor" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary-foreground/50">AI-Powered</span>
           </div>
-          <h1 className="text-4xl md:text-7xl font-serif font-bold mb-4 leading-tight">
-            StudyBuddy
-          </h1>
-          <p className="text-primary-foreground/60 font-light max-w-xl text-lg">
-            Your intelligent study companion. Explain, plan, synthesize, and quiz across every field of knowledge.
-          </p>
         </div>
       </div>
 

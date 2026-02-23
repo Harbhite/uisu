@@ -610,29 +610,24 @@ const AIQuizPage = () => {
     <div className="min-h-screen bg-background">
       <SEO title="AI Quiz - Test Your Knowledge" description="Upload study materials and get 25 tailor-made quiz questions powered by AI." />
 
-      {/* Hero */}
+      {/* Compact header */}
       <div className="bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4 pt-28 pb-14 max-w-6xl">
-          <button
-            onClick={() => navigate('/resources')}
-            className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-primary-foreground/60 hover:text-accent transition-colors mb-8"
-          >
-            <div className="p-2 border border-primary-foreground/20 group-hover:border-accent transition-colors">
+        <div className="container mx-auto px-4 pt-24 pb-6 max-w-6xl">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate('/resources')}
+              className="p-2 border border-primary-foreground/20 hover:border-accent transition-colors rounded-sm"
+            >
               <ArrowLeft size={14} />
+            </button>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <BrainCircuit size={14} className="text-accent" />
+                <span className="text-[9px] font-bold uppercase tracking-[0.4em] text-primary-foreground/50">AI-Powered Assessment</span>
+              </div>
+              <h1 className="text-xl md:text-2xl font-serif font-bold">AI Quiz</h1>
             </div>
-            <span>Back to Resources</span>
-          </button>
-
-          <div className="flex items-center gap-3 mb-3">
-            <BrainCircuit size={16} className="text-accent" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary-foreground/50">AI-Powered Assessment</span>
           </div>
-          <h1 className="text-4xl md:text-7xl font-serif font-bold mb-4 leading-tight">
-            AI Quiz
-          </h1>
-          <p className="text-primary-foreground/60 font-light max-w-xl text-lg">
-            Upload your study materials and face a custom 25-question examination batch, tailored to your rigidity level.
-          </p>
         </div>
       </div>
 

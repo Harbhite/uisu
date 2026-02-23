@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.ai-quiz]
 verify_jwt = false
+
+[functions.flashcard-gen]
+verify_jwt = false
