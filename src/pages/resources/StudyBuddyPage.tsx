@@ -4,11 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
-  ArrowLeft, BookOpen, CalendarDays, Layers, Swords,
+  BookOpen, CalendarDays, Layers, Swords,
   Send, Loader2, Sparkles, ImageIcon, RefreshCcw, Copy, Check,
-  Upload, FileIcon, Trash2, ChevronDown, ChevronUp, Table2, Code2, List, Quote, Download
+  Upload, FileIcon, Trash2, Table2, Code2, Download
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
+import AIToolsHeader from '@/components/resources/AIToolsHeader';
+import AsciiDiagramViewer from '@/components/resources/AsciiDiagramViewer';
 import { toast } from 'sonner';
 
 type Mode = 'explainer' | 'planner' | 'synthesizer' | 'debater';
@@ -295,26 +297,7 @@ const StudyBuddyPage = () => {
         description="AI-powered study companion that explains, plans, summarizes, and creates flashcards across all fields of knowledge."
       />
 
-      {/* Compact header */}
-      <div className="bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4 pt-24 pb-6 max-w-6xl">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/resources')}
-              className="p-2 border border-primary-foreground/20 hover:border-accent transition-colors rounded-sm"
-            >
-              <ArrowLeft size={14} />
-            </button>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Sparkles size={14} className="text-accent" fill="currentColor" />
-                <span className="text-[9px] font-bold uppercase tracking-[0.4em] text-primary-foreground/50">AI-Powered</span>
-              </div>
-              <h1 className="text-xl md:text-2xl font-serif font-bold">StudyBuddy</h1>
-            </div>
-          </div>
-        </div>
-      </div>
+      <AIToolsHeader title="StudyBuddy" icon={Sparkles} />
 
       <div className="container mx-auto px-4 max-w-6xl py-10">
         {/* Mode Selector */}
@@ -607,6 +590,17 @@ const StudyBuddyPage = () => {
                           code: ({ className, children, ...props }) => {
                             const isBlock = className?.includes('language-');
                             const language = className?.replace('language-', '') || '';
+                            const text = String(children).replace(/\n$/, '');
+
+                            // Detect ASCII diagrams: language hints or content with box-drawing chars
+                            const diagramLangs = ['ascii', 'diagram', 'art', 'box', 'flowchart', 'tree', 'graph'];
+                            const isDiagram = diagramLangs.includes(language.toLowerCase()) ||
+                              (isBlock && /[┌┐└┘├┤┬┴┼│─╔╗╚╝║═\+\-\|\\\/\>\<]{4,}/.test(text) && text.split('\n').length > 3);
+
+                            if (isDiagram) {
+                              return <AsciiDiagramViewer content={text} label={language || 'Diagram'} />;
+                            }
+
                             if (isBlock) {
                               return (
                                 <div className="my-6 border border-border rounded-sm overflow-hidden">
@@ -619,7 +613,7 @@ const StudyBuddyPage = () => {
                                     </div>
                                     <button
                                       onClick={() => {
-                                        navigator.clipboard.writeText(String(children));
+                                        navigator.clipboard.writeText(text);
                                         toast.success('Code copied');
                                       }}
                                       className="text-primary-foreground/40 hover:text-accent transition-colors"
