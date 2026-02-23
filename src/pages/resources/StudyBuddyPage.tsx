@@ -2,10 +2,11 @@ import React, { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
   ArrowLeft, BookOpen, CalendarDays, Layers, Swords,
   Send, Loader2, Sparkles, ImageIcon, RefreshCcw, Copy, Check,
-  Upload, FileIcon, Trash2
+  Upload, FileIcon, Trash2, ChevronDown, ChevronUp, Table2, Code2, List, Quote, Download
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { toast } from 'sonner';
@@ -436,63 +437,303 @@ const StudyBuddyPage = () => {
           </div>
         </div>
 
-        {/* Response Area */}
+        {/* Response Area — Redesigned */}
         <AnimatePresence>
-          {(response || generatedImage) && (
+          {(response || generatedImage || isLoading) && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
               ref={responseRef}
+              className="mt-2"
             >
-              {/* Actions Bar */}
-              <div className="flex items-center justify-between mb-4 border-b border-border pb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-0.5 bg-accent" />
-                  <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">AI Response</span>
-                </div>
-                <div className="flex gap-2">
-                  {response && (
-                    <button
-                      onClick={handleCopy}
-                      className="p-2 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-colors rounded-lg"
+              {/* Response Header Bar */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-1 bg-accent rounded-full" />
+                  <div className="flex items-center gap-2">
+                    <currentMode.icon size={14} className="text-accent" />
+                    <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
+                      {currentMode.label} Output
+                    </span>
+                  </div>
+                  {isLoading && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex items-center gap-2 px-3 py-1 bg-accent/10 border border-accent/20 rounded-full"
                     >
-                      {copied ? <Check size={14} /> : <Copy size={14} />}
-                    </button>
+                      <Loader2 size={10} className="animate-spin text-accent" />
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-accent">Streaming</span>
+                    </motion.div>
+                  )}
+                </div>
+                <div className="flex gap-1.5">
+                  {response && (
+                    <>
+                      <button
+                        onClick={() => {
+                          const blob = new Blob([response], { type: 'text/markdown' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `studybuddy-${currentMode.label.toLowerCase()}-${Date.now()}.md`;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                          toast.success('Downloaded as Markdown');
+                        }}
+                        className="p-2 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-all rounded-sm"
+                        title="Download as Markdown"
+                      >
+                        <Download size={13} />
+                      </button>
+                      <button
+                        onClick={handleCopy}
+                        className="p-2 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-all rounded-sm"
+                        title="Copy to clipboard"
+                      >
+                        {copied ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
+                      </button>
+                    </>
                   )}
                   <button
                     onClick={handleReset}
-                    className="p-2 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-colors rounded-lg"
+                    className="p-2 border border-border hover:border-destructive text-muted-foreground hover:text-destructive transition-all rounded-sm"
+                    title="Clear output"
                   >
-                    <RefreshCcw size={14} />
+                    <RefreshCcw size={13} />
                   </button>
                 </div>
               </div>
 
               {/* Generated Image */}
               {generatedImage && (
-                <div className="mb-8 bg-card border border-border p-4 rounded-lg">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-2">
-                    <ImageIcon size={12} /> Generated Visual
-                  </p>
-                  <img src={generatedImage} alt="AI-generated educational visual" className="max-w-full max-h-[500px] object-contain mx-auto rounded-lg" />
-                </div>
-              )}
-
-              {/* Text Response */}
-              {response && (
-                <div className="bg-card border border-border p-6 md:p-10 rounded-lg">
-                  <div className="prose prose-sm md:prose-base max-w-none prose-headings:font-serif prose-headings:text-primary prose-strong:text-foreground prose-p:text-muted-foreground prose-p:leading-relaxed prose-li:text-muted-foreground prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:text-xs prose-pre:bg-primary prose-pre:text-primary-foreground prose-hr:border-border prose-blockquote:border-accent prose-blockquote:text-muted-foreground prose-td:border-border prose-th:border-border prose-table:text-sm">
-                    <ReactMarkdown>{response}</ReactMarkdown>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="mb-8 bg-card border border-border overflow-hidden rounded-sm"
+                >
+                  <div className="px-5 py-3 border-b border-border bg-muted/30 flex items-center gap-2">
+                    <ImageIcon size={12} className="text-accent" />
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Generated Visual</span>
                   </div>
-                </div>
+                  <div className="p-6 flex justify-center bg-muted/10">
+                    <img src={generatedImage} alt="AI-generated educational visual" className="max-w-full max-h-[500px] object-contain rounded-sm shadow-lg" />
+                  </div>
+                </motion.div>
               )}
 
-              {isLoading && (
-                <div className="flex items-center gap-3 mt-4 text-muted-foreground">
-                  <Loader2 size={14} className="animate-spin" />
-                  <span className="text-xs">Generating response...</span>
-                </div>
+              {/* Text Response — Rich Rendering */}
+              {response && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="bg-card border border-border overflow-hidden rounded-sm"
+                >
+                  {/* Content Body */}
+                  <div className="p-6 md:p-10 lg:p-12">
+                    <div className="studybuddy-output max-w-none">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          h1: ({ children }) => (
+                            <h1 className="text-2xl md:text-3xl font-serif font-bold text-primary mt-8 mb-4 pb-3 border-b-2 border-accent/30 first:mt-0">
+                              {children}
+                            </h1>
+                          ),
+                          h2: ({ children }) => (
+                            <h2 className="text-xl md:text-2xl font-serif font-bold text-primary mt-8 mb-3 flex items-center gap-3">
+                              <span className="w-1 h-6 bg-accent rounded-full inline-block flex-shrink-0" />
+                              {children}
+                            </h2>
+                          ),
+                          h3: ({ children }) => (
+                            <h3 className="text-lg font-serif font-semibold text-primary mt-6 mb-2 pl-4 border-l-2 border-accent/40">
+                              {children}
+                            </h3>
+                          ),
+                          h4: ({ children }) => (
+                            <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mt-6 mb-2">
+                              {children}
+                            </h4>
+                          ),
+                          p: ({ children }) => (
+                            <p className="text-sm md:text-[15px] leading-[1.8] text-foreground/80 mb-4">
+                              {children}
+                            </p>
+                          ),
+                          strong: ({ children }) => (
+                            <strong className="font-bold text-foreground">{children}</strong>
+                          ),
+                          em: ({ children }) => (
+                            <em className="italic text-foreground/70 font-serif">{children}</em>
+                          ),
+                          ul: ({ children }) => (
+                            <ul className="my-4 space-y-2 pl-0">
+                              {children}
+                            </ul>
+                          ),
+                          ol: ({ children }) => (
+                            <ol className="my-4 space-y-2 pl-0 counter-reset-item list-none">
+                              {children}
+                            </ol>
+                          ),
+                          li: ({ children, ...props }) => {
+                            const isOrdered = (props as any).ordered;
+                            return (
+                              <li className="flex gap-3 text-sm md:text-[15px] leading-[1.8] text-foreground/80">
+                                <span className="flex-shrink-0 mt-[0.35em]">
+                                  {isOrdered ? (
+                                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent/15 text-accent text-[10px] font-bold">
+                                      {(props as any).index != null ? (props as any).index + 1 : '•'}
+                                    </span>
+                                  ) : (
+                                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-accent mt-0.5" />
+                                  )}
+                                </span>
+                                <span className="flex-1">{children}</span>
+                              </li>
+                            );
+                          },
+                          blockquote: ({ children }) => (
+                            <blockquote className="my-6 border-l-4 border-accent bg-accent/5 px-5 py-4 rounded-r-sm">
+                              <div className="text-sm italic text-foreground/70 font-serif leading-relaxed [&>p]:mb-0">
+                                {children}
+                              </div>
+                            </blockquote>
+                          ),
+                          code: ({ className, children, ...props }) => {
+                            const isBlock = className?.includes('language-');
+                            const language = className?.replace('language-', '') || '';
+                            if (isBlock) {
+                              return (
+                                <div className="my-6 border border-border rounded-sm overflow-hidden">
+                                  <div className="flex items-center justify-between px-4 py-2 bg-primary border-b border-border">
+                                    <div className="flex items-center gap-2">
+                                      <Code2 size={12} className="text-accent" />
+                                      <span className="text-[9px] font-bold uppercase tracking-widest text-primary-foreground/50">
+                                        {language || 'Code'}
+                                      </span>
+                                    </div>
+                                    <button
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(String(children));
+                                        toast.success('Code copied');
+                                      }}
+                                      className="text-primary-foreground/40 hover:text-accent transition-colors"
+                                    >
+                                      <Copy size={12} />
+                                    </button>
+                                  </div>
+                                  <pre className="p-4 bg-primary/95 overflow-x-auto">
+                                    <code className="text-xs md:text-sm font-mono text-primary-foreground/90 leading-relaxed">
+                                      {children}
+                                    </code>
+                                  </pre>
+                                </div>
+                              );
+                            }
+                            return (
+                              <code className="px-1.5 py-0.5 bg-muted text-foreground text-xs font-mono rounded-sm border border-border/50">
+                                {children}
+                              </code>
+                            );
+                          },
+                          pre: ({ children }) => <>{children}</>,
+                          table: ({ children }) => (
+                            <div className="my-6 border border-border rounded-sm overflow-hidden">
+                              <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/50 border-b border-border">
+                                <Table2 size={12} className="text-accent" />
+                                <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Table</span>
+                              </div>
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                  {children}
+                                </table>
+                              </div>
+                            </div>
+                          ),
+                          thead: ({ children }) => (
+                            <thead className="bg-primary text-primary-foreground">
+                              {children}
+                            </thead>
+                          ),
+                          th: ({ children }) => (
+                            <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest border-b border-primary-foreground/10">
+                              {children}
+                            </th>
+                          ),
+                          td: ({ children }) => (
+                            <td className="px-4 py-3 text-sm text-foreground/80 border-b border-border/50 leading-relaxed">
+                              {children}
+                            </td>
+                          ),
+                          tr: ({ children, ...props }) => (
+                            <tr className="hover:bg-muted/30 transition-colors even:bg-muted/10">
+                              {children}
+                            </tr>
+                          ),
+                          hr: () => (
+                            <div className="my-8 flex items-center gap-4">
+                              <div className="flex-1 h-px bg-border" />
+                              <div className="w-1.5 h-1.5 bg-accent rounded-full" />
+                              <div className="flex-1 h-px bg-border" />
+                            </div>
+                          ),
+                          a: ({ href, children }) => (
+                            <a href={href} target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent/80 underline underline-offset-2 transition-colors">
+                              {children}
+                            </a>
+                          ),
+                          img: ({ src, alt }) => (
+                            <figure className="my-6">
+                              <img src={src} alt={alt || ''} className="max-w-full rounded-sm border border-border shadow-sm" />
+                              {alt && <figcaption className="mt-2 text-[10px] text-muted-foreground text-center italic">{alt}</figcaption>}
+                            </figure>
+                          ),
+                        }}
+                      >
+                        {response}
+                      </ReactMarkdown>
+                    </div>
+                  </div>
+
+                  {/* Footer Stats */}
+                  <div className="px-6 md:px-10 py-3 border-t border-border bg-muted/20 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <span className="text-[9px] font-mono text-muted-foreground/50">
+                        {response.split(/\s+/).length} words
+                      </span>
+                      <span className="text-[9px] font-mono text-muted-foreground/50">
+                        {response.length} chars
+                      </span>
+                    </div>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">
+                      StudyBuddy AI · {currentMode.label}
+                    </span>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Loading skeleton */}
+              {isLoading && !response && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="bg-card border border-border rounded-sm p-8 md:p-12"
+                >
+                  <div className="space-y-4 animate-pulse">
+                    <div className="h-6 bg-muted rounded-sm w-2/3" />
+                    <div className="h-4 bg-muted rounded-sm w-full" />
+                    <div className="h-4 bg-muted rounded-sm w-5/6" />
+                    <div className="h-4 bg-muted rounded-sm w-4/5" />
+                    <div className="h-20 bg-muted rounded-sm w-full mt-6" />
+                    <div className="h-4 bg-muted rounded-sm w-3/4" />
+                    <div className="h-4 bg-muted rounded-sm w-full" />
+                  </div>
+                </motion.div>
               )}
             </motion.div>
           )}
