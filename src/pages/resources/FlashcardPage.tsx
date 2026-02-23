@@ -2,11 +2,12 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, CreditCard, Send, Loader2, Sparkles, RefreshCcw,
+  CreditCard, Send, Loader2, Sparkles, RefreshCcw,
   Upload, FileIcon, Trash2, ImageIcon, ChevronLeft, ChevronRight,
   RotateCcw, Shuffle, Filter
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
+import AIToolsHeader from '@/components/resources/AIToolsHeader';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -154,33 +155,15 @@ const FlashcardPage = () => {
     <div className="min-h-screen bg-background">
       <SEO title="AI Flashcards - Study Smart" description="Generate flashcards from any topic or material using AI." />
 
-      {/* Compact header instead of hero */}
-      <div className="bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4 pt-24 pb-6 max-w-6xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate('/resources')}
-                className="p-2 border border-primary-foreground/20 hover:border-accent transition-colors rounded-sm"
-              >
-                <ArrowLeft size={14} />
-              </button>
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <CreditCard size={14} className="text-accent" />
-                  <span className="text-[9px] font-bold uppercase tracking-[0.4em] text-primary-foreground/50">AI-Powered</span>
-                </div>
-                <h1 className="text-xl md:text-2xl font-serif font-bold">Flashcards</h1>
-              </div>
-            </div>
-            {cards.length > 0 && (
-              <div className="text-[10px] font-bold uppercase tracking-widest text-primary-foreground/40">
-                {mastered.size}/{cards.length} Mastered
-              </div>
-            )}
+      <AIToolsHeader
+        title="Flashcards"
+        icon={CreditCard}
+        rightContent={cards.length > 0 ? (
+          <div className="text-[10px] font-bold uppercase tracking-widest text-primary-foreground/40">
+            {mastered.size}/{cards.length} Mastered
           </div>
-        </div>
-      </div>
+        ) : undefined}
+      />
 
       <div className="container mx-auto px-4 max-w-6xl py-8">
         {cards.length === 0 ? (

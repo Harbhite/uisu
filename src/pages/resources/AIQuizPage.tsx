@@ -12,7 +12,6 @@ import {
   ChevronRight,
   ChevronLeft,
   Trophy,
-  ArrowLeft,
   Sliders,
   Trash2,
   ImageIcon,
@@ -21,6 +20,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { SEO } from '@/components/SEO';
+import AIToolsHeader from '@/components/resources/AIToolsHeader';
 
 type Rigidity = 'Standard' | 'Strict' | 'Rigid';
 
@@ -213,7 +213,7 @@ const QuizView: React.FC<QuizViewProps> = ({
             onClick={resetQuiz}
             className="group flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent transition-colors mb-3"
           >
-            <ArrowLeft size={12} />
+            <ChevronLeft size={12} />
             <span>Exit Quiz</span>
           </button>
           <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Examination</div>
@@ -401,7 +401,7 @@ const ResultView: React.FC<ResultViewProps> = ({
             onClick={() => navigate('/resources')}
             className="w-full py-3 border border-border text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:border-accent hover:text-accent transition-all rounded-lg"
           >
-            <ArrowLeft size={14} /> Back to Resources
+            <ChevronLeft size={14} /> Back to Resources
           </button>
         </div>
 
@@ -610,26 +610,7 @@ const AIQuizPage = () => {
     <div className="min-h-screen bg-background">
       <SEO title="AI Quiz - Test Your Knowledge" description="Upload study materials and get 25 tailor-made quiz questions powered by AI." />
 
-      {/* Compact header */}
-      <div className="bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4 pt-24 pb-6 max-w-6xl">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/resources')}
-              className="p-2 border border-primary-foreground/20 hover:border-accent transition-colors rounded-sm"
-            >
-              <ArrowLeft size={14} />
-            </button>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <BrainCircuit size={14} className="text-accent" />
-                <span className="text-[9px] font-bold uppercase tracking-[0.4em] text-primary-foreground/50">AI-Powered Assessment</span>
-              </div>
-              <h1 className="text-xl md:text-2xl font-serif font-bold">AI Quiz</h1>
-            </div>
-          </div>
-        </div>
-      </div>
+      <AIToolsHeader title="AI Quiz" subtitle="AI-Powered Assessment" icon={BrainCircuit} />
 
       <div className="container mx-auto px-4 max-w-6xl py-10">
         <AnimatePresence mode="wait">
