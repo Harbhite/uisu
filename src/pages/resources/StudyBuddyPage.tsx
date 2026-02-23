@@ -11,6 +11,7 @@ import {
 import { SEO } from '@/components/SEO';
 import AIToolsHeader from '@/components/resources/AIToolsHeader';
 import AsciiDiagramViewer from '@/components/resources/AsciiDiagramViewer';
+import MermaidDiagram from '@/components/resources/MermaidDiagram';
 import { toast } from 'sonner';
 
 type Mode = 'explainer' | 'planner' | 'synthesizer' | 'debater';
@@ -592,10 +593,20 @@ const StudyBuddyPage = () => {
                             const language = className?.replace('language-', '') || '';
                             const text = String(children).replace(/\n$/, '');
 
+                            // Detect Mermaid diagrams: explicit language or auto-detect syntax
+                            const mermaidLangs = ['mermaid', 'mmd'];
+                            const mermaidKeywords = /^(graph\s+(TD|TB|LR|RL|BT)|flowchart\s+(TD|TB|LR|RL|BT)|sequenceDiagram|classDiagram|stateDiagram|erDiagram|gantt|pie|gitgraph|mindmap|timeline|journey|quadrantChart|sankey|xychart|block-beta)/m;
+                            const isMermaid = mermaidLangs.includes(language.toLowerCase()) ||
+                              (isBlock && mermaidKeywords.test(text.trim()));
+
+                            if (isMermaid) {
+                              return <MermaidDiagram content={text} label={language || 'Flowchart'} />;
+                            }
+
                             // Detect ASCII diagrams: language hints or content with box-drawing chars
-                            const diagramLangs = ['ascii', 'diagram', 'art', 'box', 'flowchart', 'tree', 'graph'];
+                            const diagramLangs = ['ascii', 'diagram', 'art', 'box', 'tree'];
                             const isDiagram = diagramLangs.includes(language.toLowerCase()) ||
-                              (isBlock && /[┌┐└┘├┤┬┴┼│─╔╗╚╝║═\+\-\|\\\/\>\<]{4,}/.test(text) && text.split('\n').length > 3);
+                              (isBlock && /[┌┐└┘├┤┬┴┼│─╔╗╚╝║═]{4,}/.test(text) && text.split('\n').length > 3);
 
                             if (isDiagram) {
                               return <AsciiDiagramViewer content={text} label={language || 'Diagram'} />;
