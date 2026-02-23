@@ -463,16 +463,32 @@ const ResultView: React.FC<ResultViewProps> = ({
 
 const AIQuizPage = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState<'upload' | 'generating' | 'quiz' | 'result'>('upload');
-  const [inputText, setInputText] = useState('');
+  const [step, setStep] = useState<'upload' | 'generating' | 'quiz' | 'result'>(() => {
+    const saved = localStorage.getItem('aiquiz_state');
+    if (saved) {
+      try { return JSON.parse(saved).step || 'upload'; } catch { return 'upload'; }
+    }
+    return 'upload';
+  });
+  const [inputText, setInputText] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('aiquiz_state') || '{}').inputText || ''; } catch { return ''; }
+  });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [rigidity, setRigidity] = useState<Rigidity>('Standard');
+  const [rigidity, setRigidity] = useState<Rigidity>(() => {
+    try { return JSON.parse(localStorage.getItem('aiquiz_state') || '{}').rigidity || 'Standard'; } catch { return 'Standard'; }
+  });
   const [questions, setQuestions] = useState<Question[]>([]);
   const [userAnswers, setUserAnswers] = useState<number[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [timeElapsed, setTimeElapsed] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<number | null>(null);
+
+  // Persist state to localStorage
+  useEffect(() => {
+    const state = { inputText, rigidity, step: step === 'generating' ? 'upload' : step };
+    localStorage.setItem('aiquiz_state', JSON.stringify(state));
+  }, [inputText, rigidity, step]);
 
   useEffect(() => {
     return () => stopTimer();
@@ -557,6 +573,10 @@ const AIQuizPage = () => {
     const newAnswers = [...userAnswers];
     newAnswers[currentIdx] = idx;
     setUserAnswers(newAnswers);
+    // Auto-advance to next question after a brief delay
+    if (currentIdx < questions.length - 1) {
+      setTimeout(() => setCurrentIdx(prev => prev + 1), 350);
+    }
   };
 
   const goToPrevious = () => {
@@ -583,6 +603,7 @@ const AIQuizPage = () => {
     setCurrentIdx(0);
     stopTimer();
     setTimeElapsed(0);
+    localStorage.removeItem('aiquiz_state');
   };
 
   return (

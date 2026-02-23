@@ -71,10 +71,18 @@ const readFileAsText = (file: File): Promise<string> => {
 
 const StudyBuddyPage = () => {
   const navigate = useNavigate();
-  const [activeMode, setActiveMode] = useState<Mode>('explainer');
-  const [topic, setTopic] = useState('');
-  const [material, setMaterial] = useState('');
-  const [response, setResponse] = useState('');
+  const [activeMode, setActiveMode] = useState<Mode>(() => {
+    try { return (JSON.parse(localStorage.getItem('studybuddy_state') || '{}').activeMode as Mode) || 'explainer'; } catch { return 'explainer'; }
+  });
+  const [topic, setTopic] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('studybuddy_state') || '{}').topic || ''; } catch { return ''; }
+  });
+  const [material, setMaterial] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('studybuddy_state') || '{}').material || ''; } catch { return ''; }
+  });
+  const [response, setResponse] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('studybuddy_state') || '{}').response || ''; } catch { return ''; }
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
@@ -84,6 +92,12 @@ const StudyBuddyPage = () => {
   const responseRef = useRef<HTMLDivElement>(null);
 
   const currentMode = modes.find(m => m.id === activeMode)!;
+
+  // Persist state to localStorage
+  React.useEffect(() => {
+    const state = { activeMode, topic, material, response };
+    localStorage.setItem('studybuddy_state', JSON.stringify(state));
+  }, [activeMode, topic, material, response]);
 
   const STUDY_BUDDY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/study-buddy`;
 
@@ -270,6 +284,7 @@ const StudyBuddyPage = () => {
     setMaterial('');
     setGeneratedImage(null);
     setSelectedFile(null);
+    localStorage.removeItem('studybuddy_state');
   };
 
   return (
