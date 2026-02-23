@@ -6,7 +6,8 @@ import remarkGfm from 'remark-gfm';
 import {
   BookOpen, CalendarDays, Layers, Swords,
   Send, Loader2, Sparkles, ImageIcon, RefreshCcw, Copy, Check,
-  Upload, FileIcon, Trash2, Table2, Code2, Download
+  Upload, FileIcon, Trash2, Table2, Code2, Download,
+  ChevronDown, ChevronUp, Eye, EyeOff
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import AIToolsHeader from '@/components/resources/AIToolsHeader';
@@ -71,6 +72,42 @@ const readFileAsText = (file: File): Promise<string> => {
       reader.readAsText(file);
     }
   });
+};
+
+// Collapsible wrapper for diagram blocks
+const CollapsibleDiagram: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="my-6 border border-accent/30 rounded-lg overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-4 py-2.5 bg-accent/10 hover:bg-accent/15 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          {open ? <Eye size={13} className="text-accent" /> : <EyeOff size={13} className="text-muted-foreground" />}
+          <span className="text-[9px] font-bold uppercase tracking-widest text-accent">{label}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+            {open ? 'Hide' : 'Show'}
+          </span>
+          {open ? <ChevronUp size={13} className="text-muted-foreground" /> : <ChevronDown size={13} className="text-muted-foreground" />}
+        </div>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 };
 
 const StudyBuddyPage = () => {
@@ -600,7 +637,11 @@ const StudyBuddyPage = () => {
                               (isBlock && mermaidKeywords.test(text.trim()));
 
                             if (isMermaid) {
-                              return <MermaidDiagram content={text} label={language || 'Flowchart'} />;
+                              return (
+                                <CollapsibleDiagram label={language || 'Flowchart'}>
+                                  <MermaidDiagram content={text} label={language || 'Flowchart'} />
+                                </CollapsibleDiagram>
+                              );
                             }
 
                             // Detect ASCII diagrams: language hints or content with box-drawing chars
@@ -609,7 +650,11 @@ const StudyBuddyPage = () => {
                               (isBlock && /[┌┐└┘├┤┬┴┼│─╔╗╚╝║═]{4,}/.test(text) && text.split('\n').length > 3);
 
                             if (isDiagram) {
-                              return <AsciiDiagramViewer content={text} label={language || 'Diagram'} />;
+                              return (
+                                <CollapsibleDiagram label={language || 'ASCII Diagram'}>
+                                  <AsciiDiagramViewer content={text} label={language || 'Diagram'} />
+                                </CollapsibleDiagram>
+                              );
                             }
 
                             if (isBlock) {
