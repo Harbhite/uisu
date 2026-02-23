@@ -10,6 +10,7 @@ import {
   Clock,
   RefreshCcw,
   ChevronRight,
+  ChevronLeft,
   Trophy,
   ArrowLeft,
   Sliders,
@@ -30,15 +31,23 @@ interface Question {
   explanation: string;
 }
 
-interface AIQuizResponse {
-  questions: Question[];
-  error?: string;
-}
-
 const formatTime = (seconds: number) => {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return `${m}:${s.toString().padStart(2, '0')}`;
+};
+
+const readFileAsText = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    if (file.type.startsWith('image/')) {
+      reader.readAsDataURL(file);
+    } else {
+      reader.readAsText(file);
+    }
+  });
 };
 
 interface UploadViewProps {
@@ -51,6 +60,7 @@ interface UploadViewProps {
   rigidity: Rigidity;
   setRigidity: (r: Rigidity) => void;
   generateQuiz: () => void;
+  navigate: (path: string) => void;
 }
 
 const UploadView: React.FC<UploadViewProps> = ({
@@ -63,6 +73,7 @@ const UploadView: React.FC<UploadViewProps> = ({
   rigidity,
   setRigidity,
   generateQuiz,
+  navigate,
 }) => (
   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-5xl mx-auto">
     <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*,.pdf,.docx,.doc,.txt,.xlsx,.xls,.pptx,.ppt" />
@@ -168,8 +179,12 @@ interface QuizViewProps {
   currentIdx: number;
   userAnswers: number[];
   handleAnswer: (idx: number) => void;
+  goToPrevious: () => void;
+  goToNext: () => void;
+  finishQuiz: () => void;
   timeElapsed: number;
   rigidity: Rigidity;
+  resetQuiz: () => void;
 }
 
 const QuizView: React.FC<QuizViewProps> = ({
@@ -177,17 +192,30 @@ const QuizView: React.FC<QuizViewProps> = ({
   currentIdx,
   userAnswers,
   handleAnswer,
+  goToPrevious,
+  goToNext,
+  finishQuiz,
   timeElapsed,
   rigidity,
+  resetQuiz,
 }) => {
   const q = questions[currentIdx];
   if (!q) return null;
   const progress = ((currentIdx + 1) / questions.length) * 100;
+  const answeredCount = userAnswers.filter(a => a !== undefined).length;
+  const allAnswered = answeredCount === questions.length;
 
   return (
     <div className="max-w-5xl mx-auto pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
         <div>
+          <button
+            onClick={resetQuiz}
+            className="group flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent transition-colors mb-3"
+          >
+            <ArrowLeft size={12} />
+            <span>Exit Quiz</span>
+          </button>
           <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Examination</div>
           <h2 className="font-serif text-2xl md:text-3xl text-primary">Quiz — {rigidity} Mode</h2>
         </div>
@@ -211,25 +239,61 @@ const QuizView: React.FC<QuizViewProps> = ({
               </div>
 
               <div className="space-y-3">
-                {q.options.map((opt, i) => (
+                {q.options.map((opt, i) => {
+                  const isSelected = userAnswers[currentIdx] === i;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => handleAnswer(i)}
+                      className={`w-full text-left p-4 md:p-5 bg-card border group transition-all flex items-center gap-4 shadow-sm hover:shadow-md rounded-lg ${
+                        isSelected ? 'border-accent bg-accent/5' : 'border-border hover:border-primary'
+                      }`}
+                    >
+                      <div className={`w-9 h-9 border flex items-center justify-center font-bold text-xs shrink-0 rounded-md transition-colors ${
+                        isSelected
+                          ? 'bg-accent text-accent-foreground border-accent'
+                          : 'border-border bg-muted/50 text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary'
+                      }`}>
+                        {String.fromCharCode(65 + i)}
+                      </div>
+                      <span className="text-sm md:text-base text-foreground font-light">{opt}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Navigation Controls */}
+              <div className="flex items-center justify-between pt-4 border-t border-border">
+                <button
+                  onClick={goToPrevious}
+                  disabled={currentIdx === 0}
+                  className="flex items-center gap-2 px-4 py-3 border border-border text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:border-accent transition-all disabled:opacity-30 disabled:cursor-not-allowed rounded-lg"
+                >
+                  <ChevronLeft size={14} /> Previous
+                </button>
+
+                {currentIdx < questions.length - 1 ? (
                   <button
-                    key={i}
-                    onClick={() => handleAnswer(i)}
-                    disabled={userAnswers[currentIdx] !== undefined}
-                    className="w-full text-left p-4 md:p-5 bg-card border border-border hover:border-primary group transition-all flex items-center gap-4 shadow-sm hover:shadow-md disabled:opacity-70 rounded-lg"
+                    onClick={goToNext}
+                    className="flex items-center gap-2 px-4 py-3 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest hover:bg-accent hover:text-accent-foreground transition-all rounded-lg"
                   >
-                    <div className="w-9 h-9 border border-border bg-muted/50 flex items-center justify-center font-bold text-xs text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-colors shrink-0 rounded-md">
-                      {String.fromCharCode(65 + i)}
-                    </div>
-                    <span className="text-sm md:text-base text-foreground font-light">{opt}</span>
+                    Next <ChevronRight size={14} />
                   </button>
-                ))}
+                ) : (
+                  <button
+                    onClick={finishQuiz}
+                    disabled={!allAnswered}
+                    className="flex items-center gap-2 px-5 py-3 bg-accent text-accent-foreground text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed rounded-lg"
+                  >
+                    Finish Quiz <Trophy size={14} />
+                  </button>
+                )}
               </div>
             </motion.div>
           </AnimatePresence>
         </div>
 
-        <div className="lg:col-span-4 mt-4 lg:mt-0">
+        <div className="lg:col-span-4 mt-4 lg:mt-0 space-y-4">
           <div className="bg-primary text-primary-foreground p-5 md:p-6 border-l-4 border-accent relative overflow-hidden rounded-lg">
             <div className="absolute top-0 right-0 p-4 opacity-5"><BrainCircuit size={80} /></div>
             <div className="relative z-10">
@@ -245,9 +309,35 @@ const QuizView: React.FC<QuizViewProps> = ({
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[9px] font-bold uppercase text-primary-foreground/40">Answered</span>
-                  <span className="text-xs font-bold text-primary-foreground">{userAnswers.filter(a => a !== undefined).length}/{questions.length}</span>
+                  <span className="text-xs font-bold text-primary-foreground">{answeredCount}/{questions.length}</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Question Navigator */}
+          <div className="bg-card border border-border p-4 rounded-lg">
+            <h4 className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Question Map</h4>
+            <div className="grid grid-cols-5 gap-1.5">
+              {questions.map((_, i) => {
+                const isAnswered = userAnswers[i] !== undefined;
+                const isCurrent = i === currentIdx;
+                return (
+                  <button
+                    key={i}
+                    onClick={() => {/* allow direct navigation */ }}
+                    className={`w-full aspect-square flex items-center justify-center text-[10px] font-bold rounded-md transition-all ${
+                      isCurrent
+                        ? 'bg-accent text-accent-foreground ring-2 ring-accent ring-offset-1'
+                        : isAnswered
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -262,6 +352,7 @@ interface ResultViewProps {
   resetQuiz: () => void;
   timeElapsed: number;
   userAnswers: number[];
+  navigate: (path: string) => void;
 }
 
 const ResultView: React.FC<ResultViewProps> = ({
@@ -270,6 +361,7 @@ const ResultView: React.FC<ResultViewProps> = ({
   resetQuiz,
   timeElapsed,
   userAnswers,
+  navigate,
 }) => {
   const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
   const rank = percentage >= 80 ? 'Distinction' : percentage >= 60 ? 'Merit' : percentage >= 40 ? 'Pass' : 'Needs Review';
@@ -304,6 +396,12 @@ const ResultView: React.FC<ResultViewProps> = ({
             className="w-full py-4 bg-accent text-accent-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground border border-accent transition-all rounded-lg"
           >
             <RefreshCcw size={14} /> New Quiz
+          </button>
+          <button
+            onClick={() => navigate('/resources')}
+            className="w-full py-3 border border-border text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:border-accent hover:text-accent transition-all rounded-lg"
+          >
+            <ArrowLeft size={14} /> Back to Resources
           </button>
         </div>
 
@@ -382,7 +480,12 @@ const AIQuizPage = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
+      const file = e.target.files[0];
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('File too large. Max 10MB.');
+        return;
+      }
+      setSelectedFile(file);
     }
   };
 
@@ -394,19 +497,13 @@ const AIQuizPage = () => {
   const generateQuiz = async () => {
     setStep('generating');
     try {
-      let fileName = '';
       let fileContent = '';
+      let fileName = '';
 
       if (selectedFile) {
-        // Read file content if text
-        if (selectedFile.type.startsWith('text/') || selectedFile.name.endsWith('.txt') || selectedFile.name.endsWith('.md')) {
-          fileContent = await selectedFile.text();
-        }
-
-        const fileExt = selectedFile.name.split('.').pop();
-        fileName = `${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage.from('quiz-materials').upload(fileName, selectedFile);
-        if (uploadError) throw uploadError;
+        fileName = selectedFile.name;
+        // Read file content client-side instead of uploading to storage
+        fileContent = await readFileAsText(selectedFile);
       }
 
       const { data, error } = await supabase.functions.invoke('ai-quiz', {
@@ -460,13 +557,19 @@ const AIQuizPage = () => {
     const newAnswers = [...userAnswers];
     newAnswers[currentIdx] = idx;
     setUserAnswers(newAnswers);
+  };
 
-    if (currentIdx < questions.length - 1) {
-      setTimeout(() => setCurrentIdx(currentIdx + 1), 400);
-    } else {
-      stopTimer();
-      setTimeout(() => setStep('result'), 400);
-    }
+  const goToPrevious = () => {
+    if (currentIdx > 0) setCurrentIdx(currentIdx - 1);
+  };
+
+  const goToNext = () => {
+    if (currentIdx < questions.length - 1) setCurrentIdx(currentIdx + 1);
+  };
+
+  const finishQuiz = () => {
+    stopTimer();
+    setStep('result');
   };
 
   const score = userAnswers.reduce((acc, val, i) => (val === questions[i]?.correctIndex ? acc + 1 : acc), 0);
@@ -526,6 +629,7 @@ const AIQuizPage = () => {
               rigidity={rigidity}
               setRigidity={setRigidity}
               generateQuiz={generateQuiz}
+              navigate={navigate}
             />
           )}
           {step === 'generating' && <GeneratingView key="generating" />}
@@ -536,8 +640,12 @@ const AIQuizPage = () => {
               currentIdx={currentIdx}
               userAnswers={userAnswers}
               handleAnswer={handleAnswer}
+              goToPrevious={goToPrevious}
+              goToNext={goToNext}
+              finishQuiz={finishQuiz}
               timeElapsed={timeElapsed}
               rigidity={rigidity}
+              resetQuiz={resetQuiz}
             />
           )}
           {step === 'result' && (
@@ -548,6 +656,7 @@ const AIQuizPage = () => {
               resetQuiz={resetQuiz}
               timeElapsed={timeElapsed}
               userAnswers={userAnswers}
+              navigate={navigate}
             />
           )}
         </AnimatePresence>
