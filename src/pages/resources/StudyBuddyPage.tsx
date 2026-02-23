@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import {
   ArrowLeft, BookOpen, CalendarDays, Layers, CreditCard,
-  Send, Loader2, Sparkles, ImageIcon, RefreshCcw, Copy, Check
+  Send, Loader2, Sparkles, ImageIcon, RefreshCcw, Copy, Check,
+  Upload, FileIcon, Trash2
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
-import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
 type Mode = 'explainer' | 'planner' | 'synthesizer' | 'examiner';
@@ -56,6 +56,19 @@ const modes: ModeConfig[] = [
   },
 ];
 
+const readFileAsText = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    if (file.type.startsWith('image/')) {
+      reader.readAsDataURL(file);
+    } else {
+      reader.readAsText(file);
+    }
+  });
+};
+
 const StudyBuddyPage = () => {
   const navigate = useNavigate();
   const [activeMode, setActiveMode] = useState<Mode>('explainer');
@@ -66,15 +79,33 @@ const StudyBuddyPage = () => {
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const responseRef = useRef<HTMLDivElement>(null);
 
   const currentMode = modes.find(m => m.id === activeMode)!;
 
   const STUDY_BUDDY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/study-buddy`;
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('File too large. Max 10MB.');
+        return;
+      }
+      setSelectedFile(file);
+    }
+  };
+
+  const removeFile = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleSubmit = useCallback(async () => {
-    if (!topic.trim() && !material.trim()) {
-      toast.error('Please enter a topic or paste some material');
+    if (!topic.trim() && !material.trim() && !selectedFile) {
+      toast.error('Please enter a topic, paste material, or upload a file');
       return;
     }
 
@@ -83,13 +114,24 @@ const StudyBuddyPage = () => {
     setGeneratedImage(null);
 
     try {
+      let fileContent = '';
+      if (selectedFile) {
+        fileContent = await readFileAsText(selectedFile);
+      }
+
+      const bodyPayload: Record<string, any> = {
+        mode: activeMode,
+        topic: topic.trim(),
+        material: material.trim() + (fileContent ? `\n\n--- UPLOADED FILE (${selectedFile?.name}) ---\n${fileContent}` : ''),
+      };
+
       const resp = await fetch(STUDY_BUDDY_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ mode: activeMode, topic: topic.trim(), material: material.trim() }),
+        body: JSON.stringify(bodyPayload),
       });
 
       if (resp.status === 429) {
@@ -145,10 +187,8 @@ const StudyBuddyPage = () => {
         }
       }
 
-      // Ensure final content is set
       setResponse(fullText);
 
-      // Final flush
       if (textBuffer.trim()) {
         for (let raw of textBuffer.split('\n')) {
           if (!raw) continue;
@@ -173,10 +213,10 @@ const StudyBuddyPage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [activeMode, topic, material, STUDY_BUDDY_URL]);
+  }, [activeMode, topic, material, selectedFile, STUDY_BUDDY_URL]);
 
   const handleGenerateImage = useCallback(async () => {
-    if (!topic.trim() && !material.trim()) {
+    if (!topic.trim() && !material.trim() && !selectedFile) {
       toast.error('Enter a topic first to generate a visual');
       return;
     }
@@ -215,7 +255,7 @@ const StudyBuddyPage = () => {
     } finally {
       setIsGeneratingImage(false);
     }
-  }, [topic, material, activeMode, STUDY_BUDDY_URL]);
+  }, [topic, material, selectedFile, activeMode, STUDY_BUDDY_URL]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(response);
@@ -229,6 +269,7 @@ const StudyBuddyPage = () => {
     setTopic('');
     setMaterial('');
     setGeneratedImage(null);
+    setSelectedFile(null);
   };
 
   return (
@@ -320,6 +361,40 @@ const StudyBuddyPage = () => {
                 placeholder="Paste lecture notes, textbook excerpts, or any study material..."
                 className="w-full bg-muted/50 border border-border p-3 md:p-4 text-sm outline-none focus:border-accent transition-colors resize-none h-32 md:h-40 rounded-lg"
               />
+
+              {/* File Upload */}
+              <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*,.pdf,.docx,.doc,.txt,.xlsx,.xls,.pptx,.ppt,.md" />
+
+              <AnimatePresence>
+                {selectedFile && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-4 p-4 bg-primary text-primary-foreground flex items-center justify-between border-l-4 border-accent rounded-lg"
+                  >
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      {selectedFile.type.startsWith('image/') ? <ImageIcon size={16} className="text-accent" /> : <FileIcon size={16} className="text-accent" />}
+                      <div className="overflow-hidden">
+                        <div className="text-[9px] font-bold uppercase tracking-widest">Attached Material</div>
+                        <div className="text-[10px] font-mono truncate max-w-[200px] md:max-w-none">{selectedFile.name}</div>
+                      </div>
+                    </div>
+                    <button onClick={removeFile} className="p-2 hover:bg-destructive transition-colors text-primary-foreground/50 hover:text-primary-foreground rounded-full">
+                      <Trash2 size={14} />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="mt-4">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-2 px-4 py-3 border border-border text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:border-accent transition-all rounded-lg"
+                >
+                  <Upload size={14} /> Attach File
+                </button>
+              </div>
             </div>
           </div>
 
@@ -335,7 +410,7 @@ const StudyBuddyPage = () => {
 
             <button
               onClick={handleSubmit}
-              disabled={isLoading || (!topic.trim() && !material.trim())}
+              disabled={isLoading || (!topic.trim() && !material.trim() && !selectedFile)}
               className="w-full py-5 bg-accent text-accent-foreground font-bold uppercase tracking-[0.2em] text-xs border border-accent hover:bg-primary hover:text-primary-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 rounded-lg"
             >
               {isLoading ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : <><Send size={16} /> Generate</>}
@@ -343,7 +418,7 @@ const StudyBuddyPage = () => {
 
             <button
               onClick={handleGenerateImage}
-              disabled={isGeneratingImage || (!topic.trim() && !material.trim())}
+              disabled={isGeneratingImage || (!topic.trim() && !material.trim() && !selectedFile)}
               className="w-full py-4 border border-border text-muted-foreground font-bold uppercase tracking-[0.2em] text-[10px] hover:border-accent hover:text-accent transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 rounded-lg"
             >
               {isGeneratingImage ? <><Loader2 size={14} className="animate-spin" /> Generating Visual...</> : <><ImageIcon size={14} /> Generate Visual</>}
