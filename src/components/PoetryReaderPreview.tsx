@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Eye, X, Smartphone, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import DOMPurify from 'dompurify';
 import { PoetryLayout } from './PoetryLayoutSelector';
 import { PoetryStanza } from './PoetryEditor';
 import { Json } from '@/integrations/supabase/types';
@@ -88,7 +89,7 @@ const renderPreviewContent = (content: Json): React.ReactNode => {
             spacing === 'normal' && 'leading-relaxed mb-4',
             spacing === 'loose' && 'leading-loose mb-6'
           )}
-          dangerouslySetInnerHTML={{ __html: block.data.text }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(block.data.text) }}
         />
       );
     }

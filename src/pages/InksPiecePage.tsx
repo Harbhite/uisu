@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Clock, Feather, Mic, FileText, Quote, Printer } from 'lucide-react';
+import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
@@ -167,14 +168,14 @@ const InksPiecePage = () => {
         }
         
         case 'paragraph':
-          return <p key={index} className="font-serif text-lg md:text-xl text-foreground/90 mb-6 leading-relaxed" dangerouslySetInnerHTML={{ __html: data.text || '' }} />;
+          return <p key={index} className="font-serif text-lg md:text-xl text-foreground/90 mb-6 leading-relaxed" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(data.text || '') }} />;
         
         case 'list': {
           const ListTag = data.style === 'ordered' ? 'ol' : 'ul';
           return (
             <ListTag key={index} className={`font-serif text-lg text-foreground/90 mb-6 ml-6 leading-relaxed ${data.style === 'ordered' ? 'list-decimal' : 'list-disc'}`}>
               {(data.items || []).map((item: string, i: number) => (
-                <li key={i} className="mb-2" dangerouslySetInnerHTML={{ __html: item }} />
+                <li key={i} className="mb-2" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(item) }} />
               ))}
             </ListTag>
           );
@@ -183,7 +184,7 @@ const InksPiecePage = () => {
         case 'quote':
           return (
             <blockquote key={index} className="border-l-4 border-accent pl-6 md:pl-8 my-8 md:my-10">
-              <p className="font-serif text-xl md:text-2xl font-semibold text-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: data.text || '' }} />
+              <p className="font-serif text-xl md:text-2xl font-semibold text-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(data.text || '') }} />
               {data.caption && (
                 <cite className="font-sans text-sm text-muted-foreground mt-4 block not-italic">— {data.caption}</cite>
               )}
@@ -208,7 +209,7 @@ const InksPiecePage = () => {
                   {(data.content || []).map((row: string[], rowIndex: number) => (
                     <tr key={rowIndex}>
                       {row.map((cell: string, cellIndex: number) => (
-                        <td key={cellIndex} className="border border-border p-2" dangerouslySetInnerHTML={{ __html: cell }} />
+                        <td key={cellIndex} className="border border-border p-2" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(cell) }} />
                       ))}
                     </tr>
                   ))}

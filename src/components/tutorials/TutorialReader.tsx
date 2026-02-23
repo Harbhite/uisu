@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import DOMPurify from 'dompurify';
 import {
   Type,
   Minus,
@@ -200,7 +201,7 @@ const TutorialReader = ({ title, content, author, readTime = "5 min read" }: Tut
           style={{ fontSize: `${fontSize}px` }}
         >
           {/* In a real app, render safe HTML or Markdown here */}
-          <div dangerouslySetInnerHTML={{ __html: content }} />
+          <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }} />
 
           {/* Placeholder content if empty (since mock data might be short) */}
           {!content && (

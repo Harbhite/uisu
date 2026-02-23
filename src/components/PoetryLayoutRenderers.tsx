@@ -7,6 +7,7 @@ import { SocialShare } from '@/components/SocialShare';
 import { InkComments } from '@/components/InkComments';
 import { PoetryLayout } from './PoetryLayoutSelector';
 import { cn } from '@/lib/utils';
+import DOMPurify from 'dompurify';
 
 interface PoetryPiece {
   id: string;
@@ -68,7 +69,7 @@ const renderStanzaContent = (content: Json, baseClassName?: string) => {
             spacing === 'normal' && 'leading-relaxed mb-4',
             spacing === 'loose' && 'leading-loose mb-6'
           )}
-          dangerouslySetInnerHTML={{ __html: block.data.text }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(block.data.text) }}
         />
       );
     }
