@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Check, HelpCircle, X, CalendarPlus, Users, Loader2 } from 'lucide-react';
+import { Check, HelpCircle, X, CalendarPlus, Users, Loader2, Bell, BellOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -30,6 +30,7 @@ export const EventRSVP: React.FC<EventRSVPProps> = ({
   const [goingCount, setGoingCount] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [reminders, setReminders] = useState({ remind_24h: false, remind_1h: false });
 
   useEffect(() => {
     const fetchRSVPData = async () => {
@@ -40,13 +41,14 @@ export const EventRSVP: React.FC<EventRSVPProps> = ({
         // Get user's RSVP status
         const { data: rsvpData } = await supabase
           .from('event_rsvps')
-          .select('status')
+          .select('status, remind_24h, remind_1h')
           .eq('event_id', eventId)
           .eq('user_id', user.id)
           .maybeSingle();
         
         if (rsvpData) {
           setStatus(rsvpData.status as RSVPStatus);
+          setReminders({ remind_24h: rsvpData.remind_24h || false, remind_1h: rsvpData.remind_1h || false });
         }
       }
 
@@ -209,6 +211,39 @@ END:VCALENDAR`;
           </Button>
         </div>
       </div>
+
+      {/* Reminder toggles (shown when RSVP'd as going/maybe) */}
+      {status && status !== 'not_going' && (
+        <div className="flex items-center gap-3 pt-2 border-t border-border">
+          <Bell size={12} className="text-muted-foreground shrink-0" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Reminders</span>
+          {[
+            { key: 'remind_24h' as const, label: '24h before' },
+            { key: 'remind_1h' as const, label: '1h before' },
+          ].map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={async () => {
+                const newVal = !reminders[key];
+                setReminders(prev => ({ ...prev, [key]: newVal }));
+                await supabase
+                  .from('event_rsvps')
+                  .update({ [key]: newVal } as any)
+                  .eq('event_id', eventId)
+                  .eq('user_id', userId!);
+                toast.success(newVal ? `Reminder set: ${label}` : 'Reminder removed');
+              }}
+              className={`px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest rounded transition-all ${
+                reminders[key]
+                  ? 'bg-accent/15 text-accent border border-accent/30'
+                  : 'bg-muted text-muted-foreground border border-border hover:border-accent/50'
+              }`}
+            >
+              {reminders[key] ? '✓' : ''} {label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
