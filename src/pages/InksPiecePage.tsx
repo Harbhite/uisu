@@ -14,6 +14,7 @@ import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ImageLightbox, useLightbox } from '@/components/ImageLightbox';
 import { PoetryLayoutRenderer } from '@/components/PoetryLayoutRenderers';
 import { PoetryLayout } from '@/components/PoetryLayoutSelector';
+import { ReactionBar } from '@/components/ReactionBar';
 
 interface InksPiece {
   id: string;
@@ -448,6 +449,7 @@ const ArticleView = ({ piece, renderContent, readingTime }: ViewProps) => (
           ))}
         </div>
       )}
+      <ReactionBar pieceId={piece.id} className="mt-6" />
       <InkComments pieceId={piece.id} />
     </motion.div>
   </article>
@@ -477,6 +479,7 @@ const ReportView = ({ piece, renderContent, readingTime }: ViewProps) => (
           <div className="prose prose-slate dark:prose-invert max-w-none">
             {renderContent(piece.content)}
           </div>
+          <ReactionBar pieceId={piece.id} className="mt-6" />
           <InkComments pieceId={piece.id} />
         </div>
         <div className="bg-muted p-8 border-t md:border-t-0">
@@ -520,6 +523,7 @@ const OpinionView = ({ piece, renderContent, readingTime }: ViewProps) => (
       {renderContent(piece.content)}
     </div>
     <div className="max-w-none">
+      <ReactionBar pieceId={piece.id} className="mt-6" />
       <InkComments pieceId={piece.id} />
     </div>
   </article>
@@ -552,6 +556,7 @@ const InterviewView = ({ piece, renderContent, readingTime }: ViewProps) => (
       <div className="prose prose-slate dark:prose-invert max-w-none">
         {renderContent(piece.content)}
       </div>
+      <ReactionBar pieceId={piece.id} className="mt-6" />
       <InkComments pieceId={piece.id} />
     </div>
   </article>
@@ -580,6 +585,7 @@ const FictionView = ({ piece, renderContent, readingTime }: ViewProps) => (
       <div className="mt-8">
         <SocialShare title={piece.title} summary={piece.summary || ''} className="justify-center" />
       </div>
+      <ReactionBar pieceId={piece.id} className="mt-6" />
       <InkComments pieceId={piece.id} />
     </div>
   </article>
@@ -609,6 +615,7 @@ const EssayView = ({ piece, renderContent, readingTime }: ViewProps) => (
         <p className="text-muted-foreground text-sm leading-relaxed">{piece.summary}</p>
       </div>
     )}
+    <ReactionBar pieceId={piece.id} className="mt-6" />
     <InkComments pieceId={piece.id} />
   </article>
 );
@@ -683,6 +690,7 @@ const BlogView = ({ piece, renderContent, readingTime }: ViewProps) => (
     </div>
 
     {/* Comments */}
+    <ReactionBar pieceId={piece.id} className="mt-6" />
     <InkComments pieceId={piece.id} />
   </article>
 );

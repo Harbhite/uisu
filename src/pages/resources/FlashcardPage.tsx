@@ -17,6 +17,42 @@ interface Flashcard {
   difficulty: 'Easy' | 'Medium' | 'Hard';
 }
 
+// SM-2 Spaced Repetition helpers
+interface SRData {
+  easeFactor: number;
+  interval: number;
+  repetitions: number;
+  nextReview: number; // timestamp
+}
+
+const defaultSR = (): SRData => ({
+  easeFactor: 2.5,
+  interval: 1,
+  repetitions: 0,
+  nextReview: Date.now(),
+});
+
+const sm2 = (data: SRData, quality: number): SRData => {
+  // quality: 0-2 = fail, 3 = hard, 4 = good, 5 = easy
+  let { easeFactor, interval, repetitions } = data;
+  if (quality >= 3) {
+    if (repetitions === 0) interval = 1;
+    else if (repetitions === 1) interval = 6;
+    else interval = Math.round(interval * easeFactor);
+    repetitions++;
+  } else {
+    repetitions = 0;
+    interval = 1;
+  }
+  easeFactor = Math.max(1.3, easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)));
+  return {
+    easeFactor,
+    interval,
+    repetitions,
+    nextReview: Date.now() + interval * 24 * 60 * 60 * 1000,
+  };
+};
+
 const readFileAsText = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -55,15 +91,24 @@ const FlashcardPage = () => {
   const [mastered, setMastered] = useState<Set<number>>(() => {
     try { return new Set(JSON.parse(localStorage.getItem('flashcard_state') || '{}').mastered || []); } catch { return new Set(); }
   });
+  const [srMap, setSrMap] = useState<Record<number, SRData>>(() => {
+    try { return JSON.parse(localStorage.getItem('flashcard_state') || '{}').srMap || {}; } catch { return {}; }
+  });
+  const [srMode, setSrMode] = useState(false);
 
   const filteredCards = filterDifficulty
     ? cards.filter(c => c.difficulty === filterDifficulty)
-    : cards;
+    : srMode
+      ? cards.filter((_, i) => {
+          const sr = srMap[i];
+          return !sr || sr.nextReview <= Date.now();
+        })
+      : cards;
 
   useEffect(() => {
-    const state = { topic, material, cards, mastered: Array.from(mastered) };
+    const state = { topic, material, cards, mastered: Array.from(mastered), srMap };
     localStorage.setItem('flashcard_state', JSON.stringify(state));
-  }, [topic, material, cards, mastered]);
+  }, [topic, material, cards, mastered, srMap]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -112,6 +157,8 @@ const FlashcardPage = () => {
       setCurrentIdx(0);
       setFlipped(false);
       setMastered(new Set());
+      setSrMap({});
+      setSrMode(false);
       setFilterDifficulty(null);
       toast.success(`${data.flashcards.length} flashcards generated!`);
     } catch (err) {
@@ -130,6 +177,8 @@ const FlashcardPage = () => {
     setCurrentIdx(0);
     setFlipped(false);
     setMastered(new Set());
+    setSrMap({});
+    setSrMode(false);
     setFilterDifficulty(null);
     localStorage.removeItem('flashcard_state');
   };
@@ -149,6 +198,19 @@ const FlashcardPage = () => {
       else next.add(realIdx);
       return next;
     });
+  };
+
+  const handleSRRating = (quality: number) => {
+    const realIdx = cards.indexOf(filteredCards[currentIdx]);
+    const current = srMap[realIdx] || defaultSR();
+    const updated = sm2(current, quality);
+    setSrMap(prev => ({ ...prev, [realIdx]: updated }));
+    // Auto-advance
+    if (currentIdx < filteredCards.length - 1) {
+      setCurrentIdx(currentIdx + 1);
+      setFlipped(false);
+    }
+    toast.success(quality >= 3 ? 'Got it!' : 'Will review again soon');
   };
 
   const card = filteredCards[currentIdx];
@@ -296,6 +358,15 @@ const FlashcardPage = () => {
                 <button onClick={handleReset} className="p-2.5 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-colors rounded-lg" title="New set">
                   <RefreshCcw size={14} />
                 </button>
+                <button
+                  onClick={() => { setSrMode(!srMode); setCurrentIdx(0); setFlipped(false); }}
+                  className={`px-3 py-2.5 text-[9px] font-bold uppercase tracking-widest rounded-lg transition-all ${
+                    srMode ? 'bg-accent text-accent-foreground' : 'border border-border text-muted-foreground hover:border-accent'
+                  }`}
+                  title="Spaced Repetition Mode"
+                >
+                  🧠 SR
+                </button>
               </div>
               <div className="flex items-center gap-1.5">
                 <Filter size={12} className="text-muted-foreground mr-1" />
@@ -414,6 +485,42 @@ const FlashcardPage = () => {
                 Next <ChevronRight size={14} />
               </button>
             </div>
+
+            {/* Spaced Repetition Rating (shown when flipped) */}
+            {flipped && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-6 bg-muted/50 border border-border rounded-lg p-4"
+              >
+                <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-3 text-center">
+                  How well did you know this? (Spaced Repetition)
+                </p>
+                <div className="flex justify-center gap-2">
+                  {[
+                    { q: 1, label: 'Again', color: 'bg-red-100 text-red-700 hover:bg-red-200' },
+                    { q: 3, label: 'Hard', color: 'bg-amber-100 text-amber-700 hover:bg-amber-200' },
+                    { q: 4, label: 'Good', color: 'bg-blue-100 text-blue-700 hover:bg-blue-200' },
+                    { q: 5, label: 'Easy', color: 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' },
+                  ].map(({ q, label, color }) => (
+                    <button
+                      key={q}
+                      onClick={() => handleSRRating(q)}
+                      className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all ${color}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {srMode && filteredCards.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-lg font-serif text-foreground mb-2">🎉 All caught up!</p>
+                <p className="text-sm text-muted-foreground">No cards due for review. Check back later or turn off SR mode.</p>
+              </div>
+            )}
           </div>
         )}
       </div>

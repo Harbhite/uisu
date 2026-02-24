@@ -7,12 +7,14 @@ import {
   BookOpen, CalendarDays, Layers, Swords,
   Send, Loader2, Sparkles, ImageIcon, RefreshCcw, Copy, Check,
   Upload, FileIcon, Trash2, Table2, Code2, Download,
-  ChevronDown, ChevronUp, Eye, EyeOff
+  ChevronDown, ChevronUp, Eye, EyeOff, History
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { SEO } from '@/components/SEO';
 import AIToolsHeader from '@/components/resources/AIToolsHeader';
 import AsciiDiagramViewer from '@/components/resources/AsciiDiagramViewer';
 import MermaidDiagram from '@/components/resources/MermaidDiagram';
+import { StudySessionHistory } from '@/components/StudySessionHistory';
 import { toast } from 'sonner';
 
 type Mode = 'explainer' | 'planner' | 'synthesizer' | 'debater';
@@ -262,6 +264,19 @@ const StudyBuddyPage = () => {
           } catch { /* ignore */ }
         }
       }
+      // Save session to database
+      if (fullText) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from('study_sessions' as any).insert({
+            user_id: user.id,
+            mode: activeMode,
+            topic: topic.trim() || null,
+            material_preview: material.trim().substring(0, 200) || null,
+            response: fullText,
+          });
+        }
+      }
     } catch (err) {
       console.error(err);
       toast.error('Something went wrong. Please try again.');
@@ -317,6 +332,15 @@ const StudyBuddyPage = () => {
     setCopied(true);
     toast.success('Copied to clipboard');
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleLoadSession = (session: any) => {
+    setActiveMode(session.mode);
+    setTopic(session.topic || '');
+    setMaterial('');
+    setResponse(session.response);
+    setGeneratedImage(null);
+    toast.success('Session loaded');
   };
 
   const handleReset = () => {
@@ -419,13 +443,14 @@ const StudyBuddyPage = () => {
                 )}
               </AnimatePresence>
 
-              <div className="mt-4">
+              <div className="mt-4 flex flex-wrap gap-3">
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   className="flex items-center gap-2 px-4 py-3 border border-border text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:border-accent transition-all rounded-lg"
                 >
                   <Upload size={14} /> Attach File
                 </button>
+                <StudySessionHistory onLoadSession={handleLoadSession} />
               </div>
             </div>
           </div>

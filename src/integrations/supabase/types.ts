@@ -677,6 +677,9 @@ export type Database = {
           event_id: string
           id: string
           qr_token: string | null
+          remind_1h: boolean | null
+          remind_24h: boolean | null
+          reminder_email: string | null
           status: string
           updated_at: string | null
           user_id: string
@@ -686,6 +689,9 @@ export type Database = {
           event_id: string
           id?: string
           qr_token?: string | null
+          remind_1h?: boolean | null
+          remind_24h?: boolean | null
+          reminder_email?: string | null
           status?: string
           updated_at?: string | null
           user_id: string
@@ -695,6 +701,9 @@ export type Database = {
           event_id?: string
           id?: string
           qr_token?: string | null
+          remind_1h?: boolean | null
+          remind_24h?: boolean | null
+          reminder_email?: string | null
           status?: string
           updated_at?: string | null
           user_id?: string
@@ -745,6 +754,36 @@ export type Database = {
           location?: string | null
           title?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      flashcard_decks: {
+        Row: {
+          cards: Json
+          created_at: string
+          id: string
+          last_reviewed_at: string | null
+          sr_data: Json
+          topic: string
+          user_id: string
+        }
+        Insert: {
+          cards?: Json
+          created_at?: string
+          id?: string
+          last_reviewed_at?: string | null
+          sr_data?: Json
+          topic: string
+          user_id: string
+        }
+        Update: {
+          cards?: Json
+          created_at?: string
+          id?: string
+          last_reviewed_at?: string | null
+          sr_data?: Json
+          topic?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1166,6 +1205,38 @@ export type Database = {
         }
         Relationships: []
       }
+      ink_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          piece_id: string
+          reaction: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          piece_id: string
+          reaction: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          piece_id?: string
+          reaction?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ink_reactions_piece_id_fkey"
+            columns: ["piece_id"]
+            isOneToOne: false
+            referencedRelation: "ink_pieces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_listings: {
         Row: {
           application_url: string | null
@@ -1466,22 +1537,31 @@ export type Database = {
       newsletter_subscribers: {
         Row: {
           email: string
+          faculty: string | null
+          hall: string | null
           id: string
           is_active: boolean
+          level: string | null
           source: string | null
           subscribed_at: string
         }
         Insert: {
           email: string
+          faculty?: string | null
+          hall?: string | null
           id?: string
           is_active?: boolean
+          level?: string | null
           source?: string | null
           subscribed_at?: string
         }
         Update: {
           email?: string
+          faculty?: string | null
+          hall?: string | null
           id?: string
           is_active?: boolean
+          level?: string | null
           source?: string | null
           subscribed_at?: string
         }
@@ -1818,6 +1898,36 @@ export type Database = {
           provider?: string
           title?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      study_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          material_preview: string | null
+          mode: string
+          response: string
+          topic: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          material_preview?: string | null
+          mode?: string
+          response: string
+          topic?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          material_preview?: string | null
+          mode?: string
+          response?: string
+          topic?: string | null
+          user_id?: string
         }
         Relationships: []
       }
