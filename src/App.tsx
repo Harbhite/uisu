@@ -69,6 +69,8 @@ const LostFoundPage = lazy(() => import("./pages/LostFoundPage"));
 const AcademicCalendarPage = lazy(() => import("./pages/AcademicCalendarPage"));
 const ComplaintsPage = lazy(() => import("./pages/ComplaintsPage"));
 const BudgetTrackerPage = lazy(() => import("./pages/BudgetTrackerPage"));
+const SitemapPage = lazy(() => import("./pages/SitemapPage"));
+const FeedbackPage = lazy(() => import("./pages/FeedbackPage"));
 const queryClient = new QueryClient();
 
 const LoadingFallback = () => (
@@ -165,7 +167,8 @@ const AppRoutes = () => {
         <Route path="/academic-calendar" element={<PageWrapper><AcademicCalendarPage /></PageWrapper>} />
         <Route path="/complaints" element={<PageWrapper><ComplaintsPage /></PageWrapper>} />
         <Route path="/budget" element={<PageWrapper><BudgetTrackerPage /></PageWrapper>} />
-
+        <Route path="/sitemap" element={<PageWrapper><SitemapPage /></PageWrapper>} />
+        <Route path="/feedback" element={<PageWrapper><FeedbackPage /></PageWrapper>} />
         {/* Tutorials Ecosystem (Standalone Subdomain feel) */}
         <Route path="/tutorials" element={<TutorialsLayout />}>
           <Route index element={<TutorialsLandingPage />} />

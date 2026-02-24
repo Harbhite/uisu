@@ -5,8 +5,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Megaphone, Calendar, Tag, ChevronRight, Bell, Clock, X, Loader2 } from 'lucide-react';
+import { ArrowLeft, Megaphone, Calendar, Tag, ChevronRight, Bell, Clock, X, Loader2, Share2 } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
+import { SocialShare } from '@/components/SocialShare';
 
 /**
  * Props for the AnnouncementsPage component.
@@ -233,9 +234,12 @@ export const AnnouncementsPage: React.FC<AnnouncementsProps> = ({ onBack }) => {
                                 <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-line">
                                     {selectedItem.content}
                                 </p>
-                                <div className="mt-8 pt-8 border-t border-border">
-                                    <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Signed</p>
-                                    <p className="font-serif text-xl text-ui-blue">{selectedItem.author}</p>
+                                <div className="mt-8 pt-8 border-t border-border flex items-end justify-between">
+                                    <div>
+                                        <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Signed</p>
+                                        <p className="font-serif text-xl text-ui-blue">{selectedItem.author}</p>
+                                    </div>
+                                    <SocialShare title={selectedItem.title} summary={selectedItem.summary} />
                                 </div>
                             </div>
                         </motion.div>

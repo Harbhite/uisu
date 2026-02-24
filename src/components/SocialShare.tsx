@@ -1,5 +1,5 @@
 import React from 'react';
-import { Twitter, Facebook, Linkedin, Link, Share2 } from 'lucide-react';
+import { Twitter, Facebook, Linkedin, Link, Share2, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -23,7 +23,8 @@ export const SocialShare: React.FC<SocialShareProps> = ({
   const shareLinks = {
     twitter: `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`,
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}&title=${encodedTitle}&summary=${encodedSummary}`
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}&title=${encodedTitle}&summary=${encodedSummary}`,
+    whatsapp: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`
   };
 
   const copyToClipboard = async () => {
@@ -72,6 +73,15 @@ export const SocialShare: React.FC<SocialShareProps> = ({
           title="Share on LinkedIn"
         >
           <Linkedin size={16} />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handleShare('whatsapp')}
+          className="w-9 h-9 p-0 hover:bg-[#25D366]/10 hover:text-[#25D366]"
+          title="Share on WhatsApp"
+        >
+          <MessageCircle size={16} />
         </Button>
         <Button
           variant="ghost"

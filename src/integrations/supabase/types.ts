@@ -148,6 +148,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           priority: string | null
+          scheduled_at: string | null
           title: string
         }
         Insert: {
@@ -158,6 +159,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           priority?: string | null
+          scheduled_at?: string | null
           title: string
         }
         Update: {
@@ -168,7 +170,29 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           priority?: string | null
+          scheduled_at?: string | null
           title?: string
+        }
+        Relationships: []
+      }
+      anonymous_feedback: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          message: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          id?: string
+          message: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          message?: string
         }
         Relationships: []
       }
@@ -1095,6 +1119,7 @@ export type Database = {
           id: string
           is_published: boolean | null
           poetry_layout: string | null
+          scheduled_at: string | null
           summary: string | null
           tags: string[] | null
           title: string
@@ -1112,6 +1137,7 @@ export type Database = {
           id?: string
           is_published?: boolean | null
           poetry_layout?: string | null
+          scheduled_at?: string | null
           summary?: string | null
           tags?: string[] | null
           title: string
@@ -1129,6 +1155,7 @@ export type Database = {
           id?: string
           is_published?: boolean | null
           poetry_layout?: string | null
+          scheduled_at?: string | null
           summary?: string | null
           tags?: string[] | null
           title?: string
