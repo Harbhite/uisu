@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SEO } from '@/components/SEO';
+import { InksVaultSkeleton } from '@/components/skeletons/InksVaultSkeleton';
 import { Json } from '@/integrations/supabase/types';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { LikeButton } from '@/components/LikeButton';
@@ -707,11 +708,7 @@ const InksVaultPage = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background pt-32 pb-16 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-accent" />
-      </div>
-    );
+    return <InksVaultSkeleton />;
   }
 
   return (

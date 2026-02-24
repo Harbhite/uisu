@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { useLeadersBulkOperations } from '@/hooks/useLeadersBulkOperations';
+import { LeadersPageSkeleton } from '@/components/skeletons/LeadersPageSkeleton';
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -283,11 +284,7 @@ export const CurrentLeaders: React.FC<CurrentLeadersProps> = ({ onBack }) => {
     );
 
     if (loading || authLoading) {
-        return (
-            <div className="min-h-screen bg-slate-50 pt-32 pb-16 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-nobel-gold" />
-            </div>
-        );
+        return <LeadersPageSkeleton />;
     }
 
     return (
