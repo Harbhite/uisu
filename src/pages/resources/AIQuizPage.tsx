@@ -15,6 +15,8 @@ import {
   Sliders,
   Trash2,
   ImageIcon,
+  Download,
+  FileDown,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -383,6 +385,53 @@ const QuizView: React.FC<QuizViewProps> = ({
   );
 };
 
+/** Export quiz questions only (no answers revealed) */
+const exportQuestionsOnly = (questions: Question[]) => {
+  let text = '📝 AI QUIZ — QUESTIONS\n';
+  text += '═'.repeat(50) + '\n\n';
+  questions.forEach((q, i) => {
+    text += `Q${i + 1}. ${q.question}\n`;
+    q.options.forEach((opt, j) => {
+      text += `   ${String.fromCharCode(65 + j)}. ${opt}\n`;
+    });
+    text += '\n';
+  });
+  downloadTextFile(text, 'quiz-questions.txt');
+};
+
+/** Export answered quiz with explanations */
+const exportAnsweredQuiz = (questions: Question[], userAnswers: number[], score: number, timeElapsed: number) => {
+  const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
+  let text = '📋 AI QUIZ — RESULTS & EXPLANATIONS\n';
+  text += '═'.repeat(50) + '\n';
+  text += `Score: ${score}/${questions.length} (${percentage}%)\n`;
+  text += `Time: ${Math.floor(timeElapsed / 60)}m ${timeElapsed % 60}s\n`;
+  text += '═'.repeat(50) + '\n\n';
+
+  questions.forEach((q, i) => {
+    const isCorrect = userAnswers[i] === q.correctIndex;
+    text += `Q${i + 1}. ${q.question}\n`;
+    q.options.forEach((opt, j) => {
+      const marker = j === q.correctIndex ? ' ✅' : j === userAnswers[i] ? ' ❌' : '';
+      text += `   ${String.fromCharCode(65 + j)}. ${opt}${marker}\n`;
+    });
+    text += `\n   Your answer: ${userAnswers[i] !== undefined ? String.fromCharCode(65 + userAnswers[i]) : 'Unanswered'} — ${isCorrect ? 'CORRECT' : 'INCORRECT'}\n`;
+    text += `   Correct answer: ${String.fromCharCode(65 + q.correctIndex)}\n`;
+    text += `   💡 ${q.explanation}\n\n`;
+  });
+  downloadTextFile(text, 'quiz-results.txt');
+};
+
+const downloadTextFile = (content: string, filename: string) => {
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
 interface ResultViewProps {
   questions: Question[];
   score: number;
@@ -434,6 +483,23 @@ const ResultView: React.FC<ResultViewProps> = ({
           >
             <RefreshCcw size={14} /> New Quiz
           </button>
+
+          {/* Export Buttons */}
+          <div className="space-y-2">
+            <button
+              onClick={() => exportQuestionsOnly(questions)}
+              className="w-full py-3 border border-border text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:border-accent hover:text-accent transition-all rounded-lg"
+            >
+              <Download size={14} /> Export Questions
+            </button>
+            <button
+              onClick={() => exportAnsweredQuiz(questions, userAnswers, score, timeElapsed)}
+              className="w-full py-3 border border-border text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:border-accent hover:text-accent transition-all rounded-lg"
+            >
+              <FileDown size={14} /> Export Results & Explanations
+            </button>
+          </div>
+
           <button
             onClick={() => navigate('/resources')}
             className="w-full py-3 border border-border text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:border-accent hover:text-accent transition-all rounded-lg"

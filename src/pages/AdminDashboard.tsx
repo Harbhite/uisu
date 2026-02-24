@@ -163,7 +163,15 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, isAdmin, isStaff, role: userRole, loading: authLoading } = useAdminCheck();
-  const [activeTab, setActiveTab] = useState<TabType>("events");
+  const [activeTab, setActiveTab] = useState<TabType>(() => {
+    try {
+      const saved = localStorage.getItem('admin_active_tab');
+      if (saved && ["events","announcements","documents","clubs","administrations","admins","audit","publications","submissions","newsletter","complaints","analytics","feedback"].includes(saved)) {
+        return saved as TabType;
+      }
+    } catch {}
+    return "events";
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
@@ -236,6 +244,10 @@ const AdminDashboard = () => {
       }
     }
   }, [user, isStaff, authLoading, navigate, toast]);
+
+  useEffect(() => {
+    localStorage.setItem('admin_active_tab', activeTab);
+  }, [activeTab]);
 
   useEffect(() => {
     if (user && isStaff) {
