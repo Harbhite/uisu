@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { supabase } from "@/integrations/supabase/client";
 import { EventRSVP } from "@/components/EventRSVP";
+import { SocialShare } from "@/components/SocialShare";
 import { EventsPageSkeleton } from "@/components/skeletons/EventsPageSkeleton";
 
 interface EventsCalendarProps {
@@ -308,7 +309,8 @@ export const EventsCalendar: React.FC<EventsCalendarProps> = ({ onBack }) => {
                                     >
                                       <QrCode size={14} /> Staff Check-in Scanner
                                     </button>
-                                  )}
+                                   )}
+                                  <SocialShare title={event.title} summary={event.description} className="mt-2" />
                                 </div>
                               </div>
                             </div>

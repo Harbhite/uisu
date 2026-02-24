@@ -6,7 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { 
   ArrowLeft, Star, Plus, Trash2, Edit2, Calendar, FileText, 
   Megaphone, X, Upload, Loader2, Check, Users, Award, ShieldAlert,
-  ArrowUpDown, History, Search, Download, Filter, Eye, Mail, BookOpen, Inbox, Send, FlaskConical, MessageSquareWarning
+  ArrowUpDown, History, Search, Download, Filter, Eye, Mail, BookOpen, Inbox, Send, FlaskConical, MessageSquareWarning,
+  BarChart3, MessageSquare
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
@@ -19,6 +20,8 @@ import { SEO } from "@/components/SEO";
 import { SubscriberImport } from "@/components/admin/SubscriberImport";
 import { ABTestingSection } from "@/components/admin/ABTestingSection";
 import { NewsletterRichEditor } from "@/components/admin/NewsletterRichEditor";
+import { AdminAnalytics } from "@/components/admin/AdminAnalytics";
+import { AdminFeedback } from "@/components/admin/AdminFeedback";
 
 // Validation schemas
 const eventSchema = z.object({
@@ -72,7 +75,7 @@ const administrationSchema = z.object({
   })).optional(),
 });
 
-type TabType = "events" | "announcements" | "documents" | "clubs" | "administrations" | "admins" | "audit" | "publications" | "submissions" | "newsletter" | "complaints";
+type TabType = "events" | "announcements" | "documents" | "clubs" | "administrations" | "admins" | "audit" | "publications" | "submissions" | "newsletter" | "complaints" | "analytics" | "feedback";
 
 interface AuditLog {
   id: string;
@@ -764,6 +767,8 @@ const AdminDashboard = () => {
         submissions: "job_listings",
         newsletter: "newsletter_subscribers",
         complaints: "complaints",
+        analytics: "",
+        feedback: "anonymous_feedback",
       };
       
       const tableName = tableMap[activeTab];
@@ -810,6 +815,8 @@ const AdminDashboard = () => {
     { id: "submissions" as TabType, label: "Submissions", icon: Inbox },
     { id: "complaints" as TabType, label: "Complaints", icon: MessageSquareWarning },
     ...(isAdmin ? [
+      { id: "analytics" as TabType, label: "Analytics", icon: BarChart3 },
+      { id: "feedback" as TabType, label: "Feedback", icon: MessageSquare },
       { id: "newsletter" as TabType, label: "Newsletter", icon: Mail },
       { id: "admins" as TabType, label: "Staff", icon: ShieldAlert },
       { id: "audit" as TabType, label: "Audit Log", icon: History },
@@ -1616,6 +1623,9 @@ const AdminDashboard = () => {
         ) : (
           <div className="space-y-4">
             {activeTab === "submissions" && <PendingSubmissions />}
+
+            {activeTab === "analytics" && <AdminAnalytics />}
+            {activeTab === "feedback" && <AdminFeedback />}
 
             {activeTab === "complaints" && (
               <div className="space-y-3">
