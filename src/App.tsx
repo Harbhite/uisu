@@ -181,12 +181,15 @@ const AppRoutes = () => {
   );
 };
 
+const CommandPalette = lazy(() => import("./components/CommandPalette").then(m => ({ default: m.CommandPalette })));
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <Suspense fallback={<LoadingFallback />}>
+        <CommandPalette />
         <AppRoutes />
       </Suspense>
     </TooltipProvider>

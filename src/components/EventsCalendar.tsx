@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { supabase } from "@/integrations/supabase/client";
 import { EventRSVP } from "@/components/EventRSVP";
+import { EventsPageSkeleton } from "@/components/skeletons/EventsPageSkeleton";
 
 interface EventsCalendarProps {
   onBack: () => void;
@@ -100,11 +101,7 @@ export const EventsCalendar: React.FC<EventsCalendarProps> = ({ onBack }) => {
     .slice(0, 5);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-nobel-gold" />
-      </div>
-    );
+    return <EventsPageSkeleton />;
   }
 
   return (

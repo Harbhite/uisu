@@ -11,6 +11,7 @@ import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ClubEditModal } from '@/components/ClubEditModal';
+import { CommunitiesSkeleton } from '@/components/skeletons/CommunitiesSkeleton';
 
 /**
  * Props for the Communities component.
@@ -372,11 +373,7 @@ export const ClubDetailPage: React.FC<ClubDetailProps> = ({ clubId, onBack }) =>
     };
 
     if (loading) {
-        return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-accent" />
-            </div>
-        );
+        return <CommunitiesSkeleton />;
     }
 
     if (!club) return (
