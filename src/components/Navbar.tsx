@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Menu, LogOut, ChevronDown, Search } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { User } from "@supabase/supabase-js";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -50,6 +51,7 @@ ListItem.displayName = "ListItem"
 
 export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: NavbarProps) => {
   const navigate = useNavigate();
+  const { isStaff } = useAdminCheck();
 
   return (
     <>
@@ -182,7 +184,7 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
                    <Search size={16} className="lg:w-[18px] lg:h-[18px]" />
                  </button>
 
-                 {user && (
+                 {user && isStaff && (
                   <Link to="/admin" className="text-[10px] lg:text-xs font-bold uppercase tracking-widest text-slate-300 hover:text-white transition-colors hidden xl:block">
                     Admin
                   </Link>
@@ -217,8 +219,17 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
             <span className="font-serif font-bold text-lg tracking-tight text-white">UISU</span>
           </Link>
 
-          {/* Right: Sign In & Menu Button */}
+          {/* Right: Search, Sign In & Menu Button */}
           <div className="flex items-center gap-2">
+            {/* Mobile Search Button */}
+            <button
+              onClick={() => navigate('/search')}
+              className="p-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+              aria-label="Search"
+            >
+              <Search size={16} />
+            </button>
+
             {!user && (
               <motion.button
                 whileHover={{ scale: 1.05 }}

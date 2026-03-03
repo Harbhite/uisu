@@ -31,15 +31,24 @@ const pageTransition = {
   duration: 0.4
 };
 
+const MAX_RECENT = 5;
+
 const PageWrapper = ({ children }: PageWrapperProps) => {
   const { pathname } = useLocation();
   const setLastVisitedRoute = useAppStore((s) => s.setLastVisitedRoute);
+  const setAppData = useAppStore((s) => s.setAppData);
+  const getAppData = useAppStore((s) => s.getAppData);
 
-  // Track last visited route & scroll to top on route change
+  // Track last visited route, recent routes & scroll to top on route change
   useEffect(() => {
     setLastVisitedRoute(pathname);
     window.scrollTo({ top: 0, behavior: "instant" });
-  }, [pathname, setLastVisitedRoute]);
+
+    // Track recent routes (deduped, max 5)
+    const recent = getAppData<string[]>('recentRoutes') || [];
+    const updated = [pathname, ...recent.filter(r => r !== pathname)].slice(0, MAX_RECENT);
+    setAppData('recentRoutes', updated);
+  }, [pathname, setLastVisitedRoute, setAppData, getAppData]);
 
   return (
     <motion.div

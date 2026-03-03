@@ -7,6 +7,8 @@ import { AnimatePresence } from "framer-motion";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PageWrapper from "./components/PageWrapper";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 import { lazy, Suspense } from "react";
 
 // Lazy load pages for better performance
@@ -71,6 +73,7 @@ const ComplaintsPage = lazy(() => import("./pages/ComplaintsPage"));
 const BudgetTrackerPage = lazy(() => import("./pages/BudgetTrackerPage"));
 const SitemapPage = lazy(() => import("./pages/SitemapPage"));
 const FeedbackPage = lazy(() => import("./pages/FeedbackPage"));
+const AlumniNetworkPage = lazy(() => import("./pages/resources/AlumniNetworkPage"));
 const queryClient = new QueryClient();
 
 const LoadingFallback = () => (
@@ -126,6 +129,7 @@ const AppRoutes = () => {
         <Route path="/resources/study-buddy" element={<PageWrapper><StudyBuddyPage /></PageWrapper>} />
         <Route path="/resources/ai-quiz" element={<PageWrapper><AIQuizPage /></PageWrapper>} />
         <Route path="/resources/flashcards" element={<PageWrapper><FlashcardPage /></PageWrapper>} />
+        <Route path="/resources/alumni-network" element={<PageWrapper><AlumniNetworkPage /></PageWrapper>} />
 
         {/* Style Guide - only linked from footer */}
         <Route path="/style-guide" element={<PageWrapper><StyleGuidePage /></PageWrapper>} />
@@ -191,10 +195,13 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <Suspense fallback={<LoadingFallback />}>
-        <CommandPalette />
-        <AppRoutes />
-      </Suspense>
+      <ErrorBoundary>
+        <Suspense fallback={<LoadingFallback />}>
+          <CommandPalette />
+          <AppRoutes />
+          <PWAInstallPrompt />
+        </Suspense>
+      </ErrorBoundary>
     </TooltipProvider>
   </QueryClientProvider>
 );

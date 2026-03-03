@@ -535,6 +535,26 @@ const StudyBuddyPage = () => {
                         <Download size={13} />
                       </button>
                       <button
+                        onClick={() => {
+                          import('jspdf').then(({ jsPDF }) => {
+                            const doc = new jsPDF();
+                            const lines = doc.splitTextToSize(response.replace(/[#*`]/g, ''), 170);
+                            doc.setFont('helvetica', 'bold');
+                            doc.setFontSize(14);
+                            doc.text(`StudyBuddy — ${currentMode.label}`, 20, 20);
+                            doc.setFont('helvetica', 'normal');
+                            doc.setFontSize(10);
+                            doc.text(lines, 20, 32);
+                            doc.save(`studybuddy-${currentMode.label.toLowerCase()}-${Date.now()}.pdf`);
+                            toast.success('Downloaded as PDF');
+                          });
+                        }}
+                        className="p-2 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-all rounded-sm"
+                        title="Download as PDF"
+                      >
+                        <Eye size={13} />
+                      </button>
+                      <button
                         onClick={handleCopy}
                         className="p-2 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-all rounded-sm"
                         title="Copy to clipboard"

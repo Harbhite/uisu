@@ -59,7 +59,11 @@ const HallsPage = () => {
       <SEO
         title="The Republics - Halls of Residence"
         description="Explore the Halls of Residence of the University of Ibadan. The autonomous republics within the union."
-        image="/og/pages-screenshot/halls.png"
+        image="/og/og-campus-map.png"
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Halls of Residence', url: '/halls' },
+        ]}
       />
       <div className="container mx-auto px-6">
         <button
