@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
-import { Users, BookOpen, Award, Star, ArrowRight, MapPin, Quote, Megaphone, Check, ShieldCheck, Fingerprint } from "lucide-react";
+import { Users, BookOpen, Award, Star, ArrowRight, MapPin, Quote, Megaphone, Check, ShieldCheck, Fingerprint, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { TimelineDiagram, StructureDiagram } from "@/components/Diagrams";
 import { TriviaSection } from "@/components/Trivia";
@@ -10,7 +10,7 @@ import { TowerScene } from "@/components/QuantumScene";
 import { AnnouncementsBanner } from "@/components/AnnouncementsBanner";
 import { NotificationPrompt } from "@/components/NotificationPrompt";
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@supabase/supabase-js";
+import { useAuth } from "@/hooks/useAuth";
 import { LeaderCard } from "@/components/LeaderCard";
 import { SEO } from "@/components/SEO";
 import { Input } from "@/components/ui/input";
@@ -21,11 +21,13 @@ import { Footer } from "@/components/Footer";
 import { NewsletterSection } from "@/components/NewsletterSection";
 import { BackToTop } from "@/components/BackToTop";
 import { Skeleton } from "@/components/ui/skeleton";
+import { RecentlyVisited } from "@/components/RecentlyVisited";
+import { OnboardingTour } from "@/components/OnboardingTour";
 
 // --- SUB-COMPONENTS ---
 
 const Marquee = () => (
-  <div className="bg-nobel-gold text-ui-blue py-2 overflow-hidden relative z-50 cursor-default">
+  <div className="bg-nobel-gold text-ui-blue py-2 overflow-hidden relative z-50 cursor-default" role="marquee" aria-label="University of Ibadan Students' Union slogans">
     <div className="animate-marquee whitespace-nowrap flex gap-8 items-center font-bold text-xs tracking-[0.2em] uppercase">
       <span>First and Best</span> <Star size={10} fill="currentColor" />
       <span>The Greatest Uites</span> <Star size={10} fill="currentColor" />
@@ -83,7 +85,7 @@ const ParallaxCard = ({ title, subtitle, icon: Icon, color, href, progress, inde
         </div>
         
         <div>
-          <p className="text-[9px] font-bold uppercase tracking-[0.3em] opacity-60 mb-2">{subtitle}</p>
+          <p className="text-[9px] font-bold uppercase tracking-[0.3em] opacity-60 mb-2 truncate">{subtitle}</p>
           <h3 className="font-serif text-2xl leading-none tracking-tight">{title}</h3>
           <motion.div 
             className="w-0 group-hover:w-10 h-0.5 bg-nobel-gold mt-3 transition-all duration-500"
@@ -194,7 +196,7 @@ const ContactForm = () => {
             <p className="text-red-400 text-sm">{errorMessage}</p>
           )}
           <button type="submit" disabled={formState === 'submitting'} className="w-full bg-nobel-gold text-ui-blue font-bold uppercase tracking-widest py-4 rounded-none hover:bg-white hover:shadow-lg hover:shadow-white/10 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2 border border-nobel-gold">
-            {formState === 'submitting' ? 'Sending...' : 'Send Message'} 
+            {formState === 'submitting' ? <><Loader2 size={16} className="animate-spin" /> Sending...</> : 'Send Message'} 
           </button>
         </form>
       )}
@@ -226,7 +228,7 @@ const Index = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const { user, signOut } = useAuth();
   const [executives, setExecutives] = useState<ExecutiveLeader[]>([]);
   const [executivesLoading, setExecutivesLoading] = useState(true);
   const [upcomingEvents, setUpcomingEvents] = useState<{id: string; title: string; date: string; category: string}[]>([]);
@@ -239,72 +241,74 @@ const Index = () => {
   });
 
   // Fetch executives from database
-  const fetchExecutives = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('leaders')
-      .select('*')
-      .eq('is_active', true)
-      .eq('category', 'executive')
-      .order('sort_order')
-      .limit(3);
+  const fetchExecutives = useCallback(async (signal?: AbortSignal) => {
+    try {
+      const { data, error } = await supabase
+        .from('leaders')
+        .select('*')
+        .eq('is_active', true)
+        .eq('category', 'executive')
+        .order('sort_order')
+        .limit(3)
+        .abortSignal(signal!);
 
-    if (error) {
-      console.error('Error fetching executives:', error);
-    } else if (data) {
-      const mapped: ExecutiveLeader[] = data.map(l => ({
-        id: l.id,
-        name: l.name,
-        role: l.role,
-        image: l.image || '/placeholder.svg',
-        bio: l.bio || '',
-        email: l.email || '',
-        socials: (l.socials as ExecutiveLeader['socials']) || {},
-      }));
-      setExecutives(mapped);
+      if (error) throw error;
+      if (data) {
+        const mapped: ExecutiveLeader[] = data.map(l => ({
+          id: l.id,
+          name: l.name,
+          role: l.role,
+          image: l.image || '/placeholder.svg',
+          bio: l.bio || '',
+          email: l.email || '',
+          socials: (l.socials as ExecutiveLeader['socials']) || {},
+        }));
+        setExecutives(mapped);
+      }
+    } catch (err: any) {
+      if (err?.name === 'AbortError') return;
+      console.error('Error fetching executives:', err);
     }
     setExecutivesLoading(false);
   }, []);
 
   // Fetch upcoming events from database
-  const fetchUpcomingEvents = useCallback(async () => {
-    const today = new Date().toISOString().split('T')[0];
-    const { data, error } = await supabase
-      .from('events')
-      .select('*')
-      .gte('event_date', today)
-      .order('event_date', { ascending: true })
-      .limit(3);
+  const fetchUpcomingEvents = useCallback(async (signal?: AbortSignal) => {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayStr = today.toISOString().split('T')[0];
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .gte('event_date', todayStr)
+        .order('event_date', { ascending: true })
+        .limit(3)
+        .abortSignal(signal!);
 
-    if (error) {
-      console.error('Error fetching events:', error);
-    } else if (data) {
-      const mapped = data.map(e => ({
-        id: e.id,
-        title: e.title,
-        date: new Date(e.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        category: e.event_type || 'Event'
-      }));
-      setUpcomingEvents(mapped);
+      if (error) throw error;
+      if (data) {
+        const mapped = data.map(e => ({
+          id: e.id,
+          title: e.title,
+          date: new Date(e.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          category: e.event_type || 'Event'
+        }));
+        setUpcomingEvents(mapped);
+      }
+    } catch (err: any) {
+      if (err?.name === 'AbortError') return;
+      console.error('Error fetching events:', err);
     }
     setEventsLoading(false);
   }, []);
 
   useEffect(() => {
-    fetchExecutives();
-    fetchUpcomingEvents();
-  }, [fetchExecutives]);
-
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+    const controller = new AbortController();
+    fetchExecutives(controller.signal);
+    fetchUpcomingEvents(controller.signal);
+    return () => controller.abort();
+  }, [fetchExecutives, fetchUpcomingEvents]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -315,8 +319,7 @@ const Index = () => {
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
+    await signOut();
   };
 
   const scrollToSection = (id: string) => (e: React.MouseEvent) => {
@@ -374,8 +377,11 @@ const Index = () => {
       <SEO
         title="UISU SPACE"
         description="The official digital space of the University of Ibadan Students' Union (UISU). Preserving legacy, celebrating leadership, powering the future."
-        image="/og/pages-screenshot/index.png"
+        image="/og/og-home.png"
       />
+      
+      {/* Onboarding Tour for new users */}
+      {user && <OnboardingTour userId={user.id} />}
       
       {/* Marquee Banner */}
       <Marquee />
@@ -435,6 +441,11 @@ const Index = () => {
       </header>
 
       <main>
+        {/* Recently Visited */}
+        <div className="container mx-auto px-6 pt-6">
+          <RecentlyVisited />
+        </div>
+        
         {/* Introduction Section */}
         <section id="introduction" className="py-24 bg-slate-50 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-nobel-gold/10 rounded-none blur-3xl -translate-y-1/2 translate-x-1/2"></div>

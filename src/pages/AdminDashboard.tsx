@@ -467,6 +467,7 @@ const AdminDashboard = () => {
         content: "",
         priority: "normal",
         is_active: true,
+        scheduled_at: "",
       };
     } else if (activeTab === "documents") {
       return {

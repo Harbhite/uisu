@@ -132,8 +132,13 @@ export const Footer = () => {
 
             {/* Socials */}
             <div className="hidden md:flex gap-4">
-                {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
-                    <a key={i} href="#" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 hover:border-nobel-gold transition-all">
+                {[
+                  { Icon: Facebook, href: "https://facebook.com/UIStudentsUnion" },
+                  { Icon: Twitter, href: "https://twitter.com/uisu_archive" },
+                  { Icon: Instagram, href: "https://instagram.com/uisu_official" },
+                  { Icon: Linkedin, href: "https://linkedin.com/company/uisu" },
+                ].map(({ Icon, href }, i) => (
+                    <a key={i} href={href} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 hover:border-nobel-gold transition-all">
                         <Icon size={18} />
                     </a>
                 ))}
@@ -148,7 +153,7 @@ export const Footer = () => {
                     <Link to="/feedback" className="hover:text-white transition-colors">Feedback</Link>
                     <Link to="/style-guide" className="hover:text-white transition-colors">Style Guide</Link>
                 </div>
-                <span>&copy; {new Date().getFullYear()} UISU Archive.</span>
+                <span>&copy; {new Date().getFullYear()} UISU SPACE.</span>
             </div>
 
         </div>
