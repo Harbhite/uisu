@@ -10,6 +10,7 @@ import PageWrapper from "./components/PageWrapper";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 import { lazy, Suspense } from "react";
+import { LoadingSpinner } from "./components/ui/LoadingSpinner";
 
 // Lazy load pages for better performance
 const GovernancePage = lazy(() => import("./pages/GovernancePage"));
@@ -78,10 +79,7 @@ const queryClient = new QueryClient();
 
 const LoadingFallback = () => (
   <div className="flex min-h-screen items-center justify-center bg-background">
-    <div className="text-center">
-      <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-      <p className="text-muted-foreground">Loading...</p>
-    </div>
+    <LoadingSpinner size="lg" />
   </div>
 );
 
