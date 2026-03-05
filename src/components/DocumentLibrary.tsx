@@ -7,7 +7,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, FileText, Download, Search, Filter, Check, Upload, X, Star, Volume2, StopCircle, Loader2, File, FileType, FileType2, ScrollText, FileCheck, FileWarning, Eye, ExternalLink, LogIn, Tag, FileImage, FileCode, FileSpreadsheet, Share2, Link, Copy, CheckCircle, Trash2, AlertCircle } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
-import { User } from '@supabase/supabase-js';
+import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -67,7 +67,7 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
     const [copiedLink, setCopiedLink] = useState(false);
     
     // Auth State
-    const [user, setUser] = useState<User | null>(null);
+    const { user } = useAuth();
     const [isStaff, setIsStaff] = useState(false);
     const navigate = useNavigate();
     
@@ -168,11 +168,15 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
         };
     }, []);
 
-    // Check auth state and staff status
+    // Check staff status based on shared auth user
     useEffect(() => {
-        const checkStaffStatus = async (userId: string) => {
+        if (!user) {
+            setIsStaff(false);
+            return;
+        }
+        const checkStaffStatus = async () => {
             try {
-                const { data, error } = await supabase.rpc('is_moderator_or_admin', { _user_id: userId });
+                const { data, error } = await supabase.rpc('is_moderator_or_admin', { _user_id: user.id });
                 if (error) throw error;
                 setIsStaff(data === true);
             } catch (error) {
@@ -180,29 +184,8 @@ export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({ onBack }) => {
                 setIsStaff(false);
             }
         };
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            (event, session) => {
-                setUser(session?.user ?? null);
-                if (session?.user) {
-                    setTimeout(() => {
-                        checkStaffStatus(session.user.id);
-                    }, 0);
-                } else {
-                    setIsStaff(false);
-                }
-            }
-        );
-
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setUser(session?.user ?? null);
-            if (session?.user) {
-                checkStaffStatus(session.user.id);
-            }
-        });
-
-        return () => subscription.unsubscribe();
-    }, []);
+        checkStaffStatus();
+    }, [user]);
 
     // Drag and drop handlers
     const handleDragOver = useCallback((e: React.DragEvent) => {
