@@ -8,9 +8,9 @@ interface LoadingSpinnerProps {
 }
 
 const sizeConfig = {
-  sm: { width: 40, height: 40, showLabel: false },
-  md: { width: 80, height: 80, showLabel: false },
-  lg: { width: 120, height: 120, showLabel: false },
+  sm: { width: 64, height: 64, showLabel: false },
+  md: { width: 120, height: 120, showLabel: false },
+  lg: { width: 200, height: 200, showLabel: false },
 };
 
 export const LoadingSpinner = ({ size = "md", className }: LoadingSpinnerProps) => {
