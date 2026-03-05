@@ -6,6 +6,7 @@ import { Star, Mail, Lock, User, ArrowLeft, Eye, EyeOff, CheckCircle, Send } fro
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { SEO } from "@/components/SEO";
+import { useAuth } from "@/hooks/useAuth";
 
 const emailSchema = z.string().email("Please enter a valid email address");
 const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
@@ -14,6 +15,7 @@ const AuthPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [mode, setMode] = useState<"login" | "signup" | "forgot" | "reset" | "forgot-success" | "reset-success">("login");
   const [resetEmail, setResetEmail] = useState("");
 
@@ -29,34 +31,29 @@ const AuthPage = () => {
 
   const isLogin = mode === "login";
 
+  // Handle recovery token in URL
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      // When user clicks the recovery link, Supabase emits PASSWORD_RECOVERY
-      if (event === "PASSWORD_RECOVERY") {
-        setMode("reset");
-        return;
-      }
-
-      // For normal login/signup, go home
-      if (session && mode !== "reset") {
-        navigate("/");
-      }
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session && mode !== "reset") {
-        navigate("/");
-      }
-    });
-
-    // If user landed on /auth with a recovery token, show reset UI.
-    // Supabase puts tokens in the URL hash; the auth client will parse it and emit PASSWORD_RECOVERY.
     if (window.location.hash.includes("type=recovery")) {
       setMode("reset");
     }
+  }, []);
 
+  // Listen for PASSWORD_RECOVERY event
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setMode("reset");
+      }
+    });
     return () => subscription.unsubscribe();
-  }, [navigate, mode]);
+  }, []);
+
+  // Redirect authenticated users away from auth page
+  useEffect(() => {
+    if (user && mode !== "reset") {
+      navigate("/");
+    }
+  }, [user, mode, navigate]);
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
