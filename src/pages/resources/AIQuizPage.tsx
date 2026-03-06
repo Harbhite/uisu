@@ -611,18 +611,26 @@ const ResultView: React.FC<ResultViewProps> = ({
 
           {/* Export Buttons */}
           <div className="space-y-2">
-            <button
-              onClick={() => exportQuestionsOnly(questions)}
-              className="w-full py-3 border border-border text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:border-accent hover:text-accent transition-all rounded-lg"
-            >
-              <Download size={14} /> Export Questions
-            </button>
-            <button
-              onClick={() => exportAnsweredQuiz(questions, userAnswers, score, timeElapsed)}
-              className="w-full py-3 border border-border text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:border-accent hover:text-accent transition-all rounded-lg"
-            >
-              <FileDown size={14} /> Export Results & Explanations
-            </button>
+            <ExportDropdown
+              label="Export Questions"
+              icon={<Download size={14} />}
+              onExport={(fmt) => {
+                const text = buildQuestionsText(questions);
+                if (fmt === 'txt') downloadTextFile(text, 'quiz-questions.txt');
+                else if (fmt === 'pdf') exportPdf(text, 'quiz-questions.pdf');
+                else exportDocx('AI Quiz — Questions', () => buildQuestionsParagraphs(questions), 'quiz-questions.docx');
+              }}
+            />
+            <ExportDropdown
+              label="Export Results"
+              icon={<FileDown size={14} />}
+              onExport={(fmt) => {
+                const text = buildResultsText(questions, userAnswers, score, timeElapsed);
+                if (fmt === 'txt') downloadTextFile(text, 'quiz-results.txt');
+                else if (fmt === 'pdf') exportPdf(text, 'quiz-results.pdf');
+                else exportDocx('AI Quiz — Results & Explanations', () => buildResultsParagraphs(questions, userAnswers, score, timeElapsed), 'quiz-results.docx');
+              }}
+            />
           </div>
 
           <button
