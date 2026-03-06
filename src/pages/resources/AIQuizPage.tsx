@@ -566,13 +566,7 @@ const ResultView: React.FC<ResultViewProps> = ({
 
 const AIQuizPage = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState<'upload' | 'generating' | 'quiz' | 'result'>(() => {
-    const saved = localStorage.getItem('aiquiz_state');
-    if (saved) {
-      try { return JSON.parse(saved).step || 'upload'; } catch { return 'upload'; }
-    }
-    return 'upload';
-  });
+  const [step, setStep] = useState<'upload' | 'generating' | 'quiz' | 'result'>('upload');
   const [inputText, setInputText] = useState(() => {
     try { return JSON.parse(localStorage.getItem('aiquiz_state') || '{}').inputText || ''; } catch { return ''; }
   });
