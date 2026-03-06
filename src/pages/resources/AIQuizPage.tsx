@@ -220,6 +220,7 @@ interface QuizViewProps {
   handleAnswer: (idx: number) => void;
   goToPrevious: () => void;
   goToNext: () => void;
+  goToQuestion: (idx: number) => void;
   finishQuiz: () => void;
   timeElapsed: number;
   rigidity: Rigidity;
@@ -233,6 +234,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   handleAnswer,
   goToPrevious,
   goToNext,
+  goToQuestion,
   finishQuiz,
   timeElapsed,
   rigidity,
@@ -321,7 +323,7 @@ const QuizView: React.FC<QuizViewProps> = ({
                 ) : (
                   <button
                     onClick={finishQuiz}
-                    disabled={!allAnswered}
+                    disabled={answeredCount === 0}
                     className="flex items-center gap-2 px-5 py-3 bg-accent text-accent-foreground text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed rounded-lg"
                   >
                     Finish Quiz <Trophy size={14} />
@@ -364,7 +366,7 @@ const QuizView: React.FC<QuizViewProps> = ({
                 return (
                   <button
                     key={i}
-                    onClick={() => {/* allow direct navigation */ }}
+                    onClick={() => goToQuestion(i)}
                     className={`w-full aspect-square flex items-center justify-center text-[10px] font-bold rounded-md transition-all ${
                       isCurrent
                         ? 'bg-accent text-accent-foreground ring-2 ring-accent ring-offset-1'
@@ -670,14 +672,25 @@ const AIQuizPage = () => {
     if (timerRef.current) clearInterval(timerRef.current);
   };
 
+  const autoAdvanceRef = useRef<number | null>(null);
+
   const handleAnswer = (idx: number) => {
     const newAnswers = [...userAnswers];
     newAnswers[currentIdx] = idx;
     setUserAnswers(newAnswers);
-    // Auto-advance to next question after a brief delay
+    // Auto-advance with debounce to prevent race conditions
+    if (autoAdvanceRef.current) clearTimeout(autoAdvanceRef.current);
     if (currentIdx < questions.length - 1) {
-      setTimeout(() => setCurrentIdx(prev => prev + 1), 350);
+      autoAdvanceRef.current = window.setTimeout(() => {
+        setCurrentIdx(prev => Math.min(prev + 1, questions.length - 1));
+        autoAdvanceRef.current = null;
+      }, 350);
     }
+  };
+
+  const goToQuestion = (idx: number) => {
+    if (autoAdvanceRef.current) clearTimeout(autoAdvanceRef.current);
+    setCurrentIdx(idx);
   };
 
   const goToPrevious = () => {
@@ -742,6 +755,7 @@ const AIQuizPage = () => {
               handleAnswer={handleAnswer}
               goToPrevious={goToPrevious}
               goToNext={goToNext}
+              goToQuestion={goToQuestion}
               finishQuiz={finishQuiz}
               timeElapsed={timeElapsed}
               rigidity={rigidity}
