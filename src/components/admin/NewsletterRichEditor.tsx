@@ -1,4 +1,4 @@
-import { useRef, useCallback, useState } from "react";
+import { useRef, useCallback, useState, useEffect } from "react";
 import {
   Bold, Italic, Underline, Strikethrough, List, ListOrdered,
   AlignLeft, AlignCenter, AlignRight, Link, Heading1, Heading2, Heading3,
@@ -80,16 +80,41 @@ export const NewsletterRichEditor = ({ value, onChange }: NewsletterRichEditorPr
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [wordCount, setWordCount] = useState(0);
   const [uploading, setUploading] = useState(false);
+  const onChangeRef = useRef(onChange);
+  const isInitializedRef = useRef(false);
+
+  // Keep onChange ref current without triggering re-renders
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  // Sync external value into the editor only on first mount
+  // or when the value changes while the editor is NOT focused
+  useEffect(() => {
+    if (!editorRef.current) return;
+    if (!isInitializedRef.current) {
+      editorRef.current.innerHTML = value || '';
+      isInitializedRef.current = true;
+      return;
+    }
+    // Only sync if editor is not focused (external reset)
+    if (document.activeElement !== editorRef.current) {
+      const currentHtml = editorRef.current.innerHTML;
+      if (currentHtml !== value) {
+        editorRef.current.innerHTML = value || '';
+      }
+    }
+  }, [value]);
 
   const exec = useCallback((command: string, val?: string) => {
     document.execCommand(command, false, val);
     editorRef.current?.focus();
     setTimeout(() => {
       if (editorRef.current) {
-        onChange(editorRef.current.innerHTML);
+        onChangeRef.current(editorRef.current.innerHTML);
       }
     }, 0);
-  }, [onChange]);
+  }, []);
 
   const updateStats = useCallback(() => {
     if (editorRef.current) {
@@ -100,10 +125,10 @@ export const NewsletterRichEditor = ({ value, onChange }: NewsletterRichEditorPr
 
   const handleInput = useCallback(() => {
     if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
+      onChangeRef.current(editorRef.current.innerHTML);
       updateStats();
     }
-  }, [onChange, updateStats]);
+  }, [updateStats]);
 
   const insertLink = useCallback(() => {
     const url = prompt("Enter URL:");
@@ -574,7 +599,6 @@ export const NewsletterRichEditor = ({ value, onChange }: NewsletterRichEditorPr
         onBlur={handleInput}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
-        dangerouslySetInnerHTML={{ __html: value }}
         suppressContentEditableWarning
         className="min-h-[250px] max-h-[500px] overflow-y-auto px-4 py-3 font-serif text-foreground focus:outline-none prose prose-sm max-w-none
           [&_h1]:text-xl [&_h1]:font-bold [&_h1]:mb-2 [&_h1]:mt-3
