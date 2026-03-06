@@ -17,7 +17,11 @@ import {
   ImageIcon,
   Download,
   FileDown,
+  FileText,
 } from 'lucide-react';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
+import { saveAs } from 'file-saver';
+import jsPDF from 'jspdf';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
