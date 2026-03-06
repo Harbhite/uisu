@@ -231,10 +231,22 @@ const AdminDashboard = () => {
 
   // Redirect non-staff
   useEffect(() => {
-    if (!authLoading) {
+    if (authLoading) return;
+
+    let isActive = true;
+
+    const verifyAccess = async () => {
       if (!user) {
-        navigate("/auth");
-      } else if (!isStaff) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!isActive) return;
+
+        if (!session?.user) {
+          navigate("/auth");
+        }
+        return;
+      }
+
+      if (!isStaff) {
         toast({
           title: "Access Denied",
           description: "You don't have permission to access the admin dashboard.",
@@ -242,8 +254,14 @@ const AdminDashboard = () => {
         });
         navigate("/");
       }
-    }
-  }, [user, isStaff, authLoading, navigate, toast]);
+    };
+
+    void verifyAccess();
+
+    return () => {
+      isActive = false;
+    };
+  }, [user?.id, isStaff, authLoading, navigate, toast]);
 
   useEffect(() => {
     localStorage.setItem('admin_active_tab', activeTab);
