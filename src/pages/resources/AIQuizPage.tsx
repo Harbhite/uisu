@@ -17,7 +17,11 @@ import {
   ImageIcon,
   Download,
   FileDown,
+  FileText,
 } from 'lucide-react';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
+import { saveAs } from 'file-saver';
+import jsPDF from 'jspdf';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -387,10 +391,10 @@ const QuizView: React.FC<QuizViewProps> = ({
   );
 };
 
-/** Export quiz questions only (no answers revealed) */
-const exportQuestionsOnly = (questions: Question[]) => {
-  let text = '📝 AI QUIZ — QUESTIONS\n';
-  text += '═'.repeat(50) + '\n\n';
+/** Build questions text content */
+const buildQuestionsText = (questions: Question[]) => {
+  let text = 'AI QUIZ — QUESTIONS\n';
+  text += '='.repeat(50) + '\n\n';
   questions.forEach((q, i) => {
     text += `Q${i + 1}. ${q.question}\n`;
     q.options.forEach((opt, j) => {
@@ -398,30 +402,29 @@ const exportQuestionsOnly = (questions: Question[]) => {
     });
     text += '\n';
   });
-  downloadTextFile(text, 'quiz-questions.txt');
+  return text;
 };
 
-/** Export answered quiz with explanations */
-const exportAnsweredQuiz = (questions: Question[], userAnswers: number[], score: number, timeElapsed: number) => {
+/** Build results text content */
+const buildResultsText = (questions: Question[], userAnswers: number[], score: number, timeElapsed: number) => {
   const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
-  let text = '📋 AI QUIZ — RESULTS & EXPLANATIONS\n';
-  text += '═'.repeat(50) + '\n';
+  let text = 'AI QUIZ — RESULTS & EXPLANATIONS\n';
+  text += '='.repeat(50) + '\n';
   text += `Score: ${score}/${questions.length} (${percentage}%)\n`;
   text += `Time: ${Math.floor(timeElapsed / 60)}m ${timeElapsed % 60}s\n`;
-  text += '═'.repeat(50) + '\n\n';
-
+  text += '='.repeat(50) + '\n\n';
   questions.forEach((q, i) => {
     const isCorrect = userAnswers[i] === q.correctIndex;
     text += `Q${i + 1}. ${q.question}\n`;
     q.options.forEach((opt, j) => {
-      const marker = j === q.correctIndex ? ' ✅' : j === userAnswers[i] ? ' ❌' : '';
+      const marker = j === q.correctIndex ? ' [CORRECT]' : j === userAnswers[i] ? ' [YOUR ANSWER]' : '';
       text += `   ${String.fromCharCode(65 + j)}. ${opt}${marker}\n`;
     });
     text += `\n   Your answer: ${userAnswers[i] !== undefined ? String.fromCharCode(65 + userAnswers[i]) : 'Unanswered'} — ${isCorrect ? 'CORRECT' : 'INCORRECT'}\n`;
     text += `   Correct answer: ${String.fromCharCode(65 + q.correctIndex)}\n`;
-    text += `   💡 ${q.explanation}\n\n`;
+    text += `   Explanation: ${q.explanation}\n\n`;
   });
-  downloadTextFile(text, 'quiz-results.txt');
+  return text;
 };
 
 const downloadTextFile = (content: string, filename: string) => {
@@ -432,6 +435,126 @@ const downloadTextFile = (content: string, filename: string) => {
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+};
+
+const exportDocx = async (title: string, buildParagraphs: () => Paragraph[], filename: string) => {
+  const doc = new Document({
+    sections: [{
+      properties: {},
+      children: [
+        new Paragraph({ text: title, heading: HeadingLevel.HEADING_1, alignment: AlignmentType.CENTER }),
+        new Paragraph({ text: '' }),
+        ...buildParagraphs(),
+      ],
+    }],
+  });
+  const blob = await Packer.toBlob(doc);
+  saveAs(blob, filename);
+};
+
+const exportPdf = (content: string, filename: string) => {
+  const pdf = new jsPDF();
+  const margin = 15;
+  const pageWidth = pdf.internal.pageSize.getWidth() - margin * 2;
+  const lines = pdf.splitTextToSize(content, pageWidth);
+  let y = margin;
+  const lineHeight = 6;
+  lines.forEach((line: string) => {
+    if (y + lineHeight > pdf.internal.pageSize.getHeight() - margin) {
+      pdf.addPage();
+      y = margin;
+    }
+    pdf.text(line, margin, y);
+    y += lineHeight;
+  });
+  pdf.save(filename);
+};
+
+const buildQuestionsParagraphs = (questions: Question[]): Paragraph[] => {
+  const paragraphs: Paragraph[] = [];
+  questions.forEach((q, i) => {
+    paragraphs.push(new Paragraph({
+      children: [new TextRun({ text: `Q${i + 1}. ${q.question}`, bold: true, size: 24 })],
+      spacing: { before: 200 },
+    }));
+    q.options.forEach((opt, j) => {
+      paragraphs.push(new Paragraph({
+        children: [new TextRun({ text: `   ${String.fromCharCode(65 + j)}. ${opt}`, size: 22 })],
+      }));
+    });
+    paragraphs.push(new Paragraph({ text: '' }));
+  });
+  return paragraphs;
+};
+
+const buildResultsParagraphs = (questions: Question[], userAnswers: number[], score: number, timeElapsed: number): Paragraph[] => {
+  const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
+  const paragraphs: Paragraph[] = [
+    new Paragraph({ children: [new TextRun({ text: `Score: ${score}/${questions.length} (${percentage}%)`, bold: true, size: 24 })] }),
+    new Paragraph({ children: [new TextRun({ text: `Time: ${Math.floor(timeElapsed / 60)}m ${timeElapsed % 60}s`, size: 22 })] }),
+    new Paragraph({ text: '' }),
+  ];
+  questions.forEach((q, i) => {
+    const isCorrect = userAnswers[i] === q.correctIndex;
+    paragraphs.push(new Paragraph({
+      children: [new TextRun({ text: `Q${i + 1}. ${q.question}`, bold: true, size: 24 })],
+      spacing: { before: 200 },
+    }));
+    q.options.forEach((opt, j) => {
+      const isAnswer = j === q.correctIndex;
+      const isWrong = j === userAnswers[i] && !isAnswer;
+      paragraphs.push(new Paragraph({
+        children: [new TextRun({
+          text: `   ${String.fromCharCode(65 + j)}. ${opt}${isAnswer ? ' [CORRECT]' : isWrong ? ' [WRONG]' : ''}`,
+          size: 22,
+          bold: isAnswer,
+          color: isAnswer ? '16A34A' : isWrong ? 'DC2626' : '000000',
+        })],
+      }));
+    });
+    paragraphs.push(new Paragraph({
+      children: [new TextRun({ text: `   ${isCorrect ? 'CORRECT' : 'INCORRECT'} — Explanation: ${q.explanation}`, italics: true, size: 20 })],
+      spacing: { after: 100 },
+    }));
+  });
+  return paragraphs;
+};
+
+type ExportFormat = 'txt' | 'pdf' | 'docx';
+
+const ExportDropdown: React.FC<{ label: string; icon: React.ReactNode; onExport: (format: ExportFormat) => void }> = ({ label, icon, onExport }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative w-full">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full py-3 border border-border text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:border-accent hover:text-accent transition-all rounded-lg"
+      >
+        {icon} {label}
+      </button>
+      {open && (
+        <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden">
+          {(['txt', 'pdf', 'docx'] as ExportFormat[]).map(fmt => (
+            <button
+              key={fmt}
+              onClick={() => { onExport(fmt); setOpen(false); }}
+              className="w-full px-4 py-2.5 text-left text-xs font-medium text-foreground hover:bg-accent/10 flex items-center gap-2 transition-colors"
+            >
+              <FileText size={12} /> {fmt.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 };
 
 interface ResultViewProps {
@@ -488,18 +611,26 @@ const ResultView: React.FC<ResultViewProps> = ({
 
           {/* Export Buttons */}
           <div className="space-y-2">
-            <button
-              onClick={() => exportQuestionsOnly(questions)}
-              className="w-full py-3 border border-border text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:border-accent hover:text-accent transition-all rounded-lg"
-            >
-              <Download size={14} /> Export Questions
-            </button>
-            <button
-              onClick={() => exportAnsweredQuiz(questions, userAnswers, score, timeElapsed)}
-              className="w-full py-3 border border-border text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:border-accent hover:text-accent transition-all rounded-lg"
-            >
-              <FileDown size={14} /> Export Results & Explanations
-            </button>
+            <ExportDropdown
+              label="Export Questions"
+              icon={<Download size={14} />}
+              onExport={(fmt) => {
+                const text = buildQuestionsText(questions);
+                if (fmt === 'txt') downloadTextFile(text, 'quiz-questions.txt');
+                else if (fmt === 'pdf') exportPdf(text, 'quiz-questions.pdf');
+                else exportDocx('AI Quiz — Questions', () => buildQuestionsParagraphs(questions), 'quiz-questions.docx');
+              }}
+            />
+            <ExportDropdown
+              label="Export Results"
+              icon={<FileDown size={14} />}
+              onExport={(fmt) => {
+                const text = buildResultsText(questions, userAnswers, score, timeElapsed);
+                if (fmt === 'txt') downloadTextFile(text, 'quiz-results.txt');
+                else if (fmt === 'pdf') exportPdf(text, 'quiz-results.pdf');
+                else exportDocx('AI Quiz — Results & Explanations', () => buildResultsParagraphs(questions, userAnswers, score, timeElapsed), 'quiz-results.docx');
+              }}
+            />
           </div>
 
           <button
