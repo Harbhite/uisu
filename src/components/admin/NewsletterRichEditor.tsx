@@ -1,4 +1,4 @@
-import { useRef, useCallback, useState } from "react";
+import { useRef, useCallback, useState, useEffect } from "react";
 import {
   Bold, Italic, Underline, Strikethrough, List, ListOrdered,
   AlignLeft, AlignCenter, AlignRight, Link, Heading1, Heading2, Heading3,
@@ -599,7 +599,6 @@ export const NewsletterRichEditor = ({ value, onChange }: NewsletterRichEditorPr
         onBlur={handleInput}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
-        dangerouslySetInnerHTML={{ __html: value }}
         suppressContentEditableWarning
         className="min-h-[250px] max-h-[500px] overflow-y-auto px-4 py-3 font-serif text-foreground focus:outline-none prose prose-sm max-w-none
           [&_h1]:text-xl [&_h1]:font-bold [&_h1]:mb-2 [&_h1]:mt-3
