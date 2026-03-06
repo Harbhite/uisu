@@ -43,7 +43,7 @@ serve(async (req) => {
 
   try {
     const { material, rigidity, fileContent, fileName, count } = await req.json();
-    const questionCount = Math.min(Math.max(count || 25, 5), 40);
+    const questionCount = Math.min(Math.max(count || 25, 5), 200);
 
     if (!material && !fileContent) {
       return new Response(JSON.stringify({ error: "No study material provided" }), {
