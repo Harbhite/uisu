@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 
@@ -17,27 +17,62 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const latestUserRef = useRef<User | null>(null);
+  const manualSignOutRef = useRef(false);
 
   useEffect(() => {
+    latestUserRef.current = user;
+  }, [user]);
+
+  useEffect(() => {
+    const syncUser = (nextUser: User | null) => {
+      setUser((prevUser) => {
+        if (prevUser?.id === nextUser?.id) return prevUser;
+        return nextUser;
+      });
+    };
+
+    const verifySession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      syncUser(session?.user ?? null);
+      setLoading(false);
+    };
+
     // Set up listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null);
+      async (event, session) => {
+        const sessionUser = session?.user ?? null;
+
+        // Guard against transient SIGNED_OUT events during token refresh turbulence
+        if (event === 'SIGNED_OUT' && !manualSignOutRef.current && latestUserRef.current) {
+          await verifySession();
+          return;
+        }
+
+        if (event === 'SIGNED_OUT') {
+          manualSignOutRef.current = false;
+        }
+
+        syncUser(sessionUser);
         setLoading(false);
       }
     );
 
     // Then check existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    void verifySession();
 
     return () => subscription.unsubscribe();
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    manualSignOutRef.current = true;
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      manualSignOutRef.current = false;
+      throw error;
+    }
+
     setUser(null);
   };
 
@@ -49,3 +84,4 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
+

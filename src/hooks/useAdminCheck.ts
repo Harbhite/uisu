@@ -6,6 +6,7 @@ export type UserRole = 'admin' | 'moderator' | 'user';
 
 export const useAdminCheck = () => {
   const { user, loading: authLoading } = useAuth();
+  const userId = user?.id;
   const [role, setRole] = useState<UserRole>('user');
   const [isAdmin, setIsAdmin] = useState(false);
   const [isModerator, setIsModerator] = useState(false);
@@ -15,7 +16,7 @@ export const useAdminCheck = () => {
   useEffect(() => {
     if (authLoading) return;
 
-    if (!user) {
+    if (!userId) {
       setRole('user');
       setIsAdmin(false);
       setIsModerator(false);
@@ -26,9 +27,9 @@ export const useAdminCheck = () => {
 
     const checkUserRole = async () => {
       try {
-        const { data, error } = await supabase.rpc('get_user_role', { _user_id: user.id });
+        const { data, error } = await supabase.rpc('get_user_role', { _user_id: userId });
         if (error) throw error;
-        
+
         const userRole = (data as UserRole) || 'user';
         setRole(userRole);
         setIsAdmin(userRole === 'admin');
@@ -36,17 +37,14 @@ export const useAdminCheck = () => {
         setIsStaff(userRole === 'admin' || userRole === 'moderator');
       } catch (error) {
         console.error('Error checking user role:', error);
-        setRole('user');
-        setIsAdmin(false);
-        setIsModerator(false);
-        setIsStaff(false);
       }
       setLoading(false);
     };
 
     setLoading(true);
-    checkUserRole();
-  }, [user, authLoading]);
+    void checkUserRole();
+  }, [userId, authLoading]);
 
   return { user, role, isAdmin, isModerator, isStaff, loading };
 };
+
