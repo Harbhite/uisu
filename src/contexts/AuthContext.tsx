@@ -33,19 +33,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const verifySession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      syncUser(session?.user ?? null);
-      setLoading(false);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        syncUser(session?.user ?? null);
+      } catch (error) {
+        console.error('Error verifying session:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     // Set up listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         const sessionUser = session?.user ?? null;
 
         // Guard against transient SIGNED_OUT events during token refresh turbulence
         if (event === 'SIGNED_OUT' && !manualSignOutRef.current && latestUserRef.current) {
-          await verifySession();
+          void verifySession();
           return;
         }
 
