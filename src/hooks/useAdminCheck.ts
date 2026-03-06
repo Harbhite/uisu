@@ -26,18 +26,29 @@ export const useAdminCheck = () => {
     }
 
     const checkUserRole = async () => {
-      try {
-        const { data, error } = await supabase.rpc('get_user_role', { _user_id: userId });
-        if (error) throw error;
+      let lastError: unknown = null;
 
-        const userRole = (data as UserRole) || 'user';
-        setRole(userRole);
-        setIsAdmin(userRole === 'admin');
-        setIsModerator(userRole === 'moderator');
-        setIsStaff(userRole === 'admin' || userRole === 'moderator');
-      } catch (error) {
-        console.error('Error checking user role:', error);
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const { data, error } = await supabase.rpc('get_user_role', { _user_id: userId });
+
+        if (!error) {
+          const userRole = (data as UserRole) || 'user';
+          setRole(userRole);
+          setIsAdmin(userRole === 'admin');
+          setIsModerator(userRole === 'moderator');
+          setIsStaff(userRole === 'admin' || userRole === 'moderator');
+          setLoading(false);
+          return;
+        }
+
+        lastError = error;
+
+        if (attempt === 0) {
+          await new Promise((resolve) => setTimeout(resolve, 300));
+        }
       }
+
+      console.error('Error checking user role:', lastError);
       setLoading(false);
     };
 
