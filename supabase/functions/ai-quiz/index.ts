@@ -5,13 +5,43 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const LOVABLE_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const QWEN_GATEWAY = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions";
+const QWEN_MODEL = "qwen-plus";
+
+async function callWithFallback(body: Record<string, unknown>) {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  const QWEN_API_KEY = Deno.env.get("QWEN_API_KEY");
+
+  if (LOVABLE_API_KEY) {
+    const response = await fetch(LOVABLE_GATEWAY, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (response.ok) return { response, provider: "lovable" };
+    if (response.status !== 429 && response.status !== 402) return { response, provider: "lovable" };
+    console.log(`Lovable AI returned ${response.status}, falling back to Qwen...`);
+    await response.text();
+  }
+
+  if (!QWEN_API_KEY) throw new Error("Both Lovable AI and Qwen API keys are unavailable");
+
+  const qwenBody = { ...body, model: QWEN_MODEL };
+  const response = await fetch(QWEN_GATEWAY, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${QWEN_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify(qwenBody),
+  });
+
+  return { response, provider: "qwen" };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-
     const { material, rigidity, fileContent, fileName, count } = await req.json();
     const questionCount = Math.min(Math.max(count || 25, 5), 40);
 
@@ -45,55 +75,50 @@ Ensure intellectual depth, variety across the material, and strict adherence to 
     if (material) userContent += `STUDY MATERIAL:\n${material}\n\n`;
     if (fileContent) userContent += `UPLOADED DOCUMENT CONTENT (${fileName || "document"}):\n${fileContent}`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userContent },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "generate_quiz",
-              description: `Generate ${questionCount} multiple-choice quiz questions from study material`,
-              parameters: {
-                type: "object",
-                properties: {
-                  questions: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        question: { type: "string" },
-                        options: { type: "array", items: { type: "string" } },
-                        correctIndex: { type: "integer" },
-                        explanation: { type: "string" },
-                      },
-                      required: ["question", "options", "correctIndex", "explanation"],
-                      additionalProperties: false,
+    const requestBody = {
+      model: "google/gemini-3-flash-preview",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userContent },
+      ],
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "generate_quiz",
+            description: `Generate ${questionCount} multiple-choice quiz questions from study material`,
+            parameters: {
+              type: "object",
+              properties: {
+                questions: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      question: { type: "string" },
+                      options: { type: "array", items: { type: "string" } },
+                      correctIndex: { type: "integer" },
+                      explanation: { type: "string" },
                     },
+                    required: ["question", "options", "correctIndex", "explanation"],
+                    additionalProperties: false,
                   },
                 },
-                required: ["questions"],
-                additionalProperties: false,
               },
+              required: ["questions"],
+              additionalProperties: false,
             },
           },
-        ],
-        tool_choice: { type: "function", function: { name: "generate_quiz" } },
-      }),
-    });
+        },
+      ],
+      tool_choice: { type: "function", function: { name: "generate_quiz" } },
+    };
+
+    const { response, provider } = await callWithFallback(requestBody);
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error("AI gateway error:", response.status, errText);
+      console.error(`${provider} AI error:`, response.status, errText);
       return new Response(JSON.stringify({ error: "AI processing failed. Please try again." }), {
         status: response.status === 429 ? 429 : response.status === 402 ? 402 : 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -110,7 +135,7 @@ Ensure intellectual depth, variety across the material, and strict adherence to 
       const parsed = JSON.parse(toolCall.function.arguments);
       questions = parsed.questions;
     } else {
-      // Fallback: try parsing content directly
+      // Fallback: try parsing content directly (Qwen may return content instead of tool_calls)
       const content = data.choices?.[0]?.message?.content || "";
       const jsonMatch = content.match(/\[[\s\S]*\]/);
       if (jsonMatch) {

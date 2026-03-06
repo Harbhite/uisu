@@ -5,13 +5,50 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const LOVABLE_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const QWEN_GATEWAY = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions";
+const QWEN_MODEL = "qwen-plus";
+
+async function callWithFallback(body: Record<string, unknown>, isStream: boolean) {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  const QWEN_API_KEY = Deno.env.get("QWEN_API_KEY");
+
+  // Try Lovable AI first
+  if (LOVABLE_API_KEY) {
+    const response = await fetch(LOVABLE_GATEWAY, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (response.ok) return { response, provider: "lovable" };
+
+    // Only fallback on quota/rate limit errors
+    if (response.status !== 429 && response.status !== 402) {
+      return { response, provider: "lovable" };
+    }
+    console.log(`Lovable AI returned ${response.status}, falling back to Qwen...`);
+    // Consume the response body to avoid leak
+    await response.text();
+  }
+
+  // Fallback to Qwen
+  if (!QWEN_API_KEY) throw new Error("Both Lovable AI and Qwen API keys are unavailable");
+
+  const qwenBody = { ...body, model: QWEN_MODEL };
+  const response = await fetch(QWEN_GATEWAY, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${QWEN_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify(qwenBody),
+  });
+
+  return { response, provider: "qwen" };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-
     const { mode, topic, material, generateImage } = await req.json();
 
     const modePrompts: Record<string, string> = {
@@ -80,14 +117,14 @@ Use markdown formatting extensively.`
 
     const systemPrompt = modePrompts[mode] || modePrompts.explainer;
 
-    // If image generation requested, use nano banana
+    // If image generation requested, use Lovable AI only (Qwen doesn't support this)
     if (generateImage) {
-      const imageResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+      if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured for image generation");
+
+      const imageResponse = await fetch(LOVABLE_GATEWAY, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "google/gemini-2.5-flash-image",
           messages: [
@@ -117,33 +154,28 @@ Use markdown formatting extensively.`
       ? `Topic/Concept: ${topic}${material ? `\n\nAdditional Material:\n${material}` : ""}`
       : material || "No material provided";
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userContent },
-        ],
-        stream: true,
-      }),
-    });
+    const requestBody = {
+      model: "google/gemini-3-flash-preview",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userContent },
+      ],
+      stream: true,
+    };
+
+    const { response, provider } = await callWithFallback(requestBody, true);
 
     if (!response.ok) {
       const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
-      return new Response(JSON.stringify({ error: "AI gateway error" }), {
+      console.error(`${provider} AI error:`, response.status, t);
+      return new Response(JSON.stringify({ error: "AI processing failed. Please try again later." }), {
         status: response.status === 429 ? 429 : response.status === 402 ? 402 : 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     return new Response(response.body, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+      headers: { ...corsHeaders, "Content-Type": "text/event-stream", "X-AI-Provider": provider },
     });
   } catch (e) {
     console.error("study-buddy error:", e);
