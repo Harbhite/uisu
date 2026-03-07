@@ -628,7 +628,6 @@ const ResultView: React.FC<ResultViewProps> = ({
               label="Export Results"
               icon={<FileDown size={14} />}
               onExport={(fmt) => {
-                const safeName = (inputText.split('\n')[0] || 'quiz-results').replace(/[^a-zA-Z0-9\s-]/g, '').trim().replace(/\s+/g, '-').substring(0, 60) || 'quiz-results';
                 const text = buildResultsText(questions, userAnswers, score, timeElapsed);
                 if (fmt === 'txt') downloadTextFile(text, `${safeName}-results.txt`);
                 else if (fmt === 'pdf') exportPdf(text, `${safeName}-results.pdf`);
@@ -906,6 +905,7 @@ const AIQuizPage = () => {
               timeElapsed={timeElapsed}
               userAnswers={userAnswers}
               navigate={navigate}
+              topicName={inputText}
             />
           )}
         </AnimatePresence>
