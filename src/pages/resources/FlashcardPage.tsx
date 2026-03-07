@@ -4,12 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import {
   CreditCard, Send, Loader2, Sparkles, RefreshCcw,
   Upload, FileIcon, Trash2, ImageIcon, ChevronLeft, ChevronRight,
-  RotateCcw, Shuffle, Filter
+  RotateCcw, Shuffle, Filter, Download, ChevronDown, FileText, FileDown
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import AIToolsHeader from '@/components/resources/AIToolsHeader';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { saveAs } from 'file-saver';
+import { Document, Packer, Paragraph, HeadingLevel, TextRun } from 'docx';
 
 interface Flashcard {
   front: string;
@@ -67,6 +69,98 @@ const difficultyColors: Record<string, string> = {
   Easy: 'bg-emerald-100 text-emerald-800',
   Medium: 'bg-amber-100 text-amber-800',
   Hard: 'bg-red-100 text-red-800',
+};
+
+// Export Dropdown for flashcards
+const FlashcardExportDropdown: React.FC<{ cards: Flashcard[]; topic: string }> = ({ cards, topic }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const buildText = () => cards.map((c, i) =>
+    `Card ${i + 1} [${c.difficulty}]\nQ: ${c.front}\nA: ${c.back}`
+  ).join('\n\n');
+
+  const exportTxt = () => {
+    const blob = new Blob([`Flashcards — ${topic || 'Study Set'}\n${'='.repeat(40)}\n\n${buildText()}`], { type: 'text/plain' });
+    saveAs(blob, `flashcards-${Date.now()}.txt`);
+    toast.success('Downloaded as TXT');
+    setOpen(false);
+  };
+
+  const exportPdf = async () => {
+    const { jsPDF } = await import('jspdf');
+    const doc = new jsPDF();
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text(`Flashcards — ${topic || 'Study Set'}`, 20, 20);
+    let y = 32;
+    cards.forEach((c, i) => {
+      if (y > 260) { doc.addPage(); y = 20; }
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text(`Card ${i + 1} [${c.difficulty}]`, 20, y); y += 6;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      const qLines = doc.splitTextToSize(`Q: ${c.front}`, 170);
+      doc.text(qLines, 20, y); y += qLines.length * 4.5;
+      const aLines = doc.splitTextToSize(`A: ${c.back}`, 170);
+      doc.text(aLines, 20, y); y += aLines.length * 4.5 + 6;
+    });
+    doc.save(`flashcards-${Date.now()}.pdf`);
+    toast.success('Downloaded as PDF');
+    setOpen(false);
+  };
+
+  const exportDocx = async () => {
+    const paragraphs: Paragraph[] = [];
+    cards.forEach((c, i) => {
+      paragraphs.push(
+        new Paragraph({ children: [new TextRun({ text: `Card ${i + 1} [${c.difficulty}]`, bold: true, size: 22 })] }),
+        new Paragraph({ children: [new TextRun({ text: `Q: ${c.front}`, size: 20 })] }),
+        new Paragraph({ children: [new TextRun({ text: `A: ${c.back}`, size: 20, italics: true })] }),
+        new Paragraph({ text: '' }),
+      );
+    });
+    const docFile = new Document({
+      sections: [{ children: [new Paragraph({ text: `Flashcards — ${topic || 'Study Set'}`, heading: HeadingLevel.HEADING_1 }), ...paragraphs] }],
+    });
+    const blob = await Packer.toBlob(docFile);
+    saveAs(blob, `flashcards-${Date.now()}.docx`);
+    toast.success('Downloaded as DOCX');
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="p-2.5 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-colors rounded-lg flex items-center gap-1"
+        title="Export"
+      >
+        <Download size={14} />
+        <ChevronDown size={10} />
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full mt-1 bg-card border border-border rounded-lg shadow-lg z-50 min-w-[140px] py-1">
+          <button onClick={exportTxt} className="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:bg-muted/50 flex items-center gap-2">
+            <FileText size={12} /> TXT
+          </button>
+          <button onClick={exportPdf} className="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:bg-muted/50 flex items-center gap-2">
+            <FileDown size={12} /> PDF
+          </button>
+          <button onClick={exportDocx} className="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:bg-muted/50 flex items-center gap-2">
+            <FileIcon size={12} /> DOCX
+          </button>
+        </div>
+      )}
+    </div>
+  );
 };
 
 const FlashcardPage = () => {
@@ -367,6 +461,7 @@ const FlashcardPage = () => {
                 >
                   🧠 SR
                 </button>
+                <FlashcardExportDropdown cards={cards} topic={topic} />
               </div>
               <div className="flex items-center gap-1.5">
                 <Filter size={12} className="text-muted-foreground mr-1" />

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
@@ -7,8 +7,10 @@ import {
   BookOpen, CalendarDays, Layers, Swords,
   Send, Loader2, Sparkles, ImageIcon, RefreshCcw, Copy, Check,
   Upload, FileIcon, Trash2, Table2, Code2, Download,
-  ChevronDown, ChevronUp, Eye, EyeOff, History
+  ChevronDown, ChevronUp, Eye, EyeOff, History, FileText, FileDown
 } from 'lucide-react';
+import { saveAs } from 'file-saver';
+import { Document, Packer, Paragraph, HeadingLevel, TextRun } from 'docx';
 import { supabase } from '@/integrations/supabase/client';
 import { SEO } from '@/components/SEO';
 import AIToolsHeader from '@/components/resources/AIToolsHeader';
@@ -108,6 +110,91 @@ const CollapsibleDiagram: React.FC<{ label: string; children: React.ReactNode }>
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+};
+
+// Reusable Export Dropdown for TXT, PDF, DOCX
+const ExportDropdown: React.FC<{ content: string; filenameBase: string; title: string }> = ({ content, filenameBase, title }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const plainText = content.replace(/[#*`_~>]/g, '').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+
+  const exportTxt = () => {
+    const blob = new Blob([plainText], { type: 'text/plain' });
+    saveAs(blob, `${filenameBase}-${Date.now()}.txt`);
+    toast.success('Downloaded as TXT');
+    setOpen(false);
+  };
+
+  const exportPdf = async () => {
+    const { jsPDF } = await import('jspdf');
+    const doc = new jsPDF();
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text(title, 20, 20);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    const lines = doc.splitTextToSize(plainText, 170);
+    let y = 32;
+    for (const line of lines) {
+      if (y > 280) { doc.addPage(); y = 20; }
+      doc.text(line, 20, y);
+      y += 5;
+    }
+    doc.save(`${filenameBase}-${Date.now()}.pdf`);
+    toast.success('Downloaded as PDF');
+    setOpen(false);
+  };
+
+  const exportDocx = async () => {
+    const paragraphs = plainText.split('\n').filter(Boolean).map(
+      line => new Paragraph({ children: [new TextRun({ text: line, size: 22 })] })
+    );
+    const docFile = new Document({
+      sections: [{
+        children: [
+          new Paragraph({ text: title, heading: HeadingLevel.HEADING_1 }),
+          ...paragraphs,
+        ],
+      }],
+    });
+    const blob = await Packer.toBlob(docFile);
+    saveAs(blob, `${filenameBase}-${Date.now()}.docx`);
+    toast.success('Downloaded as DOCX');
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="p-2 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-all rounded-sm flex items-center gap-1"
+        title="Export"
+      >
+        <Download size={13} />
+        <ChevronDown size={10} />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg shadow-lg z-50 min-w-[140px] py-1">
+          <button onClick={exportTxt} className="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:bg-muted/50 flex items-center gap-2">
+            <FileText size={12} /> TXT
+          </button>
+          <button onClick={exportPdf} className="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:bg-muted/50 flex items-center gap-2">
+            <FileDown size={12} /> PDF
+          </button>
+          <button onClick={exportDocx} className="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:bg-muted/50 flex items-center gap-2">
+            <FileIcon size={12} /> DOCX
+          </button>
+        </div>
+      )}
     </div>
   );
 };
@@ -515,45 +602,14 @@ const StudyBuddyPage = () => {
                     </motion.div>
                   )}
                 </div>
-                <div className="flex gap-1.5">
+              <div className="flex gap-1.5">
                   {response && (
                     <>
-                      <button
-                        onClick={() => {
-                          const blob = new Blob([response], { type: 'text/markdown' });
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = `studybuddy-${currentMode.label.toLowerCase()}-${Date.now()}.md`;
-                          a.click();
-                          URL.revokeObjectURL(url);
-                          toast.success('Downloaded as Markdown');
-                        }}
-                        className="p-2 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-all rounded-sm"
-                        title="Download as Markdown"
-                      >
-                        <Download size={13} />
-                      </button>
-                      <button
-                        onClick={() => {
-                          import('jspdf').then(({ jsPDF }) => {
-                            const doc = new jsPDF();
-                            const lines = doc.splitTextToSize(response.replace(/[#*`]/g, ''), 170);
-                            doc.setFont('helvetica', 'bold');
-                            doc.setFontSize(14);
-                            doc.text(`StudyBuddy — ${currentMode.label}`, 20, 20);
-                            doc.setFont('helvetica', 'normal');
-                            doc.setFontSize(10);
-                            doc.text(lines, 20, 32);
-                            doc.save(`studybuddy-${currentMode.label.toLowerCase()}-${Date.now()}.pdf`);
-                            toast.success('Downloaded as PDF');
-                          });
-                        }}
-                        className="p-2 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-all rounded-sm"
-                        title="Download as PDF"
-                      >
-                        <Eye size={13} />
-                      </button>
+                      <ExportDropdown
+                        content={response}
+                        filenameBase={`studybuddy-${currentMode.label.toLowerCase()}`}
+                        title={`StudyBuddy — ${currentMode.label}`}
+                      />
                       <button
                         onClick={handleCopy}
                         className="p-2 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-all rounded-sm"
