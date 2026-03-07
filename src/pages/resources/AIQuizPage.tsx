@@ -564,12 +564,19 @@ interface ResultViewProps {
   timeElapsed: number;
   userAnswers: number[];
   navigate: (path: string) => void;
+  topicName: string;
 }
 
 const ResultView: React.FC<ResultViewProps> = ({
   questions,
   score,
   resetQuiz,
+  timeElapsed,
+  userAnswers,
+  navigate,
+  topicName,
+}) => {
+  const safeName = (topicName.split('\n')[0] || 'quiz').replace(/[^a-zA-Z0-9\s-]/g, '').trim().replace(/\s+/g, '-').substring(0, 60) || 'quiz';
   timeElapsed,
   userAnswers,
   navigate,
