@@ -615,20 +615,22 @@ const ResultView: React.FC<ResultViewProps> = ({
               label="Export Questions"
               icon={<Download size={14} />}
               onExport={(fmt) => {
+                const safeName = (inputText.split('\n')[0] || 'quiz-questions').replace(/[^a-zA-Z0-9\s-]/g, '').trim().replace(/\s+/g, '-').substring(0, 60) || 'quiz-questions';
                 const text = buildQuestionsText(questions);
-                if (fmt === 'txt') downloadTextFile(text, 'quiz-questions.txt');
-                else if (fmt === 'pdf') exportPdf(text, 'quiz-questions.pdf');
-                else exportDocx('AI Quiz — Questions', () => buildQuestionsParagraphs(questions), 'quiz-questions.docx');
+                if (fmt === 'txt') downloadTextFile(text, `${safeName}-questions.txt`);
+                else if (fmt === 'pdf') exportPdf(text, `${safeName}-questions.pdf`);
+                else exportDocx('AI Quiz — Questions', () => buildQuestionsParagraphs(questions), `${safeName}-questions.docx`);
               }}
             />
             <ExportDropdown
               label="Export Results"
               icon={<FileDown size={14} />}
               onExport={(fmt) => {
+                const safeName = (inputText.split('\n')[0] || 'quiz-results').replace(/[^a-zA-Z0-9\s-]/g, '').trim().replace(/\s+/g, '-').substring(0, 60) || 'quiz-results';
                 const text = buildResultsText(questions, userAnswers, score, timeElapsed);
-                if (fmt === 'txt') downloadTextFile(text, 'quiz-results.txt');
-                else if (fmt === 'pdf') exportPdf(text, 'quiz-results.pdf');
-                else exportDocx('AI Quiz — Results & Explanations', () => buildResultsParagraphs(questions, userAnswers, score, timeElapsed), 'quiz-results.docx');
+                if (fmt === 'txt') downloadTextFile(text, `${safeName}-results.txt`);
+                else if (fmt === 'pdf') exportPdf(text, `${safeName}-results.pdf`);
+                else exportDocx('AI Quiz — Results & Explanations', () => buildResultsParagraphs(questions, userAnswers, score, timeElapsed), `${safeName}-results.docx`);
               }}
             />
           </div>

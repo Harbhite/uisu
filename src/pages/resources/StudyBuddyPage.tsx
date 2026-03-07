@@ -605,9 +605,9 @@ const StudyBuddyPage = () => {
               <div className="flex gap-1.5">
                   {response && (
                     <>
-                      <ExportDropdown
+                       <ExportDropdown
                         content={response}
-                        filenameBase={`studybuddy-${currentMode.label.toLowerCase()}`}
+                        filenameBase={(topic || `studybuddy-${currentMode.label.toLowerCase()}`).replace(/[^a-zA-Z0-9\s-]/g, '').trim().replace(/\s+/g, '-').substring(0, 60)}
                         title={`StudyBuddy — ${currentMode.label}`}
                       />
                       <button
