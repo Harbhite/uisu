@@ -114,6 +114,91 @@ const CollapsibleDiagram: React.FC<{ label: string; children: React.ReactNode }>
   );
 };
 
+// Reusable Export Dropdown for TXT, PDF, DOCX
+const ExportDropdown: React.FC<{ content: string; filenameBase: string; title: string }> = ({ content, filenameBase, title }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const plainText = content.replace(/[#*`_~>]/g, '').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+
+  const exportTxt = () => {
+    const blob = new Blob([plainText], { type: 'text/plain' });
+    saveAs(blob, `${filenameBase}-${Date.now()}.txt`);
+    toast.success('Downloaded as TXT');
+    setOpen(false);
+  };
+
+  const exportPdf = async () => {
+    const { jsPDF } = await import('jspdf');
+    const doc = new jsPDF();
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text(title, 20, 20);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    const lines = doc.splitTextToSize(plainText, 170);
+    let y = 32;
+    for (const line of lines) {
+      if (y > 280) { doc.addPage(); y = 20; }
+      doc.text(line, 20, y);
+      y += 5;
+    }
+    doc.save(`${filenameBase}-${Date.now()}.pdf`);
+    toast.success('Downloaded as PDF');
+    setOpen(false);
+  };
+
+  const exportDocx = async () => {
+    const paragraphs = plainText.split('\n').filter(Boolean).map(
+      line => new Paragraph({ children: [new TextRun({ text: line, size: 22 })] })
+    );
+    const docFile = new Document({
+      sections: [{
+        children: [
+          new Paragraph({ text: title, heading: HeadingLevel.HEADING_1 }),
+          ...paragraphs,
+        ],
+      }],
+    });
+    const blob = await Packer.toBlob(docFile);
+    saveAs(blob, `${filenameBase}-${Date.now()}.docx`);
+    toast.success('Downloaded as DOCX');
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="p-2 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-all rounded-sm flex items-center gap-1"
+        title="Export"
+      >
+        <Download size={13} />
+        <ChevronDown size={10} />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg shadow-lg z-50 min-w-[140px] py-1">
+          <button onClick={exportTxt} className="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:bg-muted/50 flex items-center gap-2">
+            <FileText size={12} /> TXT
+          </button>
+          <button onClick={exportPdf} className="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:bg-muted/50 flex items-center gap-2">
+            <FileDown size={12} /> PDF
+          </button>
+          <button onClick={exportDocx} className="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:bg-muted/50 flex items-center gap-2">
+            <FileIcon size={12} /> DOCX
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const StudyBuddyPage = () => {
   const navigate = useNavigate();
   const [activeMode, setActiveMode] = useState<Mode>(() => {
