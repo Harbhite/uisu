@@ -4,12 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import {
   CreditCard, Send, Loader2, Sparkles, RefreshCcw,
   Upload, FileIcon, Trash2, ImageIcon, ChevronLeft, ChevronRight,
-  RotateCcw, Shuffle, Filter
+  RotateCcw, Shuffle, Filter, Download, ChevronDown, FileText, FileDown
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import AIToolsHeader from '@/components/resources/AIToolsHeader';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { saveAs } from 'file-saver';
+import { Document, Packer, Paragraph, HeadingLevel, TextRun } from 'docx';
 
 interface Flashcard {
   front: string;
