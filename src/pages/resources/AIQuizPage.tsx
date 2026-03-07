@@ -577,10 +577,6 @@ const ResultView: React.FC<ResultViewProps> = ({
   topicName,
 }) => {
   const safeName = (topicName.split('\n')[0] || 'quiz').replace(/[^a-zA-Z0-9\s-]/g, '').trim().replace(/\s+/g, '-').substring(0, 60) || 'quiz';
-  timeElapsed,
-  userAnswers,
-  navigate,
-}) => {
   const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
   const rank = percentage >= 80 ? 'Distinction' : percentage >= 60 ? 'Merit' : percentage >= 40 ? 'Pass' : 'Needs Review';
 
