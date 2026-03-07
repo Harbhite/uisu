@@ -386,12 +386,6 @@ const Index = () => {
       {/* Marquee Banner */}
       <Marquee />
       
-      {/* Announcements Banner */}
-      <AnnouncementsBanner />
-      
-      {/* Notification Prompt */}
-      <NotificationPrompt />
-      
       {/* Floating Navbar */}
       <Navbar
         isMenuOpen={isMenuOpen}
@@ -406,6 +400,12 @@ const Index = () => {
         setIsMenuOpen={setIsMenuOpen}
         navLinks={navLinks}
       />
+
+      {/* Announcements Banner */}
+      <AnnouncementsBanner />
+      
+      {/* Notification Prompt */}
+      <NotificationPrompt />
 
       {/* Hero Section */}
       <header className="relative min-h-screen flex flex-col items-center justify-center pt-32 pb-20 overflow-hidden bg-white">
