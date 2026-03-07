@@ -7,8 +7,10 @@ import {
   BookOpen, CalendarDays, Layers, Swords,
   Send, Loader2, Sparkles, ImageIcon, RefreshCcw, Copy, Check,
   Upload, FileIcon, Trash2, Table2, Code2, Download,
-  ChevronDown, ChevronUp, Eye, EyeOff, History
+  ChevronDown, ChevronUp, Eye, EyeOff, History, FileText, FileDown
 } from 'lucide-react';
+import { saveAs } from 'file-saver';
+import { Document, Packer, Paragraph, HeadingLevel, TextRun } from 'docx';
 import { supabase } from '@/integrations/supabase/client';
 import { SEO } from '@/components/SEO';
 import AIToolsHeader from '@/components/resources/AIToolsHeader';
@@ -515,45 +517,14 @@ const StudyBuddyPage = () => {
                     </motion.div>
                   )}
                 </div>
-                <div className="flex gap-1.5">
+              <div className="flex gap-1.5">
                   {response && (
                     <>
-                      <button
-                        onClick={() => {
-                          const blob = new Blob([response], { type: 'text/markdown' });
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = `studybuddy-${currentMode.label.toLowerCase()}-${Date.now()}.md`;
-                          a.click();
-                          URL.revokeObjectURL(url);
-                          toast.success('Downloaded as Markdown');
-                        }}
-                        className="p-2 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-all rounded-sm"
-                        title="Download as Markdown"
-                      >
-                        <Download size={13} />
-                      </button>
-                      <button
-                        onClick={() => {
-                          import('jspdf').then(({ jsPDF }) => {
-                            const doc = new jsPDF();
-                            const lines = doc.splitTextToSize(response.replace(/[#*`]/g, ''), 170);
-                            doc.setFont('helvetica', 'bold');
-                            doc.setFontSize(14);
-                            doc.text(`StudyBuddy — ${currentMode.label}`, 20, 20);
-                            doc.setFont('helvetica', 'normal');
-                            doc.setFontSize(10);
-                            doc.text(lines, 20, 32);
-                            doc.save(`studybuddy-${currentMode.label.toLowerCase()}-${Date.now()}.pdf`);
-                            toast.success('Downloaded as PDF');
-                          });
-                        }}
-                        className="p-2 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-all rounded-sm"
-                        title="Download as PDF"
-                      >
-                        <Eye size={13} />
-                      </button>
+                      <ExportDropdown
+                        content={response}
+                        filenameBase={`studybuddy-${currentMode.label.toLowerCase()}`}
+                        title={`StudyBuddy — ${currentMode.label}`}
+                      />
                       <button
                         onClick={handleCopy}
                         className="p-2 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-all rounded-sm"
