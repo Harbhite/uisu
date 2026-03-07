@@ -129,7 +129,7 @@ const ExportDropdown: React.FC<{ content: string; filenameBase: string; title: s
 
   const exportTxt = () => {
     const blob = new Blob([plainText], { type: 'text/plain' });
-    saveAs(blob, `${filenameBase}-${Date.now()}.txt`);
+    saveAs(blob, `${filenameBase}.txt`);
     toast.success('Downloaded as TXT');
     setOpen(false);
   };
@@ -149,7 +149,7 @@ const ExportDropdown: React.FC<{ content: string; filenameBase: string; title: s
       doc.text(line, 20, y);
       y += 5;
     }
-    doc.save(`${filenameBase}-${Date.now()}.pdf`);
+    doc.save(`${filenameBase}.pdf`);
     toast.success('Downloaded as PDF');
     setOpen(false);
   };
@@ -167,7 +167,7 @@ const ExportDropdown: React.FC<{ content: string; filenameBase: string; title: s
       }],
     });
     const blob = await Packer.toBlob(docFile);
-    saveAs(blob, `${filenameBase}-${Date.now()}.docx`);
+    saveAs(blob, `${filenameBase}.docx`);
     toast.success('Downloaded as DOCX');
     setOpen(false);
   };
@@ -605,9 +605,9 @@ const StudyBuddyPage = () => {
               <div className="flex gap-1.5">
                   {response && (
                     <>
-                      <ExportDropdown
+                       <ExportDropdown
                         content={response}
-                        filenameBase={`studybuddy-${currentMode.label.toLowerCase()}`}
+                        filenameBase={(topic || `studybuddy-${currentMode.label.toLowerCase()}`).replace(/[^a-zA-Z0-9\s-]/g, '').trim().replace(/\s+/g, '-').substring(0, 60)}
                         title={`StudyBuddy — ${currentMode.label}`}
                       />
                       <button

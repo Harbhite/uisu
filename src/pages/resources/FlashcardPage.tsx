@@ -86,9 +86,11 @@ const FlashcardExportDropdown: React.FC<{ cards: Flashcard[]; topic: string }> =
     `Card ${i + 1} [${c.difficulty}]\nQ: ${c.front}\nA: ${c.back}`
   ).join('\n\n');
 
+  const safeName = (topic || 'flashcards').replace(/[^a-zA-Z0-9\s-]/g, '').trim().replace(/\s+/g, '-').substring(0, 60) || 'flashcards';
+
   const exportTxt = () => {
     const blob = new Blob([`Flashcards — ${topic || 'Study Set'}\n${'='.repeat(40)}\n\n${buildText()}`], { type: 'text/plain' });
-    saveAs(blob, `flashcards-${Date.now()}.txt`);
+    saveAs(blob, `${safeName}.txt`);
     toast.success('Downloaded as TXT');
     setOpen(false);
   };
@@ -112,7 +114,7 @@ const FlashcardExportDropdown: React.FC<{ cards: Flashcard[]; topic: string }> =
       const aLines = doc.splitTextToSize(`A: ${c.back}`, 170);
       doc.text(aLines, 20, y); y += aLines.length * 4.5 + 6;
     });
-    doc.save(`flashcards-${Date.now()}.pdf`);
+    doc.save(`${safeName}.pdf`);
     toast.success('Downloaded as PDF');
     setOpen(false);
   };
@@ -131,7 +133,7 @@ const FlashcardExportDropdown: React.FC<{ cards: Flashcard[]; topic: string }> =
       sections: [{ children: [new Paragraph({ text: `Flashcards — ${topic || 'Study Set'}`, heading: HeadingLevel.HEADING_1 }), ...paragraphs] }],
     });
     const blob = await Packer.toBlob(docFile);
-    saveAs(blob, `flashcards-${Date.now()}.docx`);
+    saveAs(blob, `${safeName}.docx`);
     toast.success('Downloaded as DOCX');
     setOpen(false);
   };
