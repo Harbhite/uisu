@@ -27,7 +27,7 @@ import { OnboardingTour } from "@/components/OnboardingTour";
 // --- SUB-COMPONENTS ---
 
 const Marquee = () => (
-  <div className="bg-nobel-gold text-ui-blue py-2 overflow-hidden relative z-30 cursor-default mt-24 md:mt-20" role="marquee" aria-label="University of Ibadan Students' Union slogans">
+  <div className="bg-nobel-gold text-ui-blue py-2 overflow-hidden relative z-50 cursor-default" role="marquee" aria-label="University of Ibadan Students' Union slogans">
     <div className="animate-marquee whitespace-nowrap flex gap-8 items-center font-bold text-xs tracking-[0.2em] uppercase">
       <span>First and Best</span> <Star size={10} fill="currentColor" />
       <span>The Greatest Uites</span> <Star size={10} fill="currentColor" />
@@ -386,6 +386,12 @@ const Index = () => {
       {/* Marquee Banner */}
       <Marquee />
       
+      {/* Announcements Banner */}
+      <AnnouncementsBanner />
+      
+      {/* Notification Prompt */}
+      <NotificationPrompt />
+      
       {/* Floating Navbar */}
       <Navbar
         isMenuOpen={isMenuOpen}
@@ -400,12 +406,6 @@ const Index = () => {
         setIsMenuOpen={setIsMenuOpen}
         navLinks={navLinks}
       />
-
-      {/* Announcements Banner */}
-      <AnnouncementsBanner />
-      
-      {/* Notification Prompt */}
-      <NotificationPrompt />
 
       {/* Hero Section */}
       <header className="relative min-h-screen flex flex-col items-center justify-center pt-32 pb-20 overflow-hidden bg-white">
