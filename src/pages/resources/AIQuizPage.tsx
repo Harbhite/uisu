@@ -618,7 +618,6 @@ const ResultView: React.FC<ResultViewProps> = ({
               label="Export Questions"
               icon={<Download size={14} />}
               onExport={(fmt) => {
-                const safeName = (inputText.split('\n')[0] || 'quiz-questions').replace(/[^a-zA-Z0-9\s-]/g, '').trim().replace(/\s+/g, '-').substring(0, 60) || 'quiz-questions';
                 const text = buildQuestionsText(questions);
                 if (fmt === 'txt') downloadTextFile(text, `${safeName}-questions.txt`);
                 else if (fmt === 'pdf') exportPdf(text, `${safeName}-questions.pdf`);
