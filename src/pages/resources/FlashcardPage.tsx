@@ -461,6 +461,7 @@ const FlashcardPage = () => {
                 >
                   🧠 SR
                 </button>
+                <FlashcardExportDropdown cards={cards} topic={topic} />
               </div>
               <div className="flex items-center gap-1.5">
                 <Filter size={12} className="text-muted-foreground mr-1" />
