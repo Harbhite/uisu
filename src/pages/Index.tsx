@@ -27,7 +27,7 @@ import { OnboardingTour } from "@/components/OnboardingTour";
 // --- SUB-COMPONENTS ---
 
 const Marquee = () => (
-  <div className="bg-nobel-gold text-ui-blue py-2 overflow-hidden relative z-50 cursor-default" role="marquee" aria-label="University of Ibadan Students' Union slogans">
+  <div className="bg-nobel-gold text-ui-blue py-2 overflow-hidden relative z-40 cursor-default" role="marquee" aria-label="University of Ibadan Students' Union slogans">
     <div className="animate-marquee whitespace-nowrap flex gap-8 items-center font-bold text-xs tracking-[0.2em] uppercase">
       <span>First and Best</span> <Star size={10} fill="currentColor" />
       <span>The Greatest Uites</span> <Star size={10} fill="currentColor" />
