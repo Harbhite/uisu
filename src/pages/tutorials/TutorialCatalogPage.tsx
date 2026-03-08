@@ -1,21 +1,33 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTutorials, useTutors } from '@/hooks/useTutorials';
 import TutorialCard from '@/components/tutorials/TutorialCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, Loader2 } from 'lucide-react';
+import { Search, Filter, Loader2, ArrowUpDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+type SortOption = 'newest' | 'rating' | 'students';
 
 const TutorialCatalogPage = () => {
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFormat, setSelectedFormat] = useState<string | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<SortOption>('newest'); // Feature #16
 
   const { data: tutorials = [], isLoading } = useTutorials();
   const { data: tutors = [] } = useTutors();
 
+  // Feature #15: Read query params from URL
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q) setSearchQuery(q);
+  }, [searchParams]);
+
   const filteredTutorials = useMemo(() => {
-    return tutorials.filter(tut => {
+    let result = tutorials.filter(tut => {
       const matchesSearch = !searchQuery || 
         tut.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (tut.description || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -24,7 +36,19 @@ const TutorialCatalogPage = () => {
       const matchesLevel = !selectedLevel || tut.level === selectedLevel;
       return matchesSearch && matchesFormat && matchesLevel;
     });
-  }, [tutorials, searchQuery, selectedFormat, selectedLevel]);
+
+    // Feature #16: Sort
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case 'rating': return (b.rating || 0) - (a.rating || 0);
+        case 'students': return (b.students_count || 0) - (a.students_count || 0);
+        case 'newest':
+        default: return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      }
+    });
+
+    return result;
+  }, [tutorials, searchQuery, selectedFormat, selectedLevel, sortBy]);
 
   const hasFilters = searchQuery || selectedFormat || selectedLevel;
 
@@ -51,26 +75,43 @@ const TutorialCatalogPage = () => {
             />
           </div>
 
-          <div className="flex flex-wrap gap-3 z-10">
-             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 mr-2">
-               <Filter size={14} />
-               <span>Format</span>
-             </div>
-             {['Video', 'Audio', 'Text', 'Essay'].map(fmt => (
-               <Badge
-                 key={fmt}
-                 variant={selectedFormat === fmt ? "default" : "outline"}
-                 className={`cursor-pointer rounded-none px-4 py-2 text-[10px] uppercase tracking-wider font-bold transition-all border ${
-                   selectedFormat === fmt
-                     ? 'bg-[#2D1B4E] text-white border-[#2D1B4E] shadow-md hover:bg-purple-900'
-                     : 'bg-white/50 border-slate-200 hover:border-purple-400 hover:text-[#2D1B4E] hover:bg-white'
-                 }`}
-                 onClick={() => setSelectedFormat(selectedFormat === fmt ? null : fmt)}
-               >
-                 {fmt}
-               </Badge>
-             ))}
+          <div className="flex items-center gap-4 z-10">
+            {/* Sort dropdown - Feature #16 */}
+            <div className="flex items-center gap-2">
+              <ArrowUpDown size={14} className="text-slate-400" />
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+                <SelectTrigger className="rounded-none border-slate-200 bg-white/50 h-10 w-40 text-xs uppercase tracking-widest font-bold">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-none">
+                  <SelectItem value="newest">Newest</SelectItem>
+                  <SelectItem value="rating">Highest Rated</SelectItem>
+                  <SelectItem value="students">Most Students</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+        </div>
+
+        <div className="flex flex-wrap gap-3 z-10">
+           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 mr-2">
+             <Filter size={14} />
+             <span>Format</span>
+           </div>
+           {['Video', 'Audio', 'Text', 'Essay'].map(fmt => (
+             <Badge
+               key={fmt}
+               variant={selectedFormat === fmt ? "default" : "outline"}
+               className={`cursor-pointer rounded-none px-4 py-2 text-[10px] uppercase tracking-wider font-bold transition-all border ${
+                 selectedFormat === fmt
+                   ? 'bg-[#2D1B4E] text-white border-[#2D1B4E] shadow-md hover:bg-purple-900'
+                   : 'bg-white/50 border-slate-200 hover:border-purple-400 hover:text-[#2D1B4E] hover:bg-white'
+               }`}
+               onClick={() => setSelectedFormat(selectedFormat === fmt ? null : fmt)}
+             >
+               {fmt}
+             </Badge>
+           ))}
         </div>
 
         {/* Level filter row */}
