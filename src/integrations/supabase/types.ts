@@ -617,6 +617,39 @@ export type Database = {
         }
         Relationships: []
       }
+      editorial_board: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          display_name: string
+          id: string
+          is_active: boolean | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          display_name: string
+          id?: string
+          is_active?: boolean | null
+          role?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          display_name?: string
+          id?: string
+          is_active?: boolean | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_tracking: {
         Row: {
           ab_variant: string | null
@@ -981,6 +1014,218 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      gazette_articles: {
+        Row: {
+          article_type: string
+          author_id: string | null
+          author_name: string
+          category: string
+          content: Json
+          cover_image: string | null
+          created_at: string | null
+          id: string
+          is_featured: boolean | null
+          is_published: boolean | null
+          issue_id: string | null
+          published_at: string | null
+          reading_time: number | null
+          slug: string
+          summary: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          article_type?: string
+          author_id?: string | null
+          author_name: string
+          category?: string
+          content?: Json
+          cover_image?: string | null
+          created_at?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_published?: boolean | null
+          issue_id?: string | null
+          published_at?: string | null
+          reading_time?: number | null
+          slug: string
+          summary?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          article_type?: string
+          author_id?: string | null
+          author_name?: string
+          category?: string
+          content?: Json
+          cover_image?: string | null
+          created_at?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_published?: boolean | null
+          issue_id?: string | null
+          published_at?: string | null
+          reading_time?: number | null
+          slug?: string
+          summary?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gazette_articles_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "gazette_issues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gazette_bookmarks: {
+        Row: {
+          article_id: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gazette_bookmarks_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "gazette_articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gazette_comments: {
+        Row: {
+          article_id: string
+          content: string
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          article_id: string
+          content: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          article_id?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gazette_comments_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "gazette_articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gazette_issues: {
+        Row: {
+          cover_image: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          issue_number: number
+          published_at: string | null
+          status: string
+          title: string
+          updated_at: string | null
+          volume_number: number
+        }
+        Insert: {
+          cover_image?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          issue_number: number
+          published_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string | null
+          volume_number: number
+        }
+        Update: {
+          cover_image?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          issue_number?: number
+          published_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string | null
+          volume_number?: number
+        }
+        Relationships: []
+      }
+      gazette_reactions: {
+        Row: {
+          article_id: string
+          created_at: string | null
+          id: string
+          reaction_type: string
+          user_id: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string | null
+          id?: string
+          reaction_type: string
+          user_id: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string | null
+          id?: string
+          reaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gazette_reactions_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "gazette_articles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gpa_records: {
         Row: {
@@ -2373,6 +2618,7 @@ export type Database = {
         Returns: undefined
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_gazette_editor: { Args: { _user_id: string }; Returns: boolean }
       is_moderator_or_admin: { Args: { _user_id: string }; Returns: boolean }
       sync_profile_emails: { Args: never; Returns: undefined }
     }
