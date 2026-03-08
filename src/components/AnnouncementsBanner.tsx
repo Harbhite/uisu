@@ -127,10 +127,10 @@ export const AnnouncementsBanner = () => {
 
   return (
     <motion.div
-      initial={{ y: -100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      exit={{ y: -100, opacity: 0 }}
-      className={`fixed top-20 left-0 right-0 z-40 hidden md:block ${
+      initial={{ height: 0, opacity: 0 }}
+      animate={{ height: "auto", opacity: 1 }}
+      exit={{ height: 0, opacity: 0 }}
+      className={`relative w-full z-40 hidden md:block ${
         isUrgent ? 'bg-destructive' : 'bg-ui-blue'
       }`}
     >
