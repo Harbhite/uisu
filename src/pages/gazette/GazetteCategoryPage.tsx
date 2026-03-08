@@ -3,7 +3,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { GazetteArticleCard } from '@/components/gazette/GazetteArticleCard';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { Tag } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const categoryMap: Record<string, string> = {
   'news': 'News',
@@ -13,7 +13,7 @@ const categoryMap: Record<string, string> = {
   'official-notice': 'Official Notice',
   'resolution': 'Resolution',
   'minutes': 'Minutes',
-  'all': 'All Categories',
+  'all': 'All Articles',
 };
 
 const GazetteCategoryPage = () => {
@@ -51,22 +51,26 @@ const GazetteCategoryPage = () => {
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><LoadingSpinner size="lg" /></div>;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div className="flex items-center gap-3">
-        <Tag size={20} className="text-accent" />
-        <h1 className="text-3xl font-serif font-bold text-foreground">{categoryName}</h1>
+    <div className="space-y-10">
+      <div className="space-y-2">
+        <p className="text-[10px] text-accent uppercase tracking-[0.4em] font-bold">Section</p>
+        <h1 className="text-3xl md:text-4xl font-serif font-bold text-foreground">{categoryName}</h1>
+        {searchQuery && <p className="text-sm text-muted-foreground">Showing results for "{searchQuery}"</p>}
       </div>
-      {searchQuery && <p className="text-muted-foreground">Showing results for "{searchQuery}"</p>}
 
       {articles.length > 0 ? (
-        <div className="grid md:grid-cols-2 gap-6">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="grid md:grid-cols-2 lg:grid-cols-3 gap-4"
+        >
           {articles.map((article) => (
             <GazetteArticleCard key={article.id} article={article} />
           ))}
-        </div>
+        </motion.div>
       ) : (
         <div className="text-center py-20 text-muted-foreground">
-          <p>No articles found in this category.</p>
+          <p className="font-serif">No articles found in this section.</p>
         </div>
       )}
     </div>
