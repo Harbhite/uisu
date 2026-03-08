@@ -40,11 +40,6 @@ const CoursePlayer = ({ tutorial, tutorName = 'The Union Tutors' }: CoursePlayer
   const completedModuleIds = new Set(progressData.map((p: any) => p.module_id));
   const isMedia = activeModule?.type === 'Video' || activeModule?.type === 'Audio';
 
-  // Sync note text when module changes
-  useState(() => {
-    if (noteData?.content) setNoteText(noteData.content as string);
-  });
-
   const getVideoSrc = (content: string | null): string => {
     if (!content) return '';
     if (content.includes('youtube.com/embed')) return content;
