@@ -210,7 +210,7 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
       </nav>
 
       {/* --- MOBILE NAVBAR (Floating Pill) --- */}
-      <nav className="md:hidden sticky top-4 mx-auto w-[90%] max-w-sm z-50 no-print -mb-[70px]">
+      <nav className="md:hidden fixed top-4 left-1/2 -translate-x-1/2 w-[90%] max-w-sm z-50 no-print">
         <div className="bg-ui-dark/95 backdrop-blur-lg text-white rounded-full px-5 py-3 flex justify-between items-center shadow-2xl border border-white/10">
 
           {/* Left: Logo */}
