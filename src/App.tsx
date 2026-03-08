@@ -191,6 +191,19 @@ const AppRoutes = () => {
           <Route path="upload" element={<UploadTutorialPage />} />
         </Route>
 
+        {/* Gazette Ecosystem */}
+        <Route path="/gazette" element={<GazetteLayout />}>
+          <Route index element={<GazetteLandingPage />} />
+          <Route path="article/:slug" element={<GazetteArticlePage />} />
+          <Route path="issues" element={<GazetteIssuesPage />} />
+          <Route path="issues/:id" element={<GazetteIssuePage />} />
+          <Route path="category/:cat" element={<GazetteCategoryPage />} />
+          <Route path="editorial-board" element={<GazetteEditorialBoardPage />} />
+          <Route path="bookmarks" element={<GazetteBookmarksPage />} />
+          <Route path="editor/new" element={<GazetteEditorPage />} />
+          <Route path="editor/:id" element={<GazetteEditorPage />} />
+        </Route>
+
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
       </Routes>
