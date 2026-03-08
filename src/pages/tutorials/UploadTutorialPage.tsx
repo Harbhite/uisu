@@ -37,7 +37,7 @@ const UploadTutorialPage = () => {
       const { data: tutor } = await supabase
         .from('tutors')
         .select('id')
-        .eq('id', user.id)
+        .eq('user_id', user.id)
         .maybeSingle();
 
       let tutorId = tutor?.id;
@@ -46,20 +46,23 @@ const UploadTutorialPage = () => {
       if (!tutorId) {
         const { data: newTutor, error: tutorErr } = await supabase
           .from('tutors')
-          .insert({ id: user.id, name: user.user_metadata?.full_name || 'Anonymous Tutor', tier: 'Community', bio: '' })
+          .insert({ user_id: user.id, name: user.user_metadata?.full_name || 'Anonymous Tutor', tier: 'Community' as const, bio: '' })
           .select('id')
           .single();
         if (tutorErr) throw tutorErr;
         tutorId = newTutor.id;
       }
 
+      const formatValue = (format.charAt(0).toUpperCase() + format.slice(1)) as 'Video' | 'Audio' | 'Text' | 'Essay';
+      const levelValue = (level.charAt(0).toUpperCase() + level.slice(1)) as 'Beginner' | 'Intermediate' | 'Advanced';
+
       const { error } = await supabase
         .from('tutorials')
         .insert({
           title,
           description,
-          format: format.charAt(0).toUpperCase() + format.slice(1),
-          level: level.charAt(0).toUpperCase() + level.slice(1),
+          format: formatValue,
+          level: levelValue,
           cover_image: coverImage || null,
           tutor_id: tutorId,
           is_published: false,
