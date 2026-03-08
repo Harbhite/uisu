@@ -57,7 +57,7 @@ const ConstitutionExport: React.FC = () => {
     const { Document, Packer, Paragraph, TextRun, HeadingLevel } = await import('docx');
     const children: any[] = [];
     children.push(new Paragraph({ text: 'THE CONSTITUTION', heading: HeadingLevel.TITLE }));
-    children.push(new Paragraph({ text: "University of Ibadan Students' Union", heading: HeadingLevel.SUBTITLE }));
+    children.push(new Paragraph({ text: "University of Ibadan Students' Union", heading: HeadingLevel.HEADING_2 }));
 
     constitutionData.forEach(article => {
       children.push(new Paragraph({ text: article.title, heading: HeadingLevel.HEADING_1, spacing: { before: 400 } }));
