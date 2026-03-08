@@ -1,36 +1,38 @@
 import { useTutors, useTutorials } from '@/hooks/useTutorials';
+import { useAllTutorialProgress } from '@/hooks/useTutorialProgress';
 import TutorialCard from '@/components/tutorials/TutorialCard';
 import TutorCard from '@/components/tutorials/TutorCard';
-import { ArrowRight, BookOpen, Loader2 } from 'lucide-react';
+import { ArrowRight, BookOpen, Loader2, PlayCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { categories } from '@/lib/tutorials-data';
+import { useAuth } from '@/contexts/AuthContext';
 
-const WavePattern = () => {
-  return (
-    <div className="flex flex-col gap-[6px] items-end justify-center h-full opacity-80">
-      {Array.from({ length: 24 }).map((_, i) => {
-        const dist = Math.abs(i - 12);
-        const widthPercent = Math.max(20, 100 - (dist * 7));
-        return (
-          <motion.div
-            key={i}
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: `${widthPercent}%`, opacity: 1 }}
-            transition={{ duration: 0.8, delay: i * 0.02, ease: "easeOut" }}
-            className="h-[2px] bg-purple-200/40 rounded-full"
-            style={{ width: `${widthPercent}%` }}
-          />
-        );
-      })}
-    </div>
-  );
-};
+const WavePattern = () => (
+  <div className="flex flex-col gap-[6px] items-end justify-center h-full opacity-80">
+    {Array.from({ length: 24 }).map((_, i) => {
+      const dist = Math.abs(i - 12);
+      const widthPercent = Math.max(20, 100 - (dist * 7));
+      return (
+        <motion.div
+          key={i}
+          initial={{ width: 0, opacity: 0 }}
+          animate={{ width: `${widthPercent}%`, opacity: 1 }}
+          transition={{ duration: 0.8, delay: i * 0.02, ease: "easeOut" }}
+          className="h-[2px] bg-purple-200/40 rounded-full"
+          style={{ width: `${widthPercent}%` }}
+        />
+      );
+    })}
+  </div>
+);
 
 const TutorialsLandingPage = () => {
   const { data: tutors = [], isLoading: tutorsLoading } = useTutors();
   const { data: tutorials = [], isLoading: tutorialsLoading } = useTutorials();
+  const { user } = useAuth();
+  const { data: allProgress = [] } = useAllTutorialProgress();
 
   const officialTutors = tutors.filter(t => t.tier === 'Official');
   const verifiedTutors = tutors.filter(t => t.tier === 'Verified');
@@ -38,6 +40,22 @@ const TutorialsLandingPage = () => {
   const featuredTutorials = tutorials.slice(0, 6);
 
   const isLoading = tutorsLoading || tutorialsLoading;
+
+  // Feature #19: Continue where you left off
+  const inProgressTutorials = (() => {
+    if (!user || allProgress.length === 0 || tutorials.length === 0) return [];
+    const tutorialProgressMap = new Map<string, number>();
+    allProgress.forEach((p: any) => {
+      tutorialProgressMap.set(p.tutorial_id, (tutorialProgressMap.get(p.tutorial_id) || 0) + 1);
+    });
+    return tutorials
+      .filter(t => {
+        const completed = tutorialProgressMap.get(t.id) || 0;
+        const total = (t.modules?.length) || 0;
+        return completed > 0 && completed < total;
+      })
+      .slice(0, 3);
+  })();
 
   return (
     <div className="space-y-16 pb-12">
@@ -73,7 +91,26 @@ const TutorialsLandingPage = () => {
         <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-10 mix-blend-overlay pointer-events-none" />
       </section>
 
-      {/* Categories */}
+      {/* Continue Learning (Feature #19) */}
+      {inProgressTutorials.length > 0 && (
+        <section className="px-4">
+          <div className="flex items-center justify-between mb-8 border-b border-green-200 pb-4">
+            <h2 className="text-2xl font-serif font-bold text-[#2D1B4E] flex items-center gap-3">
+              <PlayCircle size={24} className="text-green-500" />
+              Continue Learning
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {inProgressTutorials.map((tut) => (
+              <div key={tut.id} className="transform hover:z-10 transition-transform">
+                <TutorialCard tutorial={tut} tutor={tutors.find(t => t.id === tut.tutor_id)} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Categories - Fix #3: Pass tag query param */}
       <section className="px-4">
         <div className="flex items-center justify-between mb-8 border-b border-purple-200 pb-4">
           <h2 className="text-2xl font-serif font-bold text-[#2D1B4E] flex items-center gap-3">
@@ -85,7 +122,7 @@ const TutorialsLandingPage = () => {
           {categories.map((cat) => (
             <Link
               key={cat.id}
-              to={`/tutorials/catalog`}
+              to={`/tutorials/catalog?q=${encodeURIComponent(cat.title)}`}
               className="group p-8 bg-white border border-purple-100 hover:border-purple-400 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all text-center flex flex-col items-center justify-center gap-4 h-48 relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />

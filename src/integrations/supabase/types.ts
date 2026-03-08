@@ -2113,6 +2113,36 @@ export type Database = {
           },
         ]
       }
+      tutorial_notes: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          module_id: string
+          tutorial_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          module_id: string
+          tutorial_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          module_id?: string
+          tutorial_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tutorial_progress: {
         Row: {
           completed_at: string | null

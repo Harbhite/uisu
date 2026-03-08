@@ -1,27 +1,15 @@
 import { useState } from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  BookOpen,
-  Layout,
-  Upload,
-  User,
-  Menu as MenuIcon,
-  Search,
-  Home
+  BookOpen, Layout, Upload, User, Menu as MenuIcon, Search, Home
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const SidebarItem = ({
-  icon: Icon,
-  label,
-  to,
-  isActive
+  icon: Icon, label, to, isActive
 }: {
-  icon: React.ElementType;
-  label: string;
-  to: string;
-  isActive: boolean;
+  icon: React.ElementType; label: string; to: string; isActive: boolean;
 }) => (
   <Link
     to={to}
@@ -42,14 +30,25 @@ const SidebarItem = ({
 
 const TutorialsLayout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const links = [
     { icon: Layout, label: 'Dashboard', to: '/tutorials' },
     { icon: BookOpen, label: 'Browse Catalog', to: '/tutorials/catalog' },
     { icon: Upload, label: 'Upload Tutorial', to: '/tutorials/upload' },
-    { icon: User, label: 'My Profile', to: '/tutorials/profile' },
+    { icon: User, label: 'My Profile', to: '/profile' }, // Fix #9: link to actual profile
   ];
+
+  // Fix #8: Wire search to navigate to catalog with query param
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/tutorials/catalog?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+    }
+  };
 
   return (
     <div className="flex h-screen bg-[#F5F2FA] overflow-hidden font-sans text-slate-800">
@@ -66,12 +65,11 @@ const TutorialsLayout = () => {
         )}
       </AnimatePresence>
 
-      {/* Sidebar (Desktop & Mobile Drawer) */}
+      {/* Sidebar */}
       <aside className={cn(
         "fixed inset-y-0 left-0 z-50 w-72 bg-[#1a0b2e] backdrop-blur-xl border-r border-white/5 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 flex flex-col shadow-2xl",
         isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        {/* Conical Gradient accent at top-left */}
         <div className="absolute top-0 left-0 w-full h-32 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-purple-500/30 via-purple-900/10 to-transparent opacity-60 pointer-events-none" />
 
         <div className="p-8 border-b border-white/5 relative z-10">
@@ -86,7 +84,7 @@ const TutorialsLayout = () => {
             <SidebarItem
               key={link.to}
               {...link}
-              isActive={location.pathname === link.to || (link.to !== '/tutorials' && location.pathname.startsWith(link.to))}
+              isActive={location.pathname === link.to || (link.to !== '/tutorials' && link.to !== '/profile' && location.pathname.startsWith(link.to))}
             />
           ))}
         </nav>
@@ -101,10 +99,8 @@ const TutorialsLayout = () => {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#F5F2FA]">
-        {/* Background Noise/Gradient */}
         <div className="absolute inset-0 pointer-events-none opacity-30 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-purple-200/40 via-transparent to-transparent" />
 
-        {/* Top Header */}
         <header className="bg-white/60 backdrop-blur-md border-b border-purple-100 h-16 flex items-center justify-between px-8 shrink-0 sticky top-0 z-30">
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -113,14 +109,16 @@ const TutorialsLayout = () => {
             <MenuIcon />
           </button>
 
-          <div className="hidden md:flex items-center gap-3 text-slate-400 w-full max-w-xl bg-white/50 px-4 py-2 rounded-none border border-transparent focus-within:border-purple-300 transition-colors">
+          <form onSubmit={handleSearch} className="hidden md:flex items-center gap-3 text-slate-400 w-full max-w-xl bg-white/50 px-4 py-2 rounded-none border border-transparent focus-within:border-purple-300 transition-colors">
              <Search size={16} />
              <input
                 type="text"
                 placeholder="Search tutorials..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="bg-transparent border-none outline-none text-sm w-full placeholder:text-slate-400 text-slate-800"
              />
-          </div>
+          </form>
 
           <div className="flex items-center gap-4">
              <div className="w-8 h-8 bg-[#6E5494] text-white flex items-center justify-center font-bold text-xs border border-[#6E5494] hover:bg-transparent hover:text-[#6E5494] transition-colors cursor-pointer shadow-sm">
@@ -129,7 +127,6 @@ const TutorialsLayout = () => {
           </div>
         </header>
 
-        {/* Scrollable Area */}
         <div className="flex-1 overflow-y-auto p-8 scroll-smooth relative z-10">
           <Outlet />
         </div>
