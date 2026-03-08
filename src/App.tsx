@@ -75,6 +75,17 @@ const BudgetTrackerPage = lazy(() => import("./pages/BudgetTrackerPage"));
 const SitemapPage = lazy(() => import("./pages/SitemapPage"));
 const FeedbackPage = lazy(() => import("./pages/FeedbackPage"));
 const AlumniNetworkPage = lazy(() => import("./pages/resources/AlumniNetworkPage"));
+
+// Gazette
+const GazetteLayout = lazy(() => import("./components/gazette/GazetteLayout"));
+const GazetteLandingPage = lazy(() => import("./pages/gazette/GazetteLandingPage"));
+const GazetteArticlePage = lazy(() => import("./pages/gazette/GazetteArticlePage"));
+const GazetteEditorPage = lazy(() => import("./pages/gazette/GazetteEditorPage"));
+const GazetteIssuesPage = lazy(() => import("./pages/gazette/GazetteIssuesPage"));
+const GazetteIssuePage = lazy(() => import("./pages/gazette/GazetteIssuePage"));
+const GazetteCategoryPage = lazy(() => import("./pages/gazette/GazetteCategoryPage"));
+const GazetteEditorialBoardPage = lazy(() => import("./pages/gazette/GazetteEditorialBoardPage"));
+const GazetteBookmarksPage = lazy(() => import("./pages/gazette/GazetteBookmarksPage"));
 const queryClient = new QueryClient();
 
 const LoadingFallback = () => (

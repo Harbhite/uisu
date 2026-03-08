@@ -191,7 +191,6 @@ const GazetteEditorPage = () => {
             <EditorJS
               data={content}
               onChange={setContent}
-              holder="gazette-editor"
             />
           </div>
         </div>
