@@ -75,6 +75,17 @@ const BudgetTrackerPage = lazy(() => import("./pages/BudgetTrackerPage"));
 const SitemapPage = lazy(() => import("./pages/SitemapPage"));
 const FeedbackPage = lazy(() => import("./pages/FeedbackPage"));
 const AlumniNetworkPage = lazy(() => import("./pages/resources/AlumniNetworkPage"));
+
+// Gazette
+const GazetteLayout = lazy(() => import("./components/gazette/GazetteLayout"));
+const GazetteLandingPage = lazy(() => import("./pages/gazette/GazetteLandingPage"));
+const GazetteArticlePage = lazy(() => import("./pages/gazette/GazetteArticlePage"));
+const GazetteEditorPage = lazy(() => import("./pages/gazette/GazetteEditorPage"));
+const GazetteIssuesPage = lazy(() => import("./pages/gazette/GazetteIssuesPage"));
+const GazetteIssuePage = lazy(() => import("./pages/gazette/GazetteIssuePage"));
+const GazetteCategoryPage = lazy(() => import("./pages/gazette/GazetteCategoryPage"));
+const GazetteEditorialBoardPage = lazy(() => import("./pages/gazette/GazetteEditorialBoardPage"));
+const GazetteBookmarksPage = lazy(() => import("./pages/gazette/GazetteBookmarksPage"));
 const queryClient = new QueryClient();
 
 const LoadingFallback = () => (
@@ -178,6 +189,19 @@ const AppRoutes = () => {
           <Route path=":id" element={<TutorialDetailPage />} />
           <Route path="tutor/:id" element={<TutorProfilePage />} />
           <Route path="upload" element={<UploadTutorialPage />} />
+        </Route>
+
+        {/* Gazette Ecosystem */}
+        <Route path="/gazette" element={<GazetteLayout />}>
+          <Route index element={<GazetteLandingPage />} />
+          <Route path="article/:slug" element={<GazetteArticlePage />} />
+          <Route path="issues" element={<GazetteIssuesPage />} />
+          <Route path="issues/:id" element={<GazetteIssuePage />} />
+          <Route path="category/:cat" element={<GazetteCategoryPage />} />
+          <Route path="editorial-board" element={<GazetteEditorialBoardPage />} />
+          <Route path="bookmarks" element={<GazetteBookmarksPage />} />
+          <Route path="editor/new" element={<GazetteEditorPage />} />
+          <Route path="editor/:id" element={<GazetteEditorPage />} />
         </Route>
 
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
