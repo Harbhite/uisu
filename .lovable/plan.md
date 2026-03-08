@@ -1,50 +1,32 @@
-# 6 New Features for the Constitution Page
 
-The current page has search, scroll spy, font sizing, print, citation links, and an amendments ledger. Here are 6 features that would meaningfully extend it:
 
----
+# Replace Global Loading Spinner with Animated UISU Branded Loader
 
-## 1. Full Document Export (PDF, DOCX, TXT)
+## What
+Replace the plain `Loader2` spinning icon with a custom animated loading component that uses the UISU logo mark and smooth motion — applied globally across all loading states.
 
-Add an export dropdown (matching the pattern already used in StudyBuddy/Flashcards) to the sidebar. Users can download the entire constitution or just the currently viewed article in PDF, DOCX, or TXT format using `jspdf`, `docx`, and `file-saver`.
+## Design
+A pulsing/morphing UISU-branded loader:
+- Three concentric rings that rotate at different speeds with the accent gold color
+- A subtle scale pulse on the center dot
+- "Loading..." text below with a typing/fade animation
+- Keeps the same `size` prop API (`sm`, `md`, `lg`) for drop-in compatibility
 
-**File:** `ConstitutionPage.tsx`
+## Changes
 
-## 2. Dark Mode / Night Reading Toggle
+### 1. Rewrite `src/components/ui/LoadingSpinner.tsx`
+Replace the `Loader2` icon with a custom SVG animation:
+- Three concentric circles with staggered `rotate` animations via Framer Motion
+- Center dot with a pulse effect
+- Optional "Loading..." label for `md` and `lg` sizes
+- Uses the existing accent color (`text-accent` / gold)
+- Same interface: `size?: "sm" | "md" | "lg"`, `className?: string`
 
-Add a toggle in the sidebar that switches the page to a dark background with light text. Store preference in `localStorage`. This is a reading-heavy page, so a dark mode is practical.
+### 2. Update `LoadingFallback` in `src/App.tsx`
+Replace the inline `border-4 border-primary border-t-transparent rounded-full animate-spin` spinner with `<LoadingSpinner size="lg" />`.
 
-**File:** `ConstitutionPage.tsx`
+### 3. No changes needed to consumer files
+Since `LoadingSpinner` keeps the same export name and props, all 4 consumer files (`CareerHubPage`, `ScholarshipPage`, `InksPiecePage`, `PendingSubmissions`) work automatically.
 
-## 3. Article Bookmarks with LocalStorage
+The ~50+ inline `Loader2 animate-spin` usages across the codebase are contextual button/section spinners and will remain as-is — this change targets full-page/section loading states only.
 
-Let users bookmark specific articles. Show a small bookmark icon on each article header. Bookmarked articles appear in a collapsible "Bookmarks" section at the top of the sidebar for quick access. Persisted in `localStorage`.
-
-**File:** `ConstitutionPage.tsx`
-
-## 4. Collapsible / Accordion Article Sections
-
-Allow users to collapse individual article sections to reduce visual clutter when reading a long document. Use the existing `Collapsible` component. Default to expanded; clicking the section title toggles it.
-
-**File:** `ConstitutionPage.tsx`
-
-## 5. Mobile Table of Contents Drawer
-
-On mobile/tablet (below `xl`), add a floating "Table of Contents" button that opens a bottom sheet (using the existing `Drawer`/`Sheet` component) with the full article index, mirroring the desktop sidebar navigation.
-
-**File:** `ConstitutionPage.tsx`
-
-## 6. Search Result Highlighting
-
-When a search query matches text inside an article, highlight the matching words in yellow within the article content (not just filter articles). This helps users quickly locate the exact clause they are looking for.
-
-**File:** `ConstitutionPage.tsx`
-
----
-
-## Implementation Notes
-
-- All 6 features are contained within `ConstitutionPage.tsx` and require no database changes.
-- Features 1 uses existing `jspdf`/`docx`/`file-saver` libraries already installed.
-- Features 4-5 use existing UI primitives (`Collapsible`, `Drawer`).
-- No new dependencies needed.
