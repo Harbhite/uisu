@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.flashcard-gen]
 verify_jwt = false
+
+[functions.lost-found-match]
+verify_jwt = false
