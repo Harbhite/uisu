@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, MapPin, Clock, Tag, X, Upload, Phone, Loader2, Trash2, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { Search, Plus, MapPin, Clock, Tag, X, Upload, Phone, Loader2, Trash2, CheckCircle2, ArrowLeft, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,25 @@ interface LostFoundItem {
   created_at: string;
 }
 
+interface AIMatch {
+  item: Omit<LostFoundItem, 'user_id' | 'item_type' | 'status'>;
+  confidence: string;
+  reason: string;
+}
+
+const ConfidenceBadge = ({ confidence }: { confidence: string }) => {
+  const styles = {
+    high: 'bg-green-50 text-green-700 border-green-200',
+    medium: 'bg-amber-50 text-amber-700 border-amber-200',
+    low: 'bg-slate-50 text-slate-500 border-slate-200',
+  };
+  return (
+    <span className={`inline-block px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest border rounded-none ${styles[confidence as keyof typeof styles] || styles.low}`}>
+      {confidence} match
+    </span>
+  );
+};
+
 const LostFoundPage = () => {
   const navigate = useNavigate();
   const [items, setItems] = useState<LostFoundItem[]>([]);
@@ -43,6 +62,13 @@ const LostFoundPage = () => {
   const [creating, setCreating] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // AI Smart Search state
+  const [showAISearch, setShowAISearch] = useState(false);
+  const [aiDescription, setAiDescription] = useState('');
+  const [aiMatches, setAiMatches] = useState<AIMatch[]>([]);
+  const [aiSearching, setAiSearching] = useState(false);
+  const [aiSearched, setAiSearched] = useState(false);
 
   const [form, setForm] = useState({
     title: '', description: '', category: 'Other', item_type: 'lost',
@@ -106,6 +132,49 @@ const LostFoundPage = () => {
     if (!confirm('Delete this post?')) return;
     const { error } = await supabase.from('lost_found_items').delete().eq('id', id);
     if (!error) { toast.success('Deleted'); fetchItems(); setShowDetailModal(null); }
+  };
+
+  const handleAISearch = async () => {
+    if (!aiDescription.trim()) { toast.error('Please describe what you lost'); return; }
+    setAiSearching(true);
+    setAiSearched(false);
+    setAiMatches([]);
+    try {
+      const { data, error } = await supabase.functions.invoke('lost-found-match', {
+        body: { description: aiDescription },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        if (data.error.includes('Rate limit') || data.error.includes('429')) {
+          toast.error('AI is busy, please try again in a moment');
+        } else if (data.error.includes('402')) {
+          toast.error('AI service temporarily unavailable');
+        } else {
+          toast.error(data.error);
+        }
+        return;
+      }
+      setAiMatches(data.matches || []);
+      setAiSearched(true);
+      if (data.matches?.length === 0) {
+        toast.info('No matching found items detected');
+      } else {
+        toast.success(`Found ${data.matches.length} potential match${data.matches.length > 1 ? 'es' : ''}!`);
+      }
+    } catch (e) {
+      console.error('AI search error:', e);
+      toast.error('AI search failed, please try again');
+    } finally {
+      setAiSearching(false);
+    }
+  };
+
+  const handleViewMatchedItem = (matchItem: AIMatch['item']) => {
+    // Find the full item from the items list
+    const fullItem = items.find(i => i.id === matchItem.id);
+    if (fullItem) {
+      setShowDetailModal(fullItem);
+    }
   };
 
   const filtered = items.filter(item => {
@@ -175,6 +244,128 @@ const LostFoundPage = () => {
             Report lost items or help reunite found items with their owners across campus.
           </motion.p>
         </div>
+
+        {/* AI Smart Search */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="mb-8"
+        >
+          <button
+            onClick={() => setShowAISearch(!showAISearch)}
+            className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-ui-blue/5 to-nobel-gold/5 border border-ui-blue/10 hover:border-nobel-gold/30 transition-all group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-nobel-gold/10 border border-nobel-gold/20">
+                <Sparkles size={16} className="text-nobel-gold" />
+              </div>
+              <div className="text-left">
+                <p className="text-xs font-bold uppercase tracking-widest text-ui-blue">AI Smart Search</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Describe your lost item and AI will find matching found items</p>
+              </div>
+            </div>
+            {showAISearch ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+          </button>
+
+          <AnimatePresence>
+            {showAISearch && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden"
+              >
+                <div className="border border-t-0 border-ui-blue/10 bg-white p-6 space-y-4">
+                  <Textarea
+                    placeholder="Describe what you lost in detail — color, brand, size, where you last had it, any unique features..."
+                    value={aiDescription}
+                    onChange={e => setAiDescription(e.target.value)}
+                    className="rounded-none border-slate-200 min-h-[100px] text-sm"
+                    rows={3}
+                  />
+                  <div className="flex items-center gap-3">
+                    <Button
+                      onClick={handleAISearch}
+                      disabled={aiSearching || !aiDescription.trim()}
+                      className="gap-2 rounded-none bg-nobel-gold hover:bg-nobel-gold/90 text-ui-blue text-xs uppercase tracking-widest font-bold"
+                    >
+                      {aiSearching ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                      {aiSearching ? 'Searching...' : 'Find Matches'}
+                    </Button>
+                    {aiSearched && (
+                      <span className="text-xs text-slate-400">
+                        {aiMatches.length} match{aiMatches.length !== 1 ? 'es' : ''} found
+                      </span>
+                    )}
+                  </div>
+
+                  {/* AI Results */}
+                  <AnimatePresence>
+                    {aiSearched && aiMatches.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="space-y-3 pt-4 border-t border-slate-100"
+                      >
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Potential Matches</p>
+                        {aiMatches.map((match, i) => (
+                          <motion.div
+                            key={match.item.id}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: i * 0.08 }}
+                            onClick={() => handleViewMatchedItem(match.item)}
+                            className="flex gap-4 p-4 bg-slate-50/50 border border-slate-100 hover:border-nobel-gold/40 cursor-pointer transition-all group"
+                          >
+                            {/* Thumbnail */}
+                            <div className="w-16 h-16 flex-shrink-0 bg-slate-100 border border-slate-200 overflow-hidden">
+                              {(match.item.photos as string[])?.length > 0 ? (
+                                <img src={(match.item.photos as string[])[0]} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="flex items-center justify-center h-full">
+                                  <Tag size={16} className="text-slate-300" />
+                                </div>
+                              )}
+                            </div>
+                            {/* Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <ConfidenceBadge confidence={match.confidence} />
+                                <Badge variant="outline" className="text-[8px] rounded-none border-slate-200 text-slate-400 uppercase tracking-widest font-bold bg-white">
+                                  {match.item.category}
+                                </Badge>
+                              </div>
+                              <h4 className="font-serif text-sm font-bold text-ui-blue group-hover:text-nobel-gold transition-colors truncate">
+                                {match.item.title}
+                              </h4>
+                              <p className="text-[11px] text-slate-500 mt-1 italic line-clamp-1">{match.reason}</p>
+                              {match.item.location && (
+                                <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+                                  <MapPin size={10} className="text-nobel-gold" />{match.item.location}
+                                </p>
+                              )}
+                            </div>
+                          </motion.div>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {aiSearched && aiMatches.length === 0 && (
+                    <div className="text-center py-8 border-t border-slate-100">
+                      <Search size={24} className="mx-auto text-slate-200 mb-3" />
+                      <p className="text-sm text-slate-400">No matching found items right now.</p>
+                      <p className="text-xs text-slate-300 mt-1">Try a different description or check back later.</p>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-12">
