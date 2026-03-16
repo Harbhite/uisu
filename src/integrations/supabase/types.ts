@@ -494,6 +494,76 @@ export type Database = {
         }
         Relationships: []
       }
+      confession_reactions: {
+        Row: {
+          confession_id: string
+          created_at: string | null
+          id: string
+          reaction_type: string
+          user_id: string
+        }
+        Insert: {
+          confession_id: string
+          created_at?: string | null
+          id?: string
+          reaction_type?: string
+          user_id: string
+        }
+        Update: {
+          confession_id?: string
+          created_at?: string | null
+          id?: string
+          reaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "confession_reactions_confession_id_fkey"
+            columns: ["confession_id"]
+            isOneToOne: false
+            referencedRelation: "confessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      confessions: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          is_approved: boolean | null
+          is_flagged: boolean | null
+          parent_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          is_approved?: boolean | null
+          is_flagged?: boolean | null
+          parent_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_approved?: boolean | null
+          is_flagged?: boolean | null
+          parent_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "confessions_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "confessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_messages: {
         Row: {
           created_at: string
@@ -647,6 +717,125 @@ export type Database = {
           is_active?: boolean | null
           role?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      election_candidates: {
+        Row: {
+          created_at: string | null
+          election_id: string
+          id: string
+          manifesto: string | null
+          name: string
+          photo_url: string | null
+          position: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          election_id: string
+          id?: string
+          manifesto?: string | null
+          name: string
+          photo_url?: string | null
+          position: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          election_id?: string
+          id?: string
+          manifesto?: string | null
+          name?: string
+          photo_url?: string | null
+          position?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "election_candidates_election_id_fkey"
+            columns: ["election_id"]
+            isOneToOne: false
+            referencedRelation: "elections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      election_votes: {
+        Row: {
+          candidate_id: string
+          created_at: string | null
+          election_id: string
+          id: string
+          position: string
+          user_id: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string | null
+          election_id: string
+          id?: string
+          position: string
+          user_id: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string | null
+          election_id?: string
+          id?: string
+          position?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "election_votes_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "election_candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "election_votes_election_id_fkey"
+            columns: ["election_id"]
+            isOneToOne: false
+            referencedRelation: "elections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      elections: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          ends_at: string | null
+          id: string
+          starts_at: string | null
+          status: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          starts_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          starts_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -2207,6 +2396,51 @@ export type Database = {
           mode?: string
           response?: string
           topic?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      timetable_entries: {
+        Row: {
+          color: string | null
+          course_code: string | null
+          course_name: string
+          created_at: string | null
+          day_of_week: number
+          end_time: string
+          id: string
+          lecturer: string | null
+          location: string | null
+          start_time: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          course_code?: string | null
+          course_name: string
+          created_at?: string | null
+          day_of_week: number
+          end_time: string
+          id?: string
+          lecturer?: string | null
+          location?: string | null
+          start_time: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          course_code?: string | null
+          course_name?: string
+          created_at?: string | null
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          lecturer?: string | null
+          location?: string | null
+          start_time?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
