@@ -218,14 +218,14 @@ const ConfessionsPage = () => {
   };
 
   const handleReact = async (confessionId: string, type: string) => {
-    if (!session?.user?.id) { toast.error('Sign in to react'); return; }
+    if (!user?.id) { toast.error('Sign in to react'); return; }
     const existing = (reactions[confessionId] || []).find(r => r.reaction_type === type);
     if (existing?.user_reacted) {
       await supabase.from('confession_reactions').delete()
-        .eq('confession_id', confessionId).eq('user_id', session.user.id).eq('reaction_type', type);
+        .eq('confession_id', confessionId).eq('user_id', user.id).eq('reaction_type', type);
     } else {
       await supabase.from('confession_reactions').insert({
-        confession_id: confessionId, user_id: session.user.id, reaction_type: type,
+        confession_id: confessionId, user_id: user.id, reaction_type: type,
       });
     }
     fetchConfessions();
