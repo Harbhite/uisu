@@ -75,6 +75,9 @@ const BudgetTrackerPage = lazy(() => import("./pages/BudgetTrackerPage"));
 const SitemapPage = lazy(() => import("./pages/SitemapPage"));
 const FeedbackPage = lazy(() => import("./pages/FeedbackPage"));
 const AlumniNetworkPage = lazy(() => import("./pages/resources/AlumniNetworkPage"));
+const AcademicPlannerPage2 = lazy(() => import("./pages/AcademicPlannerPage"));
+const ConfessionsPage = lazy(() => import("./pages/ConfessionsPage"));
+const ElectionsPage = lazy(() => import("./pages/ElectionsPage"));
 
 // Gazette
 const GazetteLayout = lazy(() => import("./components/gazette/GazetteLayout"));
