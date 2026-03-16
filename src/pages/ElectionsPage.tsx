@@ -137,7 +137,7 @@ const ElectionsPage = () => {
       description: newDesc.trim() || null,
       starts_at: newStartsAt || null,
       ends_at: newEndsAt || null,
-      created_by: session?.user?.id,
+      created_by: user?.id,
     });
     if (error) toast.error('Failed to create'); else { toast.success('Election created'); fetchData(); }
     setSavingElection(false); setShowCreateElection(false);
