@@ -185,6 +185,9 @@ const AppRoutes = () => {
         <Route path="/budget" element={<PageWrapper><BudgetTrackerPage /></PageWrapper>} />
         <Route path="/sitemap" element={<PageWrapper><SitemapPage /></PageWrapper>} />
         <Route path="/feedback" element={<PageWrapper><FeedbackPage /></PageWrapper>} />
+        <Route path="/planner" element={<PageWrapper><AcademicPlannerPage2 /></PageWrapper>} />
+        <Route path="/confessions" element={<PageWrapper><ConfessionsPage /></PageWrapper>} />
+        <Route path="/elections" element={<PageWrapper><ElectionsPage /></PageWrapper>} />
         {/* Tutorials Ecosystem (Standalone Subdomain feel) */}
         <Route path="/tutorials" element={<TutorialsLayout />}>
           <Route index element={<TutorialsLandingPage />} />
