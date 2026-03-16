@@ -159,12 +159,12 @@ const ElectionsPage = () => {
   };
 
   const handleVote = async (electionId: string, candidateId: string, position: string) => {
-    if (!session?.user?.id) { toast.error('Sign in to vote'); return; }
+    if (!user?.id) { toast.error('Sign in to vote'); return; }
     const alreadyVoted = (userVotes[electionId] || []).some(v => v.position === position);
     if (alreadyVoted) { toast.error('You already voted for this position'); return; }
     setSubmittingVote(true);
     const { error } = await supabase.from('election_votes').insert({
-      election_id: electionId, candidate_id: candidateId, user_id: session.user.id, position,
+      election_id: electionId, candidate_id: candidateId, user_id: user.id, position,
     });
     if (error) toast.error(error.message.includes('duplicate') ? 'Already voted' : 'Vote failed');
     else { toast.success('Vote cast!'); fetchData(); }
