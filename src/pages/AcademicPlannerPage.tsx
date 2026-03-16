@@ -87,16 +87,16 @@ const AcademicPlannerPage = () => {
   const [color, setColor] = useState(COLORS[0]);
 
   const fetchEntries = useCallback(async () => {
-    if (!session?.user?.id) { setLoading(false); return; }
+    if (!user?.id) { setLoading(false); return; }
     const { data, error } = await supabase
       .from('timetable_entries')
       .select('*')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .order('day_of_week')
       .order('start_time');
     if (!error && data) setEntries(data as TimetableEntry[]);
     setLoading(false);
-  }, [session?.user?.id]);
+  }, [user?.id]);
 
   useEffect(() => { fetchEntries(); }, [fetchEntries]);
 
