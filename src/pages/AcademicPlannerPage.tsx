@@ -116,12 +116,12 @@ const AcademicPlannerPage = () => {
   };
 
   const handleSave = async () => {
-    if (!session?.user?.id) { toast.error('Please sign in'); return; }
+    if (!user?.id) { toast.error('Please sign in'); return; }
     if (!courseName.trim()) { toast.error('Course name is required'); return; }
     if (startTime >= endTime) { toast.error('End time must be after start time'); return; }
     setSaving(true);
     const payload = {
-      user_id: session.user.id,
+      user_id: user.id,
       course_name: courseName.trim(),
       course_code: courseCode.trim() || null,
       lecturer: lecturer.trim() || null,
