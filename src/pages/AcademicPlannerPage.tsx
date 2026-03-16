@@ -157,7 +157,7 @@ const AcademicPlannerPage = () => {
     toast.success('Timetable exported');
   };
 
-  if (!session) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <SEO title="Academic Planner | UISU" description="Build your weekly timetable" />
