@@ -62,7 +62,7 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 const ElectionsPage = () => {
   const navigate = useNavigate();
-  const { session } = useAuth();
+  const { user } = useAuth();
   const { isAdmin } = useAdminCheck();
   const [elections, setElections] = useState<Election[]>([]);
   const [candidates, setCandidates] = useState<Record<string, Candidate[]>>({});

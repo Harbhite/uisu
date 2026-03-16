@@ -69,7 +69,7 @@ const generateICS = (entries: TimetableEntry[]) => {
 
 const AcademicPlannerPage = () => {
   const navigate = useNavigate();
-  const { session } = useAuth();
+  const { user } = useAuth();
   const [entries, setEntries] = useState<TimetableEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDialog, setShowDialog] = useState(false);

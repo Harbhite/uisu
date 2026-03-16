@@ -136,7 +136,7 @@ const ConfessionCard = ({ confession, reactions, replies, session, isAdmin, onRe
 
 const ConfessionsPage = () => {
   const navigate = useNavigate();
-  const { session } = useAuth();
+  const { user } = useAuth();
   const { isAdmin } = useAdminCheck();
   const [confessions, setConfessions] = useState<Confession[]>([]);
   const [reactions, setReactions] = useState<Record<string, ReactionCount[]>>({});
