@@ -174,7 +174,7 @@ const ConfessionsPage = () => {
         rxMap[id] = types.map(t => ({
           reaction_type: t,
           count: forThis.filter((r: any) => r.reaction_type === t).length,
-          user_reacted: forThis.some((r: any) => r.reaction_type === t && r.user_id === session?.user?.id),
+          user_reacted: forThis.some((r: any) => r.reaction_type === t && r.user_id === user?.id),
         }));
       });
       setReactions(rxMap);
