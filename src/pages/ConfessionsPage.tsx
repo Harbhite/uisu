@@ -308,7 +308,7 @@ const ConfessionsPage = () => {
                 confession={c}
                 reactions={reactions[c.id] || []}
                 replies={repliesMap[c.id] || []}
-                session={session}
+                session={user}
                 isAdmin={isAdmin}
                 onReact={handleReact}
                 onReply={(parentId) => { setReplyTo(parentId); window.scrollTo({ top: 0, behavior: 'smooth' }); }}

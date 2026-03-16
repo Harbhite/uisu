@@ -308,7 +308,7 @@ const ElectionsPage = () => {
                               </div>
                             )}
 
-                            {status === 'active' && !userVotedForPos && session && (
+                            {status === 'active' && !userVotedForPos && user && (
                               <Button
                                 size="sm"
                                 className="w-full mt-3 bg-primary text-primary-foreground"
