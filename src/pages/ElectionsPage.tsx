@@ -112,8 +112,8 @@ const ElectionsPage = () => {
       }
 
       // Fetch user's votes
-      if (session?.user?.id) {
-        const { data: myVotes } = await supabase.from('election_votes').select('*').eq('user_id', session.user.id);
+      if (user?.id) {
+        const { data: myVotes } = await supabase.from('election_votes').select('*').eq('user_id', user.id);
         if (myVotes) {
           const uv: Record<string, UserVote[]> = {};
           (myVotes as any[]).forEach(v => {
@@ -125,7 +125,7 @@ const ElectionsPage = () => {
       }
     }
     setLoading(false);
-  }, [session?.user?.id]);
+  }, [user?.id]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
