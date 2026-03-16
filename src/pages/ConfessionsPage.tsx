@@ -193,7 +193,7 @@ const ConfessionsPage = () => {
     }
 
     setLoading(false);
-  }, [session?.user?.id]);
+  }, [user?.id]);
 
   const [repliesMap, setRepliesMap] = useState<Record<string, Confession[]>>({});
 
