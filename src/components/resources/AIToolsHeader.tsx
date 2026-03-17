@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Brain, BrainCircuit, CreditCard, Sparkles, ArrowLeft } from 'lucide-react';
+import { Brain, BrainCircuit, CreditCard, FileText, Sparkles, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface AITool {
@@ -14,6 +14,7 @@ const tools: AITool[] = [
   { id: 'studybuddy', label: 'StudyBuddy', path: '/resources/study-buddy', icon: Brain },
   { id: 'quiz', label: 'AI Quiz', path: '/resources/ai-quiz', icon: BrainCircuit },
   { id: 'flashcards', label: 'Flashcards', path: '/resources/flashcards', icon: CreditCard },
+  { id: 'studyaide', label: 'Study Aide', path: '/resources/study-aide', icon: FileText },
 ];
 
 interface AIToolsHeaderProps {
