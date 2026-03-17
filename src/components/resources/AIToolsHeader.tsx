@@ -14,6 +14,7 @@ const tools: AITool[] = [
   { id: 'studybuddy', label: 'StudyBuddy', path: '/resources/study-buddy', icon: Brain },
   { id: 'quiz', label: 'AI Quiz', path: '/resources/ai-quiz', icon: BrainCircuit },
   { id: 'flashcards', label: 'Flashcards', path: '/resources/flashcards', icon: CreditCard },
+  { id: 'studyaide', label: 'Study Aide', path: '/resources/study-aide', icon: FileText },
 ];
 
 interface AIToolsHeaderProps {
