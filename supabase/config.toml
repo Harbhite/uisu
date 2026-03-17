@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.lost-found-match]
 verify_jwt = false
+
+[functions.study-aide]
+verify_jwt = false
