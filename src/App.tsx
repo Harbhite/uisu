@@ -47,6 +47,7 @@ const CalculatorSuitePage = lazy(() => import("./pages/resources/CalculatorSuite
 const StudyBuddyPage = lazy(() => import("./pages/resources/StudyBuddyPage"));
 const AIQuizPage = lazy(() => import("./pages/resources/AIQuizPage"));
 const FlashcardPage = lazy(() => import("./pages/resources/FlashcardPage"));
+const StudyAidePage = lazy(() => import("./pages/resources/StudyAidePage"));
 const StyleGuidePage = lazy(() => import("./pages/StyleGuidePage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 const HistoryPage = lazy(() => import("./pages/HistoryPage"));
