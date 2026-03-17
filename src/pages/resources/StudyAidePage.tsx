@@ -313,7 +313,7 @@ const StudyAidePage: React.FC = () => {
         title="AI Study Aide — UISU SPACE"
         description="Generate key points, summaries, outlines, and concept maps from your study materials using AI."
         url="https://uisu.lovable.app/resources/study-aide"
-        ogImage="/og/og-home.png"
+        image="/og/og-home.png"
       />
       <div className="min-h-screen bg-background">
         <AIToolsHeader title="Study Aide" subtitle="AI-Powered Study Generation" icon={FileText} />
