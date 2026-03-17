@@ -179,7 +179,7 @@ const AcademicPlannerPage = () => {
         <div className="container mx-auto px-4 pt-24 pb-6 max-w-6xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button onClick={() => navigate(-1)} className="p-2 border border-primary-foreground/20 hover:border-accent transition-colors rounded-sm">
+              <button onClick={() => navigate(-1)} className="p-2 border border-primary-foreground/20 hover:border-accent transition-colors rounded-xl">
                 <ArrowLeft size={14} />
               </button>
               <div>
@@ -212,7 +212,7 @@ const AcademicPlannerPage = () => {
           <div className="overflow-x-auto -mx-4 px-4">
             <div className="min-w-[700px]">
               {/* Day headers */}
-              <div className="grid grid-cols-[60px_repeat(7,1fr)] gap-px bg-border rounded-t-lg overflow-hidden">
+              <div className="grid grid-cols-[60px_repeat(7,1fr)] gap-px bg-border rounded-t-2xl overflow-hidden">
                 <div className="bg-muted p-2 text-[10px] font-bold text-muted-foreground uppercase" />
                 {DAYS.map(d => (
                   <div key={d} className="bg-muted p-2 text-[10px] font-bold text-muted-foreground uppercase text-center">{d.slice(0, 3)}</div>
@@ -238,7 +238,7 @@ const AcademicPlannerPage = () => {
                       key={e.id}
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="absolute rounded-md p-1.5 overflow-hidden cursor-pointer group"
+                      className="absolute rounded-xl shadow-sm p-1.5 overflow-hidden cursor-pointer group"
                       style={{
                         gridColumn: col,
                         top: `${top}px`,
@@ -270,7 +270,7 @@ const AcademicPlannerPage = () => {
 
       {/* Add/Edit Dialog */}
       <Dialog open={showDialog} onOpenChange={(o) => { if (!o) resetForm(); setShowDialog(o); }}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle className="font-serif">{editingEntry ? 'Edit Course' : 'Add Course'}</DialogTitle>
           </DialogHeader>

@@ -40,10 +40,10 @@ const ConfidenceBadge = ({ confidence }: { confidence: string }) => {
   const styles = {
     high: 'bg-green-50 text-green-700 border-green-200',
     medium: 'bg-amber-50 text-amber-700 border-amber-200',
-    low: 'bg-slate-50 text-slate-500 border-slate-200',
+    low: 'bg-slate-50 text-slate-500 border-border',
   };
   return (
-    <span className={`inline-block px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest border rounded-none ${styles[confidence as keyof typeof styles] || styles.low}`}>
+    <span className={`inline-block px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest border rounded-2xl ${styles[confidence as keyof typeof styles] || styles.low}`}>
       {confidence} match
     </span>
   );
@@ -196,7 +196,7 @@ const LostFoundPage = () => {
           onClick={() => navigate('/')}
           className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors mb-12"
         >
-          <div className="p-2 border border-slate-200 group-hover:border-nobel-gold transition-colors">
+          <div className="p-2 border border-border group-hover:border-nobel-gold transition-colors">
             <ArrowLeft size={14} />
           </div>
           <span>Back</span>
@@ -219,7 +219,7 @@ const LostFoundPage = () => {
               </div>
               <Button
                 onClick={() => currentUser ? setShowCreateModal(true) : toast.error('Please sign in')}
-                className="gap-2 rounded-none text-xs uppercase tracking-widest bg-ui-blue hover:bg-ui-blue/90"
+                className="gap-2 rounded-2xl text-xs uppercase tracking-widest bg-ui-blue hover:bg-ui-blue/90"
               >
                 <Plus size={16} /> Post Item
               </Button>
@@ -277,19 +277,19 @@ const LostFoundPage = () => {
                 transition={{ duration: 0.3 }}
                 className="overflow-hidden"
               >
-                <div className="border border-t-0 border-ui-blue/10 bg-white p-6 space-y-4">
+                <div className="border border-t-0 border-ui-blue/10 bg-card p-6 space-y-4">
                   <Textarea
                     placeholder="Describe what you lost in detail — color, brand, size, where you last had it, any unique features..."
                     value={aiDescription}
                     onChange={e => setAiDescription(e.target.value)}
-                    className="rounded-none border-slate-200 min-h-[100px] text-sm"
+                    className="rounded-2xl border-border min-h-[100px] text-sm"
                     rows={3}
                   />
                   <div className="flex items-center gap-3">
                     <Button
                       onClick={handleAISearch}
                       disabled={aiSearching || !aiDescription.trim()}
-                      className="gap-2 rounded-none bg-nobel-gold hover:bg-nobel-gold/90 text-ui-blue text-xs uppercase tracking-widest font-bold"
+                      className="gap-2 rounded-2xl bg-nobel-gold hover:bg-nobel-gold/90 text-ui-blue text-xs uppercase tracking-widest font-bold"
                     >
                       {aiSearching ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
                       {aiSearching ? 'Searching...' : 'Find Matches'}
@@ -321,7 +321,7 @@ const LostFoundPage = () => {
                             className="flex gap-4 p-4 bg-slate-50/50 border border-slate-100 hover:border-nobel-gold/40 cursor-pointer transition-all group"
                           >
                             {/* Thumbnail */}
-                            <div className="w-16 h-16 flex-shrink-0 bg-slate-100 border border-slate-200 overflow-hidden">
+                            <div className="w-16 h-16 flex-shrink-0 bg-slate-100 border border-border overflow-hidden">
                               {(match.item.photos as string[])?.length > 0 ? (
                                 <img src={(match.item.photos as string[])[0]} alt="" className="w-full h-full object-cover" />
                               ) : (
@@ -334,7 +334,7 @@ const LostFoundPage = () => {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
                                 <ConfidenceBadge confidence={match.confidence} />
-                                <Badge variant="outline" className="text-[8px] rounded-none border-slate-200 text-slate-400 uppercase tracking-widest font-bold bg-white">
+                                <Badge variant="outline" className="text-[8px] rounded-2xl border-border text-slate-400 uppercase tracking-widest font-bold bg-card">
                                   {match.item.category}
                                 </Badge>
                               </div>
@@ -370,10 +370,10 @@ const LostFoundPage = () => {
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-12">
           <Tabs value={filter} onValueChange={(v) => setFilter(v as 'all' | 'lost' | 'found')} className="w-full sm:w-auto">
-            <TabsList className="rounded-none bg-white border border-slate-200 p-1 h-auto grid grid-cols-3 w-full sm:w-[300px]">
-              <TabsTrigger value="all" className="rounded-none py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white">All</TabsTrigger>
-              <TabsTrigger value="lost" className="rounded-none py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white">Lost</TabsTrigger>
-              <TabsTrigger value="found" className="rounded-none py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white">Found</TabsTrigger>
+            <TabsList className="rounded-2xl bg-card border border-border p-1 h-auto grid grid-cols-3 w-full sm:w-[300px]">
+              <TabsTrigger value="all" className="rounded-2xl py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white">All</TabsTrigger>
+              <TabsTrigger value="lost" className="rounded-2xl py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white">Lost</TabsTrigger>
+              <TabsTrigger value="found" className="rounded-2xl py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white">Found</TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -383,15 +383,15 @@ const LostFoundPage = () => {
               placeholder="Search items..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="pl-12 rounded-none border-slate-200 h-full min-h-[42px]"
+              className="pl-12 rounded-2xl border-border h-full min-h-[42px]"
             />
           </div>
 
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-full sm:w-48 rounded-none border-slate-200 h-full min-h-[42px] text-xs font-bold uppercase tracking-widest text-slate-500">
+            <SelectTrigger className="w-full sm:w-48 rounded-2xl border-border h-full min-h-[42px] text-xs font-bold uppercase tracking-widest text-slate-500">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
-            <SelectContent className="rounded-none border-slate-200">
+            <SelectContent className="rounded-2xl border-border">
               <SelectItem value="all" className="text-xs uppercase tracking-widest">All Categories</SelectItem>
               {CATEGORIES.map(c => <SelectItem key={c} value={c} className="text-xs uppercase tracking-widest">{c}</SelectItem>)}
             </SelectContent>
@@ -402,8 +402,8 @@ const LostFoundPage = () => {
         {loading ? (
           <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-nobel-gold" /></div>
         ) : filtered.length === 0 ? (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-24 bg-white border border-slate-200 rounded-none">
-            <div className="w-16 h-16 bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto mb-6 rounded-none">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-24 bg-card border border-border rounded-2xl">
+            <div className="w-16 h-16 bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto mb-6 rounded-2xl">
               <Search size={28} className="text-slate-300" />
             </div>
             <h3 className="font-serif text-xl text-ui-blue mb-2">No items found</h3>
@@ -420,7 +420,7 @@ const LostFoundPage = () => {
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: i * 0.05 }}
                   onClick={() => setShowDetailModal(item)}
-                  className="bg-white border border-slate-200 rounded-none overflow-hidden cursor-pointer hover:border-nobel-gold hover:shadow-sm transition-all duration-300 group flex flex-col h-full"
+                  className="bg-card border border-border rounded-2xl overflow-hidden cursor-pointer hover:border-nobel-gold shadow-sm hover:shadow-md transition-all duration-300 group flex flex-col h-full"
                 >
                   <div className="aspect-[16/10] overflow-hidden bg-slate-50 relative border-b border-slate-100">
                     {item.photos?.length > 0 ? (
@@ -431,7 +431,7 @@ const LostFoundPage = () => {
                       </div>
                     )}
                     <div className="absolute top-3 left-3">
-                      <span className={`inline-block px-3 py-1 text-[9px] font-bold uppercase tracking-widest border rounded-none ${
+                      <span className={`inline-block px-3 py-1 text-[9px] font-bold uppercase tracking-widest border rounded-2xl ${
                         item.item_type === 'lost' 
                           ? 'bg-red-50 text-red-600 border-red-100'
                           : 'bg-green-50 text-green-600 border-green-100'
@@ -443,7 +443,7 @@ const LostFoundPage = () => {
 
                   <div className="p-6 flex flex-col flex-1">
                     <div className="flex items-center gap-2 mb-3">
-                      <Badge variant="outline" className="text-[9px] rounded-none border-slate-200 text-slate-400 uppercase tracking-widest font-bold bg-slate-50">
+                      <Badge variant="outline" className="text-[9px] rounded-2xl border-border text-slate-400 uppercase tracking-widest font-bold bg-slate-50">
                         {item.category}
                       </Badge>
                       <span className="text-[10px] text-slate-300 ml-auto flex items-center gap-1">
@@ -477,45 +477,45 @@ const LostFoundPage = () => {
 
       {/* Create Modal */}
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto rounded-none border-slate-200">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border-border">
           <DialogHeader><DialogTitle className="font-serif text-2xl text-ui-blue">Post Lost or Found Item</DialogTitle></DialogHeader>
           <div className="space-y-4 mt-2">
             <Tabs value={form.item_type} onValueChange={v => setForm(f => ({ ...f, item_type: v }))}>
-              <TabsList className="w-full rounded-none bg-slate-50 border border-slate-200 h-auto p-1">
-                <TabsTrigger value="lost" className="flex-1 rounded-none py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white">I Lost Something</TabsTrigger>
-                <TabsTrigger value="found" className="flex-1 rounded-none py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white">I Found Something</TabsTrigger>
+              <TabsList className="w-full rounded-2xl bg-slate-50 border border-border h-auto p-1">
+                <TabsTrigger value="lost" className="flex-1 rounded-2xl py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white">I Lost Something</TabsTrigger>
+                <TabsTrigger value="found" className="flex-1 rounded-2xl py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white">I Found Something</TabsTrigger>
               </TabsList>
             </Tabs>
 
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Title</label>
-              <Input placeholder="Item name" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="rounded-none border-slate-200" />
+              <Input placeholder="Item name" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="rounded-2xl border-border" />
             </div>
 
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Description</label>
-              <Textarea placeholder="Color, brand, identifying features..." value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="rounded-none border-slate-200" />
+              <Textarea placeholder="Color, brand, identifying features..." value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="rounded-2xl border-border" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Category</label>
                 <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
-                  <SelectTrigger className="rounded-none border-slate-200"><SelectValue /></SelectTrigger>
-                  <SelectContent className="rounded-none border-slate-200">
+                  <SelectTrigger className="rounded-2xl border-border"><SelectValue /></SelectTrigger>
+                  <SelectContent className="rounded-2xl border-border">
                     {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Location</label>
-                <Input placeholder="e.g. Library" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} className="rounded-none border-slate-200" />
+                <Input placeholder="e.g. Library" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} className="rounded-2xl border-border" />
               </div>
             </div>
 
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Contact Info</label>
-              <Input placeholder="Phone/WhatsApp" value={form.contact_info} onChange={e => setForm(f => ({ ...f, contact_info: e.target.value }))} className="rounded-none border-slate-200" />
+              <Input placeholder="Phone/WhatsApp" value={form.contact_info} onChange={e => setForm(f => ({ ...f, contact_info: e.target.value }))} className="rounded-2xl border-border" />
             </div>
             
             {/* Photos */}
@@ -523,16 +523,16 @@ const LostFoundPage = () => {
               <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Photos</p>
               <div className="flex gap-2 flex-wrap">
                 {form.photos.map((url, i) => (
-                  <div key={i} className="relative w-20 h-20 bg-slate-50 border border-slate-200 rounded-none overflow-hidden">
+                  <div key={i} className="relative w-20 h-20 bg-slate-50 border border-border rounded-2xl overflow-hidden">
                     <img src={url} className="w-full h-full object-cover" />
                     <button onClick={() => setForm(f => ({ ...f, photos: f.photos.filter((_, idx) => idx !== i) }))}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-none p-0.5">
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-2xl p-0.5">
                       <X size={12} />
                     </button>
                   </div>
                 ))}
                 <button onClick={() => fileRef.current?.click()}
-                  className="w-20 h-20 border-2 border-dashed border-slate-200 rounded-none flex items-center justify-center text-slate-300 hover:border-nobel-gold hover:text-nobel-gold transition-colors">
+                  className="w-20 h-20 border-2 border-dashed border-border rounded-2xl flex items-center justify-center text-slate-300 hover:border-nobel-gold hover:text-nobel-gold transition-colors">
                   {uploading ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} />}
                 </button>
                 <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUploadPhoto} />
@@ -540,8 +540,8 @@ const LostFoundPage = () => {
             </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowCreateModal(false)} className="rounded-none border-slate-200 text-xs uppercase tracking-widest font-bold">Cancel</Button>
-            <Button onClick={handleCreate} disabled={creating} className="rounded-none bg-ui-blue text-xs uppercase tracking-widest font-bold">
+            <Button variant="outline" onClick={() => setShowCreateModal(false)} className="rounded-2xl border-border text-xs uppercase tracking-widest font-bold">Cancel</Button>
+            <Button onClick={handleCreate} disabled={creating} className="rounded-2xl bg-ui-blue text-xs uppercase tracking-widest font-bold">
               {creating ? <Loader2 size={14} className="animate-spin mr-2" /> : null}
               Post Item
             </Button>
@@ -551,17 +551,17 @@ const LostFoundPage = () => {
 
       {/* Detail Modal */}
       <Dialog open={!!showDetailModal} onOpenChange={() => setShowDetailModal(null)}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto rounded-none border-slate-200">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border-border">
           {showDetailModal && (
             <>
               <DialogHeader>
                 <div className="flex items-center gap-2 mb-2">
-                  <span className={`inline-block px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-widest border rounded-none ${
+                  <span className={`inline-block px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-widest border rounded-2xl ${
                     showDetailModal.item_type === 'lost' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'
                   }`}>
                     {showDetailModal.item_type}
                   </span>
-                  <Badge variant="outline" className="text-[9px] rounded-none border-slate-200 text-slate-500 uppercase tracking-widest font-bold bg-slate-50">
+                  <Badge variant="outline" className="text-[9px] rounded-2xl border-border text-slate-500 uppercase tracking-widest font-bold bg-slate-50">
                     {showDetailModal.category}
                   </Badge>
                 </div>
@@ -571,7 +571,7 @@ const LostFoundPage = () => {
               {showDetailModal.photos?.length > 0 && (
                 <div className="flex gap-2 overflow-x-auto py-4">
                   {showDetailModal.photos.map((url, i) => (
-                    <img key={i} src={url} className="h-64 object-cover rounded-none border border-slate-200" alt="" />
+                    <img key={i} src={url} className="h-64 object-cover rounded-2xl border border-border" alt="" />
                   ))}
                 </div>
               )}
@@ -603,10 +603,10 @@ const LostFoundPage = () => {
 
               {currentUser === showDetailModal.user_id && (
                 <div className="flex gap-2 pt-6 border-t border-slate-100">
-                  <Button variant="outline" size="sm" onClick={() => handleResolve(showDetailModal.id)} className="gap-2 rounded-none border-slate-200 text-xs uppercase tracking-widest font-bold flex-1">
+                  <Button variant="outline" size="sm" onClick={() => handleResolve(showDetailModal.id)} className="gap-2 rounded-2xl border-border text-xs uppercase tracking-widest font-bold flex-1">
                     <CheckCircle2 size={14} /> Mark Resolved
                   </Button>
-                  <Button variant="destructive" size="sm" onClick={() => handleDelete(showDetailModal.id)} className="rounded-none text-xs uppercase tracking-widest font-bold">
+                  <Button variant="destructive" size="sm" onClick={() => handleDelete(showDetailModal.id)} className="rounded-2xl text-xs uppercase tracking-widest font-bold">
                     <Trash2 size={14} />
                   </Button>
                 </div>
