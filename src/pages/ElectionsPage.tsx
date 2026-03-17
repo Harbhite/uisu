@@ -186,7 +186,7 @@ const ElectionsPage = () => {
         <div className="container mx-auto px-4 pt-24 pb-6 max-w-4xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button onClick={() => navigate(-1)} className="p-2 border border-primary-foreground/20 hover:border-accent transition-colors rounded-sm">
+              <button onClick={() => navigate(-1)} className="p-2 border border-primary-foreground/20 hover:border-accent transition-colors rounded-xl">
                 <ArrowLeft size={14} />
               </button>
               <div>
@@ -269,7 +269,7 @@ const ElectionsPage = () => {
                             key={cand.id}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className={`bg-card border rounded-lg p-4 relative overflow-hidden ${
+                            className={`bg-card border rounded-2xl shadow-sm hover:shadow-md p-4 relative overflow-hidden ${
                               isWinner ? 'border-accent ring-1 ring-accent/20' : 'border-border'
                             }`}
                           >
@@ -345,7 +345,7 @@ const ElectionsPage = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     onClick={() => setSelectedElection(e)}
-                    className="bg-card border border-border rounded-lg p-4 cursor-pointer hover:border-accent/30 transition-colors"
+                    className="bg-card border border-border rounded-2xl p-4 cursor-pointer hover:border-accent/30 shadow-sm hover:shadow-md transition-colors"
                   >
                     <div className="flex items-start justify-between">
                       <div>
@@ -370,7 +370,7 @@ const ElectionsPage = () => {
 
       {/* Create Election Dialog */}
       <Dialog open={showCreateElection} onOpenChange={setShowCreateElection}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md rounded-2xl">
           <DialogHeader><DialogTitle className="font-serif">Create Election</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div><Label className="text-xs">Title *</Label><Input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="e.g. SUG Presidential Election 2026" /></div>
@@ -388,7 +388,7 @@ const ElectionsPage = () => {
 
       {/* Add Candidate Dialog */}
       <Dialog open={showAddCandidate} onOpenChange={setShowAddCandidate}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md rounded-2xl">
           <DialogHeader><DialogTitle className="font-serif">Add Candidate</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div><Label className="text-xs">Name *</Label><Input value={candName} onChange={e => setCandName(e.target.value)} placeholder="Candidate name" /></div>

@@ -269,7 +269,7 @@ const ComplaintsPage = () => {
           onClick={() => navigate('/')}
           className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-accent transition-colors mb-12"
         >
-          <div className="p-2 border border-slate-200 rounded-md group-hover:border-accent transition-colors">
+          <div className="p-2 border border-slate-200 rounded-xl group-hover:border-accent transition-colors">
             <ArrowLeft size={14} />
           </div>
           <span>Back</span>
@@ -287,13 +287,13 @@ const ComplaintsPage = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowStats(!showStats)}
-                className="gap-2 rounded-md text-xs uppercase tracking-widest"
+                className="gap-2 rounded-xl text-xs uppercase tracking-widest"
               >
                 <BarChart3 size={14} /> Stats
               </Button>
               <Button
                 onClick={() => currentUser ? setShowCreateModal(true) : toast.error('Please sign in')}
-                className="gap-2 rounded-md text-xs uppercase tracking-widest bg-primary hover:bg-primary/90"
+                className="gap-2 rounded-xl text-xs uppercase tracking-widest bg-primary hover:bg-primary/90"
               >
                 <Plus size={16} /> Submit Complaint
               </Button>
@@ -340,7 +340,7 @@ const ComplaintsPage = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="bg-white border border-slate-200 rounded-lg p-5"
+                    className="bg-white border border-slate-200 rounded-2xl p-5"
                   >
                     <div className="flex items-center justify-between mb-3">
                       <span className={`${s.color}`}>{s.icon}</span>
@@ -353,7 +353,7 @@ const ComplaintsPage = () => {
 
               <div className="grid md:grid-cols-2 gap-4">
                 {/* Resolution Rate */}
-                <div className="bg-white border border-slate-200 rounded-lg p-5">
+                <div className="bg-white border border-slate-200 rounded-2xl p-5">
                   <div className="flex items-center gap-2 mb-4">
                     <TrendingUp size={16} className="text-accent" />
                     <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Resolution Rate</span>
@@ -378,7 +378,7 @@ const ComplaintsPage = () => {
                 </div>
 
                 {/* Category Breakdown */}
-                <div className="bg-white border border-slate-200 rounded-lg p-5">
+                <div className="bg-white border border-slate-200 rounded-2xl p-5">
                   <div className="flex items-center gap-2 mb-4">
                     <PieChart size={16} className="text-accent" />
                     <span className="text-xs font-bold uppercase tracking-widest text-slate-400">By Category</span>
@@ -414,44 +414,44 @@ const ComplaintsPage = () => {
               placeholder="Search complaints by title, description, or category..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="pl-11 rounded-md border-slate-200 h-12"
+              className="pl-11 rounded-xl border-slate-200 h-12"
             />
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
             <Tabs value={tab} onValueChange={v => setTab(v as any)} className="w-full sm:w-auto">
-              <TabsList className="rounded-md bg-white border border-slate-200 p-1 h-auto grid grid-cols-2 w-full sm:w-[300px]">
-                <TabsTrigger value="all" className="rounded-md py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">All</TabsTrigger>
-                <TabsTrigger value="mine" className="rounded-md py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">My Submissions</TabsTrigger>
+              <TabsList className="rounded-xl bg-white border border-slate-200 p-1 h-auto grid grid-cols-2 w-full sm:w-[300px]">
+                <TabsTrigger value="all" className="rounded-xl py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">All</TabsTrigger>
+                <TabsTrigger value="mine" className="rounded-xl py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">My Submissions</TabsTrigger>
               </TabsList>
             </Tabs>
 
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full sm:w-48 rounded-md border-slate-200 h-full min-h-[42px] text-xs font-bold uppercase tracking-widest text-slate-500">
+              <SelectTrigger className="w-full sm:w-48 rounded-xl border-slate-200 h-full min-h-[42px] text-xs font-bold uppercase tracking-widest text-slate-500">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
-              <SelectContent className="rounded-md border-slate-200">
+              <SelectContent className="rounded-xl border-slate-200">
                 <SelectItem value="all" className="text-xs uppercase tracking-widest">All Categories</SelectItem>
                 {CATEGORIES.map(c => <SelectItem key={c} value={c} className="text-xs uppercase tracking-widest">{c}</SelectItem>)}
               </SelectContent>
             </Select>
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-48 rounded-md border-slate-200 h-full min-h-[42px] text-xs font-bold uppercase tracking-widest text-slate-500">
+              <SelectTrigger className="w-full sm:w-48 rounded-xl border-slate-200 h-full min-h-[42px] text-xs font-bold uppercase tracking-widest text-slate-500">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
-              <SelectContent className="rounded-md border-slate-200">
+              <SelectContent className="rounded-xl border-slate-200">
                 <SelectItem value="all" className="text-xs uppercase tracking-widest">All Status</SelectItem>
                 {Object.entries(STATUS_MAP).map(([k, v]) => <SelectItem key={k} value={k} className="text-xs uppercase tracking-widest">{v.label}</SelectItem>)}
               </SelectContent>
             </Select>
 
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full sm:w-52 rounded-md border-slate-200 h-full min-h-[42px] text-xs font-bold uppercase tracking-widest text-slate-500">
+              <SelectTrigger className="w-full sm:w-52 rounded-xl border-slate-200 h-full min-h-[42px] text-xs font-bold uppercase tracking-widest text-slate-500">
                 <ArrowUpDown size={12} className="mr-1" />
                 <SelectValue placeholder="Sort" />
               </SelectTrigger>
-              <SelectContent className="rounded-md border-slate-200">
+              <SelectContent className="rounded-xl border-slate-200">
                 {SORT_OPTIONS.map(s => <SelectItem key={s.value} value={s.value} className="text-xs uppercase tracking-widest">{s.label}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -469,8 +469,8 @@ const ComplaintsPage = () => {
         {loading ? (
           <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-accent" /></div>
         ) : filtered.length === 0 ? (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-24 bg-white border border-slate-200 rounded-lg">
-            <div className="w-16 h-16 bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto mb-6 rounded-lg">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-24 bg-white border border-slate-200 rounded-2xl">
+            <div className="w-16 h-16 bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto mb-6 rounded-2xl">
               <AlertTriangle size={28} className="text-slate-300" />
             </div>
             <h3 className="font-serif text-xl text-primary mb-2">No complaints found</h3>
@@ -488,14 +488,14 @@ const ComplaintsPage = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ delay: i * 0.02 }}
-                    className="bg-white border border-slate-200 rounded-lg p-6 hover:border-accent transition-all duration-200 cursor-pointer group shadow-sm hover:shadow-md"
+                    className="bg-white border border-slate-200 rounded-2xl p-6 hover:border-accent transition-all duration-200 cursor-pointer group shadow-sm hover:shadow-md"
                     onClick={() => openDetail(c)}
                   >
                     <div className="flex items-start gap-6">
                       {/* Upvote */}
                       <button
                         onClick={(e) => { e.stopPropagation(); handleUpvote(c.id); }}
-                        className={`flex flex-col items-center gap-1 px-3 py-2 rounded-md border transition-colors min-w-[60px] ${
+                        className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl border transition-colors min-w-[60px] ${
                           userUpvotes.has(c.id)
                             ? 'bg-primary text-primary-foreground border-primary'
                             : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-accent hover:text-accent'
@@ -511,13 +511,13 @@ const ComplaintsPage = () => {
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
                               <h3 className="font-serif text-xl font-bold text-primary group-hover:text-accent transition-colors">{c.title}</h3>
                               {c.is_anonymous && (
-                                <Badge variant="outline" className="text-[9px] rounded-md border-slate-200 text-slate-400 uppercase tracking-widest font-bold">
+                                <Badge variant="outline" className="text-[9px] rounded-xl border-slate-200 text-slate-400 uppercase tracking-widest font-bold">
                                   Anonymous
                                 </Badge>
                               )}
                             </div>
                             <div className="flex items-center gap-2 flex-wrap text-xs">
-                              <Badge variant="outline" className="text-[9px] rounded-md border-slate-200 text-slate-500 uppercase tracking-widest font-bold bg-slate-50">
+                              <Badge variant="outline" className="text-[9px] rounded-xl border-slate-200 text-slate-500 uppercase tracking-widest font-bold bg-slate-50">
                                 {c.category}
                               </Badge>
                               <span className="text-slate-300">•</span>
@@ -526,10 +526,10 @@ const ComplaintsPage = () => {
                           </div>
 
                           <div className="flex flex-col items-end gap-2">
-                            <Badge variant="outline" className={`text-[9px] rounded-md uppercase tracking-widest font-bold ${statusInfo.color}`}>
+                            <Badge variant="outline" className={`text-[9px] rounded-xl uppercase tracking-widest font-bold ${statusInfo.color}`}>
                               <span className="mr-1.5">{statusInfo.icon}</span>{statusInfo.label}
                             </Badge>
-                            <span className={`text-[9px] font-bold uppercase px-2 py-0.5 border rounded-md ${getPriorityStyle(c.priority)}`}>
+                            <span className={`text-[9px] font-bold uppercase px-2 py-0.5 border rounded-xl ${getPriorityStyle(c.priority)}`}>
                               {c.priority} Priority
                             </span>
                           </div>
@@ -550,25 +550,25 @@ const ComplaintsPage = () => {
 
       {/* Create Modal */}
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent className="max-w-lg rounded-lg border-slate-200">
+        <DialogContent className="max-w-lg rounded-2xl border-slate-200">
           <DialogHeader><DialogTitle className="font-serif text-2xl text-primary">Submit a Complaint</DialogTitle></DialogHeader>
           <div className="space-y-4 mt-2">
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Title</label>
-              <Input placeholder="Short summary" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="rounded-md border-slate-200" />
+              <Input placeholder="Short summary" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="rounded-xl border-slate-200" />
             </div>
 
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Description</label>
-              <Textarea placeholder="Describe your complaint in detail..." value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={5} className="rounded-md border-slate-200" />
+              <Textarea placeholder="Describe your complaint in detail..." value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={5} className="rounded-xl border-slate-200" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Category</label>
                 <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
-                  <SelectTrigger className="rounded-md border-slate-200"><SelectValue /></SelectTrigger>
-                  <SelectContent className="rounded-md border-slate-200">
+                  <SelectTrigger className="rounded-xl border-slate-200"><SelectValue /></SelectTrigger>
+                  <SelectContent className="rounded-xl border-slate-200">
                     {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                   </SelectContent>
                 </Select>
@@ -576,8 +576,8 @@ const ComplaintsPage = () => {
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Priority</label>
                 <Select value={form.priority} onValueChange={v => setForm(f => ({ ...f, priority: v }))}>
-                  <SelectTrigger className="rounded-md border-slate-200"><SelectValue /></SelectTrigger>
-                  <SelectContent className="rounded-md border-slate-200">
+                  <SelectTrigger className="rounded-xl border-slate-200"><SelectValue /></SelectTrigger>
+                  <SelectContent className="rounded-xl border-slate-200">
                     <SelectItem value="low">Low Priority</SelectItem>
                     <SelectItem value="medium">Medium Priority</SelectItem>
                     <SelectItem value="high">High Priority</SelectItem>
@@ -595,8 +595,8 @@ const ComplaintsPage = () => {
             </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowCreateModal(false)} className="rounded-md border-slate-200 text-xs uppercase tracking-widest font-bold">Cancel</Button>
-            <Button onClick={handleCreate} disabled={creating} className="rounded-md bg-primary text-xs uppercase tracking-widest font-bold">
+            <Button variant="outline" onClick={() => setShowCreateModal(false)} className="rounded-xl border-slate-200 text-xs uppercase tracking-widest font-bold">Cancel</Button>
+            <Button onClick={handleCreate} disabled={creating} className="rounded-xl bg-primary text-xs uppercase tracking-widest font-bold">
               {creating && <Loader2 size={14} className="animate-spin mr-2" />}
               Submit
             </Button>
@@ -606,18 +606,18 @@ const ComplaintsPage = () => {
 
       {/* Detail Modal */}
       <Dialog open={!!showDetailModal} onOpenChange={() => setShowDetailModal(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg border-slate-200">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border-slate-200">
           {showDetailModal && (
             <>
               <DialogHeader>
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  <Badge variant="outline" className={`rounded-md text-[9px] font-bold uppercase tracking-widest ${STATUS_MAP[showDetailModal.status]?.color}`}>
+                  <Badge variant="outline" className={`rounded-xl text-[9px] font-bold uppercase tracking-widest ${STATUS_MAP[showDetailModal.status]?.color}`}>
                     {STATUS_MAP[showDetailModal.status]?.label}
                   </Badge>
-                  <Badge variant="outline" className="rounded-md border-slate-200 text-slate-500 text-[9px] font-bold uppercase tracking-widest bg-slate-50">
+                  <Badge variant="outline" className="rounded-xl border-slate-200 text-slate-500 text-[9px] font-bold uppercase tracking-widest bg-slate-50">
                     {showDetailModal.category}
                   </Badge>
-                  <span className={`text-[9px] font-bold uppercase px-2 py-0.5 border rounded-md ${getPriorityStyle(showDetailModal.priority)}`}>
+                  <span className={`text-[9px] font-bold uppercase px-2 py-0.5 border rounded-xl ${getPriorityStyle(showDetailModal.priority)}`}>
                     {showDetailModal.priority} Priority
                   </span>
                 </div>
@@ -629,7 +629,7 @@ const ComplaintsPage = () => {
               </p>
 
               {showDetailModal.resolution && (
-                <div className="bg-slate-50 border border-slate-200 p-6 rounded-lg mt-4">
+                <div className="bg-slate-50 border border-slate-200 p-6 rounded-2xl mt-4">
                   <div className="flex items-center gap-2 mb-2">
                     <CheckCircle2 size={14} className="text-green-600" />
                     <p className="text-xs font-bold text-primary uppercase tracking-widest">Resolution</p>
@@ -658,7 +658,7 @@ const ComplaintsPage = () => {
                 ) : (
                   <div className="space-y-3 max-h-64 overflow-y-auto mb-4">
                     {comments.map(comment => (
-                      <div key={comment.id} className="bg-slate-50 border border-slate-100 rounded-md p-4 group/comment">
+                      <div key={comment.id} className="bg-slate-50 border border-slate-100 rounded-xl p-4 group/comment">
                         <div className="flex items-center justify-between mb-1.5">
                           <div className="flex items-center gap-2">
                             <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
@@ -689,13 +689,13 @@ const ComplaintsPage = () => {
                       value={newComment}
                       onChange={e => setNewComment(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSubmitComment()}
-                      className="rounded-md border-slate-200 flex-1"
+                      className="rounded-xl border-slate-200 flex-1"
                     />
                     <Button
                       size="icon"
                       onClick={handleSubmitComment}
                       disabled={submittingComment || !newComment.trim()}
-                      className="rounded-md bg-primary shrink-0"
+                      className="rounded-xl bg-primary shrink-0"
                     >
                       {submittingComment ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                     </Button>
@@ -705,7 +705,7 @@ const ComplaintsPage = () => {
 
               {/* Staff Actions */}
               {isStaff && (
-                <div className="bg-slate-50 border border-slate-200 p-6 mt-6 space-y-4 rounded-lg">
+                <div className="bg-slate-50 border border-slate-200 p-6 mt-6 space-y-4 rounded-2xl">
                   <div className="flex items-center gap-2 mb-2">
                     <Eye size={14} className="text-accent" />
                     <h4 className="text-xs font-bold text-primary uppercase tracking-widest">Staff Actions</h4>
@@ -714,8 +714,8 @@ const ComplaintsPage = () => {
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Update Status</label>
                     <Select value={staffForm.status} onValueChange={v => setStaffForm(f => ({ ...f, status: v }))}>
-                      <SelectTrigger className="rounded-md border-slate-200 bg-white"><SelectValue placeholder="Update status" /></SelectTrigger>
-                      <SelectContent className="rounded-md border-slate-200">
+                      <SelectTrigger className="rounded-xl border-slate-200 bg-white"><SelectValue placeholder="Update status" /></SelectTrigger>
+                      <SelectContent className="rounded-xl border-slate-200">
                         {Object.entries(STATUS_MAP).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}
                       </SelectContent>
                     </Select>
@@ -723,15 +723,15 @@ const ComplaintsPage = () => {
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Assign To</label>
-                    <Input placeholder="Staff name" value={staffForm.assigned_to} onChange={e => setStaffForm(f => ({ ...f, assigned_to: e.target.value }))} className="rounded-md border-slate-200 bg-white" />
+                    <Input placeholder="Staff name" value={staffForm.assigned_to} onChange={e => setStaffForm(f => ({ ...f, assigned_to: e.target.value }))} className="rounded-xl border-slate-200 bg-white" />
                   </div>
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Resolution Note</label>
-                    <Textarea placeholder="Resolution note..." value={staffForm.resolution} onChange={e => setStaffForm(f => ({ ...f, resolution: e.target.value }))} className="rounded-md border-slate-200 bg-white" />
+                    <Textarea placeholder="Resolution note..." value={staffForm.resolution} onChange={e => setStaffForm(f => ({ ...f, resolution: e.target.value }))} className="rounded-xl border-slate-200 bg-white" />
                   </div>
 
-                  <Button onClick={handleStaffUpdate} disabled={updatingStaff} className="w-full rounded-md bg-primary uppercase tracking-widest text-xs font-bold">
+                  <Button onClick={handleStaffUpdate} disabled={updatingStaff} className="w-full rounded-xl bg-primary uppercase tracking-widest text-xs font-bold">
                     {updatingStaff && <Loader2 size={14} className="animate-spin mr-2" />}
                     Update Complaint
                   </Button>

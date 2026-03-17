@@ -350,7 +350,7 @@ const PollsPage = () => {
       </div>
 
       {/* ── Stats Strip ── */}
-      <div className="border-b border-border bg-card">
+      <div className="border-b border-border bg-card rounded-b-2xl">
         <div className="container mx-auto px-4 md:px-6 max-w-5xl">
           <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border">
             {[
@@ -455,7 +455,7 @@ const PollsPage = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05, duration: 0.4 }}
-                    className="relative bg-card border border-border overflow-hidden group"
+                    className="relative bg-card border border-border overflow-hidden rounded-2xl shadow-sm hover:shadow-md group"
                   >
                     {/* Confetti overlay */}
                     {confettiPoll === poll.id && (
@@ -526,7 +526,7 @@ const PollsPage = () => {
                         <motion.div
                           initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="mb-6 p-4 border border-accent/30 bg-accent/5"
+                          className="mb-6 p-4 border border-accent/30 rounded-xl bg-accent/5"
                         >
                           <div className="flex items-center gap-2 mb-1">
                             <Award size={16} className="text-accent" />
@@ -556,7 +556,7 @@ const PollsPage = () => {
                               {showVoteUI ? (
                                 <button
                                   onClick={() => toggleOption(poll.id, opt.id, poll.poll_type, poll.max_choices)}
-                                  className={`w-full text-left p-4 border-2 transition-all relative overflow-hidden ${
+                                  className={`w-full text-left p-4 border-2 transition-all relative overflow-hidden rounded-xl ${
                                     isSelected
                                       ? 'border-primary bg-primary/5'
                                       : 'border-border hover:border-primary/30 bg-card'
@@ -579,7 +579,7 @@ const PollsPage = () => {
                                   )}
                                 </button>
                               ) : (
-                                <div className={`p-4 border relative overflow-hidden ${isWinner ? 'border-accent bg-accent/5' : 'border-border bg-card'}`}>
+                                <div className={`p-4 border relative overflow-hidden rounded-xl ${isWinner ? 'border-accent bg-accent/5' : 'border-border bg-card'}`}>
                                   {/* Result bar */}
                                   {canSeeResults && (
                                     <motion.div
@@ -674,7 +674,7 @@ const PollsPage = () => {
 
       {/* ── Create Poll Dialog ── */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl">
           <DialogHeader>
             <DialogTitle className="font-serif text-2xl">Create a Poll</DialogTitle>
           </DialogHeader>
@@ -739,7 +739,7 @@ const PollsPage = () => {
             </div>
 
             {/* Settings */}
-            <div className="border border-border p-4 space-y-4">
+            <div className="border border-border p-4 space-y-4 rounded-xl">
               <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground block">Settings</span>
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-light">Anonymous voting</Label>
