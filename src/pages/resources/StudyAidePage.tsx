@@ -244,10 +244,15 @@ const StudyAidePage: React.FC = () => {
         }
       }
 
+      if (!fullText.trim()) {
+        toast.error('No content received from AI. Please try again.');
+        setPhase('input');
+        return;
+      }
       setPhase('result');
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to generate. Please try again.');
+    } catch (err: any) {
+      console.error('Study Aide error:', err?.message || err);
+      toast.error(err?.message === 'No stream' ? 'Connection failed. Please try again.' : 'Failed to generate. Please try again.');
       setPhase('input');
     }
   }, [inputText, selectedFile, mode]);
