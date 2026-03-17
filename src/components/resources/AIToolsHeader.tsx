@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Brain, BrainCircuit, CreditCard, Sparkles, ArrowLeft } from 'lucide-react';
+import { Brain, BrainCircuit, CreditCard, FileText, Sparkles, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface AITool {
