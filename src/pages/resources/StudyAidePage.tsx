@@ -260,7 +260,7 @@ const StudyAidePage: React.FC = () => {
       toast.error(err?.message === 'No stream' ? 'Connection failed. Please try again.' : 'Failed to generate. Please try again.');
       setPhase('input');
     }
-  }, [inputText, selectedFile, mode]);
+  }, [inputText, selectedFile, mode, quickPointCount]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(result);
