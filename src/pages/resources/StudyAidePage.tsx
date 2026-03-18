@@ -407,9 +407,36 @@ const StudyAidePage: React.FC = () => {
                                 {m.description}
                               </p>
                             </button>
-                          );
-                        })}
-                      </div>
+                            {/* Quick Points count selector */}
+                            {m.id === 'quickpoints' && mode === 'quickpoints' && (
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="mt-2 p-3 bg-primary-foreground/5 rounded-lg border border-primary-foreground/10"
+                              >
+                                <p className="text-[9px] font-bold uppercase tracking-widest text-primary-foreground/50 mb-2">Number of points</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {QUICK_POINT_COUNTS.map(c => (
+                                    <button
+                                      key={c}
+                                      onClick={() => setQuickPointCount(c)}
+                                      className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all ${
+                                        quickPointCount === c
+                                          ? 'bg-accent text-accent-foreground'
+                                          : 'bg-primary-foreground/10 text-primary-foreground/60 hover:bg-primary-foreground/20'
+                                      }`}
+                                    >
+                                      {c}
+                                    </button>
+                                  ))}
+                                </div>
+                              </motion.div>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                    </div>
                     </div>
 
                     <button
