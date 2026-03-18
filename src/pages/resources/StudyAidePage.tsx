@@ -390,8 +390,8 @@ const StudyAidePage: React.FC = () => {
                         {modes.map((m) => {
                           const Icon = m.icon;
                           return (
+                            <React.Fragment key={m.id}>
                             <button
-                              key={m.id}
                               onClick={() => setMode(m.id)}
                               className={`w-full text-left p-3.5 border transition-all rounded-lg ${
                                 mode === m.id
