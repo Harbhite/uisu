@@ -150,6 +150,7 @@ const ExportDropdown: React.FC<{ content: string; topic: string }> = ({ content,
 const StudyAidePage: React.FC = () => {
   const navigate = useNavigate();
   const [mode, setMode] = useState<AideMode>('keypoints');
+  const [quickPointCount, setQuickPointCount] = useState<number>(25);
   const [inputText, setInputText] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
