@@ -40,7 +40,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { mode, topic, material } = await req.json();
+    const { mode, topic, material, pointCount } = await req.json();
 
     const modePrompts: Record<string, string> = {
       keypoints: `You are an elite academic assistant at the University of Ibadan. Extract and present the KEY POINTS from the provided material/topic. Format your response as:
