@@ -52,9 +52,7 @@ const AcademicCalendarPage = () => {
     setLoading(false);
   };
 
-  const upcomingEvents = useMemo(() => {
-    return events.filter(e => !isPast(new Date(e.event_date)) || isToday(new Date(e.event_date))).slice(0, 5);
-  }, [events]);
+  const upcomingEvents = useMemo(() => events.filter(e => !isPast(new Date(e.event_date)) || isToday(new Date(e.event_date))).slice(0, 5), [events]);
 
   const getCountdown = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -82,8 +80,7 @@ const AcademicCalendarPage = () => {
         if (error) throw error;
         toast.success('Event added');
       }
-      setShowModal(false);
-      setEditingEvent(null);
+      setShowModal(false); setEditingEvent(null);
       setForm({ title: '', description: '', event_date: '', end_date: '', event_type: 'general', is_important: false });
       fetchEvents();
     } catch { toast.error('Failed to save'); }
@@ -109,60 +106,83 @@ const AcademicCalendarPage = () => {
   const paddingDays = Array.from({ length: startDayOfWeek }, (_, i) => i);
   const getEventsForDay = (date: Date) => events.filter(e => isSameDay(new Date(e.event_date), date));
 
+  const totalEvents = events.length;
+  const upcomingCount = upcomingEvents.length;
+  const importantCount = events.filter(e => e.is_important).length;
+
   return (
     <div className="min-h-screen bg-background">
       <SEO title="Academic Calendar - UISU SPACE" description="Important academic dates, exams, deadlines, and countdowns" />
 
-      {/* Hero */}
+      {/* Hero Header */}
       <div className="bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4 pt-28 pb-14 max-w-6xl">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary-foreground/60 mb-3">Academic Affairs</p>
-            <h1 className="text-4xl md:text-6xl font-serif font-bold mb-4 leading-tight">Academic Calendar</h1>
-            <p className="text-primary-foreground/70 font-light max-w-xl text-lg">
-              Track exams, deadlines, registration periods, and holidays at a glance.
-            </p>
-          </motion.div>
-          {isStaff && (
-            <div className="mt-8 pt-6 border-t border-primary-foreground/10">
-              <Button
-                onClick={() => { setEditingEvent(null); setForm({ title: '', description: '', event_date: '', end_date: '', event_type: 'general', is_important: false }); setShowModal(true); }}
-                variant="secondary"
-                className="gap-2 rounded-sm"
-              >
-                <Plus size={16} /> Add Event
-              </Button>
+        <div className="container mx-auto px-4 pt-24 pb-8 max-w-6xl">
+          <div className="flex items-center gap-4 mb-6">
+            <button onClick={() => window.history.back()} className="p-2.5 rounded-full border border-primary-foreground/20 hover:bg-primary-foreground/10 transition-colors">
+              <ChevronLeft size={16} />
+            </button>
+            <div className="flex-1">
+              <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-primary-foreground/50">Academic Affairs</p>
+              <h1 className="text-2xl md:text-3xl font-serif font-bold">Academic Calendar</h1>
             </div>
-          )}
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-primary-foreground/10 flex items-center justify-center"><Calendar size={14} /></div>
+                <div>
+                  <p className="text-lg font-bold leading-none">{totalEvents}</p>
+                  <p className="text-[9px] uppercase tracking-widest text-primary-foreground/50">Events</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-primary-foreground/10 flex items-center justify-center"><Clock size={14} /></div>
+                <div>
+                  <p className="text-lg font-bold leading-none">{upcomingCount}</p>
+                  <p className="text-[9px] uppercase tracking-widest text-primary-foreground/50">Upcoming</p>
+                </div>
+              </div>
+              {importantCount > 0 && (
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center"><Star size={14} className="text-accent" /></div>
+                  <div>
+                    <p className="text-lg font-bold leading-none">{importantCount}</p>
+                    <p className="text-[9px] uppercase tracking-widest text-primary-foreground/50">Important</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            {isStaff && (
+              <Button size="sm" onClick={() => { setEditingEvent(null); setForm({ title: '', description: '', event_date: '', end_date: '', event_type: 'general', is_important: false }); setShowModal(true); }}
+                className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-full">
+                <Plus size={14} className="mr-1.5" /> Add Event
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-10 max-w-6xl">
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
         {/* Countdown Cards */}
         {upcomingEvents.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground mb-5">Upcoming Deadlines</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          <div className="mb-8">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground mb-4">Upcoming Deadlines</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
               {upcomingEvents.map((event, i) => {
                 const countdown = getCountdown(event.event_date);
                 const isUrgent = differenceInDays(new Date(event.event_date), new Date()) <= 3;
                 return (
-                  <motion.div
-                    key={event.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.06 }}
-                    className={`bg-card border border-border rounded-sm p-5 relative overflow-hidden ${isUrgent ? 'border-destructive/40 shadow-sm' : ''}`}
+                  <motion.div key={event.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
+                    className={`bg-card border border-border rounded-2xl p-5 relative overflow-hidden ${isUrgent ? 'border-destructive/40 shadow-sm' : ''}`}
                   >
                     {event.is_important && <Star size={14} className="absolute top-4 right-4 text-accent fill-accent" />}
-                    <Badge variant="outline" className={`text-[10px] mb-3 rounded-sm ${getTypeStyle(event.event_type)}`}>
+                    <Badge variant="outline" className={`text-[10px] mb-3 rounded-full ${getTypeStyle(event.event_type)}`}>
                       {EVENT_TYPES.find(t => t.value === event.event_type)?.label}
                     </Badge>
                     <h3 className="font-serif font-semibold text-sm text-foreground line-clamp-2 mb-1">{event.title}</h3>
                     <p className="text-xs text-muted-foreground mb-3">{format(new Date(event.event_date), 'MMM d, yyyy')}</p>
-                    <p className={`text-xl font-serif font-bold ${isUrgent ? 'text-destructive' : 'text-primary'}`}>
-                      {countdown}
-                    </p>
+                    <p className={`text-xl font-serif font-bold ${isUrgent ? 'text-destructive' : 'text-primary'}`}>{countdown}</p>
                   </motion.div>
                 );
               })}
@@ -171,13 +191,13 @@ const AcademicCalendarPage = () => {
         )}
 
         {/* Calendar Grid */}
-        <div className="bg-card border border-border rounded-sm p-6 md:p-8 mb-10">
+        <div className="bg-card border border-border rounded-2xl p-5 md:p-8 mb-8">
           <div className="flex items-center justify-between mb-6">
-            <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="rounded-sm"><ChevronLeft size={18} /></Button>
+            <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="rounded-full"><ChevronLeft size={18} /></Button>
             <h2 className="text-2xl font-serif font-bold text-foreground">{format(currentMonth, 'MMMM yyyy')}</h2>
-            <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="rounded-sm"><ChevronRight size={18} /></Button>
+            <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="rounded-full"><ChevronRight size={18} /></Button>
           </div>
-          <div className="grid grid-cols-7 gap-px bg-border rounded-sm overflow-hidden">
+          <div className="grid grid-cols-7 gap-px bg-border rounded-2xl overflow-hidden">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
               <div key={day} className="text-center text-[10px] font-bold text-muted-foreground uppercase tracking-wider py-3 bg-muted">{day}</div>
             ))}
@@ -192,9 +212,7 @@ const AcademicCalendarPage = () => {
                   </span>
                   <div className="mt-1 space-y-0.5">
                     {dayEvents.slice(0, 2).map(e => (
-                      <div key={e.id} className={`text-[10px] px-1 py-0.5 truncate rounded-sm ${getTypeStyle(e.event_type)}`} title={e.title}>
-                        {e.title}
-                      </div>
+                      <div key={e.id} className={`text-[10px] px-1.5 py-0.5 truncate rounded-full ${getTypeStyle(e.event_type)}`} title={e.title}>{e.title}</div>
                     ))}
                     {dayEvents.length > 2 && <span className="text-[10px] text-muted-foreground">+{dayEvents.length - 2}</span>}
                   </div>
@@ -206,19 +224,20 @@ const AcademicCalendarPage = () => {
 
         {/* Full Event List */}
         <div>
-          <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground mb-5">All Events</h2>
+          <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground mb-4">All Events</h2>
           {loading ? (
-            <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-accent" /></div>
+            <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
           ) : events.length === 0 ? (
-            <p className="text-center py-12 text-muted-foreground font-light">No events scheduled yet.</p>
+            <div className="text-center py-20 bg-card border border-border rounded-2xl">
+              <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4"><Calendar size={32} className="text-muted-foreground" /></div>
+              <p className="font-serif text-lg text-foreground">No events scheduled yet</p>
+              <p className="text-sm text-muted-foreground mt-1">Check back soon for updates.</p>
+            </div>
           ) : (
             <div className="space-y-2">
               {events.map(event => (
-                <motion.div
-                  key={event.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex items-center gap-4 bg-card border border-border rounded-sm p-4 hover:shadow-sm transition-shadow"
+                <motion.div key={event.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                  className="flex items-center gap-4 bg-card border border-border rounded-2xl p-4 hover:shadow-md transition-shadow"
                 >
                   <div className="text-center min-w-[48px] border-r border-border pr-4">
                     <span className="text-2xl font-serif font-bold text-primary">{format(new Date(event.event_date), 'd')}</span>
@@ -230,9 +249,7 @@ const AcademicCalendarPage = () => {
                       {event.is_important && <Star size={12} className="text-accent fill-accent shrink-0" />}
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className={`text-[10px] rounded-sm ${getTypeStyle(event.event_type)}`}>
-                        {EVENT_TYPES.find(t => t.value === event.event_type)?.label}
-                      </Badge>
+                      <Badge variant="outline" className={`text-[10px] rounded-full ${getTypeStyle(event.event_type)}`}>{EVENT_TYPES.find(t => t.value === event.event_type)?.label}</Badge>
                       {event.end_date && <span className="text-xs text-muted-foreground">→ {format(new Date(event.end_date), 'MMM d')}</span>}
                     </div>
                   </div>
@@ -241,8 +258,8 @@ const AcademicCalendarPage = () => {
                   </span>
                   {isStaff && (
                     <div className="flex gap-1 shrink-0">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-sm" onClick={() => handleEdit(event)}><Edit2 size={14} /></Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive rounded-sm" onClick={() => handleDelete(event.id)}><Trash2 size={14} /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => handleEdit(event)}><Edit2 size={14} /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive rounded-full" onClick={() => handleDelete(event.id)}><Trash2 size={14} /></Button>
                     </div>
                   )}
                 </motion.div>
@@ -254,26 +271,18 @@ const AcademicCalendarPage = () => {
 
       {/* Create/Edit Modal */}
       <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="sm:rounded-sm">
+        <DialogContent className="rounded-2xl">
           <DialogHeader><DialogTitle className="font-serif text-2xl">{editingEvent ? 'Edit Event' : 'Add Calendar Event'}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <Input placeholder="Event title *" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="rounded-sm" />
-            <Textarea placeholder="Description (optional)" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="rounded-sm" />
+            <Input placeholder="Event title *" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="rounded-xl" />
+            <Textarea placeholder="Description (optional)" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="rounded-xl" />
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs">Start Date *</Label>
-                <Input type="date" value={form.event_date} onChange={e => setForm(f => ({ ...f, event_date: e.target.value }))} className="rounded-sm" />
-              </div>
-              <div>
-                <Label className="text-xs">End Date</Label>
-                <Input type="date" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))} className="rounded-sm" />
-              </div>
+              <div><Label className="text-xs">Start Date *</Label><Input type="date" value={form.event_date} onChange={e => setForm(f => ({ ...f, event_date: e.target.value }))} className="rounded-xl" /></div>
+              <div><Label className="text-xs">End Date</Label><Input type="date" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))} className="rounded-xl" /></div>
             </div>
             <Select value={form.event_type} onValueChange={v => setForm(f => ({ ...f, event_type: v }))}>
-              <SelectTrigger className="rounded-sm"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {EVENT_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-              </SelectContent>
+              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent className="rounded-xl">{EVENT_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
             </Select>
             <div className="flex items-center gap-2">
               <Switch checked={form.is_important} onCheckedChange={v => setForm(f => ({ ...f, is_important: v }))} />
@@ -281,10 +290,9 @@ const AcademicCalendarPage = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowModal(false)} className="rounded-sm">Cancel</Button>
-            <Button onClick={handleSave} disabled={saving} className="rounded-sm">
-              {saving && <Loader2 size={16} className="animate-spin mr-2" />}
-              {editingEvent ? 'Update' : 'Add Event'}
+            <Button variant="outline" onClick={() => setShowModal(false)} className="rounded-full">Cancel</Button>
+            <Button onClick={handleSave} disabled={saving} className="rounded-full">
+              {saving && <Loader2 size={16} className="animate-spin mr-2" />}{editingEvent ? 'Update' : 'Add Event'}
             </Button>
           </DialogFooter>
         </DialogContent>
