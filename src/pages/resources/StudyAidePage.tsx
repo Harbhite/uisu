@@ -195,7 +195,7 @@ const StudyAidePage: React.FC = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ mode, topic: inputText.trim().substring(0, 200), material }),
+        body: JSON.stringify({ mode: mode === 'quickpoints' ? 'quickpoints' : mode, topic: inputText.trim().substring(0, 200), material, pointCount: mode === 'quickpoints' ? quickPointCount : undefined }),
       });
 
       if (!response.ok) {
