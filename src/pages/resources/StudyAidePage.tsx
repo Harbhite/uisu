@@ -14,17 +14,21 @@ import { toast } from 'sonner';
 import { SEO } from '@/components/SEO';
 import AIToolsHeader from '@/components/resources/AIToolsHeader';
 
-type AideMode = 'keypoints' | 'summary' | 'outline' | 'concepts';
+type AideMode = 'keypoints' | 'summary' | 'outline' | 'concepts' | 'quickpoints';
 
 interface ModeConfig {
   id: AideMode;
   label: string;
   description: string;
   icon: React.ElementType;
+  hasCount?: boolean;
 }
+
+const QUICK_POINT_COUNTS = [15, 25, 50, 75, 100] as const;
 
 const modes: ModeConfig[] = [
   { id: 'keypoints', label: 'Key Points', description: 'Extract prioritized key points from your material', icon: Key },
+  { id: 'quickpoints', label: 'Quick Points', description: 'Brief, concise numbered key points — choose how many', icon: ListTree, hasCount: true },
   { id: 'summary', label: 'Summary Brief', description: 'Comprehensive summary with core concepts & takeaways', icon: BookOpen },
   { id: 'outline', label: 'Study Outline', description: 'Hierarchical outline with definitions & review questions', icon: ListTree },
   { id: 'concepts', label: 'Concept Map', description: 'Glossary, relationships table & memory aids', icon: Network },
