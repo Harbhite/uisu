@@ -142,6 +142,24 @@ For each major concept:
 Be comprehensive. Cover all significant terms and their interconnections.`,
     };
 
+    // Dynamic quickpoints prompt with user-selected count
+    if (mode === 'quickpoints') {
+      const count = Math.min(Math.max(Number(pointCount) || 25, 5), 150);
+      modePrompts.quickpoints = `You are an elite academic assistant at the University of Ibadan. Generate exactly ${count} KEY POINTS from the provided material/topic. Each key point must be:
+
+- **Brief** (1-2 sentences maximum)
+- **Concise** (no fluff, straight to the point)
+- **Self-contained** (understandable without additional context)
+
+Format your response as a numbered list:
+
+1. **[Concise Title]:** [Brief 1-2 sentence explanation]
+2. **[Concise Title]:** [Brief 1-2 sentence explanation]
+...continue to exactly ${count} points.
+
+Prioritize the most exam-worthy and conceptually important points. Cover breadth over depth. Do NOT include sub-points, examples, or elaborations — keep each point atomic and scannable. Use markdown bold for titles only.`;
+    }
+
     const systemPrompt = modePrompts[mode] || modePrompts.keypoints;
 
     const userContent = topic
