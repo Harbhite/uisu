@@ -14,17 +14,21 @@ import { toast } from 'sonner';
 import { SEO } from '@/components/SEO';
 import AIToolsHeader from '@/components/resources/AIToolsHeader';
 
-type AideMode = 'keypoints' | 'summary' | 'outline' | 'concepts';
+type AideMode = 'keypoints' | 'summary' | 'outline' | 'concepts' | 'quickpoints';
 
 interface ModeConfig {
   id: AideMode;
   label: string;
   description: string;
   icon: React.ElementType;
+  hasCount?: boolean;
 }
+
+const QUICK_POINT_COUNTS = [15, 25, 50, 75, 100] as const;
 
 const modes: ModeConfig[] = [
   { id: 'keypoints', label: 'Key Points', description: 'Extract prioritized key points from your material', icon: Key },
+  { id: 'quickpoints', label: 'Quick Points', description: 'Brief, concise numbered key points — choose how many', icon: ListTree, hasCount: true },
   { id: 'summary', label: 'Summary Brief', description: 'Comprehensive summary with core concepts & takeaways', icon: BookOpen },
   { id: 'outline', label: 'Study Outline', description: 'Hierarchical outline with definitions & review questions', icon: ListTree },
   { id: 'concepts', label: 'Concept Map', description: 'Glossary, relationships table & memory aids', icon: Network },
@@ -146,6 +150,7 @@ const ExportDropdown: React.FC<{ content: string; topic: string }> = ({ content,
 const StudyAidePage: React.FC = () => {
   const navigate = useNavigate();
   const [mode, setMode] = useState<AideMode>('keypoints');
+  const [quickPointCount, setQuickPointCount] = useState<number>(25);
   const [inputText, setInputText] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -190,7 +195,7 @@ const StudyAidePage: React.FC = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ mode, topic: inputText.trim().substring(0, 200), material }),
+        body: JSON.stringify({ mode: mode === 'quickpoints' ? 'quickpoints' : mode, topic: inputText.trim().substring(0, 200), material, pointCount: mode === 'quickpoints' ? quickPointCount : undefined }),
       });
 
       if (!response.ok) {
@@ -255,7 +260,7 @@ const StudyAidePage: React.FC = () => {
       toast.error(err?.message === 'No stream' ? 'Connection failed. Please try again.' : 'Failed to generate. Please try again.');
       setPhase('input');
     }
-  }, [inputText, selectedFile, mode]);
+  }, [inputText, selectedFile, mode, quickPointCount]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(result);
@@ -385,8 +390,8 @@ const StudyAidePage: React.FC = () => {
                         {modes.map((m) => {
                           const Icon = m.icon;
                           return (
+                            <React.Fragment key={m.id}>
                             <button
-                              key={m.id}
                               onClick={() => setMode(m.id)}
                               className={`w-full text-left p-3.5 border transition-all rounded-lg ${
                                 mode === m.id
@@ -402,9 +407,36 @@ const StudyAidePage: React.FC = () => {
                                 {m.description}
                               </p>
                             </button>
-                          );
-                        })}
-                      </div>
+                            {/* Quick Points count selector */}
+                            {m.id === 'quickpoints' && mode === 'quickpoints' && (
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="mt-2 p-3 bg-primary-foreground/5 rounded-lg border border-primary-foreground/10"
+                              >
+                                <p className="text-[9px] font-bold uppercase tracking-widest text-primary-foreground/50 mb-2">Number of points</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {QUICK_POINT_COUNTS.map(c => (
+                                    <button
+                                      key={c}
+                                      onClick={() => setQuickPointCount(c)}
+                                      className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all ${
+                                        quickPointCount === c
+                                          ? 'bg-accent text-accent-foreground'
+                                          : 'bg-primary-foreground/10 text-primary-foreground/60 hover:bg-primary-foreground/20'
+                                      }`}
+                                    >
+                                      {c}
+                                    </button>
+                                  ))}
+                                </div>
+                              </motion.div>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                    </div>
                     </div>
 
                     <button
