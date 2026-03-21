@@ -1,32 +1,66 @@
 
 
-# Replace Global Loading Spinner with Animated UISU Branded Loader
+# Redesign: Confessions + Elections Pages
 
-## What
-Replace the plain `Loader2` spinning icon with a custom animated loading component that uses the UISU logo mark and smooth motion — applied globally across all loading states.
+Rebuild both pages to match the modern rounded aesthetic (rounded-2xl cards, rounded-full buttons/pills, rounded-xl inputs, stat pills in hero header).
 
-## Design
-A pulsing/morphing UISU-branded loader:
-- Three concentric rings that rotate at different speeds with the accent gold color
-- A subtle scale pulse on the center dot
-- "Loading..." text below with a typing/fade animation
-- Keeps the same `size` prop API (`sm`, `md`, `lg`) for drop-in compatibility
+---
 
-## Changes
+## 1. Confessions Page
 
-### 1. Rewrite `src/components/ui/LoadingSpinner.tsx`
-Replace the `Loader2` icon with a custom SVG animation:
-- Three concentric circles with staggered `rotate` animations via Framer Motion
-- Center dot with a pulse effect
-- Optional "Loading..." label for `md` and `lg` sizes
-- Uses the existing accent color (`text-accent` / gold)
-- Same interface: `size?: "sm" | "md" | "lg"`, `className?: string`
+**Hero header redesign**
+- Add stat pills: total confessions count, pending moderation count, total reactions count
+- Change back button from `rounded-sm` to `rounded-full`
+- Add a subtle icon/illustration
 
-### 2. Update `LoadingFallback` in `src/App.tsx`
-Replace the inline `border-4 border-primary border-t-transparent rounded-full animate-spin` spinner with `<LoadingSpinner size="lg" />`.
+**Submit box**
+- Card: `rounded-2xl` (currently `rounded-lg`)
+- Textarea: `rounded-xl`
+- Submit button: `rounded-full`
+- Character counter as a pill badge
 
-### 3. No changes needed to consumer files
-Since `LoadingSpinner` keeps the same export name and props, all 4 consumer files (`CareerHubPage`, `ScholarshipPage`, `InksPiecePage`, `PendingSubmissions`) work automatically.
+**Confession cards**
+- Cards: `rounded-2xl` with hover shadow transition (currently `rounded-lg`)
+- Reaction buttons already `rounded-full` — keep
+- Admin action buttons: `rounded-full`
+- Reply thread container: `rounded-xl` with softer border
+- Pending badge: `rounded-full` pill style
 
-The ~50+ inline `Loader2 animate-spin` usages across the codebase are contextual button/section spinners and will remain as-is — this change targets full-page/section loading states only.
+**Empty state**
+- Rounded illustration container
+
+---
+
+## 2. Elections Page
+
+**Hero header redesign**
+- Add stat pills: total elections, active elections, total votes cast
+- Back button: `rounded-full`
+
+**Elections list cards**
+- Already `rounded-2xl` — keep
+- Status badges: ensure `rounded-full`
+- Add subtle gradient or accent border on active elections
+
+**Election detail view**
+- Candidate cards: already `rounded-2xl` — keep
+- Vote button: `rounded-full`
+- Vote progress bar: already `rounded-full` — keep
+- "Add Candidate" and admin buttons: `rounded-full`
+
+**Dialogs**
+- Already `rounded-2xl` — keep
+- All inputs inside dialogs: `rounded-xl`
+- Dialog buttons: `rounded-full`
+
+---
+
+## Files Modified
+
+| File | Change |
+|---|---|
+| `src/pages/ConfessionsPage.tsx` | Full UI refresh with rounded tokens and stat pills |
+| `src/pages/ElectionsPage.tsx` | Rounded buttons/inputs, stat pills in hero |
+
+No database or backend changes needed.
 
