@@ -4,8 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, Plus, Vote, Users, CheckCircle2, Loader2, Award, Clock,
-  BarChart3, User, Trash2, Edit2, X, Calendar
+  ArrowLeft, Plus, Vote, Users, Loader2, Award, Clock,
+  User, Trash2, Calendar
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SEO } from '@/components/SEO';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
@@ -57,7 +56,7 @@ const StatusBadge = ({ status }: { status: string }) => {
     upcoming: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
     closed: 'bg-muted text-muted-foreground border-border',
   };
-  return <Badge variant="outline" className={`text-[9px] ${styles[status] || styles.closed}`}>{status}</Badge>;
+  return <Badge variant="outline" className={`rounded-full text-[9px] ${styles[status] || styles.closed}`}>{status}</Badge>;
 };
 
 const ElectionsPage = () => {
@@ -70,10 +69,9 @@ const ElectionsPage = () => {
   const [userVotes, setUserVotes] = useState<Record<string, UserVote[]>>({});
   const [loading, setLoading] = useState(true);
   const [selectedElection, setSelectedElection] = useState<Election | null>(null);
-  const [voting, setVoting] = useState<Record<string, string>>({});
   const [submittingVote, setSubmittingVote] = useState(false);
+  const [totalVotesCount, setTotalVotesCount] = useState(0);
 
-  // Admin: create election
   const [showCreateElection, setShowCreateElection] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
@@ -81,7 +79,6 @@ const ElectionsPage = () => {
   const [newEndsAt, setNewEndsAt] = useState('');
   const [savingElection, setSavingElection] = useState(false);
 
-  // Admin: add candidate
   const [showAddCandidate, setShowAddCandidate] = useState(false);
   const [candName, setCandName] = useState('');
   const [candPosition, setCandPosition] = useState('');
@@ -92,7 +89,6 @@ const ElectionsPage = () => {
     const { data: electionsData } = await supabase.from('elections').select('*').order('created_at', { ascending: false });
     if (electionsData) {
       setElections(electionsData as Election[]);
-      // Fetch candidates for each election
       const { data: allCandidates } = await supabase.from('election_candidates').select('*');
       if (allCandidates) {
         const map: Record<string, Candidate[]> = {};
@@ -103,15 +99,14 @@ const ElectionsPage = () => {
         setCandidates(map);
       }
 
-      // Fetch vote counts per candidate
       const { data: votes } = await supabase.from('election_votes').select('candidate_id');
       if (votes) {
         const counts: Record<string, number> = {};
         votes.forEach((v: any) => { counts[v.candidate_id] = (counts[v.candidate_id] || 0) + 1; });
         setVoteCounts(counts);
+        setTotalVotesCount(votes.length);
       }
 
-      // Fetch user's votes
       if (user?.id) {
         const { data: myVotes } = await supabase.from('election_votes').select('*').eq('user_id', user.id);
         if (myVotes) {
@@ -176,17 +171,19 @@ const ElectionsPage = () => {
     if (!error) { toast.success('Deleted'); fetchData(); setSelectedElection(null); }
   };
 
+  const activeCount = elections.filter(e => getElectionStatus(e) === 'active').length;
   const positions = selectedElection ? [...new Set((candidates[selectedElection.id] || []).map(c => c.position))] : [];
 
   return (
     <div className="min-h-screen bg-background">
       <SEO title="Elections | UISU" description="Student union elections and voting" />
 
+      {/* Hero */}
       <div className="bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4 pt-24 pb-6 max-w-4xl">
-          <div className="flex items-center justify-between">
+        <div className="container mx-auto px-4 pt-24 pb-8 max-w-4xl">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
-              <button onClick={() => navigate(-1)} className="p-2 border border-primary-foreground/20 hover:border-accent transition-colors rounded-xl">
+              <button onClick={() => navigate(-1)} className="p-2.5 border border-primary-foreground/20 hover:border-accent transition-colors rounded-full">
                 <ArrowLeft size={14} />
               </button>
               <div>
@@ -195,10 +192,21 @@ const ElectionsPage = () => {
               </div>
             </div>
             {isAdmin && (
-              <Button size="sm" onClick={() => setShowCreateElection(true)} className="bg-accent text-accent-foreground hover:bg-accent/90">
+              <Button size="sm" onClick={() => setShowCreateElection(true)} className="rounded-full bg-accent text-accent-foreground hover:bg-accent/90">
                 <Plus size={14} className="mr-1" /> New Election
               </Button>
             )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <span className="bg-primary-foreground/10 backdrop-blur-sm rounded-full px-3 py-1 text-[10px] font-medium flex items-center gap-1.5">
+              <Vote size={10} /> {elections.length} Elections
+            </span>
+            <span className="bg-primary-foreground/10 backdrop-blur-sm rounded-full px-3 py-1 text-[10px] font-medium flex items-center gap-1.5">
+              <Award size={10} /> {activeCount} Active
+            </span>
+            <span className="bg-primary-foreground/10 backdrop-blur-sm rounded-full px-3 py-1 text-[10px] font-medium flex items-center gap-1.5">
+              <Users size={10} /> {totalVotesCount} Votes Cast
+            </span>
           </div>
         </div>
       </div>
@@ -207,9 +215,8 @@ const ElectionsPage = () => {
         {loading ? (
           <div className="flex justify-center py-20"><Loader2 className="animate-spin text-muted-foreground" size={24} /></div>
         ) : selectedElection ? (
-          /* Election detail view */
           <div className="space-y-6">
-            <button onClick={() => setSelectedElection(null)} className="text-xs text-accent flex items-center gap-1 hover:underline">
+            <button onClick={() => setSelectedElection(null)} className="text-xs text-accent flex items-center gap-1 hover:underline rounded-full">
               <ArrowLeft size={12} /> Back to elections
             </button>
             <div className="flex items-start justify-between">
@@ -227,10 +234,10 @@ const ElectionsPage = () => {
               </div>
               {isAdmin && (
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={() => setShowAddCandidate(true)}>
+                  <Button size="sm" variant="outline" className="rounded-full" onClick={() => setShowAddCandidate(true)}>
                     <Plus size={12} className="mr-1" /> Candidate
                   </Button>
-                  <Button size="sm" variant="outline" className="text-destructive" onClick={() => handleDeleteElection(selectedElection.id)}>
+                  <Button size="sm" variant="outline" className="rounded-full text-destructive" onClick={() => handleDeleteElection(selectedElection.id)}>
                     <Trash2 size={12} />
                   </Button>
                 </div>
@@ -239,8 +246,10 @@ const ElectionsPage = () => {
 
             {positions.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
-                <Users size={40} className="mx-auto mb-3" />
-                <p>No candidates registered yet.</p>
+                <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-muted/50 flex items-center justify-center">
+                  <Users size={32} />
+                </div>
+                <p className="font-medium">No candidates registered yet</p>
               </div>
             ) : (
               positions.map(pos => {
@@ -255,7 +264,7 @@ const ElectionsPage = () => {
                     <div className="flex items-center gap-2">
                       <Award size={14} className="text-accent" />
                       <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">{pos}</h3>
-                      <span className="text-[10px] text-muted-foreground">({totalVotes} vote{totalVotes !== 1 ? 's' : ''})</span>
+                      <Badge variant="outline" className="rounded-full text-[10px] font-normal">{totalVotes} vote{totalVotes !== 1 ? 's' : ''}</Badge>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       {posCandidates.map(cand => {
@@ -269,8 +278,8 @@ const ElectionsPage = () => {
                             key={cand.id}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className={`bg-card border rounded-2xl shadow-sm hover:shadow-md p-4 relative overflow-hidden ${
-                              isWinner ? 'border-accent ring-1 ring-accent/20' : 'border-border'
+                            className={`bg-card border rounded-2xl shadow-sm hover:shadow-md transition-all p-4 relative overflow-hidden ${
+                              isWinner ? 'border-accent ring-1 ring-accent/20' : status === 'active' ? 'border-border hover:border-accent/30' : 'border-border'
                             }`}
                           >
                             {isWinner && (
@@ -284,12 +293,11 @@ const ElectionsPage = () => {
                               </div>
                               <div>
                                 <p className="font-semibold text-sm text-foreground">{cand.name}</p>
-                                {hasVoted && <Badge className="text-[8px] bg-accent/20 text-accent border-0">Your vote</Badge>}
+                                {hasVoted && <Badge className="rounded-full text-[8px] bg-accent/20 text-accent border-0">Your vote</Badge>}
                               </div>
                             </div>
                             {cand.manifesto && <p className="text-xs text-muted-foreground mb-3 line-clamp-3">{cand.manifesto}</p>}
 
-                            {/* Vote bar */}
                             {(status === 'closed' || isAdmin) && (
                               <div className="space-y-1">
                                 <div className="flex justify-between text-[10px]">
@@ -311,7 +319,7 @@ const ElectionsPage = () => {
                             {status === 'active' && !userVotedForPos && user && (
                               <Button
                                 size="sm"
-                                className="w-full mt-3 bg-primary text-primary-foreground"
+                                className="w-full mt-3 rounded-full bg-primary text-primary-foreground"
                                 disabled={submittingVote}
                                 onClick={() => handleVote(selectedElection.id, cand.id, pos)}
                               >
@@ -328,12 +336,13 @@ const ElectionsPage = () => {
             )}
           </div>
         ) : (
-          /* Elections list */
           <div className="space-y-4">
             {elections.length === 0 ? (
               <div className="text-center py-20 text-muted-foreground">
-                <Vote size={40} className="mx-auto mb-3" />
-                <p>No elections yet.</p>
+                <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-muted/50 flex items-center justify-center">
+                  <Vote size={32} />
+                </div>
+                <p className="font-medium">No elections yet</p>
               </div>
             ) : (
               elections.map(e => {
@@ -345,7 +354,9 @@ const ElectionsPage = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     onClick={() => setSelectedElection(e)}
-                    className="bg-card border border-border rounded-2xl p-4 cursor-pointer hover:border-accent/30 shadow-sm hover:shadow-md transition-colors"
+                    className={`bg-card border rounded-2xl p-4 cursor-pointer shadow-sm hover:shadow-md transition-all ${
+                      status === 'active' ? 'border-accent/30 hover:border-accent/50' : 'border-border hover:border-accent/30'
+                    }`}
                   >
                     <div className="flex items-start justify-between">
                       <div>
@@ -373,13 +384,13 @@ const ElectionsPage = () => {
         <DialogContent className="max-w-md rounded-2xl">
           <DialogHeader><DialogTitle className="font-serif">Create Election</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div><Label className="text-xs">Title *</Label><Input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="e.g. SUG Presidential Election 2026" /></div>
-            <div><Label className="text-xs">Description</Label><Textarea value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Election details..." className="resize-none" /></div>
+            <div><Label className="text-xs">Title *</Label><Input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="e.g. SUG Presidential Election 2026" className="rounded-xl" /></div>
+            <div><Label className="text-xs">Description</Label><Textarea value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Election details..." className="resize-none rounded-xl" /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label className="text-xs">Starts At</Label><Input type="datetime-local" value={newStartsAt} onChange={e => setNewStartsAt(e.target.value)} /></div>
-              <div><Label className="text-xs">Ends At</Label><Input type="datetime-local" value={newEndsAt} onChange={e => setNewEndsAt(e.target.value)} /></div>
+              <div><Label className="text-xs">Starts At</Label><Input type="datetime-local" value={newStartsAt} onChange={e => setNewStartsAt(e.target.value)} className="rounded-xl" /></div>
+              <div><Label className="text-xs">Ends At</Label><Input type="datetime-local" value={newEndsAt} onChange={e => setNewEndsAt(e.target.value)} className="rounded-xl" /></div>
             </div>
-            <Button onClick={handleCreateElection} disabled={savingElection} className="w-full bg-primary text-primary-foreground">
+            <Button onClick={handleCreateElection} disabled={savingElection} className="w-full rounded-full bg-primary text-primary-foreground">
               {savingElection && <Loader2 size={14} className="animate-spin mr-2" />} Create Election
             </Button>
           </div>
@@ -391,10 +402,10 @@ const ElectionsPage = () => {
         <DialogContent className="max-w-md rounded-2xl">
           <DialogHeader><DialogTitle className="font-serif">Add Candidate</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div><Label className="text-xs">Name *</Label><Input value={candName} onChange={e => setCandName(e.target.value)} placeholder="Candidate name" /></div>
-            <div><Label className="text-xs">Position *</Label><Input value={candPosition} onChange={e => setCandPosition(e.target.value)} placeholder="e.g. President, Vice President" /></div>
-            <div><Label className="text-xs">Manifesto</Label><Textarea value={candManifesto} onChange={e => setCandManifesto(e.target.value)} placeholder="Campaign promises..." className="resize-none" /></div>
-            <Button onClick={handleAddCandidate} disabled={savingCandidate} className="w-full bg-primary text-primary-foreground">
+            <div><Label className="text-xs">Name *</Label><Input value={candName} onChange={e => setCandName(e.target.value)} placeholder="Candidate name" className="rounded-xl" /></div>
+            <div><Label className="text-xs">Position *</Label><Input value={candPosition} onChange={e => setCandPosition(e.target.value)} placeholder="e.g. President, Vice President" className="rounded-xl" /></div>
+            <div><Label className="text-xs">Manifesto</Label><Textarea value={candManifesto} onChange={e => setCandManifesto(e.target.value)} placeholder="Campaign promises..." className="resize-none rounded-xl" /></div>
+            <Button onClick={handleAddCandidate} disabled={savingCandidate} className="w-full rounded-full bg-primary text-primary-foreground">
               {savingCandidate && <Loader2 size={14} className="animate-spin mr-2" />} Add Candidate
             </Button>
           </div>

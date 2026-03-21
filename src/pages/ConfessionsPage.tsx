@@ -4,8 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, Send, MessageCircle, Heart, Flame, Laugh, ThumbsDown,
-  Loader2, Shield, Eye, EyeOff, ChevronDown, ChevronUp, AlertTriangle, Flag
+  ArrowLeft, Send, MessageCircle, Heart, Flame, Laugh,
+  Loader2, Shield, EyeOff, ChevronDown, ChevronUp, AlertTriangle, Flag
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -53,11 +53,11 @@ const ConfessionCard = ({ confession, reactions, replies, session, isAdmin, onRe
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card border border-border rounded-lg p-4 space-y-3"
+      className="bg-card border border-border rounded-2xl p-5 space-y-3 hover:shadow-md transition-all"
     >
       {!confession.is_approved && (
-        <Badge variant="outline" className="text-[9px] border-amber-500/30 text-amber-600">
-          <Eye size={10} className="mr-1" /> Pending Approval
+        <Badge className="rounded-full text-[9px] bg-amber-500/10 text-amber-600 border-amber-500/20">
+          Pending Approval
         </Badge>
       )}
       <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{confession.content}</p>
@@ -74,7 +74,7 @@ const ConfessionCard = ({ confession, reactions, replies, session, isAdmin, onRe
               <button
                 key={r.type}
                 onClick={() => session && onReact(confession.id, r.type)}
-                className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] transition-all ${
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] transition-all ${
                   reacted ? 'bg-accent/20 text-accent' : 'hover:bg-muted text-muted-foreground'
                 }`}
               >
@@ -85,7 +85,7 @@ const ConfessionCard = ({ confession, reactions, replies, session, isAdmin, onRe
           })}
           <button
             onClick={() => onReply(confession.id)}
-            className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] text-muted-foreground hover:bg-muted"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] text-muted-foreground hover:bg-muted"
           >
             <MessageCircle size={12} />
             {replies.length > 0 && <span>{replies.length}</span>}
@@ -94,13 +94,13 @@ const ConfessionCard = ({ confession, reactions, replies, session, isAdmin, onRe
       </div>
 
       {isAdmin && (
-        <div className="flex gap-2 pt-1 border-t border-border">
+        <div className="flex gap-2 pt-2 border-t border-border">
           {!confession.is_approved && (
-            <Button size="sm" variant="outline" className="text-[10px] h-7" onClick={() => onApprove(confession.id)}>
+            <Button size="sm" variant="outline" className="rounded-full text-[10px] h-8" onClick={() => onApprove(confession.id)}>
               <Shield size={10} className="mr-1" /> Approve
             </Button>
           )}
-          <Button size="sm" variant="outline" className="text-[10px] h-7 text-destructive" onClick={() => onDelete(confession.id)}>
+          <Button size="sm" variant="outline" className="rounded-full text-[10px] h-8 text-destructive" onClick={() => onDelete(confession.id)}>
             <Flag size={10} className="mr-1" /> Remove
           </Button>
         </div>
@@ -117,7 +117,7 @@ const ConfessionCard = ({ confession, reactions, replies, session, isAdmin, onRe
               <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
                 <div className="ml-4 mt-2 space-y-2 border-l-2 border-accent/20 pl-3">
                   {replies.map(reply => (
-                    <div key={reply.id} className="text-xs text-foreground/80">
+                    <div key={reply.id} className="text-xs text-foreground/80 bg-muted/30 rounded-xl p-3">
                       <p className="whitespace-pre-wrap">{reply.content}</p>
                       <p className="text-[9px] text-muted-foreground mt-1">
                         {formatDistanceToNow(new Date(reply.created_at), { addSuffix: true })}
@@ -144,6 +144,7 @@ const ConfessionsPage = () => {
   const [content, setContent] = useState('');
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [repliesMap, setRepliesMap] = useState<Record<string, Confession[]>>({});
 
   const fetchConfessions = useCallback(async () => {
     const { data, error } = await supabase
@@ -153,14 +154,12 @@ const ConfessionsPage = () => {
       .order('created_at', { ascending: false });
     if (!error && data) setConfessions(data as Confession[]);
 
-    // Fetch replies
     const { data: repliesData } = await supabase
       .from('confessions')
       .select('*')
       .not('parent_id', 'is', null)
       .order('created_at');
 
-    // Fetch all reactions
     const { data: reactionsData } = await supabase
       .from('confession_reactions')
       .select('*');
@@ -180,24 +179,24 @@ const ConfessionsPage = () => {
       setReactions(rxMap);
     }
 
-    // Store replies in state keyed by parent
     if (repliesData) {
-      const repliesMap: Record<string, Confession[]> = {};
+      const rMap: Record<string, Confession[]> = {};
       (repliesData as Confession[]).forEach(r => {
         if (r.parent_id) {
-          if (!repliesMap[r.parent_id]) repliesMap[r.parent_id] = [];
-          repliesMap[r.parent_id].push(r);
+          if (!rMap[r.parent_id]) rMap[r.parent_id] = [];
+          rMap[r.parent_id].push(r);
         }
       });
-      setRepliesMap(repliesMap);
+      setRepliesMap(rMap);
     }
 
     setLoading(false);
   }, [user?.id]);
 
-  const [repliesMap, setRepliesMap] = useState<Record<string, Confession[]>>({});
-
   useEffect(() => { fetchConfessions(); }, [fetchConfessions]);
+
+  const totalReactions = Object.values(reactions).flat().reduce((sum, r) => sum + r.count, 0);
+  const pendingCount = confessions.filter(c => !c.is_approved).length;
 
   const handleSubmit = async () => {
     if (!content.trim()) { toast.error('Write something first'); return; }
@@ -207,7 +206,7 @@ const ConfessionsPage = () => {
     const { error } = await supabase.from('confessions').insert({
       content: content.trim(),
       parent_id: replyTo,
-      is_approved: isAdmin, // auto-approve if admin
+      is_approved: isAdmin,
     });
     if (error) toast.error('Failed to submit');
     else {
@@ -245,10 +244,11 @@ const ConfessionsPage = () => {
     <div className="min-h-screen bg-background">
       <SEO title="Confessions | UISU" description="Anonymous confessions board" />
 
+      {/* Hero */}
       <div className="bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4 pt-24 pb-6 max-w-2xl">
-          <div className="flex items-center gap-4">
-            <button onClick={() => navigate(-1)} className="p-2 border border-primary-foreground/20 hover:border-accent transition-colors rounded-sm">
+        <div className="container mx-auto px-4 pt-24 pb-8 max-w-2xl">
+          <div className="flex items-center gap-4 mb-4">
+            <button onClick={() => navigate(-1)} className="p-2.5 border border-primary-foreground/20 hover:border-accent transition-colors rounded-full">
               <ArrowLeft size={14} />
             </button>
             <div>
@@ -256,33 +256,48 @@ const ConfessionsPage = () => {
               <h1 className="text-xl md:text-2xl font-serif font-bold">Confessions Board</h1>
             </div>
           </div>
+          <div className="flex flex-wrap gap-2">
+            <span className="bg-primary-foreground/10 backdrop-blur-sm rounded-full px-3 py-1 text-[10px] font-medium flex items-center gap-1.5">
+              <MessageCircle size={10} /> {confessions.length} Confessions
+            </span>
+            {isAdmin && pendingCount > 0 && (
+              <span className="bg-amber-500/20 text-amber-200 rounded-full px-3 py-1 text-[10px] font-medium flex items-center gap-1.5">
+                <Shield size={10} /> {pendingCount} Pending
+              </span>
+            )}
+            <span className="bg-primary-foreground/10 backdrop-blur-sm rounded-full px-3 py-1 text-[10px] font-medium flex items-center gap-1.5">
+              <Heart size={10} /> {totalReactions} Reactions
+            </span>
+          </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-6 max-w-2xl space-y-6">
         {/* Submit box */}
-        <div className="bg-card border border-border rounded-lg p-4 space-y-3">
+        <div className="bg-card border border-border rounded-2xl p-5 space-y-3">
           <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
             <EyeOff size={12} />
             <span>Your identity is completely anonymous</span>
           </div>
           {replyTo && (
-            <div className="flex items-center gap-2 text-xs text-accent">
+            <div className="flex items-center gap-2 text-xs text-accent bg-accent/5 rounded-xl px-3 py-2">
               <MessageCircle size={12} />
               <span>Replying to a confession</span>
-              <button onClick={() => setReplyTo(null)} className="text-muted-foreground hover:text-foreground">✕</button>
+              <button onClick={() => setReplyTo(null)} className="ml-auto text-muted-foreground hover:text-foreground">✕</button>
             </div>
           )}
           <Textarea
             value={content}
             onChange={e => setContent(e.target.value)}
             placeholder={replyTo ? "Write your reply..." : "Share something on your mind..."}
-            className="min-h-[80px] text-sm resize-none"
+            className="min-h-[80px] text-sm resize-none rounded-xl"
             maxLength={1000}
           />
           <div className="flex items-center justify-between">
-            <span className="text-[10px] text-muted-foreground">{content.length}/1000</span>
-            <Button onClick={handleSubmit} disabled={submitting || content.trim().length < 10} size="sm" className="bg-primary text-primary-foreground">
+            <Badge variant="outline" className="rounded-full text-[10px] font-normal">
+              {content.length}/1000
+            </Badge>
+            <Button onClick={handleSubmit} disabled={submitting || content.trim().length < 10} size="sm" className="rounded-full bg-primary text-primary-foreground">
               {submitting ? <Loader2 size={14} className="animate-spin mr-1" /> : <Send size={14} className="mr-1" />}
               {replyTo ? 'Reply' : 'Confess'}
             </Button>
@@ -297,8 +312,11 @@ const ConfessionsPage = () => {
           <div className="flex justify-center py-12"><Loader2 className="animate-spin text-muted-foreground" size={24} /></div>
         ) : confessions.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
-            <MessageCircle size={40} className="mx-auto mb-3" />
-            <p>No confessions yet. Be the first to share.</p>
+            <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-muted/50 flex items-center justify-center">
+              <MessageCircle size={32} />
+            </div>
+            <p className="font-medium">No confessions yet</p>
+            <p className="text-xs mt-1">Be the first to share something.</p>
           </div>
         ) : (
           <div className="space-y-4">
