@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { CardListSkeleton } from '@/components/skeletons/GenericSkeletons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, ThumbsUp, Plus, Loader2, Clock, CheckCircle2, Eye, EyeOff, ArrowLeft, Search, ArrowUpDown, BarChart3, MessageCircle, Send, Trash2, TrendingUp, Timer, PieChart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -390,7 +391,7 @@ const ComplaintsPage = () => {
 
         {/* List */}
         {loading ? (
-          <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
+          <CardListSkeleton count={4} />
         ) : filtered.length === 0 ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-24 bg-card border border-border rounded-2xl">
             <div className="w-16 h-16 bg-muted flex items-center justify-center mx-auto mb-6 rounded-full">

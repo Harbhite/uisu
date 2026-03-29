@@ -25,7 +25,10 @@ const iconMap: { [key: string]: React.ElementType } = {
   gpa: Calculator,
   calculators: Grip,
   studybuddy: Brain,
-  aiquiz: Brain
+  aiquiz: Brain,
+  timetable: Grip,
+  gpatracker: Calculator,
+  pastquestions: Library,
 };
 
 const colorMap: { [key: string]: string } = {
@@ -42,7 +45,10 @@ const colorMap: { [key: string]: string } = {
   gpa: 'bg-emerald-700',
   calculators: 'bg-violet-700',
   studybuddy: 'bg-blue-800',
-  aiquiz: 'bg-rose-800'
+  aiquiz: 'bg-rose-800',
+  timetable: 'bg-sky-800',
+  gpatracker: 'bg-emerald-800',
+  pastquestions: 'bg-indigo-700',
 };
 
 interface ResourceCardProps {

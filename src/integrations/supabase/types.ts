@@ -2036,6 +2036,51 @@ export type Database = {
         }
         Relationships: []
       }
+      past_questions: {
+        Row: {
+          ai_solution: string | null
+          course_code: string
+          course_title: string
+          created_at: string
+          faculty: string
+          id: string
+          is_approved: boolean
+          question_text: string
+          semester: string
+          submitted_by: string | null
+          updated_at: string
+          year: string
+        }
+        Insert: {
+          ai_solution?: string | null
+          course_code: string
+          course_title?: string
+          created_at?: string
+          faculty?: string
+          id?: string
+          is_approved?: boolean
+          question_text: string
+          semester?: string
+          submitted_by?: string | null
+          updated_at?: string
+          year?: string
+        }
+        Update: {
+          ai_solution?: string | null
+          course_code?: string
+          course_title?: string
+          created_at?: string
+          faculty?: string
+          id?: string
+          is_approved?: boolean
+          question_text?: string
+          semester?: string
+          submitted_by?: string | null
+          updated_at?: string
+          year?: string
+        }
+        Relationships: []
+      }
       poll_options: {
         Row: {
           created_at: string | null

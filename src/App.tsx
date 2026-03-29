@@ -48,6 +48,9 @@ const StudyBuddyPage = lazy(() => import("./pages/resources/StudyBuddyPage"));
 const AIQuizPage = lazy(() => import("./pages/resources/AIQuizPage"));
 const FlashcardPage = lazy(() => import("./pages/resources/FlashcardPage"));
 const StudyAidePage = lazy(() => import("./pages/resources/StudyAidePage"));
+const TimetableBuilderPage = lazy(() => import("./pages/resources/TimetableBuilderPage"));
+const GPATrackerPage = lazy(() => import("./pages/resources/GPATrackerPage"));
+const PastQuestionsPage = lazy(() => import("./pages/resources/PastQuestionsPage"));
 const StyleGuidePage = lazy(() => import("./pages/StyleGuidePage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 const HistoryPage = lazy(() => import("./pages/HistoryPage"));
@@ -143,6 +146,9 @@ const AppRoutes = () => {
         <Route path="/resources/ai-quiz" element={<PageWrapper><AIQuizPage /></PageWrapper>} />
         <Route path="/resources/flashcards" element={<PageWrapper><FlashcardPage /></PageWrapper>} />
         <Route path="/resources/study-aide" element={<PageWrapper><StudyAidePage /></PageWrapper>} />
+        <Route path="/resources/timetable" element={<PageWrapper><TimetableBuilderPage /></PageWrapper>} />
+        <Route path="/resources/gpa-tracker" element={<PageWrapper><GPATrackerPage /></PageWrapper>} />
+        <Route path="/resources/past-questions" element={<PageWrapper><PastQuestionsPage /></PageWrapper>} />
         <Route path="/resources/alumni-network" element={<PageWrapper><AlumniNetworkPage /></PageWrapper>} />
 
         {/* Style Guide - only linked from footer */}

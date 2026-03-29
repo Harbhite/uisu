@@ -440,6 +440,27 @@ export const resourceCategories: ResourceCategory[] = [
     description: 'Generate smart flashcards from any topic or material. Flip, shuffle, and master concepts.',
     color: 'bg-amber-600',
     path: '/resources/flashcards'
+  },
+  {
+    id: 'timetable',
+    title: 'Timetable Builder',
+    description: 'Build your weekly class timetable with conflict detection and image export.',
+    color: 'bg-sky-600',
+    path: '/resources/timetable'
+  },
+  {
+    id: 'gpatracker',
+    title: 'GPA Tracker',
+    description: 'Track your GPA across semesters with cumulative calculations and future projections.',
+    color: 'bg-emerald-600',
+    path: '/resources/gpa-tracker'
+  },
+  {
+    id: 'pastquestions',
+    title: 'Past Questions Bank',
+    description: 'Browse crowdsourced exam questions with AI-generated solutions.',
+    color: 'bg-indigo-600',
+    path: '/resources/past-questions'
   }
 ];
 

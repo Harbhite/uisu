@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { CardListSkeleton } from '@/components/skeletons/GenericSkeletons';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -213,7 +214,7 @@ const ElectionsPage = () => {
 
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         {loading ? (
-          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-muted-foreground" size={24} /></div>
+          <CardListSkeleton count={3} />
         ) : selectedElection ? (
           <div className="space-y-6">
             <button onClick={() => setSelectedElection(null)} className="text-xs text-accent flex items-center gap-1 hover:underline rounded-full">
