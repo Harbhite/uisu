@@ -83,7 +83,7 @@ const PastQuestionsPage = () => {
     }
 
     setSubmitting(true);
-    const { error } = await supabase.from('past_questions').insert({
+    const { error } = await (supabase as any).from('past_questions').insert({
       course_code: newCourseCode.trim().toUpperCase(),
       course_title: newCourseTitle.trim(),
       faculty: newFaculty,
@@ -92,7 +92,7 @@ const PastQuestionsPage = () => {
       question_text: newQuestionText.trim(),
       submitted_by: user.id,
       is_approved: false,
-    } as any);
+    });
 
     setSubmitting(false);
     if (error) {
