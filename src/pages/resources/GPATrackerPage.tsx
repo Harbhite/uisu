@@ -391,37 +391,146 @@ const GPATrackerPage = () => {
           </motion.div>
         )}
 
-        {/* Export Button */}
+        {/* Export Buttons */}
         {semesters.length > 0 && (
-          <div className="flex gap-3 mb-8">
-            <Button variant="outline" className="rounded-full gap-2" onClick={() => {
-              const lines: string[] = [];
-              lines.push(`GPA Report — ${scale} Scale`);
-              lines.push(`Generated: ${new Date().toLocaleDateString()}`);
-              lines.push(`CGPA: ${cgpa.toFixed(2)} (${cls.label})`);
-              lines.push(`Total Units: ${getTotalUnits()}`);
-              lines.push('');
-              semesters.forEach((sem, i) => {
-                const semGPA = calcSemGPA(sem.courses);
-                lines.push(`--- ${sem.name} — ${sem.year} (GPA: ${semGPA.toFixed(2)}) ---`);
-                sem.courses.forEach(c => {
-                  if (c.name || c.grade) {
-                    lines.push(`  ${c.name || 'Untitled'} | ${c.units} units | Grade: ${c.grade || 'N/A'}`);
-                  }
-                });
-                lines.push('');
-              });
-              const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url; a.download = `GPA_Report_${new Date().toISOString().slice(0,10)}.txt`;
-              a.click(); URL.revokeObjectURL(url);
-              toast.success('GPA report exported!');
+          <div className="flex flex-wrap gap-3 mb-8">
+            <Button variant="outline" className="rounded-full gap-2" onClick={async () => {
+              toast.loading('Generating image…');
+              const el = document.getElementById('gpa-export-card');
+              if (!el) return;
+              el.style.display = 'block';
+              const html2canvas = (await import('html2canvas')).default;
+              const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+              el.style.display = 'none';
+              const link = document.createElement('a');
+              link.download = `GPA_Report_${new Date().toISOString().slice(0, 10)}.png`;
+              link.href = canvas.toDataURL('image/png');
+              link.click();
+              toast.dismiss();
+              toast.success('Image exported!');
             }}>
-              <Download size={16} /> Export Report
+              <Download size={16} /> Export as Image
+            </Button>
+            <Button variant="outline" className="rounded-full gap-2" onClick={async () => {
+              toast.loading('Generating PDF…');
+              const el = document.getElementById('gpa-export-card');
+              if (!el) return;
+              el.style.display = 'block';
+              const html2canvas = (await import('html2canvas')).default;
+              const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+              el.style.display = 'none';
+              const { default: jsPDF } = await import('jspdf');
+              const imgW = 190;
+              const imgH = (canvas.height * imgW) / canvas.width;
+              const doc = new jsPDF('p', 'mm', 'a4');
+              let y = 10;
+              const pageH = 277;
+              // If the image is taller than a page, split across pages
+              if (imgH <= pageH) {
+                doc.addImage(canvas.toDataURL('image/png'), 'PNG', 10, y, imgW, imgH);
+              } else {
+                let remaining = canvas.height;
+                let srcY = 0;
+                while (remaining > 0) {
+                  const sliceH = Math.min(remaining, (pageH / imgH) * canvas.height);
+                  const sliceCanvas = document.createElement('canvas');
+                  sliceCanvas.width = canvas.width;
+                  sliceCanvas.height = sliceH;
+                  sliceCanvas.getContext('2d')!.drawImage(canvas, 0, srcY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+                  const sliceImgH = (sliceH * imgW) / canvas.width;
+                  if (srcY > 0) doc.addPage();
+                  doc.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', 10, 10, imgW, sliceImgH);
+                  srcY += sliceH;
+                  remaining -= sliceH;
+                }
+              }
+              doc.save(`GPA_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
+              toast.dismiss();
+              toast.success('PDF exported!');
+            }}>
+              <Download size={16} /> Export as PDF
             </Button>
           </div>
         )}
+
+        {/* Hidden export card rendered off-screen */}
+        <div id="gpa-export-card" style={{ display: 'none', position: 'absolute', left: '-9999px', top: 0, width: '720px', fontFamily: 'Georgia, serif' }}>
+          <div style={{ padding: '40px', background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px', borderBottom: '3px solid #1e3a5f', paddingBottom: '20px' }}>
+              <div>
+                <h1 style={{ fontSize: '28px', color: '#1e3a5f', margin: 0, letterSpacing: '1px' }}>ACADEMIC TRANSCRIPT</h1>
+                <p style={{ fontSize: '13px', color: '#64748b', margin: '6px 0 0', letterSpacing: '3px', textTransform: 'uppercase' }}>GPA Report • {scale} Scale</p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>Generated</p>
+                <p style={{ fontSize: '14px', color: '#475569', margin: '2px 0 0', fontWeight: 600 }}>{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              </div>
+            </div>
+
+            {/* CGPA Hero */}
+            <div style={{ background: 'linear-gradient(135deg, #1e3a5f, #2d5a8e)', borderRadius: '16px', padding: '28px 32px', color: 'white', marginBottom: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '3px', opacity: 0.7, margin: 0 }}>Cumulative GPA</p>
+                <p style={{ fontSize: '52px', fontWeight: 700, margin: '4px 0 0', lineHeight: 1 }}>{cgpa.toFixed(2)}</p>
+                <p style={{ fontSize: '14px', opacity: 0.85, margin: '8px 0 0' }}>{cls.label}</p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: '12px', padding: '12px 20px' }}>
+                  <p style={{ fontSize: '11px', opacity: 0.7, margin: 0 }}>Total Units</p>
+                  <p style={{ fontSize: '28px', fontWeight: 700, margin: '2px 0 0' }}>{getTotalUnits()}</p>
+                </div>
+                <p style={{ fontSize: '11px', opacity: 0.6, marginTop: '8px' }}>{semesters.length} Semester{semesters.length !== 1 ? 's' : ''}</p>
+              </div>
+            </div>
+
+            {/* Semester Breakdown */}
+            {semesters.map((sem, idx) => {
+              const semGPA = calcSemGPA(sem.courses);
+              const semCls = getClassification(semGPA);
+              return (
+                <div key={sem.id} style={{ background: 'white', borderRadius: '12px', marginBottom: '16px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                  <div style={{ background: '#f8fafc', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#1e3a5f', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700 }}>{idx + 1}</div>
+                      <span style={{ fontSize: '15px', fontWeight: 600, color: '#1e3a5f' }}>{sem.name} — {sem.year}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '13px', color: '#64748b' }}>{semCls.label}</span>
+                      <span style={{ background: '#1e3a5f', color: 'white', padding: '4px 14px', borderRadius: '20px', fontSize: '13px', fontWeight: 700 }}>{semGPA.toFixed(2)}</span>
+                    </div>
+                  </div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                    <thead>
+                      <tr style={{ background: '#f1f5f9' }}>
+                        <th style={{ padding: '10px 20px', textAlign: 'left', color: '#64748b', fontWeight: 600, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px' }}>Course</th>
+                        <th style={{ padding: '10px 20px', textAlign: 'center', color: '#64748b', fontWeight: 600, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px' }}>Units</th>
+                        <th style={{ padding: '10px 20px', textAlign: 'center', color: '#64748b', fontWeight: 600, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px' }}>Grade</th>
+                        <th style={{ padding: '10px 20px', textAlign: 'center', color: '#64748b', fontWeight: 600, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px' }}>Points</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sem.courses.filter(c => c.name || c.grade).map((c, ci) => (
+                        <tr key={c.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                          <td style={{ padding: '10px 20px', color: '#334155' }}>{c.name || 'Untitled'}</td>
+                          <td style={{ padding: '10px 20px', textAlign: 'center', color: '#475569' }}>{c.units}</td>
+                          <td style={{ padding: '10px 20px', textAlign: 'center', fontWeight: 700, color: c.grade === 'A' ? '#059669' : c.grade === 'F' ? '#dc2626' : '#1e3a5f' }}>{c.grade || '—'}</td>
+                          <td style={{ padding: '10px 20px', textAlign: 'center', color: '#475569' }}>{c.grade && GP[scale][c.grade] !== undefined ? (GP[scale][c.grade] * c.units).toFixed(1) : '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })}
+
+            {/* Footer */}
+            <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '2px solid #cbd5e1', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0 }}>University of Ibadan Students' Union • UISU Portal</p>
+              <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0 }}>This is an unofficial student-generated report</p>
+            </div>
+          </div>
+        </div>
 
         {/* Empty state */}
         {semesters.length === 0 && (
