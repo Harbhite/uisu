@@ -56,6 +56,8 @@ const PastQuestionsPage = () => {
   const [newSemester, setNewSemester] = useState('First');
   const [newQuestionText, setNewQuestionText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
 
   useEffect(() => { fetchQuestions(); }, []);
 
@@ -78,18 +80,41 @@ const PastQuestionsPage = () => {
 
   const handleSubmitQuestion = async () => {
     if (!user) { toast.error('Please sign in to submit questions'); return; }
-    if (!newCourseCode.trim() || !newQuestionText.trim()) {
-      toast.error('Course code and question text are required'); return;
+    if (!newCourseCode.trim() || (!newQuestionText.trim() && uploadedFiles.length === 0)) {
+      toast.error('Course code and question text or file are required'); return;
     }
 
     setSubmitting(true);
+
+    // Upload files if any
+    let fileUrls: string[] = [];
+    if (uploadedFiles.length > 0) {
+      setUploadingFiles(true);
+      for (const file of uploadedFiles) {
+        const ext = file.name.split('.').pop();
+        const path = `past-questions/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from('documents').upload(path, file);
+        if (uploadError) {
+          console.error('File upload error:', uploadError);
+          toast.error(`Failed to upload ${file.name}`);
+        } else {
+          const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path);
+          fileUrls.push(urlData.publicUrl);
+        }
+      }
+      setUploadingFiles(false);
+    }
+
+    const questionText = newQuestionText.trim() +
+      (fileUrls.length > 0 ? `\n\n[Attached files: ${fileUrls.join(', ')}]` : '');
+
     const { error } = await (supabase as any).from('past_questions').insert({
       course_code: newCourseCode.trim().toUpperCase(),
       course_title: newCourseTitle.trim(),
       faculty: newFaculty,
       year: newYear,
       semester: newSemester,
-      question_text: newQuestionText.trim(),
+      question_text: questionText,
       submitted_by: user.id,
       is_approved: false,
     });
@@ -102,6 +127,7 @@ const PastQuestionsPage = () => {
       toast.success('Question submitted for review!');
       setShowSubmitForm(false);
       setNewCourseCode(''); setNewCourseTitle(''); setNewQuestionText('');
+      setUploadedFiles([]);
     }
   };
 
@@ -274,11 +300,36 @@ const PastQuestionsPage = () => {
                     <label className="text-xs font-medium text-slate-500 mb-1 block">Question(s) *</label>
                     <Textarea value={newQuestionText} onChange={e => setNewQuestionText(e.target.value)}
                       placeholder="Type or paste the exam question(s) here..."
-                      className="rounded-xl min-h-[160px]" />
+                      className="rounded-xl min-h-[120px]" />
                   </div>
-                  <Button onClick={handleSubmitQuestion} disabled={submitting} className="w-full rounded-full bg-ui-blue hover:bg-ui-blue/90 gap-2">
-                    {submitting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-                    {submitting ? 'Submitting...' : 'Submit for Review'}
+                  <div>
+                    <label className="text-xs font-medium text-slate-500 mb-1 block">Attach Files (optional)</label>
+                    <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center hover:border-ui-blue/40 transition-colors">
+                      <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                        onChange={e => {
+                          if (e.target.files) setUploadedFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+                        }}
+                        className="hidden" id="pq-file-input" />
+                      <label htmlFor="pq-file-input" className="cursor-pointer">
+                        <Upload size={20} className="mx-auto text-slate-400 mb-1" />
+                        <p className="text-xs text-slate-500">Click to upload PDF, images, or docs</p>
+                      </label>
+                    </div>
+                    {uploadedFiles.length > 0 && (
+                      <div className="mt-2 space-y-1">
+                        {uploadedFiles.map((f, i) => (
+                          <div key={i} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-1.5 text-xs">
+                            <span className="truncate text-slate-600">{f.name}</span>
+                            <button onClick={() => setUploadedFiles(prev => prev.filter((_, idx) => idx !== i))}
+                              className="text-slate-400 hover:text-red-500 ml-2"><X size={14} /></button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <Button onClick={handleSubmitQuestion} disabled={submitting || uploadingFiles} className="w-full rounded-full bg-ui-blue hover:bg-ui-blue/90 gap-2">
+                    {(submitting || uploadingFiles) ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                    {uploadingFiles ? 'Uploading files...' : submitting ? 'Submitting...' : 'Submit for Review'}
                   </Button>
                   <p className="text-xs text-slate-400 text-center">Submissions are reviewed before being published.</p>
                 </div>
