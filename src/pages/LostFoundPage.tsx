@@ -400,7 +400,7 @@ const LostFoundPage = () => {
 
         {/* Grid */}
         {loading ? (
-          <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-nobel-gold" /></div>
+          <GridCardSkeleton count={6} cols={2} />
         ) : filtered.length === 0 ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-24 bg-card border border-border rounded-2xl">
             <div className="w-16 h-16 bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto mb-6 rounded-2xl">

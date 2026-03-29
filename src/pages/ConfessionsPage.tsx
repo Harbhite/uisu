@@ -309,7 +309,7 @@ const ConfessionsPage = () => {
 
         {/* Confessions list */}
         {loading ? (
-          <div className="flex justify-center py-12"><Loader2 className="animate-spin text-muted-foreground" size={24} /></div>
+          <FeedSkeleton count={3} />
         ) : confessions.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-muted/50 flex items-center justify-center">
