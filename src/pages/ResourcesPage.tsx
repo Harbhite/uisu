@@ -25,7 +25,10 @@ const iconMap: { [key: string]: React.ElementType } = {
   gpa: Calculator,
   calculators: Grip,
   studybuddy: Brain,
-  aiquiz: Brain
+  aiquiz: Brain,
+  timetable: Grip,
+  gpatracker: Calculator,
+  pastquestions: Library,
 };
 
 const colorMap: { [key: string]: string } = {
