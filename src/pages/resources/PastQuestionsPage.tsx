@@ -80,18 +80,41 @@ const PastQuestionsPage = () => {
 
   const handleSubmitQuestion = async () => {
     if (!user) { toast.error('Please sign in to submit questions'); return; }
-    if (!newCourseCode.trim() || !newQuestionText.trim()) {
-      toast.error('Course code and question text are required'); return;
+    if (!newCourseCode.trim() || (!newQuestionText.trim() && uploadedFiles.length === 0)) {
+      toast.error('Course code and question text or file are required'); return;
     }
 
     setSubmitting(true);
+
+    // Upload files if any
+    let fileUrls: string[] = [];
+    if (uploadedFiles.length > 0) {
+      setUploadingFiles(true);
+      for (const file of uploadedFiles) {
+        const ext = file.name.split('.').pop();
+        const path = `past-questions/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from('documents').upload(path, file);
+        if (uploadError) {
+          console.error('File upload error:', uploadError);
+          toast.error(`Failed to upload ${file.name}`);
+        } else {
+          const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path);
+          fileUrls.push(urlData.publicUrl);
+        }
+      }
+      setUploadingFiles(false);
+    }
+
+    const questionText = newQuestionText.trim() +
+      (fileUrls.length > 0 ? `\n\n[Attached files: ${fileUrls.join(', ')}]` : '');
+
     const { error } = await (supabase as any).from('past_questions').insert({
       course_code: newCourseCode.trim().toUpperCase(),
       course_title: newCourseTitle.trim(),
       faculty: newFaculty,
       year: newYear,
       semester: newSemester,
-      question_text: newQuestionText.trim(),
+      question_text: questionText,
       submitted_by: user.id,
       is_approved: false,
     });
@@ -104,6 +127,7 @@ const PastQuestionsPage = () => {
       toast.success('Question submitted for review!');
       setShowSubmitForm(false);
       setNewCourseCode(''); setNewCourseTitle(''); setNewQuestionText('');
+      setUploadedFiles([]);
     }
   };
 
