@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { CardListSkeleton } from '@/components/skeletons/GenericSkeletons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, ThumbsUp, Plus, Loader2, Clock, CheckCircle2, Eye, EyeOff, ArrowLeft, Search, ArrowUpDown, BarChart3, MessageCircle, Send, Trash2, TrendingUp, Timer, PieChart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
