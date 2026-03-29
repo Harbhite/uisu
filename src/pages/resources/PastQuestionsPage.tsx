@@ -61,7 +61,7 @@ const PastQuestionsPage = () => {
 
   const fetchQuestions = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('past_questions')
       .select('*')
       .eq('is_approved', true)
@@ -69,10 +69,9 @@ const PastQuestionsPage = () => {
 
     if (error) {
       console.error('Error fetching questions:', error);
-      // If table doesn't exist yet, just show empty state
       setQuestions([]);
     } else {
-      setQuestions((data as unknown as PastQuestion[]) || []);
+      setQuestions((data as PastQuestion[]) || []);
     }
     setLoading(false);
   };
