@@ -391,6 +391,38 @@ const GPATrackerPage = () => {
           </motion.div>
         )}
 
+        {/* Export Button */}
+        {semesters.length > 0 && (
+          <div className="flex gap-3 mb-8">
+            <Button variant="outline" className="rounded-full gap-2" onClick={() => {
+              const lines: string[] = [];
+              lines.push(`GPA Report — ${scale} Scale`);
+              lines.push(`Generated: ${new Date().toLocaleDateString()}`);
+              lines.push(`CGPA: ${cgpa.toFixed(2)} (${cls.label})`);
+              lines.push(`Total Units: ${getTotalUnits()}`);
+              lines.push('');
+              semesters.forEach((sem, i) => {
+                const semGPA = calcSemGPA(sem.courses);
+                lines.push(`--- ${sem.name} — ${sem.year} (GPA: ${semGPA.toFixed(2)}) ---`);
+                sem.courses.forEach(c => {
+                  if (c.name || c.grade) {
+                    lines.push(`  ${c.name || 'Untitled'} | ${c.units} units | Grade: ${c.grade || 'N/A'}`);
+                  }
+                });
+                lines.push('');
+              });
+              const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url; a.download = `GPA_Report_${new Date().toISOString().slice(0,10)}.txt`;
+              a.click(); URL.revokeObjectURL(url);
+              toast.success('GPA report exported!');
+            }}>
+              <Download size={16} /> Export Report
+            </Button>
+          </div>
+        )}
+
         {/* Empty state */}
         {semesters.length === 0 && (
           <div className="text-center py-16">

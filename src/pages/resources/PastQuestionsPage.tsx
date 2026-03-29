@@ -56,6 +56,8 @@ const PastQuestionsPage = () => {
   const [newSemester, setNewSemester] = useState('First');
   const [newQuestionText, setNewQuestionText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
 
   useEffect(() => { fetchQuestions(); }, []);
 
