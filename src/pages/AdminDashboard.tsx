@@ -1648,9 +1648,17 @@ const AdminDashboard = () => {
         </div>
 
         {/* Content */}
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-nobel-gold" />
+         {loading ? (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[1,2,3,4].map(i => (
+                <div key={i} className="bg-white border border-slate-200 rounded-2xl p-5 animate-pulse">
+                  <div className="h-3 bg-slate-100 rounded-full w-1/2 mb-3" />
+                  <div className="h-8 bg-slate-100 rounded w-2/3" />
+                </div>
+              ))}
+            </div>
+            <TableSkeleton rows={5} />
           </div>
         ) : (
           <div className="space-y-4">
