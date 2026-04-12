@@ -8,6 +8,8 @@ const corsHeaders = {
 const LOVABLE_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const QWEN_GATEWAY = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions";
 const QWEN_MODEL = "qwen-plus";
+const MAX_INPUT_CHARS = 800_000;
+const TRUNCATION_NOTICE = "\n\n[... Remaining material omitted to fit AI processing limits.]";
 
 async function callWithFallback(body: Record<string, unknown>) {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -38,12 +40,57 @@ async function callWithFallback(body: Record<string, unknown>) {
   return { response, provider: "qwen" };
 }
 
+function truncateContent(content: string) {
+  if (content.length <= MAX_INPUT_CHARS) {
+    return { content, truncated: false };
+  }
+
+  return {
+    content: `${content.slice(0, MAX_INPUT_CHARS)}${TRUNCATION_NOTICE}`,
+    truncated: true,
+  };
+}
+
+function buildErrorMessage(status: number, detail = "") {
+  const normalized = detail.toLowerCase();
+
+  if (status === 429 || normalized.includes("rate limit")) {
+    return "Rate limit reached. Please wait a moment and try again.";
+  }
+
+  if (status === 402 || normalized.includes("payment required") || normalized.includes("credits")) {
+    return "AI credits exhausted. Please try again later.";
+  }
+
+  if (normalized.includes("maximum context length") || normalized.includes("context length")) {
+    return "This material is too large for one AI pass. Please split it into smaller sections or upload the most relevant pages.";
+  }
+
+  if (normalized.includes("no material")) {
+    return "No study material provided.";
+  }
+
+  return "AI processing failed. Please try again.";
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const { topic, material, count } = await req.json();
-    const cardCount = count || 20;
+    const cardCount = Math.min(Math.max(count || 20, 5), 100);
+
+    const userContent = topic
+      ? `Topic/Concept: ${topic}${material ? `\n\nAdditional Material:\n${material}` : ""}`
+      : material || "";
+
+    if (!userContent.trim()) {
+      return new Response(JSON.stringify({ error: "No study material provided" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { content: boundedUserContent, truncated } = truncateContent(userContent);
 
     const systemPrompt = `You are an expert flashcard generator for university students across ALL fields of knowledge — Law, Medicine, Engineering, Arts, Sciences, Social Sciences, etc.
 
@@ -57,15 +104,11 @@ Rules:
 - Be concise but thorough on the back side
 - Use precise academic language appropriate to the field`;
 
-    const userContent = topic
-      ? `Topic/Concept: ${topic}${material ? `\n\nAdditional Material:\n${material}` : ""}`
-      : material || "No material provided";
-
     const requestBody = {
       model: "google/gemini-3-flash-preview",
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: userContent },
+        { role: "user", content: boundedUserContent },
       ],
       tools: [
         {
@@ -104,8 +147,7 @@ Rules:
     if (!response.ok) {
       const t = await response.text();
       console.error(`${provider} AI error:`, response.status, t);
-      return new Response(JSON.stringify({ error: "AI processing failed" }), {
-        status: response.status === 429 ? 429 : response.status === 402 ? 402 : 500,
+      return new Response(JSON.stringify({ error: buildErrorMessage(response.status, t) }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -118,7 +160,6 @@ Rules:
       const parsed = JSON.parse(toolCall.function.arguments);
       flashcards = parsed;
     } else {
-      // Fallback: parse content directly (Qwen may return content instead of tool_calls)
       const content = data.choices?.[0]?.message?.content || "";
       const jsonMatch = content.match(/\{[\s\S]*"flashcards"[\s\S]*\}/);
       if (jsonMatch) {
@@ -128,13 +169,12 @@ Rules:
       }
     }
 
-    return new Response(JSON.stringify(flashcards), {
+    return new Response(JSON.stringify({ ...flashcards, truncated }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("flashcard-gen error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500,
+    return new Response(JSON.stringify({ error: buildErrorMessage(500, e instanceof Error ? e.message : "Unknown error") }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

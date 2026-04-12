@@ -8,12 +8,13 @@ const corsHeaders = {
 const LOVABLE_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const QWEN_GATEWAY = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions";
 const QWEN_MODEL = "qwen-plus";
+const MAX_INPUT_CHARS = 800_000;
+const TRUNCATION_NOTICE = "\n\n[... Remaining material omitted to fit AI processing limits.]";
 
 async function callWithFallback(body: Record<string, unknown>, isStream: boolean) {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   const QWEN_API_KEY = Deno.env.get("QWEN_API_KEY");
 
-  // Try Lovable AI first
   if (LOVABLE_API_KEY) {
     const response = await fetch(LOVABLE_GATEWAY, {
       method: "POST",
@@ -23,16 +24,13 @@ async function callWithFallback(body: Record<string, unknown>, isStream: boolean
 
     if (response.ok) return { response, provider: "lovable" };
 
-    // Only fallback on quota/rate limit errors
     if (response.status !== 429 && response.status !== 402) {
       return { response, provider: "lovable" };
     }
     console.log(`Lovable AI returned ${response.status}, falling back to Qwen...`);
-    // Consume the response body to avoid leak
     await response.text();
   }
 
-  // Fallback to Qwen
   if (!QWEN_API_KEY) throw new Error("Both Lovable AI and Qwen API keys are unavailable");
 
   const qwenBody = { ...body, model: QWEN_MODEL };
@@ -43,6 +41,17 @@ async function callWithFallback(body: Record<string, unknown>, isStream: boolean
   });
 
   return { response, provider: "qwen" };
+}
+
+function truncateContent(content: string) {
+  if (content.length <= MAX_INPUT_CHARS) {
+    return { content, truncated: false };
+  }
+
+  return {
+    content: `${content.slice(0, MAX_INPUT_CHARS)}${TRUNCATION_NOTICE}`,
+    truncated: true,
+  };
 }
 
 serve(async (req) => {
@@ -117,7 +126,6 @@ Use markdown formatting extensively.`
 
     const systemPrompt = modePrompts[mode] || modePrompts.explainer;
 
-    // If image generation requested, use Lovable AI only (Qwen doesn't support this)
     if (generateImage) {
       const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
       if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured for image generation");
@@ -149,10 +157,11 @@ Use markdown formatting extensively.`
       });
     }
 
-    // Standard text completion with streaming
-    const userContent = topic
+    const rawUserContent = topic
       ? `Topic/Concept: ${topic}${material ? `\n\nAdditional Material:\n${material}` : ""}`
       : material || "No material provided";
+
+    const { content: userContent } = truncateContent(rawUserContent);
 
     const requestBody = {
       model: "google/gemini-3-flash-preview",

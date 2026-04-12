@@ -199,9 +199,10 @@ const StudyAidePage: React.FC = () => {
       });
 
       if (!response.ok) {
+        const payload = await response.json().catch(() => null);
         if (response.status === 429) { toast.error('Rate limit reached. Please wait a moment.'); setPhase('input'); return; }
         if (response.status === 402) { toast.error('AI credits exhausted. Please try later.'); setPhase('input'); return; }
-        throw new Error('Generation failed');
+        throw new Error(payload?.error || 'Generation failed');
       }
 
       const reader = response.body?.getReader();

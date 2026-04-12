@@ -8,6 +8,8 @@ const corsHeaders = {
 const LOVABLE_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const QWEN_GATEWAY = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions";
 const QWEN_MODEL = "qwen-plus";
+const MAX_INPUT_CHARS = 800_000;
+const TRUNCATION_NOTICE = "\n\n[... Remaining material omitted to fit AI processing limits.]";
 
 async function callWithFallback(body: Record<string, unknown>) {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -38,6 +40,39 @@ async function callWithFallback(body: Record<string, unknown>) {
   return { response, provider: "qwen" };
 }
 
+function truncateContent(content: string) {
+  if (content.length <= MAX_INPUT_CHARS) {
+    return { content, truncated: false };
+  }
+
+  return {
+    content: `${content.slice(0, MAX_INPUT_CHARS)}${TRUNCATION_NOTICE}`,
+    truncated: true,
+  };
+}
+
+function buildErrorMessage(status: number, detail = "") {
+  const normalized = detail.toLowerCase();
+
+  if (status === 429 || normalized.includes("rate limit")) {
+    return "Rate limit reached. Please wait a moment and try again.";
+  }
+
+  if (status === 402 || normalized.includes("payment required") || normalized.includes("credits")) {
+    return "AI credits exhausted. Please try again later.";
+  }
+
+  if (normalized.includes("maximum context length") || normalized.includes("context length")) {
+    return "This material is too large for one AI pass. Please split it into smaller sections or upload the most relevant pages.";
+  }
+
+  if (normalized.includes("no study material")) {
+    return "No study material provided.";
+  }
+
+  return "AI processing failed. Please try again.";
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -45,12 +80,17 @@ serve(async (req) => {
     const { material, rigidity, fileContent, fileName, count } = await req.json();
     const questionCount = Math.min(Math.max(count || 25, 5), 200);
 
-    if (!material && !fileContent) {
+    let userContent = "";
+    if (material) userContent += `STUDY MATERIAL:\n${material}\n\n`;
+    if (fileContent) userContent += `UPLOADED DOCUMENT CONTENT (${fileName || "document"}):\n${fileContent}`;
+
+    if (!userContent.trim()) {
       return new Response(JSON.stringify({ error: "No study material provided" }), {
-        status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const { content: boundedUserContent, truncated } = truncateContent(userContent);
 
     const rigidityPrompt: Record<string, string> = {
       Standard: "Focus on foundational concepts and direct facts. Questions should test basic understanding and recall.",
@@ -71,15 +111,11 @@ You MUST return a valid JSON array of exactly ${questionCount} objects. Each obj
 
 Ensure intellectual depth, variety across the material, and strict adherence to the provided content. Do NOT include any text outside the JSON array.`;
 
-    let userContent = "";
-    if (material) userContent += `STUDY MATERIAL:\n${material}\n\n`;
-    if (fileContent) userContent += `UPLOADED DOCUMENT CONTENT (${fileName || "document"}):\n${fileContent}`;
-
     const requestBody = {
       model: "google/gemini-3-flash-preview",
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: userContent },
+        { role: "user", content: boundedUserContent },
       ],
       tools: [
         {
@@ -119,15 +155,12 @@ Ensure intellectual depth, variety across the material, and strict adherence to 
     if (!response.ok) {
       const errText = await response.text();
       console.error(`${provider} AI error:`, response.status, errText);
-      return new Response(JSON.stringify({ error: "AI processing failed. Please try again." }), {
-        status: response.status === 429 ? 429 : response.status === 402 ? 402 : 500,
+      return new Response(JSON.stringify({ error: buildErrorMessage(response.status, errText) }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const data = await response.json();
-
-    // Extract from tool call
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
     let questions;
 
@@ -135,7 +168,6 @@ Ensure intellectual depth, variety across the material, and strict adherence to 
       const parsed = JSON.parse(toolCall.function.arguments);
       questions = parsed.questions;
     } else {
-      // Fallback: try parsing content directly (Qwen may return content instead of tool_calls)
       const content = data.choices?.[0]?.message?.content || "";
       const jsonMatch = content.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
@@ -149,13 +181,12 @@ Ensure intellectual depth, variety across the material, and strict adherence to 
       throw new Error("No valid questions generated");
     }
 
-    return new Response(JSON.stringify({ questions: questions.slice(0, questionCount) }), {
+    return new Response(JSON.stringify({ questions: questions.slice(0, questionCount), truncated }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("ai-quiz error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500,
+    return new Response(JSON.stringify({ error: buildErrorMessage(500, e instanceof Error ? e.message : "Unknown error") }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
