@@ -454,33 +454,42 @@ const GPATrackerPage = () => {
         )}
 
         {/* Hidden export card rendered off-screen */}
-        <div id="gpa-export-card" style={{ display: 'none', position: 'absolute', left: '-9999px', top: 0, width: '720px', fontFamily: 'Georgia, serif' }}>
-          <div style={{ padding: '40px', background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' }}>
+        <div id="gpa-export-card" style={{ display: 'none', position: 'absolute', left: '-9999px', top: 0, width: '800px', fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif" }}>
+          <div style={{ padding: '48px', background: '#ffffff', minHeight: '600px' }}>
+            {/* Decorative top bar */}
+            <div style={{ height: '6px', background: 'linear-gradient(90deg, #003366, #C5A059, #003366)', borderRadius: '3px', marginBottom: '36px' }} />
+
             {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px', borderBottom: '3px solid #1e3a5f', paddingBottom: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '36px' }}>
               <div>
-                <h1 style={{ fontSize: '28px', color: '#1e3a5f', margin: 0, letterSpacing: '1px' }}>ACADEMIC TRANSCRIPT</h1>
-                <p style={{ fontSize: '13px', color: '#64748b', margin: '6px 0 0', letterSpacing: '3px', textTransform: 'uppercase' }}>GPA Report • {scale} Scale</p>
+                <h1 style={{ fontSize: '13px', color: '#C5A059', margin: 0, letterSpacing: '4px', textTransform: 'uppercase', fontWeight: 700 }}>UISU SPACE</h1>
+                <h2 style={{ fontSize: '30px', color: '#003366', margin: '6px 0 0', fontWeight: 800, letterSpacing: '-0.5px' }}>Academic Transcript</h2>
+                <p style={{ fontSize: '13px', color: '#8894a5', margin: '6px 0 0' }}>GPA Report — {scale} Scale</p>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>Generated</p>
-                <p style={{ fontSize: '14px', color: '#475569', margin: '2px 0 0', fontWeight: 600 }}>{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              <div style={{ textAlign: 'right', background: '#f8f9fb', borderRadius: '10px', padding: '14px 20px', border: '1px solid #e8ecf1' }}>
+                <p style={{ fontSize: '10px', color: '#a0a8b4', margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>Generated</p>
+                <p style={{ fontSize: '14px', color: '#003366', margin: '4px 0 0', fontWeight: 700 }}>{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
               </div>
             </div>
 
             {/* CGPA Hero */}
-            <div style={{ background: 'linear-gradient(135deg, #1e3a5f, #2d5a8e)', borderRadius: '16px', padding: '28px 32px', color: 'white', marginBottom: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '3px', opacity: 0.7, margin: 0 }}>Cumulative GPA</p>
-                <p style={{ fontSize: '52px', fontWeight: 700, margin: '4px 0 0', lineHeight: 1 }}>{cgpa.toFixed(2)}</p>
-                <p style={{ fontSize: '14px', opacity: 0.85, margin: '8px 0 0' }}>{cls.label}</p>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: '12px', padding: '12px 20px' }}>
-                  <p style={{ fontSize: '11px', opacity: 0.7, margin: 0 }}>Total Units</p>
-                  <p style={{ fontSize: '28px', fontWeight: 700, margin: '2px 0 0' }}>{getTotalUnits()}</p>
+            <div style={{ background: 'linear-gradient(135deg, #003366 0%, #00528c 100%)', borderRadius: '16px', padding: '32px 36px', color: 'white', marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', overflow: 'hidden' }}>
+              {/* Decorative circle */}
+              <div style={{ position: 'absolute', right: '-30px', top: '-30px', width: '160px', height: '160px', borderRadius: '50%', background: 'rgba(197, 160, 89, 0.12)' }} />
+              <div style={{ position: 'absolute', right: '80px', bottom: '-40px', width: '100px', height: '100px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '4px', opacity: 0.6, margin: 0, fontWeight: 600 }}>Cumulative GPA</p>
+                <p style={{ fontSize: '56px', fontWeight: 800, margin: '4px 0 0', lineHeight: 1 }}>{cgpa.toFixed(2)}</p>
+                <div style={{ display: 'inline-block', background: 'rgba(197, 160, 89, 0.25)', borderRadius: '20px', padding: '4px 16px', marginTop: '10px' }}>
+                  <span style={{ fontSize: '13px', color: '#C5A059', fontWeight: 700 }}>{cls.label}</span>
                 </div>
-                <p style={{ fontSize: '11px', opacity: 0.6, marginTop: '8px' }}>{semesters.length} Semester{semesters.length !== 1 ? 's' : ''}</p>
+              </div>
+              <div style={{ textAlign: 'right', position: 'relative', zIndex: 1 }}>
+                <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '14px', padding: '16px 24px', backdropFilter: 'blur(10px)' }}>
+                  <p style={{ fontSize: '10px', opacity: 0.6, margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>Total Units</p>
+                  <p style={{ fontSize: '32px', fontWeight: 800, margin: '4px 0 0' }}>{getTotalUnits()}</p>
+                </div>
+                <p style={{ fontSize: '11px', opacity: 0.5, marginTop: '10px' }}>{semesters.length} Semester{semesters.length !== 1 ? 's' : ''} Recorded</p>
               </div>
             </div>
 
@@ -489,33 +498,38 @@ const GPATrackerPage = () => {
               const semGPA = calcSemGPA(sem.courses);
               const semCls = getClassification(semGPA);
               return (
-                <div key={sem.id} style={{ background: 'white', borderRadius: '12px', marginBottom: '16px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
-                  <div style={{ background: '#f8fafc', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#1e3a5f', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700 }}>{idx + 1}</div>
-                      <span style={{ fontSize: '15px', fontWeight: 600, color: '#1e3a5f' }}>{sem.name} — {sem.year}</span>
+                <div key={sem.id} style={{ background: '#ffffff', borderRadius: '12px', marginBottom: '20px', overflow: 'hidden', border: '1px solid #e2e7ed' }}>
+                  <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #edf0f4', background: '#fafbfc' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                      <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, #003366, #00528c)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 800 }}>{idx + 1}</div>
+                      <div>
+                        <span style={{ fontSize: '15px', fontWeight: 700, color: '#003366', display: 'block' }}>{sem.name}</span>
+                        <span style={{ fontSize: '12px', color: '#8894a5' }}>{sem.year}</span>
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '13px', color: '#64748b' }}>{semCls.label}</span>
-                      <span style={{ background: '#1e3a5f', color: 'white', padding: '4px 14px', borderRadius: '20px', fontSize: '13px', fontWeight: 700 }}>{semGPA.toFixed(2)}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '12px', color: '#8894a5', fontWeight: 500 }}>{semCls.label}</span>
+                      <span style={{ background: 'linear-gradient(135deg, #003366, #00528c)', color: 'white', padding: '5px 16px', borderRadius: '20px', fontSize: '14px', fontWeight: 800 }}>{semGPA.toFixed(2)}</span>
                     </div>
                   </div>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                     <thead>
-                      <tr style={{ background: '#f1f5f9' }}>
-                        <th style={{ padding: '10px 20px', textAlign: 'left', color: '#64748b', fontWeight: 600, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px' }}>Course</th>
-                        <th style={{ padding: '10px 20px', textAlign: 'center', color: '#64748b', fontWeight: 600, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px' }}>Units</th>
-                        <th style={{ padding: '10px 20px', textAlign: 'center', color: '#64748b', fontWeight: 600, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px' }}>Grade</th>
-                        <th style={{ padding: '10px 20px', textAlign: 'center', color: '#64748b', fontWeight: 600, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px' }}>Points</th>
+                      <tr>
+                        <th style={{ padding: '12px 24px', textAlign: 'left', color: '#8894a5', fontWeight: 700, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1.5px', borderBottom: '2px solid #f0f2f5' }}>Course</th>
+                        <th style={{ padding: '12px 24px', textAlign: 'center', color: '#8894a5', fontWeight: 700, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1.5px', borderBottom: '2px solid #f0f2f5' }}>Units</th>
+                        <th style={{ padding: '12px 24px', textAlign: 'center', color: '#8894a5', fontWeight: 700, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1.5px', borderBottom: '2px solid #f0f2f5' }}>Grade</th>
+                        <th style={{ padding: '12px 24px', textAlign: 'center', color: '#8894a5', fontWeight: 700, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1.5px', borderBottom: '2px solid #f0f2f5' }}>Points</th>
                       </tr>
                     </thead>
                     <tbody>
                       {sem.courses.filter(c => c.name || c.grade).map((c, ci) => (
-                        <tr key={c.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                          <td style={{ padding: '10px 20px', color: '#334155' }}>{c.name || 'Untitled'}</td>
-                          <td style={{ padding: '10px 20px', textAlign: 'center', color: '#475569' }}>{c.units}</td>
-                          <td style={{ padding: '10px 20px', textAlign: 'center', fontWeight: 700, color: c.grade === 'A' ? '#059669' : c.grade === 'F' ? '#dc2626' : '#1e3a5f' }}>{c.grade || '—'}</td>
-                          <td style={{ padding: '10px 20px', textAlign: 'center', color: '#475569' }}>{c.grade && GP[scale][c.grade] !== undefined ? (GP[scale][c.grade] * c.units).toFixed(1) : '—'}</td>
+                        <tr key={c.id} style={{ borderBottom: ci === sem.courses.filter(x => x.name || x.grade).length - 1 ? 'none' : '1px solid #f5f6f8' }}>
+                          <td style={{ padding: '11px 24px', color: '#1e293b', fontWeight: 500 }}>{c.name || 'Untitled'}</td>
+                          <td style={{ padding: '11px 24px', textAlign: 'center', color: '#64748b' }}>{c.units}</td>
+                          <td style={{ padding: '11px 24px', textAlign: 'center' }}>
+                            <span style={{ display: 'inline-block', minWidth: '28px', padding: '2px 10px', borderRadius: '6px', fontWeight: 800, fontSize: '12px', background: c.grade === 'A' ? '#ecfdf5' : c.grade === 'F' ? '#fef2f2' : '#f0f4ff', color: c.grade === 'A' ? '#059669' : c.grade === 'F' ? '#dc2626' : '#003366' }}>{c.grade || '—'}</span>
+                          </td>
+                          <td style={{ padding: '11px 24px', textAlign: 'center', color: '#64748b', fontWeight: 600 }}>{c.grade && GP[scale][c.grade] !== undefined ? (GP[scale][c.grade] * c.units).toFixed(1) : '—'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -525,10 +539,13 @@ const GPATrackerPage = () => {
             })}
 
             {/* Footer */}
-            <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '2px solid #cbd5e1', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0 }}>University of Ibadan Students' Union • UISU Portal</p>
-              <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0 }}>This is an unofficial student-generated report</p>
+            <div style={{ marginTop: '28px', paddingTop: '20px', borderTop: '2px solid #e8ecf1', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <p style={{ fontSize: '11px', color: '#a0a8b4', margin: 0, fontWeight: 500 }}>University of Ibadan Students' Union • UISU SPACE</p>
+              <p style={{ fontSize: '10px', color: '#bcc3ce', margin: 0, fontStyle: 'italic' }}>Unofficial student-generated report</p>
             </div>
+
+            {/* Bottom decorative bar */}
+            <div style={{ height: '4px', background: 'linear-gradient(90deg, #C5A059, #003366)', borderRadius: '2px', marginTop: '20px' }} />
           </div>
         </div>
 
