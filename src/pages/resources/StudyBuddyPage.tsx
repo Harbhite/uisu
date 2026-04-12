@@ -288,7 +288,11 @@ const StudyBuddyPage = () => {
         setIsLoading(false);
         return;
       }
-      if (!resp.ok || !resp.body) throw new Error('Failed to start stream');
+      if (!resp.ok) {
+        const payload = await resp.json().catch(() => null);
+        throw new Error(payload?.error || 'Failed to start stream');
+      }
+      if (!resp.body) throw new Error('Failed to start stream');
 
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
@@ -366,7 +370,7 @@ const StudyBuddyPage = () => {
       }
     } catch (err) {
       console.error(err);
-      toast.error('Something went wrong. Please try again.');
+      toast.error(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
     }
