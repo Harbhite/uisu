@@ -40,7 +40,13 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { mode, topic, material, pointCount } = await req.json();
+    const { mode, topic, material: rawMaterial, pointCount } = await req.json();
+
+    // Truncate material to ~800K chars (~200K tokens) to stay within model context limits
+    const MAX_CHARS = 800_000;
+    const material = rawMaterial && rawMaterial.length > MAX_CHARS
+      ? rawMaterial.slice(0, MAX_CHARS) + "\n\n[... Content truncated due to length. The above represents the first portion of the material.]"
+      : rawMaterial;
 
     const modePrompts: Record<string, string> = {
       keypoints: `You are an elite academic assistant at the University of Ibadan. Extract and present the KEY POINTS from the provided material/topic. Format your response as:
