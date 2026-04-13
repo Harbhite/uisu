@@ -142,7 +142,10 @@ const PastQuestionsPage = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        const msg = data?.error || error?.message || 'Failed to generate solution';
+        throw new Error(msg);
+      }
 
       const solution = data?.solution || 'Unable to generate solution.';
 
@@ -152,7 +155,7 @@ const PastQuestionsPage = () => {
       toast.success('AI solution generated!');
     } catch (err) {
       console.error('Solution generation error:', err);
-      toast.error('Failed to generate solution. Please try again.');
+      toast.error(err instanceof Error ? err.message : 'Failed to generate solution. Please try again.');
     } finally {
       setSolvingId(null);
     }
