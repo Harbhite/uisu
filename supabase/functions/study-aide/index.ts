@@ -36,17 +36,24 @@ async function callWithFallback(body: Record<string, unknown>) {
   return { response, provider: "qwen" };
 }
 
+const depthInstructions: Record<string, string> = {
+  beginner: "\n\nTARGET AUDIENCE: Beginner-level student. Use simple, accessible language. Explain every concept from scratch with plenty of real-world analogies and examples. Avoid jargon or define it immediately when used.",
+  intermediate: "\n\nTARGET AUDIENCE: Intermediate-level student with foundational knowledge. Use standard academic language. Balance depth with clarity.",
+  advanced: "\n\nTARGET AUDIENCE: Advanced student or researcher. Use precise academic/technical language freely. Go deep into nuances, edge cases, exceptions, and cross-disciplinary connections.",
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { mode, topic, material: rawMaterial, pointCount } = await req.json();
+    const { mode, topic, material: rawMaterial, pointCount, depth } = await req.json();
 
-    // Truncate material to ~800K chars (~200K tokens) to stay within model context limits
     const MAX_CHARS = 800_000;
     const material = rawMaterial && rawMaterial.length > MAX_CHARS
-      ? rawMaterial.slice(0, MAX_CHARS) + "\n\n[... Content truncated due to length. The above represents the first portion of the material.]"
+      ? rawMaterial.slice(0, MAX_CHARS) + "\n\n[... Content truncated due to length.]"
       : rawMaterial;
+
+    const depthSuffix = depthInstructions[depth] || depthInstructions.intermediate;
 
     const modePrompts: Record<string, string> = {
       keypoints: `You are an elite academic assistant at the University of Ibadan. Extract and present the KEY POINTS from the provided material/topic. Format your response as:
@@ -61,7 +68,7 @@ For each key point:
 
 ---
 
-Extract 8-15 key points depending on material complexity. Prioritize the most exam-worthy and conceptually important points. Use markdown formatting extensively. Be thorough but concise.`,
+Extract 8-15 key points depending on material complexity. Prioritize the most exam-worthy and conceptually important points. Use markdown formatting extensively. Be thorough but concise.${depthSuffix}`,
 
       summary: `You are an elite academic assistant at the University of Ibadan. Create a COMPREHENSIVE SUMMARY BRIEF of the provided material/topic. Structure your response as:
 
@@ -85,7 +92,7 @@ Extract 8-15 key points depending on material complexity. Prioritize the most ex
 ### Exam Focus Areas
 [What's most likely to be tested and why]
 
-Use markdown formatting extensively. Be comprehensive yet readable.`,
+Use markdown formatting extensively. Be comprehensive yet readable.${depthSuffix}`,
 
       outline: `You are an elite academic assistant at the University of Ibadan. Create a STRUCTURED STUDY OUTLINE from the provided material/topic. Format as:
 
@@ -113,7 +120,7 @@ Use markdown formatting extensively. Be comprehensive yet readable.`,
 2. [Self-test question]
 ...
 
-Create a thorough, hierarchical outline that serves as a complete study roadmap. Use markdown tables where appropriate.`,
+Create a thorough, hierarchical outline that serves as a complete study roadmap. Use markdown tables where appropriate.${depthSuffix}`,
 
       concepts: `You are an elite academic assistant at the University of Ibadan. Create a CONCEPT MAP & GLOSSARY from the provided material/topic. Structure as:
 
@@ -145,7 +152,7 @@ For each major concept:
 ### Memory Aids
 [Mnemonics, acronyms, or memory tricks for key terms]
 
-Be comprehensive. Cover all significant terms and their interconnections.`,
+Be comprehensive. Cover all significant terms and their interconnections.${depthSuffix}`,
     };
 
     // Dynamic quickpoints prompt with user-selected count
@@ -163,7 +170,7 @@ Format your response as a numbered list:
 2. **[Concise Title]:** [Brief 1-2 sentence explanation]
 ...continue to exactly ${count} points.
 
-Prioritize the most exam-worthy and conceptually important points. Cover breadth over depth. Do NOT include sub-points, examples, or elaborations — keep each point atomic and scannable. Use markdown bold for titles only.`;
+Prioritize the most exam-worthy and conceptually important points. Cover breadth over depth. Do NOT include sub-points, examples, or elaborations — keep each point atomic and scannable. Use markdown bold for titles only.${depthSuffix}`;
     }
 
     const systemPrompt = modePrompts[mode] || modePrompts.keypoints;

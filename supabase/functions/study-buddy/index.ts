@@ -11,7 +11,7 @@ const QWEN_MODEL = "qwen-plus";
 const MAX_INPUT_CHARS = 800_000;
 const TRUNCATION_NOTICE = "\n\n[... Remaining material omitted to fit AI processing limits.]";
 
-async function callWithFallback(body: Record<string, unknown>, isStream: boolean) {
+async function callWithFallback(body: Record<string, unknown>, _isStream: boolean) {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   const QWEN_API_KEY = Deno.env.get("QWEN_API_KEY");
 
@@ -23,10 +23,7 @@ async function callWithFallback(body: Record<string, unknown>, isStream: boolean
     });
 
     if (response.ok) return { response, provider: "lovable" };
-
-    if (response.status !== 429 && response.status !== 402) {
-      return { response, provider: "lovable" };
-    }
+    if (response.status !== 429 && response.status !== 402) return { response, provider: "lovable" };
     console.log(`Lovable AI returned ${response.status}, falling back to Qwen...`);
     await response.text();
   }
@@ -44,84 +41,62 @@ async function callWithFallback(body: Record<string, unknown>, isStream: boolean
 }
 
 function truncateContent(content: string) {
-  if (content.length <= MAX_INPUT_CHARS) {
-    return { content, truncated: false };
-  }
-
-  return {
-    content: `${content.slice(0, MAX_INPUT_CHARS)}${TRUNCATION_NOTICE}`,
-    truncated: true,
-  };
+  if (content.length <= MAX_INPUT_CHARS) return { content, truncated: false };
+  return { content: `${content.slice(0, MAX_INPUT_CHARS)}${TRUNCATION_NOTICE}`, truncated: true };
 }
+
+const depthInstructions: Record<string, string> = {
+  beginner: "\n\nTARGET AUDIENCE: Beginner-level student. Use simple, accessible language. Explain every concept from scratch with plenty of real-world analogies. Avoid jargon or define it immediately.",
+  intermediate: "",
+  advanced: "\n\nTARGET AUDIENCE: Advanced student or researcher. Use precise academic/technical language. Go deep into nuances, edge cases, and cross-disciplinary connections.",
+};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { mode, topic, material, generateImage } = await req.json();
+    const { mode, topic, material, generateImage, depth, chatHistory } = await req.json();
+
+    const depthSuffix = depthInstructions[depth] || "";
 
     const modePrompts: Record<string, string> = {
       explainer: `You are StudyBuddy Explainer — an elite academic tutor at the University of Ibadan. Break down the concept or material provided into clear, digestible parts using:
 - Real-world analogies and metaphors
 - Step-by-step logical breakdowns
-- Mermaid diagrams for flowcharts, processes, and relationships (use \`\`\`mermaid code blocks with valid Mermaid syntax like "graph TD", "flowchart LR", "sequenceDiagram", "classDiagram", "stateDiagram-v2", "erDiagram", "mindmap", "timeline", etc.)
-- Mathematical notation when solving maths/engineering problems (use LaTeX-style notation)
+- Mermaid diagrams for flowcharts, processes, and relationships (use \`\`\`mermaid code blocks)
+- Mathematical notation when solving maths/engineering problems
 - Tables for comparisons (use markdown tables)
 - Clear section headers with markdown
 
-IMPORTANT: When illustrating processes, hierarchies, relationships, or flows, ALWAYS include a Mermaid diagram in a \`\`\`mermaid code block. For example:
-\`\`\`mermaid
-graph TD
-    A[Start] --> B{Decision}
-    B -->|Yes| C[Do Something]
-    B -->|No| D[Do Something Else]
-\`\`\`
+IMPORTANT: When illustrating processes, hierarchies, relationships, or flows, ALWAYS include a Mermaid diagram.
 
 You handle ALL fields: Law, Medicine, Engineering, Arts, Sciences, Social Sciences, etc.
-Be thorough, creative, and intellectually rigorous. Use markdown formatting extensively.`,
+Be thorough, creative, and intellectually rigorous.${depthSuffix}`,
 
       planner: `You are StudyBuddy Planner — a strategic academic advisor. Create a detailed 7-day study schedule for the topic/material provided. Include:
 - Day-by-day breakdown with specific time blocks
 - Key topics to cover each day
 - Review sessions and practice problems
 - Tips for retention and active recall
-- A motivational note for each day
-- A Mermaid timeline or gantt chart showing the study plan visually (use \`\`\`mermaid code block)
-
-Format as a clean markdown table or structured plan. Be practical and realistic.`,
+- A Mermaid timeline or gantt chart showing the study plan visually${depthSuffix}`,
 
       synthesizer: `You are StudyBuddy Synthesizer — an expert summarizer. Create a hierarchical brief of the provided material:
 - **Executive Summary** (2-3 sentences)
 - **Key Concepts** (bulleted, with brief explanations)
 - **Critical Details** (numbered, prioritized)
-- **Connections & Relationships** (how concepts link — include a Mermaid mindmap or graph diagram in a \`\`\`mermaid code block showing relationships)
+- **Connections & Relationships** (include a Mermaid mindmap or graph)
 - **Quick-Reference Glossary** (key terms defined)
 
-Be concise but comprehensive. Use markdown formatting and Mermaid diagrams where they add clarity.`,
+Be concise but comprehensive.${depthSuffix}`,
 
-      examiner: `You are StudyBuddy Examiner — a flashcard generator. Create 15 high-quality flashcards from the material:
-- Mix of definition, application, and analysis questions
-- Each flashcard should have a FRONT (question) and BACK (answer)
-- Include difficulty ratings (Easy/Medium/Hard)
-- Cover the most exam-worthy content
-
-Format each as:
-### Flashcard [number] — [Difficulty]
-**Q:** [question]
-**A:** [answer]
-
----`,
-
-      debater: `You are StudyBuddy Debater — a Socratic debate partner for University of Ibadan students. Given a topic, present a structured academic debate:
+      debater: `You are StudyBuddy Debater — a Socratic debate partner. Given a topic, present a structured academic debate:
 - **Proposition** (Arguments FOR) — at least 4 strong points with evidence
 - **Opposition** (Arguments AGAINST) — at least 4 strong counterpoints with evidence  
 - **Key Rebuttals** — how each side responds to the other
 - **Nuances & Gray Areas** — complexities that resist simple answers
 - **Your Verdict** — a balanced, scholarly conclusion weighing both sides
 
-Be intellectually rigorous. Use real-world examples, case law, scientific evidence, or historical precedents where applicable. Challenge assumptions. This is for sharpening critical thinking across ALL fields.
-
-Use markdown formatting extensively.`
+Be intellectually rigorous. Use real-world examples, case law, scientific evidence, or historical precedents.${depthSuffix}`
     };
 
     const systemPrompt = modePrompts[mode] || modePrompts.explainer;
@@ -145,7 +120,7 @@ Use markdown formatting extensively.`
       if (!imageResponse.ok) {
         const errText = await imageResponse.text();
         console.error("Image generation error:", imageResponse.status, errText);
-        return new Response(JSON.stringify({ error: "Image generation failed", details: errText }), {
+        return new Response(JSON.stringify({ error: "Image generation failed" }), {
           status: imageResponse.status === 429 ? 429 : imageResponse.status === 402 ? 402 : 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -163,12 +138,25 @@ Use markdown formatting extensively.`
 
     const { content: userContent } = truncateContent(rawUserContent);
 
+    // Build messages with chat history for conversation memory
+    const messages: { role: string; content: string }[] = [
+      { role: "system", content: systemPrompt },
+    ];
+
+    // Include previous conversation history if provided
+    if (chatHistory && Array.isArray(chatHistory)) {
+      for (const msg of chatHistory.slice(-10)) { // Keep last 10 exchanges for context
+        if (msg.role && msg.content) {
+          messages.push({ role: msg.role, content: msg.content.substring(0, 50_000) }); // Cap each message
+        }
+      }
+    }
+
+    messages.push({ role: "user", content: userContent });
+
     const requestBody = {
       model: "google/gemini-3-flash-preview",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userContent },
-      ],
+      messages,
       stream: true,
     };
 

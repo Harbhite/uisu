@@ -65,18 +65,7 @@ const modes: ModeConfig[] = [
   },
 ];
 
-const readFileAsText = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    if (file.type.startsWith('image/')) {
-      reader.readAsDataURL(file);
-    } else {
-      reader.readAsText(file);
-    }
-  });
-};
+// readFileContent imported from @/lib/file-utils
 
 // Collapsible wrapper for diagram blocks
 const CollapsibleDiagram: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => {
@@ -220,6 +209,11 @@ const StudyBuddyPage = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const responseRef = useRef<HTMLDivElement>(null);
+  const [depth, setDepth] = useState<DepthLevel>(() => {
+    try { return (localStorage.getItem('studybuddy_depth') as DepthLevel) || 'intermediate'; } catch { return 'intermediate'; }
+  });
+  // Conversation memory: stores {role, content} pairs
+  const [chatHistory, setChatHistory] = useState<Array<{role: string; content: string}>>([]);
 
   const currentMode = modes.find(m => m.id === activeMode)!;
 
@@ -228,6 +222,7 @@ const StudyBuddyPage = () => {
     const state = { activeMode, topic, material, response };
     localStorage.setItem('studybuddy_state', JSON.stringify(state));
   }, [activeMode, topic, material, response]);
+  React.useEffect(() => { localStorage.setItem('studybuddy_depth', depth); }, [depth]);
 
   const STUDY_BUDDY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/study-buddy`;
 
@@ -260,13 +255,16 @@ const StudyBuddyPage = () => {
     try {
       let fileContent = '';
       if (selectedFile) {
-        fileContent = await readFileAsText(selectedFile);
+        const { text } = await readFileContent(selectedFile);
+        fileContent = text;
       }
 
       const bodyPayload: Record<string, any> = {
         mode: activeMode,
         topic: topic.trim(),
         material: material.trim() + (fileContent ? `\n\n--- UPLOADED FILE (${selectedFile?.name}) ---\n${fileContent}` : ''),
+        depth,
+        chatHistory,
       };
 
       const resp = await fetch(STUDY_BUDDY_URL, {
@@ -368,13 +366,21 @@ const StudyBuddyPage = () => {
           });
         }
       }
+      // Update chat history for conversation memory
+      if (fullText) {
+        setChatHistory(prev => [
+          ...prev,
+          { role: 'user', content: topic.trim() + (material.trim() ? `\n${material.trim().substring(0, 500)}` : '') },
+          { role: 'assistant', content: fullText.substring(0, 5000) },
+        ]);
+      }
     } catch (err) {
       console.error(err);
       toast.error(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
     }
-  }, [activeMode, topic, material, selectedFile, STUDY_BUDDY_URL]);
+  }, [activeMode, topic, material, selectedFile, STUDY_BUDDY_URL, depth, chatHistory]);
 
   const handleGenerateImage = useCallback(async () => {
     if (!topic.trim() && !material.trim() && !selectedFile) {
@@ -440,7 +446,20 @@ const StudyBuddyPage = () => {
     setMaterial('');
     setGeneratedImage(null);
     setSelectedFile(null);
+    setChatHistory([]);
     localStorage.removeItem('studybuddy_state');
+  };
+
+  // Cross-tool pipeline
+  const sendToFlashcards = () => {
+    localStorage.setItem('flashcard_state', JSON.stringify({ topic: topic.trim().substring(0, 200), material: response, cards: [] }));
+    navigate('/resources/flashcards');
+    toast.success('Material sent to Flashcard Generator');
+  };
+  const sendToQuiz = () => {
+    localStorage.setItem('aiquiz_state', JSON.stringify({ inputText: response, rigidity: 'Standard', questionCount: 25 }));
+    navigate('/resources/ai-quiz');
+    toast.success('Material sent to AI Quiz');
   };
 
   return (

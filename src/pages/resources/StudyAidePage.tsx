@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileText, Upload, Sparkles, RefreshCcw, Trash2, ImageIcon, FileIcon,
   Download, FileDown, ChevronDown, Key, BookOpen, ListTree, Network,
-  Copy, Check, ChevronRight,
+  Copy, Check, ChevronRight, BrainCircuit, CreditCard, GraduationCap,
 } from 'lucide-react';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 import { saveAs } from 'file-saver';
@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { SEO } from '@/components/SEO';
 import AIToolsHeader from '@/components/resources/AIToolsHeader';
+import { readFileContent, DepthLevel, DEPTH_LABELS, DEPTH_DESCRIPTIONS } from '@/lib/file-utils';
 
 type AideMode = 'keypoints' | 'summary' | 'outline' | 'concepts' | 'quickpoints';
 
@@ -33,16 +34,6 @@ const modes: ModeConfig[] = [
   { id: 'outline', label: 'Study Outline', description: 'Hierarchical outline with definitions & review questions', icon: ListTree },
   { id: 'concepts', label: 'Concept Map', description: 'Glossary, relationships table & memory aids', icon: Network },
 ];
-
-const readFileAsText = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    if (file.type.startsWith('image/')) reader.readAsDataURL(file);
-    else reader.readAsText(file);
-  });
-};
 
 // ─── Export Dropdown ─────────────────────────────────────────────
 const ExportDropdown: React.FC<{ content: string; topic: string }> = ({ content, topic }) => {
@@ -158,13 +149,17 @@ const StudyAidePage: React.FC = () => {
   const [result, setResult] = useState('');
   const [copied, setCopied] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
+  const [depth, setDepth] = useState<DepthLevel>(() => {
+    try { return (localStorage.getItem('study-aide-depth') as DepthLevel) || 'intermediate'; } catch { return 'intermediate'; }
+  });
 
-  // Persist mode choice
+  // Persist mode & depth
   useEffect(() => {
     const saved = localStorage.getItem('study-aide-mode');
     if (saved && modes.some(m => m.id === saved)) setMode(saved as AideMode);
   }, []);
   useEffect(() => { localStorage.setItem('study-aide-mode', mode); }, [mode]);
+  useEffect(() => { localStorage.setItem('study-aide-depth', depth); }, [depth]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -185,8 +180,12 @@ const StudyAidePage: React.FC = () => {
     try {
       let material = inputText;
       if (selectedFile) {
-        const fileContent = await readFileAsText(selectedFile);
-        material = material ? `${material}\n\n--- Uploaded File: ${selectedFile.name} ---\n${fileContent}` : fileContent;
+        const { text: fileContent, isImage } = await readFileContent(selectedFile);
+        if (isImage) {
+          material = material ? `${material}\n\n--- Uploaded Image: ${selectedFile.name} ---\n[Image data attached]` : `[Image: ${selectedFile.name}]`;
+        } else {
+          material = material ? `${material}\n\n--- Uploaded File: ${selectedFile.name} ---\n${fileContent}` : fileContent;
+        }
       }
 
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/study-aide`, {
@@ -195,7 +194,13 @@ const StudyAidePage: React.FC = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ mode: mode === 'quickpoints' ? 'quickpoints' : mode, topic: inputText.trim().substring(0, 200), material, pointCount: mode === 'quickpoints' ? quickPointCount : undefined }),
+        body: JSON.stringify({
+          mode: mode === 'quickpoints' ? 'quickpoints' : mode,
+          topic: inputText.trim().substring(0, 200),
+          material,
+          pointCount: mode === 'quickpoints' ? quickPointCount : undefined,
+          depth,
+        }),
       });
 
       if (!response.ok) {
@@ -261,7 +266,7 @@ const StudyAidePage: React.FC = () => {
       toast.error(err?.message === 'No stream' ? 'Connection failed. Please try again.' : 'Failed to generate. Please try again.');
       setPhase('input');
     }
-  }, [inputText, selectedFile, mode, quickPointCount]);
+  }, [inputText, selectedFile, mode, quickPointCount, depth]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(result);
@@ -275,6 +280,25 @@ const StudyAidePage: React.FC = () => {
     setResult('');
   };
 
+  // Cross-tool pipeline
+  const sendToFlashcards = () => {
+    localStorage.setItem('flashcard_state', JSON.stringify({ topic: inputText.trim().substring(0, 200), material: result, cards: [] }));
+    navigate('/resources/flashcards');
+    toast.success('Material sent to Flashcard Generator');
+  };
+
+  const sendToQuiz = () => {
+    localStorage.setItem('aiquiz_state', JSON.stringify({ inputText: result, rigidity: 'Standard', questionCount: 25 }));
+    navigate('/resources/ai-quiz');
+    toast.success('Material sent to AI Quiz');
+  };
+
+  const sendToStudyBuddy = () => {
+    localStorage.setItem('studybuddy_state', JSON.stringify({ activeMode: 'explainer', topic: inputText.trim().substring(0, 200), material: result, response: '' }));
+    navigate('/resources/study-buddy');
+    toast.success('Material sent to StudyBuddy');
+  };
+
   const currentMode = modes.find(m => m.id === mode)!;
   const ModeIcon = currentMode.icon;
 
@@ -282,15 +306,11 @@ const StudyAidePage: React.FC = () => {
   const renderMarkdown = (text: string) => {
     const lines = text.split('\n');
     return lines.map((line, i) => {
-      // Headers
       if (line.startsWith('## ')) return <h2 key={i} className="text-xl font-serif font-bold text-foreground mt-6 mb-3">{line.slice(3)}</h2>;
       if (line.startsWith('### ')) return <h3 key={i} className="text-lg font-serif font-semibold text-foreground mt-5 mb-2">{line.slice(4)}</h3>;
       if (line.startsWith('#### ')) return <h4 key={i} className="text-base font-serif font-semibold text-foreground mt-4 mb-1.5">{line.slice(5)}</h4>;
-      // Horizontal rule
       if (/^---+$/.test(line.trim())) return <hr key={i} className="my-4 border-border" />;
-      // Table header separator
       if (/^\|[\s-|]+\|$/.test(line.trim())) return null;
-      // Table rows
       if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
         const cells = line.split('|').filter(Boolean).map(c => c.trim());
         return (
@@ -299,14 +319,10 @@ const StudyAidePage: React.FC = () => {
           </div>
         );
       }
-      // Bullet
       if (line.trim().startsWith('- ')) return <li key={i} className="ml-5 text-sm text-foreground/90 leading-relaxed list-disc" dangerouslySetInnerHTML={{ __html: formatInline(line.trim().slice(2)) }} />;
-      // Numbered
       const numMatch = line.trim().match(/^(\d+)\.\s(.*)$/);
       if (numMatch) return <li key={i} className="ml-5 text-sm text-foreground/90 leading-relaxed list-decimal" dangerouslySetInnerHTML={{ __html: formatInline(numMatch[2]) }} />;
-      // Empty
       if (!line.trim()) return <div key={i} className="h-2" />;
-      // Paragraph
       return <p key={i} className="text-sm text-foreground/90 leading-relaxed" dangerouslySetInnerHTML={{ __html: formatInline(line) }} />;
     });
   };
@@ -408,7 +424,6 @@ const StudyAidePage: React.FC = () => {
                                 {m.description}
                               </p>
                             </button>
-                            {/* Quick Points count selector */}
                             {m.id === 'quickpoints' && mode === 'quickpoints' && (
                               <motion.div
                                 initial={{ opacity: 0, height: 0 }}
@@ -438,6 +453,27 @@ const StudyAidePage: React.FC = () => {
                         );
                       })}
                     </div>
+
+                    {/* Depth Control */}
+                    <div className="mt-5 pt-4 border-t border-primary-foreground/10">
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-primary-foreground/50 mb-2 flex items-center gap-1.5">
+                        <GraduationCap size={12} /> Depth Level
+                      </p>
+                      <div className="flex gap-1.5">
+                        {(['beginner', 'intermediate', 'advanced'] as DepthLevel[]).map(d => (
+                          <button
+                            key={d}
+                            onClick={() => setDepth(d)}
+                            className={`flex-1 px-2 py-2 text-[9px] font-bold uppercase tracking-widest rounded-md transition-all ${
+                              depth === d ? 'bg-accent text-accent-foreground' : 'bg-primary-foreground/10 text-primary-foreground/50 hover:bg-primary-foreground/20'
+                            }`}
+                          >
+                            {DEPTH_LABELS[d]}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-[8px] text-primary-foreground/30 mt-1.5">{DEPTH_DESCRIPTIONS[depth]}</p>
+                    </div>
                     </div>
 
                     <button
@@ -465,7 +501,6 @@ const StudyAidePage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Live preview while streaming */}
                 {result && (
                   <div className="mt-4 bg-card border border-border p-6 rounded-lg">
                     <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-4 flex items-center gap-2">
@@ -509,6 +544,24 @@ const StudyAidePage: React.FC = () => {
                 {/* Result content */}
                 <div ref={resultRef} className="bg-card border border-border p-6 md:p-8 rounded-lg">
                   <div className="max-w-none">{renderMarkdown(result)}</div>
+                </div>
+
+                {/* Cross-tool Pipeline */}
+                <div className="mt-6 bg-muted/50 border border-border rounded-lg p-4">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-2">
+                    <Sparkles size={12} className="text-accent" /> Send to Another Tool
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button onClick={sendToFlashcards} className="flex items-center gap-2 px-4 py-2.5 border border-border text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:border-accent transition-all rounded-lg">
+                      <CreditCard size={13} /> Flashcards
+                    </button>
+                    <button onClick={sendToQuiz} className="flex items-center gap-2 px-4 py-2.5 border border-border text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:border-accent transition-all rounded-lg">
+                      <BrainCircuit size={13} /> AI Quiz
+                    </button>
+                    <button onClick={sendToStudyBuddy} className="flex items-center gap-2 px-4 py-2.5 border border-border text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:border-accent transition-all rounded-lg">
+                      <BookOpen size={13} /> StudyBuddy
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             )}
