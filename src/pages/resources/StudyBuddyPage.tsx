@@ -366,13 +366,21 @@ const StudyBuddyPage = () => {
           });
         }
       }
+      // Update chat history for conversation memory
+      if (fullText) {
+        setChatHistory(prev => [
+          ...prev,
+          { role: 'user', content: topic.trim() + (material.trim() ? `\n${material.trim().substring(0, 500)}` : '') },
+          { role: 'assistant', content: fullText.substring(0, 5000) },
+        ]);
+      }
     } catch (err) {
       console.error(err);
       toast.error(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
     }
-  }, [activeMode, topic, material, selectedFile, STUDY_BUDDY_URL]);
+  }, [activeMode, topic, material, selectedFile, STUDY_BUDDY_URL, depth, chatHistory]);
 
   const handleGenerateImage = useCallback(async () => {
     if (!topic.trim() && !material.trim() && !selectedFile) {
@@ -438,7 +446,20 @@ const StudyBuddyPage = () => {
     setMaterial('');
     setGeneratedImage(null);
     setSelectedFile(null);
+    setChatHistory([]);
     localStorage.removeItem('studybuddy_state');
+  };
+
+  // Cross-tool pipeline
+  const sendToFlashcards = () => {
+    localStorage.setItem('flashcard_state', JSON.stringify({ topic: topic.trim().substring(0, 200), material: response, cards: [] }));
+    navigate('/resources/flashcards');
+    toast.success('Material sent to Flashcard Generator');
+  };
+  const sendToQuiz = () => {
+    localStorage.setItem('aiquiz_state', JSON.stringify({ inputText: response, rigidity: 'Standard', questionCount: 25 }));
+    navigate('/resources/ai-quiz');
+    toast.success('Material sent to AI Quiz');
   };
 
   return (
