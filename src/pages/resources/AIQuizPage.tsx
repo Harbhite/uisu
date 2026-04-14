@@ -775,12 +775,16 @@ const AIQuizPage = () => {
     try {
       let fileContent = '';
       let fileName = '';
+      let imageDataUrl = '';
 
       if (selectedFile) {
         fileName = selectedFile.name;
-        // Read file content client-side using pdfjs-dist for PDFs
-        const { text } = await readFileContent(selectedFile);
-        fileContent = text;
+        const { text, isImage } = await readFileContent(selectedFile);
+        if (isImage) {
+          imageDataUrl = text; // base64 data URL for vision
+        } else {
+          fileContent = text;
+        }
       }
 
       const { data, error } = await supabase.functions.invoke('ai-quiz', {
@@ -791,6 +795,7 @@ const AIQuizPage = () => {
           fileContent: fileContent || undefined,
           count: questionCount,
           depth,
+          ...(imageDataUrl ? { imageData: imageDataUrl } : {}),
         },
       });
 
@@ -807,11 +812,20 @@ const AIQuizPage = () => {
         throw new Error('No questions generated. Try providing more detailed material.');
       }
 
-      setQuestions(data.questions.slice(0, questionCount));
+      const quizQuestions = data.questions.slice(0, questionCount);
+      setQuestions(quizQuestions);
       setUserAnswers([]);
       setCurrentIdx(0);
       setStep('quiz');
       startTimer();
+
+      // Cache for offline access
+      cacheOutput({
+        tool: 'quiz',
+        topic: inputText.trim().substring(0, 200) || fileName || 'Untitled Quiz',
+        result: quizQuestions,
+        depth,
+      });
     } catch (error: any) {
       console.error(error);
       const message = error instanceof Error ? error.message : 'Quiz generation failed. Please try again.';
