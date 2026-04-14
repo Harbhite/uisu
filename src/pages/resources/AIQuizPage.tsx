@@ -26,6 +26,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { readFileContent, DepthLevel } from '@/lib/file-utils';
+import { cacheOutput } from '@/lib/ai-cache';
+import GenerationProgress from '@/components/resources/GenerationProgress';
 import { SEO } from '@/components/SEO';
 import AIToolsHeader from '@/components/resources/AIToolsHeader';
 
