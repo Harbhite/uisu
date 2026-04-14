@@ -25,7 +25,7 @@ import jsPDF from 'jspdf';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { readFileContent, DepthLevel, DEPTH_LABELS, DEPTH_DESCRIPTIONS } from '@/lib/file-utils';
+import { readFileContent, DepthLevel } from '@/lib/file-utils';
 import { SEO } from '@/components/SEO';
 import AIToolsHeader from '@/components/resources/AIToolsHeader';
 

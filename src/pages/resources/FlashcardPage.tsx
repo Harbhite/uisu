@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { saveAs } from 'file-saver';
 import { Document, Packer, Paragraph, HeadingLevel, TextRun } from 'docx';
-import { readFileContent, DepthLevel, DEPTH_LABELS, DEPTH_DESCRIPTIONS } from '@/lib/file-utils';
+import { readFileContent, DepthLevel } from '@/lib/file-utils';
 
 interface Flashcard {
   front: string;
