@@ -18,6 +18,7 @@ import AsciiDiagramViewer from '@/components/resources/AsciiDiagramViewer';
 import MermaidDiagram from '@/components/resources/MermaidDiagram';
 import { StudySessionHistory } from '@/components/StudySessionHistory';
 import { toast } from 'sonner';
+import { readFileContent, DepthLevel } from '@/lib/file-utils';
 
 type Mode = 'explainer' | 'planner' | 'synthesizer' | 'debater';
 
