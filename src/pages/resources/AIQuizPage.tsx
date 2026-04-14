@@ -25,6 +25,7 @@ import jsPDF from 'jspdf';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { readFileContent, DepthLevel, DEPTH_LABELS, DEPTH_DESCRIPTIONS } from '@/lib/file-utils';
 import { SEO } from '@/components/SEO';
 import AIToolsHeader from '@/components/resources/AIToolsHeader';
 
@@ -43,18 +44,7 @@ const formatTime = (seconds: number) => {
   return `${m}:${s.toString().padStart(2, '0')}`;
 };
 
-const readFileAsText = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    if (file.type.startsWith('image/')) {
-      reader.readAsDataURL(file);
-    } else {
-      reader.readAsText(file);
-    }
-  });
-};
+// readFileAsText replaced by readFileContent from file-utils
 
 interface UploadViewProps {
   inputText: string;

@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { saveAs } from 'file-saver';
 import { Document, Packer, Paragraph, HeadingLevel, TextRun } from 'docx';
+import { readFileContent, DepthLevel, DEPTH_LABELS, DEPTH_DESCRIPTIONS } from '@/lib/file-utils';
 
 interface Flashcard {
   front: string;
@@ -55,15 +56,7 @@ const sm2 = (data: SRData, quality: number): SRData => {
   };
 };
 
-const readFileAsText = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    if (file.type.startsWith('image/')) reader.readAsDataURL(file);
-    else reader.readAsText(file);
-  });
-};
+// readFileAsText replaced by readFileContent from file-utils
 
 const difficultyColors: Record<string, string> = {
   Easy: 'bg-emerald-100 text-emerald-800',
