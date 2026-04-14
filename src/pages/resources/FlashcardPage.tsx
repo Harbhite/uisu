@@ -222,7 +222,10 @@ const FlashcardPage = () => {
     setIsLoading(true);
     try {
       let fileContent = '';
-      if (selectedFile) fileContent = await readFileAsText(selectedFile);
+      if (selectedFile) {
+        const { text } = await readFileContent(selectedFile);
+        fileContent = text;
+      }
 
       const { data, error } = await supabase.functions.invoke('flashcard-gen', {
         body: {

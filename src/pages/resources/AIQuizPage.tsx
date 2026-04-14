@@ -745,7 +745,7 @@ const AIQuizPage = () => {
       if (selectedFile) {
         fileName = selectedFile.name;
         // Read file content client-side instead of uploading to storage
-        fileContent = await readFileAsText(selectedFile);
+        const { text } = await readFileContent(selectedFile);
       }
 
       const { data, error } = await supabase.functions.invoke('ai-quiz', {
