@@ -213,6 +213,10 @@ const FlashcardPage = () => {
   };
 
   const [cardCount, setCardCount] = useState(15);
+  const [depth, setDepth] = useState<DepthLevel>(() => {
+    try { return (localStorage.getItem('flashcard_depth') as DepthLevel) || 'intermediate'; } catch { return 'intermediate'; }
+  });
+  useEffect(() => { localStorage.setItem('flashcard_depth', depth); }, [depth]);
 
   const handleGenerate = useCallback(async () => {
     if (!topic.trim() && !material.trim() && !selectedFile) {
@@ -232,6 +236,7 @@ const FlashcardPage = () => {
           topic: topic.trim(),
           material: material.trim() + (fileContent ? `\n\n--- UPLOADED FILE (${selectedFile?.name}) ---\n${fileContent}` : ''),
           count: cardCount,
+          depth,
         },
       });
 

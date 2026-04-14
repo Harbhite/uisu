@@ -709,12 +709,16 @@ const AIQuizPage = () => {
   const [timeElapsed, setTimeElapsed] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<number | null>(null);
+  const [depth, setDepth] = useState<DepthLevel>(() => {
+    try { return (localStorage.getItem('aiquiz_depth') as DepthLevel) || 'intermediate'; } catch { return 'intermediate'; }
+  });
 
   // Persist state to localStorage
   useEffect(() => {
     const state = { inputText, rigidity, questionCount, step: step === 'generating' ? 'upload' : step };
     localStorage.setItem('aiquiz_state', JSON.stringify(state));
   }, [inputText, rigidity, questionCount, step]);
+  useEffect(() => { localStorage.setItem('aiquiz_depth', depth); }, [depth]);
 
   useEffect(() => {
     return () => stopTimer();
@@ -756,6 +760,7 @@ const AIQuizPage = () => {
           fileName: fileName || undefined,
           fileContent: fileContent || undefined,
           count: questionCount,
+          depth,
         },
       });
 
