@@ -642,7 +642,7 @@ const ResultView: React.FC<ResultViewProps> = ({
             >
               <RefreshCcw size={14} /> Review {incorrectCount} Mistake{incorrectCount > 1 ? 's' : ''}
             </button>
-          )
+          )}
 
           {/* Export Buttons */}
           <div className="space-y-2">
