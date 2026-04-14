@@ -888,6 +888,23 @@ const StudyBuddyPage = () => {
                     </div>
                   </div>
 
+                  {/* Cross-tool Pipeline */}
+                  {response && !isLoading && (
+                    <div className="px-6 md:px-10 py-4 border-t border-border bg-muted/10">
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-2">
+                        <Sparkles size={10} className="text-accent" /> Send to Another Tool
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <button onClick={sendToFlashcards} className="flex items-center gap-1.5 px-3 py-2 border border-border text-[9px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:border-accent transition-all rounded-md">
+                          Flashcards
+                        </button>
+                        <button onClick={sendToQuiz} className="flex items-center gap-1.5 px-3 py-2 border border-border text-[9px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:border-accent transition-all rounded-md">
+                          AI Quiz
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Footer Stats */}
                   <div className="px-6 md:px-10 py-3 border-t border-border bg-muted/20 flex items-center justify-between">
                     <div className="flex items-center gap-4">
