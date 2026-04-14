@@ -59,6 +59,8 @@ interface UploadViewProps {
   setQuestionCount: (n: number) => void;
   generateQuiz: () => void;
   navigate: (path: string) => void;
+  depth: DepthLevel;
+  setDepth: (d: DepthLevel) => void;
 }
 
 const UploadView: React.FC<UploadViewProps> = ({
@@ -74,6 +76,8 @@ const UploadView: React.FC<UploadViewProps> = ({
   setQuestionCount,
   generateQuiz,
   navigate,
+  depth,
+  setDepth,
 }) => (
   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-5xl mx-auto">
     <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*,.pdf,.docx,.doc,.txt,.xlsx,.xls,.pptx,.ppt" />
