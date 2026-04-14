@@ -77,7 +77,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { topic, material, count } = await req.json();
+    const { topic, material, count, depth } = await req.json();
     const cardCount = Math.min(Math.max(count || 20, 5), 100);
 
     const userContent = topic
@@ -92,6 +92,14 @@ serve(async (req) => {
 
     const { content: boundedUserContent, truncated } = truncateContent(userContent);
 
+    const depthInstruction: Record<string, string> = {
+      beginner: "\nTARGET AUDIENCE: Beginner-level student. Use simple language. Keep questions and answers straightforward with clear explanations.",
+      intermediate: "\nTARGET AUDIENCE: Intermediate-level student. Use standard academic language. Balance depth with clarity.",
+      advanced: "\nTARGET AUDIENCE: Advanced student or researcher. Use precise technical language. Include nuanced distinctions and edge cases.",
+    };
+
+    const depthLine = depth && depthInstruction[depth] ? depthInstruction[depth] : "";
+
     const systemPrompt = `You are an expert flashcard generator for university students across ALL fields of knowledge — Law, Medicine, Engineering, Arts, Sciences, Social Sciences, etc.
 
 Create exactly ${cardCount} high-quality flashcards from the provided topic/material.
@@ -102,7 +110,7 @@ Rules:
 - Assign difficulty: Easy, Medium, or Hard
 - Cover the most exam-worthy and important content
 - Be concise but thorough on the back side
-- Use precise academic language appropriate to the field`;
+- Use precise academic language appropriate to the field${depthLine}`;
 
     const requestBody = {
       model: "google/gemini-3-flash-preview",

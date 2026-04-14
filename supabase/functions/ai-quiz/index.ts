@@ -77,7 +77,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { material, rigidity, fileContent, fileName, count } = await req.json();
+    const { material, rigidity, fileContent, fileName, count, depth } = await req.json();
     const questionCount = Math.min(Math.max(count || 25, 5), 200);
 
     let userContent = "";
@@ -98,10 +98,18 @@ serve(async (req) => {
       Rigid: "Focus on advanced synthesis, edge cases, historical context, and highly complex logical deductions. Questions should challenge even top students.",
     };
 
+    const depthInstruction: Record<string, string> = {
+      beginner: "TARGET AUDIENCE: Beginner-level student. Use simple, accessible language. Questions should be straightforward with clear answer choices.",
+      intermediate: "TARGET AUDIENCE: Intermediate-level student. Use standard academic language. Balance difficulty with clarity.",
+      advanced: "TARGET AUDIENCE: Advanced student or researcher. Use precise technical language. Include edge cases and nuanced distinctions.",
+    };
+
+    const depthLine = depth && depthInstruction[depth] ? `\n${depthInstruction[depth]}` : "";
+
     const systemPrompt = `You are an elite professor at a prestigious university. Based on the provided study materials, generate an official examination batch of exactly ${questionCount} multiple-choice questions.
 
 LEVEL OF RIGIDITY: ${rigidity || "Strict"}
-INSTRUCTION: ${rigidityPrompt[rigidity || "Strict"]}
+INSTRUCTION: ${rigidityPrompt[rigidity || "Strict"]}${depthLine}
 
 You MUST return a valid JSON array of exactly ${questionCount} objects. Each object MUST have:
 - "question": string (the question text)
