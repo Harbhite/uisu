@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { saveAs } from 'file-saver';
 import { Document, Packer, Paragraph, HeadingLevel, TextRun } from 'docx';
 import { readFileContent, DepthLevel } from '@/lib/file-utils';
+import { cacheOutput } from '@/lib/ai-cache';
 
 interface Flashcard {
   front: string;
@@ -258,6 +259,7 @@ const FlashcardPage = () => {
       setSrMode(false);
       setFilterDifficulty(null);
       toast.success(`${data.flashcards.length} flashcards generated!`);
+      cacheOutput({ tool: 'flashcards', topic: topic.trim() || 'Untitled', result: data.flashcards, depth });
     } catch (err) {
       console.error(err);
       toast.error('Failed to generate flashcards.');

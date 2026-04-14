@@ -26,6 +26,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { readFileContent, DepthLevel } from '@/lib/file-utils';
+import { cacheOutput } from '@/lib/ai-cache';
+import GenerationProgress from '@/components/resources/GenerationProgress';
 import { SEO } from '@/components/SEO';
 import AIToolsHeader from '@/components/resources/AIToolsHeader';
 
@@ -222,14 +224,14 @@ const UploadView: React.FC<UploadViewProps> = ({
   </motion.div>
 );
 
-const GeneratingView: React.FC = () => (
+const GeneratingView: React.FC<{ partialContent?: string }> = ({ partialContent = '' }) => (
   <div className="h-[60vh] flex flex-col items-center justify-center text-center px-6">
     <motion.div animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: 'linear' }} className="mb-8 text-accent">
       <RefreshCcw size={64} strokeWidth={1} />
     </motion.div>
     <h2 className="font-serif text-3xl md:text-4xl text-primary mb-4">Generating Your Quiz</h2>
-    <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.3em]">Synthesizing questions from your material...</p>
-    <div className="w-48 h-1 bg-muted mt-10 overflow-hidden relative rounded-full">
+    <GenerationProgress isGenerating={true} partialContent={partialContent} label="AI is crafting questions" />
+    <div className="w-48 h-1 bg-muted mt-6 overflow-hidden relative rounded-full">
       <motion.div initial={{ x: '-100%' }} animate={{ x: '100%' }} transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }} className="absolute inset-0 w-1/2 bg-primary" />
     </div>
   </div>
@@ -583,6 +585,7 @@ interface ResultViewProps {
   userAnswers: number[];
   navigate: (path: string) => void;
   topicName: string;
+  onReviewMistakes: () => void;
 }
 
 const ResultView: React.FC<ResultViewProps> = ({
@@ -593,10 +596,12 @@ const ResultView: React.FC<ResultViewProps> = ({
   userAnswers,
   navigate,
   topicName,
+  onReviewMistakes,
 }) => {
   const safeName = (topicName.split('\n')[0] || 'quiz').replace(/[^a-zA-Z0-9\s-]/g, '').trim().replace(/\s+/g, '-').substring(0, 60) || 'quiz';
   const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
   const rank = percentage >= 80 ? 'Distinction' : percentage >= 60 ? 'Merit' : percentage >= 40 ? 'Pass' : 'Needs Review';
+  const incorrectCount = questions.filter((q, i) => userAnswers[i] !== q.correctIndex).length;
 
   return (
     <div className="max-w-5xl mx-auto pb-20">
@@ -629,6 +634,15 @@ const ResultView: React.FC<ResultViewProps> = ({
           >
             <RefreshCcw size={14} /> New Quiz
           </button>
+
+          {incorrectCount > 0 && (
+            <button
+              onClick={onReviewMistakes}
+              className="w-full py-4 border-2 border-accent text-accent font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-accent hover:text-accent-foreground transition-all rounded-lg"
+            >
+              <RefreshCcw size={14} /> Review {incorrectCount} Mistake{incorrectCount > 1 ? 's' : ''}
+            </button>
+          )}
 
           {/* Export Buttons */}
           <div className="space-y-2">
@@ -773,12 +787,16 @@ const AIQuizPage = () => {
     try {
       let fileContent = '';
       let fileName = '';
+      let imageDataUrl = '';
 
       if (selectedFile) {
         fileName = selectedFile.name;
-        // Read file content client-side using pdfjs-dist for PDFs
-        const { text } = await readFileContent(selectedFile);
-        fileContent = text;
+        const { text, isImage } = await readFileContent(selectedFile);
+        if (isImage) {
+          imageDataUrl = text; // base64 data URL for vision
+        } else {
+          fileContent = text;
+        }
       }
 
       const { data, error } = await supabase.functions.invoke('ai-quiz', {
@@ -789,6 +807,7 @@ const AIQuizPage = () => {
           fileContent: fileContent || undefined,
           count: questionCount,
           depth,
+          ...(imageDataUrl ? { imageData: imageDataUrl } : {}),
         },
       });
 
@@ -805,11 +824,20 @@ const AIQuizPage = () => {
         throw new Error('No questions generated. Try providing more detailed material.');
       }
 
-      setQuestions(data.questions.slice(0, questionCount));
+      const quizQuestions = data.questions.slice(0, questionCount);
+      setQuestions(quizQuestions);
       setUserAnswers([]);
       setCurrentIdx(0);
       setStep('quiz');
       startTimer();
+
+      // Cache for offline access
+      cacheOutput({
+        tool: 'quiz',
+        topic: inputText.trim().substring(0, 200) || fileName || 'Untitled Quiz',
+        result: quizQuestions,
+        depth,
+      });
     } catch (error: any) {
       console.error(error);
       const message = error instanceof Error ? error.message : 'Quiz generation failed. Please try again.';
@@ -932,6 +960,17 @@ const AIQuizPage = () => {
               userAnswers={userAnswers}
               navigate={navigate}
               topicName={inputText}
+              onReviewMistakes={() => {
+                // Filter to only incorrectly answered questions
+                const incorrectIndices = questions.map((q, i) => userAnswers[i] !== q.correctIndex ? i : -1).filter(i => i !== -1);
+                const mistakeQuestions = incorrectIndices.map(i => questions[i]);
+                setQuestions(mistakeQuestions);
+                setUserAnswers([]);
+                setCurrentIdx(0);
+                setStep('quiz');
+                startTimer();
+                toast.success(`Reviewing ${mistakeQuestions.length} missed question${mistakeQuestions.length > 1 ? 's' : ''}`);
+              }}
             />
           )}
         </AnimatePresence>

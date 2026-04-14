@@ -55,7 +55,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { mode, topic, material, generateImage, depth, chatHistory } = await req.json();
+    const { mode, topic, material, generateImage, depth, chatHistory, imageData } = await req.json();
 
     const depthSuffix = depthInstructions[depth] || "";
 
@@ -69,6 +69,7 @@ serve(async (req) => {
 - Clear section headers with markdown
 
 IMPORTANT: When illustrating processes, hierarchies, relationships, or flows, ALWAYS include a Mermaid diagram.
+IMPORTANT: If an image is provided, analyze it thoroughly — identify diagrams, handwriting, text, formulas, charts, or any visual elements and incorporate them into your explanation.
 
 You handle ALL fields: Law, Medicine, Engineering, Arts, Sciences, Social Sciences, etc.
 Be thorough, creative, and intellectually rigorous.${depthSuffix}`,
@@ -78,7 +79,8 @@ Be thorough, creative, and intellectually rigorous.${depthSuffix}`,
 - Key topics to cover each day
 - Review sessions and practice problems
 - Tips for retention and active recall
-- A Mermaid timeline or gantt chart showing the study plan visually${depthSuffix}`,
+- A Mermaid timeline or gantt chart showing the study plan visually
+If an image is provided, analyze it to understand the scope of study material.${depthSuffix}`,
 
       synthesizer: `You are StudyBuddy Synthesizer — an expert summarizer. Create a hierarchical brief of the provided material:
 - **Executive Summary** (2-3 sentences)
@@ -86,7 +88,7 @@ Be thorough, creative, and intellectually rigorous.${depthSuffix}`,
 - **Critical Details** (numbered, prioritized)
 - **Connections & Relationships** (include a Mermaid mindmap or graph)
 - **Quick-Reference Glossary** (key terms defined)
-
+If an image is provided, extract and incorporate all visible information.
 Be concise but comprehensive.${depthSuffix}`,
 
       debater: `You are StudyBuddy Debater — a Socratic debate partner. Given a topic, present a structured academic debate:
@@ -95,7 +97,6 @@ Be concise but comprehensive.${depthSuffix}`,
 - **Key Rebuttals** — how each side responds to the other
 - **Nuances & Gray Areas** — complexities that resist simple answers
 - **Your Verdict** — a balanced, scholarly conclusion weighing both sides
-
 Be intellectually rigorous. Use real-world examples, case law, scientific evidence, or historical precedents.${depthSuffix}`
     };
 
@@ -126,8 +127,8 @@ Be intellectually rigorous. Use real-world examples, case law, scientific eviden
         });
       }
 
-      const imageData = await imageResponse.json();
-      return new Response(JSON.stringify(imageData), {
+      const imageDataResp = await imageResponse.json();
+      return new Response(JSON.stringify(imageDataResp), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -139,20 +140,31 @@ Be intellectually rigorous. Use real-world examples, case law, scientific eviden
     const { content: userContent } = truncateContent(rawUserContent);
 
     // Build messages with chat history for conversation memory
-    const messages: { role: string; content: string }[] = [
+    const messages: Array<{ role: string; content: string | Array<{type: string; text?: string; image_url?: {url: string}}> }> = [
       { role: "system", content: systemPrompt },
     ];
 
     // Include previous conversation history if provided
     if (chatHistory && Array.isArray(chatHistory)) {
-      for (const msg of chatHistory.slice(-10)) { // Keep last 10 exchanges for context
+      for (const msg of chatHistory.slice(-10)) {
         if (msg.role && msg.content) {
-          messages.push({ role: msg.role, content: msg.content.substring(0, 50_000) }); // Cap each message
+          messages.push({ role: msg.role, content: msg.content.substring(0, 50_000) });
         }
       }
     }
 
-    messages.push({ role: "user", content: userContent });
+    // Build user message with optional vision input
+    if (imageData && typeof imageData === 'string' && imageData.startsWith('data:image/')) {
+      messages.push({
+        role: "user",
+        content: [
+          { type: "text", text: userContent },
+          { type: "image_url", image_url: { url: imageData } },
+        ],
+      });
+    } else {
+      messages.push({ role: "user", content: userContent });
+    }
 
     const requestBody = {
       model: "google/gemini-3-flash-preview",
