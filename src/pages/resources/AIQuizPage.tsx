@@ -960,6 +960,17 @@ const AIQuizPage = () => {
               userAnswers={userAnswers}
               navigate={navigate}
               topicName={inputText}
+              onReviewMistakes={() => {
+                // Filter to only incorrectly answered questions
+                const incorrectIndices = questions.map((q, i) => userAnswers[i] !== q.correctIndex ? i : -1).filter(i => i !== -1);
+                const mistakeQuestions = incorrectIndices.map(i => questions[i]);
+                setQuestions(mistakeQuestions);
+                setUserAnswers([]);
+                setCurrentIdx(0);
+                setStep('quiz');
+                startTimer();
+                toast.success(`Reviewing ${mistakeQuestions.length} missed question${mistakeQuestions.length > 1 ? 's' : ''}`);
+              }}
             />
           )}
         </AnimatePresence>
