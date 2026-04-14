@@ -19,6 +19,8 @@ import MermaidDiagram from '@/components/resources/MermaidDiagram';
 import { StudySessionHistory } from '@/components/StudySessionHistory';
 import { toast } from 'sonner';
 import { readFileContent, DepthLevel } from '@/lib/file-utils';
+import { cacheOutput, getCachedOutputs, CachedOutput } from '@/lib/ai-cache';
+import GenerationProgress from '@/components/resources/GenerationProgress';
 
 type Mode = 'explainer' | 'planner' | 'synthesizer' | 'debater';
 
@@ -255,9 +257,14 @@ const StudyBuddyPage = () => {
 
     try {
       let fileContent = '';
+      let imageDataUrl = '';
       if (selectedFile) {
-        const { text } = await readFileContent(selectedFile);
-        fileContent = text;
+        const { text, isImage } = await readFileContent(selectedFile);
+        if (isImage) {
+          imageDataUrl = text; // base64 data URL for vision
+        } else {
+          fileContent = text;
+        }
       }
 
       const bodyPayload: Record<string, any> = {
@@ -266,6 +273,7 @@ const StudyBuddyPage = () => {
         material: material.trim() + (fileContent ? `\n\n--- UPLOADED FILE (${selectedFile?.name}) ---\n${fileContent}` : ''),
         depth,
         chatHistory,
+        ...(imageDataUrl ? { imageData: imageDataUrl } : {}),
       };
 
       const resp = await fetch(STUDY_BUDDY_URL, {
@@ -374,6 +382,14 @@ const StudyBuddyPage = () => {
           { role: 'user', content: topic.trim() + (material.trim() ? `\n${material.trim().substring(0, 500)}` : '') },
           { role: 'assistant', content: fullText.substring(0, 5000) },
         ]);
+        // Cache for offline access
+        cacheOutput({
+          tool: 'study-buddy',
+          topic: topic.trim() || 'Untitled',
+          result: fullText,
+          mode: activeMode,
+          depth,
+        });
       }
     } catch (err) {
       console.error(err);
@@ -615,15 +631,12 @@ const StudyBuddyPage = () => {
                       {currentMode.label} Output
                     </span>
                   </div>
-                  {isLoading && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="flex items-center gap-2 px-3 py-1 bg-accent/10 border border-accent/20 rounded-full"
-                    >
-                      <Loader2 size={10} className="animate-spin text-accent" />
-                      <span className="text-[9px] font-bold uppercase tracking-widest text-accent">Streaming</span>
-                    </motion.div>
+              {isLoading && (
+                    <GenerationProgress
+                      isGenerating={isLoading}
+                      partialContent={response}
+                      label={`${currentMode.label} generating`}
+                    />
                   )}
                 </div>
               <div className="flex gap-1.5">
