@@ -259,6 +259,7 @@ const FlashcardPage = () => {
       setSrMode(false);
       setFilterDifficulty(null);
       toast.success(`${data.flashcards.length} flashcards generated!`);
+      cacheOutput({ tool: 'flashcards', topic: topic.trim() || 'Untitled', result: data.flashcards, depth });
     } catch (err) {
       console.error(err);
       toast.error('Failed to generate flashcards.');
