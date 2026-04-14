@@ -186,6 +186,30 @@ const UploadView: React.FC<UploadViewProps> = ({
           </div>
         </div>
 
+        <div className="bg-primary text-primary-foreground p-5 md:p-6 border-l-4 border-accent rounded-lg">
+          <label className="block text-[9px] font-bold uppercase tracking-widest text-primary-foreground/40 mb-2">Depth Level</label>
+          <div className="flex flex-wrap gap-1.5">
+            {(['beginner', 'intermediate', 'advanced'] as DepthLevel[]).map((level) => (
+              <button
+                key={level}
+                onClick={() => setDepth(level)}
+                className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all ${
+                  depth === level
+                    ? 'bg-accent text-accent-foreground'
+                    : 'border border-primary-foreground/10 text-primary-foreground/50 hover:bg-primary-foreground/5'
+                }`}
+              >
+                {level}
+              </button>
+            ))}
+          </div>
+          <p className="text-[9px] text-primary-foreground/30 mt-2">
+            {depth === 'beginner' && 'Simple language, straightforward questions.'}
+            {depth === 'intermediate' && 'Standard academic depth.'}
+            {depth === 'advanced' && 'Expert-level with edge cases.'}
+          </p>
+        </div>
+
         <button
           onClick={generateQuiz}
           disabled={!inputText.trim() && !selectedFile}
@@ -877,6 +901,8 @@ const AIQuizPage = () => {
               setQuestionCount={setQuestionCount}
               generateQuiz={generateQuiz}
               navigate={navigate}
+              depth={depth}
+              setDepth={setDepth}
             />
           )}
           {step === 'generating' && <GeneratingView key="generating" />}
