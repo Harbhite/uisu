@@ -585,6 +585,7 @@ interface ResultViewProps {
   userAnswers: number[];
   navigate: (path: string) => void;
   topicName: string;
+  onReviewMistakes: () => void;
 }
 
 const ResultView: React.FC<ResultViewProps> = ({
@@ -595,10 +596,12 @@ const ResultView: React.FC<ResultViewProps> = ({
   userAnswers,
   navigate,
   topicName,
+  onReviewMistakes,
 }) => {
   const safeName = (topicName.split('\n')[0] || 'quiz').replace(/[^a-zA-Z0-9\s-]/g, '').trim().replace(/\s+/g, '-').substring(0, 60) || 'quiz';
   const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
   const rank = percentage >= 80 ? 'Distinction' : percentage >= 60 ? 'Merit' : percentage >= 40 ? 'Pass' : 'Needs Review';
+  const incorrectCount = questions.filter((q, i) => userAnswers[i] !== q.correctIndex).length;
 
   return (
     <div className="max-w-5xl mx-auto pb-20">
@@ -631,6 +634,15 @@ const ResultView: React.FC<ResultViewProps> = ({
           >
             <RefreshCcw size={14} /> New Quiz
           </button>
+
+          {incorrectCount > 0 && (
+            <button
+              onClick={onReviewMistakes}
+              className="w-full py-4 border-2 border-accent text-accent font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-accent hover:text-accent-foreground transition-all rounded-lg"
+            >
+              <RefreshCcw size={14} /> Review {incorrectCount} Mistake{incorrectCount > 1 ? 's' : ''}
+            </button>
+          )
 
           {/* Export Buttons */}
           <div className="space-y-2">
