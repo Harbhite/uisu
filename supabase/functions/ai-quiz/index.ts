@@ -77,14 +77,14 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { material, rigidity, fileContent, fileName, count, depth } = await req.json();
+    const { material, rigidity, fileContent, fileName, count, depth, imageData } = await req.json();
     const questionCount = Math.min(Math.max(count || 25, 5), 200);
 
     let userContent = "";
     if (material) userContent += `STUDY MATERIAL:\n${material}\n\n`;
     if (fileContent) userContent += `UPLOADED DOCUMENT CONTENT (${fileName || "document"}):\n${fileContent}`;
 
-    if (!userContent.trim()) {
+    if (!userContent.trim() && !imageData) {
       return new Response(JSON.stringify({ error: "No study material provided" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -105,11 +105,12 @@ serve(async (req) => {
     };
 
     const depthLine = depth && depthInstruction[depth] ? `\n${depthInstruction[depth]}` : "";
+    const imageNote = imageData ? "\nIMPORTANT: An image has been provided. Analyze all visible content (diagrams, text, formulas, charts) and generate questions based on it." : "";
 
     const systemPrompt = `You are an elite professor at a prestigious university. Based on the provided study materials, generate an official examination batch of exactly ${questionCount} multiple-choice questions.
 
 LEVEL OF RIGIDITY: ${rigidity || "Strict"}
-INSTRUCTION: ${rigidityPrompt[rigidity || "Strict"]}${depthLine}
+INSTRUCTION: ${rigidityPrompt[rigidity || "Strict"]}${depthLine}${imageNote}
 
 You MUST return a valid JSON array of exactly ${questionCount} objects. Each object MUST have:
 - "question": string (the question text)
@@ -119,11 +120,23 @@ You MUST return a valid JSON array of exactly ${questionCount} objects. Each obj
 
 Ensure intellectual depth, variety across the material, and strict adherence to the provided content. Do NOT include any text outside the JSON array.`;
 
+    // Build user message with optional vision input
+    let userMessage: string | Array<{type: string; text?: string; image_url?: {url: string}}>;
+
+    if (imageData && typeof imageData === 'string' && imageData.startsWith('data:image/')) {
+      userMessage = [
+        { type: "text", text: boundedUserContent || "Generate quiz questions based on the attached image." },
+        { type: "image_url", image_url: { url: imageData } },
+      ];
+    } else {
+      userMessage = boundedUserContent;
+    }
+
     const requestBody = {
       model: "google/gemini-3-flash-preview",
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: boundedUserContent },
+        { role: "user", content: userMessage },
       ],
       tools: [
         {

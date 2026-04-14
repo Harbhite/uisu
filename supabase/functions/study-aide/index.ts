@@ -46,7 +46,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { mode, topic, material: rawMaterial, pointCount, depth } = await req.json();
+    const { mode, topic, material: rawMaterial, pointCount, depth, imageData } = await req.json();
 
     const MAX_CHARS = 800_000;
     const material = rawMaterial && rawMaterial.length > MAX_CHARS
@@ -54,6 +54,8 @@ serve(async (req) => {
       : rawMaterial;
 
     const depthSuffix = depthInstructions[depth] || depthInstructions.intermediate;
+
+    const imageNote = "\nIMPORTANT: If an image is provided (diagram, handwritten notes, textbook page), analyze it thoroughly and incorporate all visible information into your response.";
 
     const modePrompts: Record<string, string> = {
       keypoints: `You are an elite academic assistant at the University of Ibadan. Extract and present the KEY POINTS from the provided material/topic. Format your response as:
@@ -68,7 +70,7 @@ For each key point:
 
 ---
 
-Extract 8-15 key points depending on material complexity. Prioritize the most exam-worthy and conceptually important points. Use markdown formatting extensively. Be thorough but concise.${depthSuffix}`,
+Extract 8-15 key points depending on material complexity. Prioritize the most exam-worthy and conceptually important points. Use markdown formatting extensively. Be thorough but concise.${imageNote}${depthSuffix}`,
 
       summary: `You are an elite academic assistant at the University of Ibadan. Create a COMPREHENSIVE SUMMARY BRIEF of the provided material/topic. Structure your response as:
 
@@ -92,7 +94,7 @@ Extract 8-15 key points depending on material complexity. Prioritize the most ex
 ### Exam Focus Areas
 [What's most likely to be tested and why]
 
-Use markdown formatting extensively. Be comprehensive yet readable.${depthSuffix}`,
+Use markdown formatting extensively. Be comprehensive yet readable.${imageNote}${depthSuffix}`,
 
       outline: `You are an elite academic assistant at the University of Ibadan. Create a STRUCTURED STUDY OUTLINE from the provided material/topic. Format as:
 
@@ -120,7 +122,7 @@ Use markdown formatting extensively. Be comprehensive yet readable.${depthSuffix
 2. [Self-test question]
 ...
 
-Create a thorough, hierarchical outline that serves as a complete study roadmap. Use markdown tables where appropriate.${depthSuffix}`,
+Create a thorough, hierarchical outline that serves as a complete study roadmap. Use markdown tables where appropriate.${imageNote}${depthSuffix}`,
 
       concepts: `You are an elite academic assistant at the University of Ibadan. Create a CONCEPT MAP & GLOSSARY from the provided material/topic. Structure as:
 
@@ -152,7 +154,7 @@ For each major concept:
 ### Memory Aids
 [Mnemonics, acronyms, or memory tricks for key terms]
 
-Be comprehensive. Cover all significant terms and their interconnections.${depthSuffix}`,
+Be comprehensive. Cover all significant terms and their interconnections.${imageNote}${depthSuffix}`,
     };
 
     // Dynamic quickpoints prompt with user-selected count
@@ -170,20 +172,32 @@ Format your response as a numbered list:
 2. **[Concise Title]:** [Brief 1-2 sentence explanation]
 ...continue to exactly ${count} points.
 
-Prioritize the most exam-worthy and conceptually important points. Cover breadth over depth. Do NOT include sub-points, examples, or elaborations — keep each point atomic and scannable. Use markdown bold for titles only.${depthSuffix}`;
+Prioritize the most exam-worthy and conceptually important points. Cover breadth over depth. Do NOT include sub-points, examples, or elaborations — keep each point atomic and scannable. Use markdown bold for titles only.${imageNote}${depthSuffix}`;
     }
 
     const systemPrompt = modePrompts[mode] || modePrompts.keypoints;
 
-    const userContent = topic
+    // Build user message - support multimodal vision input
+    const textContent = topic
       ? `Topic/Concept: ${topic}${material ? `\n\nAdditional Material:\n${material}` : ""}`
       : material || "No material provided";
+
+    let userMessage: string | Array<{type: string; text?: string; image_url?: {url: string}}>;
+
+    if (imageData && typeof imageData === 'string' && imageData.startsWith('data:image/')) {
+      userMessage = [
+        { type: "text", text: textContent },
+        { type: "image_url", image_url: { url: imageData } },
+      ];
+    } else {
+      userMessage = textContent;
+    }
 
     const requestBody = {
       model: "google/gemini-3-flash-preview",
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: userContent },
+        { role: "user", content: userMessage },
       ],
       stream: true,
     };
