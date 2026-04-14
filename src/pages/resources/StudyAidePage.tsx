@@ -14,6 +14,8 @@ import { toast } from 'sonner';
 import { SEO } from '@/components/SEO';
 import AIToolsHeader from '@/components/resources/AIToolsHeader';
 import { readFileContent, DepthLevel, DEPTH_LABELS, DEPTH_DESCRIPTIONS } from '@/lib/file-utils';
+import { cacheOutput } from '@/lib/ai-cache';
+import GenerationProgress from '@/components/resources/GenerationProgress';
 
 type AideMode = 'keypoints' | 'summary' | 'outline' | 'concepts' | 'quickpoints';
 
@@ -178,13 +180,15 @@ const StudyAidePage: React.FC = () => {
     setResult('');
 
     try {
-      let material = inputText;
+      let materialText = inputText;
+      let imageDataUrl = '';
       if (selectedFile) {
         const { text: fileContent, isImage } = await readFileContent(selectedFile);
         if (isImage) {
-          material = material ? `${material}\n\n--- Uploaded Image: ${selectedFile.name} ---\n[Image data attached]` : `[Image: ${selectedFile.name}]`;
+          imageDataUrl = fileContent; // base64 data URL for vision
+          materialText = materialText ? `${materialText}\n\n--- Uploaded Image: ${selectedFile.name} ---\n[Image data attached for analysis]` : `[Image: ${selectedFile.name}]`;
         } else {
-          material = material ? `${material}\n\n--- Uploaded File: ${selectedFile.name} ---\n${fileContent}` : fileContent;
+          materialText = materialText ? `${materialText}\n\n--- Uploaded File: ${selectedFile.name} ---\n${fileContent}` : fileContent;
         }
       }
 
@@ -197,9 +201,10 @@ const StudyAidePage: React.FC = () => {
         body: JSON.stringify({
           mode: mode === 'quickpoints' ? 'quickpoints' : mode,
           topic: inputText.trim().substring(0, 200),
-          material,
+          material: materialText,
           pointCount: mode === 'quickpoints' ? quickPointCount : undefined,
           depth,
+          ...(imageDataUrl ? { imageData: imageDataUrl } : {}),
         }),
       });
 
@@ -260,6 +265,14 @@ const StudyAidePage: React.FC = () => {
         setPhase('input');
         return;
       }
+      // Cache for offline access
+      cacheOutput({
+        tool: 'study-aide',
+        topic: inputText.trim().substring(0, 200) || 'Untitled',
+        result: fullText,
+        mode,
+        depth,
+      });
       setPhase('result');
     } catch (err: any) {
       console.error('Study Aide error:', err?.message || err);
@@ -490,15 +503,12 @@ const StudyAidePage: React.FC = () => {
 
             {phase === 'generating' && (
               <motion.div key="generating" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-5xl mx-auto">
-                <div className="h-[60vh] flex flex-col items-center justify-center text-center px-6">
+                <div className="h-[40vh] flex flex-col items-center justify-center text-center px-6">
                   <motion.div animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: 'linear' }} className="mb-8 text-accent">
                     <RefreshCcw size={64} strokeWidth={1} />
                   </motion.div>
                   <h2 className="font-serif text-3xl md:text-4xl text-primary mb-4">Generating {currentMode.label}</h2>
-                  <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.3em]">Analyzing your material...</p>
-                  <div className="w-48 h-1 bg-muted mt-10 overflow-hidden relative rounded-full">
-                    <motion.div initial={{ x: '-100%' }} animate={{ x: '100%' }} transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }} className="absolute inset-0 w-1/2 bg-primary" />
-                  </div>
+                  <GenerationProgress isGenerating={phase === 'generating'} partialContent={result} label={`Generating ${currentMode.label}`} />
                 </div>
 
                 {result && (
