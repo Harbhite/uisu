@@ -19,7 +19,7 @@ import MermaidDiagram from '@/components/resources/MermaidDiagram';
 import { StudySessionHistory } from '@/components/StudySessionHistory';
 import { toast } from 'sonner';
 import { readFileContent, DepthLevel } from '@/lib/file-utils';
-import { cacheOutput, getCachedOutputs, CachedOutput } from '@/lib/ai-cache';
+import { cacheOutput } from '@/lib/ai-cache';
 import GenerationProgress from '@/components/resources/GenerationProgress';
 
 type Mode = 'explainer' | 'planner' | 'synthesizer' | 'debater';
