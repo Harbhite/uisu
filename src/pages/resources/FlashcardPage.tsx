@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { saveAs } from 'file-saver';
 import { Document, Packer, Paragraph, HeadingLevel, TextRun } from 'docx';
 import { readFileContent, DepthLevel } from '@/lib/file-utils';
+import { cacheOutput } from '@/lib/ai-cache';
 
 interface Flashcard {
   front: string;
