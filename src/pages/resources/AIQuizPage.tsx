@@ -25,6 +25,7 @@ import jsPDF from 'jspdf';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { readFileContent, DepthLevel } from '@/lib/file-utils';
 import { SEO } from '@/components/SEO';
 import AIToolsHeader from '@/components/resources/AIToolsHeader';
 
@@ -43,18 +44,7 @@ const formatTime = (seconds: number) => {
   return `${m}:${s.toString().padStart(2, '0')}`;
 };
 
-const readFileAsText = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    if (file.type.startsWith('image/')) {
-      reader.readAsDataURL(file);
-    } else {
-      reader.readAsText(file);
-    }
-  });
-};
+// readFileAsText replaced by readFileContent from file-utils
 
 interface UploadViewProps {
   inputText: string;
@@ -69,6 +59,8 @@ interface UploadViewProps {
   setQuestionCount: (n: number) => void;
   generateQuiz: () => void;
   navigate: (path: string) => void;
+  depth: DepthLevel;
+  setDepth: (d: DepthLevel) => void;
 }
 
 const UploadView: React.FC<UploadViewProps> = ({
@@ -84,6 +76,8 @@ const UploadView: React.FC<UploadViewProps> = ({
   setQuestionCount,
   generateQuiz,
   navigate,
+  depth,
+  setDepth,
 }) => (
   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-5xl mx-auto">
     <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*,.pdf,.docx,.doc,.txt,.xlsx,.xls,.pptx,.ppt" />
@@ -190,6 +184,30 @@ const UploadView: React.FC<UploadViewProps> = ({
               }`}
             />
           </div>
+        </div>
+
+        <div className="bg-primary text-primary-foreground p-5 md:p-6 border-l-4 border-accent rounded-lg">
+          <label className="block text-[9px] font-bold uppercase tracking-widest text-primary-foreground/40 mb-2">Depth Level</label>
+          <div className="flex flex-wrap gap-1.5">
+            {(['beginner', 'intermediate', 'advanced'] as DepthLevel[]).map((level) => (
+              <button
+                key={level}
+                onClick={() => setDepth(level)}
+                className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all ${
+                  depth === level
+                    ? 'bg-accent text-accent-foreground'
+                    : 'border border-primary-foreground/10 text-primary-foreground/50 hover:bg-primary-foreground/5'
+                }`}
+              >
+                {level}
+              </button>
+            ))}
+          </div>
+          <p className="text-[9px] text-primary-foreground/30 mt-2">
+            {depth === 'beginner' && 'Simple language, straightforward questions.'}
+            {depth === 'intermediate' && 'Standard academic depth.'}
+            {depth === 'advanced' && 'Expert-level with edge cases.'}
+          </p>
         </div>
 
         <button
@@ -719,12 +737,16 @@ const AIQuizPage = () => {
   const [timeElapsed, setTimeElapsed] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<number | null>(null);
+  const [depth, setDepth] = useState<DepthLevel>(() => {
+    try { return (localStorage.getItem('aiquiz_depth') as DepthLevel) || 'intermediate'; } catch { return 'intermediate'; }
+  });
 
   // Persist state to localStorage
   useEffect(() => {
     const state = { inputText, rigidity, questionCount, step: step === 'generating' ? 'upload' : step };
     localStorage.setItem('aiquiz_state', JSON.stringify(state));
   }, [inputText, rigidity, questionCount, step]);
+  useEffect(() => { localStorage.setItem('aiquiz_depth', depth); }, [depth]);
 
   useEffect(() => {
     return () => stopTimer();
@@ -754,8 +776,9 @@ const AIQuizPage = () => {
 
       if (selectedFile) {
         fileName = selectedFile.name;
-        // Read file content client-side instead of uploading to storage
-        fileContent = await readFileAsText(selectedFile);
+        // Read file content client-side using pdfjs-dist for PDFs
+        const { text } = await readFileContent(selectedFile);
+        fileContent = text;
       }
 
       const { data, error } = await supabase.functions.invoke('ai-quiz', {
@@ -765,6 +788,7 @@ const AIQuizPage = () => {
           fileName: fileName || undefined,
           fileContent: fileContent || undefined,
           count: questionCount,
+          depth,
         },
       });
 
@@ -877,6 +901,8 @@ const AIQuizPage = () => {
               setQuestionCount={setQuestionCount}
               generateQuiz={generateQuiz}
               navigate={navigate}
+              depth={depth}
+              setDepth={setDepth}
             />
           )}
           {step === 'generating' && <GeneratingView key="generating" />}

@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { saveAs } from 'file-saver';
 import { Document, Packer, Paragraph, HeadingLevel, TextRun } from 'docx';
+import { readFileContent, DepthLevel } from '@/lib/file-utils';
 
 interface Flashcard {
   front: string;
@@ -55,15 +56,7 @@ const sm2 = (data: SRData, quality: number): SRData => {
   };
 };
 
-const readFileAsText = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    if (file.type.startsWith('image/')) reader.readAsDataURL(file);
-    else reader.readAsText(file);
-  });
-};
+// readFileAsText replaced by readFileContent from file-utils
 
 const difficultyColors: Record<string, string> = {
   Easy: 'bg-emerald-100 text-emerald-800',
@@ -220,6 +213,10 @@ const FlashcardPage = () => {
   };
 
   const [cardCount, setCardCount] = useState(15);
+  const [depth, setDepth] = useState<DepthLevel>(() => {
+    try { return (localStorage.getItem('flashcard_depth') as DepthLevel) || 'intermediate'; } catch { return 'intermediate'; }
+  });
+  useEffect(() => { localStorage.setItem('flashcard_depth', depth); }, [depth]);
 
   const handleGenerate = useCallback(async () => {
     if (!topic.trim() && !material.trim() && !selectedFile) {
@@ -229,13 +226,17 @@ const FlashcardPage = () => {
     setIsLoading(true);
     try {
       let fileContent = '';
-      if (selectedFile) fileContent = await readFileAsText(selectedFile);
+      if (selectedFile) {
+        const { text } = await readFileContent(selectedFile);
+        fileContent = text;
+      }
 
       const { data, error } = await supabase.functions.invoke('flashcard-gen', {
         body: {
           topic: topic.trim(),
           material: material.trim() + (fileContent ? `\n\n--- UPLOADED FILE (${selectedFile?.name}) ---\n${fileContent}` : ''),
           count: cardCount,
+          depth,
         },
       });
 
@@ -430,6 +431,28 @@ const FlashcardPage = () => {
                     />
                   </div>
                   <div className="text-[9px] font-bold uppercase tracking-widest text-primary-foreground/30 mt-4">Ready for input</div>
+
+                  <label className="block text-[9px] font-bold uppercase tracking-widest text-primary-foreground/40 mb-2 mt-5">Depth Level</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(['beginner', 'intermediate', 'advanced'] as DepthLevel[]).map((level) => (
+                      <button
+                        key={level}
+                        onClick={() => setDepth(level)}
+                        className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all ${
+                          depth === level
+                            ? 'bg-accent text-accent-foreground'
+                            : 'border border-primary-foreground/10 text-primary-foreground/50 hover:bg-primary-foreground/5'
+                        }`}
+                      >
+                        {level}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[9px] text-primary-foreground/30 mt-2">
+                    {depth === 'beginner' && 'Simple language, straightforward cards.'}
+                    {depth === 'intermediate' && 'Standard academic depth.'}
+                    {depth === 'advanced' && 'Expert-level with nuanced distinctions.'}
+                  </p>
                 </div>
 
                 <button
