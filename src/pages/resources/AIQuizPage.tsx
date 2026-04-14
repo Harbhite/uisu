@@ -222,14 +222,14 @@ const UploadView: React.FC<UploadViewProps> = ({
   </motion.div>
 );
 
-const GeneratingView: React.FC = () => (
+const GeneratingView: React.FC<{ partialContent?: string }> = ({ partialContent = '' }) => (
   <div className="h-[60vh] flex flex-col items-center justify-center text-center px-6">
     <motion.div animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: 'linear' }} className="mb-8 text-accent">
       <RefreshCcw size={64} strokeWidth={1} />
     </motion.div>
     <h2 className="font-serif text-3xl md:text-4xl text-primary mb-4">Generating Your Quiz</h2>
-    <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.3em]">Synthesizing questions from your material...</p>
-    <div className="w-48 h-1 bg-muted mt-10 overflow-hidden relative rounded-full">
+    <GenerationProgress isGenerating={true} partialContent={partialContent} label="AI is crafting questions" />
+    <div className="w-48 h-1 bg-muted mt-6 overflow-hidden relative rounded-full">
       <motion.div initial={{ x: '-100%' }} animate={{ x: '100%' }} transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }} className="absolute inset-0 w-1/2 bg-primary" />
     </div>
   </div>
