@@ -219,7 +219,7 @@ const UploadView: React.FC<UploadViewProps> = ({
 
         <button
           onClick={generateQuiz}
-          disabled={!inputText.trim() && !selectedFile}
+          disabled={!inputText.trim() && selectedFiles.length === 0}
           className="w-full py-5 md:py-6 bg-accent text-accent-foreground font-bold uppercase tracking-[0.2em] text-xs border border-accent hover:bg-primary hover:text-primary-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg rounded-lg"
         >
           Initialize Protocol <ChevronRight size={16} />
@@ -591,6 +591,8 @@ interface ResultViewProps {
   navigate: (path: string) => void;
   topicName: string;
   onReviewMistakes: () => void;
+  onSaveToQuizlets: () => void;
+  onSendToFlashcards: () => void;
 }
 
 const ResultView: React.FC<ResultViewProps> = ({
@@ -602,6 +604,8 @@ const ResultView: React.FC<ResultViewProps> = ({
   navigate,
   topicName,
   onReviewMistakes,
+  onSaveToQuizlets,
+  onSendToFlashcards,
 }) => {
   const safeName = (topicName.split('\n')[0] || 'quiz').replace(/[^a-zA-Z0-9\s-]/g, '').trim().replace(/\s+/g, '-').substring(0, 60) || 'quiz';
   const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
@@ -672,6 +676,16 @@ const ResultView: React.FC<ResultViewProps> = ({
               }}
             />
           </div>
+
+          {/* Cross-tool & Save */}
+          <button onClick={onSendToFlashcards}
+            className="w-full py-3 border border-border text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:border-accent hover:text-accent transition-all rounded-lg">
+            <CreditCard size={14} /> Send to Flashcards
+          </button>
+          <button onClick={onSaveToQuizlets}
+            className="w-full py-3 border border-accent text-accent font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-accent hover:text-accent-foreground transition-all rounded-lg">
+            <BookOpen size={14} /> Save to Quizlets
+          </button>
 
           <button
             onClick={() => navigate('/resources')}
