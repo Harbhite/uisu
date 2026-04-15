@@ -2293,6 +2293,92 @@ export type Database = {
         }
         Relationships: []
       }
+      quizlet_attempts: {
+        Row: {
+          answers: Json
+          completed_at: string
+          id: string
+          quizlet_id: string
+          score: number
+          time_seconds: number
+          total: number
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          completed_at?: string
+          id?: string
+          quizlet_id: string
+          score?: number
+          time_seconds?: number
+          total?: number
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          completed_at?: string
+          id?: string
+          quizlet_id?: string
+          score?: number
+          time_seconds?: number
+          total?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quizlet_attempts_quizlet_id_fkey"
+            columns: ["quizlet_id"]
+            isOneToOne: false
+            referencedRelation: "quizlets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quizlets: {
+        Row: {
+          attempt_count: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          difficulty: string
+          id: string
+          is_published: boolean
+          question_count: number
+          questions: Json
+          rigidity: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulty?: string
+          id?: string
+          is_published?: boolean
+          question_count?: number
+          questions?: Json
+          rigidity?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulty?: string
+          id?: string
+          is_published?: boolean
+          question_count?: number
+          questions?: Json
+          rigidity?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       resources: {
         Row: {
           category: string
