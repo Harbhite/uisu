@@ -59,14 +59,13 @@ interface UploadViewProps {
   setInputText: (text: string) => void;
   fileInputRef: React.RefObject<HTMLInputElement>;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  selectedFile: File | null;
-  removeFile: () => void;
+  selectedFiles: File[];
+  removeFile: (idx: number) => void;
   rigidity: Rigidity;
   setRigidity: (r: Rigidity) => void;
   questionCount: number;
   setQuestionCount: (n: number) => void;
   generateQuiz: () => void;
-  navigate: (path: string) => void;
   depth: DepthLevel;
   setDepth: (d: DepthLevel) => void;
 }
