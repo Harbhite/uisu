@@ -785,18 +785,17 @@ const AIQuizPage = () => {
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error('File too large. Max 10MB.');
-        return;
-      }
-      setSelectedFile(file);
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files).filter(f => {
+        if (f.size > 10 * 1024 * 1024) { toast.error(`${f.name} too large. Max 10MB.`); return false; }
+        return true;
+      });
+      setSelectedFiles(prev => [...prev, ...newFiles]);
     }
   };
 
-  const removeFile = () => {
-    setSelectedFile(null);
+  const removeFile = (idx: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== idx));
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -807,14 +806,12 @@ const AIQuizPage = () => {
       let fileName = '';
       let imageDataUrl = '';
 
-      if (selectedFile) {
-        fileName = selectedFile.name;
-        const { text, isImage } = await readFileContent(selectedFile);
-        if (isImage) {
-          imageDataUrl = text; // base64 data URL for vision
-        } else {
-          fileContent = text;
-        }
+      if (selectedFiles.length > 0) {
+        const results = await readMultipleFiles(selectedFiles);
+        const { mergedText, imageDataUrls } = mergeFileContents(results);
+        fileContent = mergedText;
+        fileName = selectedFiles.map(f => f.name).join(', ');
+        if (imageDataUrls.length > 0) imageDataUrl = imageDataUrls[0]; // first image for vision
       }
 
       const { data, error } = await supabase.functions.invoke('ai-quiz', {
