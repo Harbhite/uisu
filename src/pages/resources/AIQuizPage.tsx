@@ -18,14 +18,20 @@ import {
   Download,
   FileDown,
   FileText,
+  CreditCard,
+  BookOpen,
+  Save,
+  Send,
 } from 'lucide-react';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { readFileContent, DepthLevel } from '@/lib/file-utils';
+import { readMultipleFiles, mergeFileContents } from '@/lib/multi-file-utils';
 import { cacheOutput } from '@/lib/ai-cache';
 import GenerationProgress from '@/components/resources/GenerationProgress';
 import { SEO } from '@/components/SEO';
