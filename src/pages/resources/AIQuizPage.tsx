@@ -914,11 +914,50 @@ const AIQuizPage = () => {
     setQuestions([]);
     setUserAnswers([]);
     setInputText('');
-    setSelectedFile(null);
+    setSelectedFiles([]);
     setCurrentIdx(0);
     stopTimer();
     setTimeElapsed(0);
     localStorage.removeItem('aiquiz_state');
+  };
+
+  const saveToQuizlets = async () => {
+    if (!user) { toast.error('Please sign in to save quizlets'); navigate('/auth'); return; }
+    try {
+      const title = inputText.trim().substring(0, 200) || 'AI Generated Quiz';
+      const { error } = await supabase.from('quizlets').insert({
+        title,
+        description: `${questions.length} questions • ${rigidity} rigidity • ${depth} depth`,
+        questions: questions as any,
+        question_count: questions.length,
+        difficulty: depth,
+        rigidity,
+        created_by: user.id,
+      });
+      if (error) throw error;
+      toast.success('Quiz saved to Quizlets!');
+      navigate('/resources/quizlets');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to save quiz');
+    }
+  };
+
+  const sendToFlashcards = () => {
+    const flashcardData = questions.map(q => ({
+      front: q.question,
+      back: `${q.options[q.correctIndex]}\n\n${q.explanation}`,
+      difficulty: 'Medium' as const,
+    }));
+    localStorage.setItem('flashcard_state', JSON.stringify({
+      topic: inputText.trim().substring(0, 100) || 'Quiz Flashcards',
+      material: '',
+      cards: flashcardData,
+      mastered: [],
+      srMap: {},
+    }));
+    toast.success('Sent to Flashcards!');
+    navigate('/resources/flashcards');
   };
 
   return (
@@ -936,14 +975,13 @@ const AIQuizPage = () => {
               setInputText={setInputText}
               fileInputRef={fileInputRef}
               handleFileChange={handleFileChange}
-              selectedFile={selectedFile}
+              selectedFiles={selectedFiles}
               removeFile={removeFile}
               rigidity={rigidity}
               setRigidity={setRigidity}
               questionCount={questionCount}
               setQuestionCount={setQuestionCount}
               generateQuiz={generateQuiz}
-              navigate={navigate}
               depth={depth}
               setDepth={setDepth}
             />
