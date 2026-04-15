@@ -18,14 +18,18 @@ import {
   Download,
   FileDown,
   FileText,
+  CreditCard,
+  BookOpen,
 } from 'lucide-react';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { readFileContent, DepthLevel } from '@/lib/file-utils';
+import { DepthLevel } from '@/lib/file-utils';
+import { readMultipleFiles, mergeFileContents } from '@/lib/multi-file-utils';
 import { cacheOutput } from '@/lib/ai-cache';
 import GenerationProgress from '@/components/resources/GenerationProgress';
 import { SEO } from '@/components/SEO';
@@ -53,14 +57,13 @@ interface UploadViewProps {
   setInputText: (text: string) => void;
   fileInputRef: React.RefObject<HTMLInputElement>;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  selectedFile: File | null;
-  removeFile: () => void;
+  selectedFiles: File[];
+  removeFile: (idx: number) => void;
   rigidity: Rigidity;
   setRigidity: (r: Rigidity) => void;
   questionCount: number;
   setQuestionCount: (n: number) => void;
   generateQuiz: () => void;
-  navigate: (path: string) => void;
   depth: DepthLevel;
   setDepth: (d: DepthLevel) => void;
 }
@@ -70,19 +73,18 @@ const UploadView: React.FC<UploadViewProps> = ({
   setInputText,
   fileInputRef,
   handleFileChange,
-  selectedFile,
+  selectedFiles,
   removeFile,
   rigidity,
   setRigidity,
   questionCount,
   setQuestionCount,
   generateQuiz,
-  navigate,
   depth,
   setDepth,
 }) => (
   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-5xl mx-auto">
-    <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*,.pdf,.docx,.doc,.txt,.xlsx,.xls,.pptx,.ppt" />
+    <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*,.pdf,.docx,.doc,.txt,.xlsx,.xls,.pptx,.ppt" multiple />
 
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <div className="lg:col-span-8 space-y-4">
@@ -96,25 +98,26 @@ const UploadView: React.FC<UploadViewProps> = ({
           />
 
           <AnimatePresence>
-            {selectedFile && (
+            {selectedFiles.length > 0 && selectedFiles.map((file, idx) => (
               <motion.div
+                key={file.name + idx}
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-4 p-4 bg-primary text-primary-foreground flex items-center justify-between border-l-4 border-accent rounded-lg"
+                className="mt-2 p-3 bg-primary text-primary-foreground flex items-center justify-between border-l-4 border-accent rounded-lg"
               >
                 <div className="flex items-center gap-3 overflow-hidden">
-                  {selectedFile.type.startsWith('image/') ? <ImageIcon size={16} className="text-accent" /> : <FileIcon size={16} className="text-accent" />}
+                  {file.type.startsWith('image/') ? <ImageIcon size={16} className="text-accent" /> : <FileIcon size={16} className="text-accent" />}
                   <div className="overflow-hidden">
-                    <div className="text-[9px] font-bold uppercase tracking-widest">Attached Material</div>
-                    <div className="text-[10px] font-mono truncate max-w-[200px] md:max-w-none">{selectedFile.name}</div>
+                    <div className="text-[9px] font-bold uppercase tracking-widest">File {idx + 1}</div>
+                    <div className="text-[10px] font-mono truncate max-w-[200px] md:max-w-none">{file.name}</div>
                   </div>
                 </div>
-                <button onClick={removeFile} className="p-2 hover:bg-destructive transition-colors text-primary-foreground/50 hover:text-primary-foreground rounded-full">
+                <button onClick={() => removeFile(idx)} className="p-2 hover:bg-destructive transition-colors text-primary-foreground/50 hover:text-primary-foreground rounded-full">
                   <Trash2 size={14} />
                 </button>
               </motion.div>
-            )}
+            ))}
           </AnimatePresence>
 
           <div className="mt-4">
@@ -122,7 +125,7 @@ const UploadView: React.FC<UploadViewProps> = ({
               onClick={() => fileInputRef.current?.click()}
               className="flex items-center gap-2 px-4 py-3 border border-border text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:border-accent transition-all rounded-lg"
             >
-              <Upload size={14} /> Attach File
+              <Upload size={14} /> Attach File{selectedFiles.length > 0 ? 's' : ''} {selectedFiles.length > 0 && `(${selectedFiles.length})`}
             </button>
           </div>
         </div>
@@ -214,7 +217,7 @@ const UploadView: React.FC<UploadViewProps> = ({
 
         <button
           onClick={generateQuiz}
-          disabled={!inputText.trim() && !selectedFile}
+          disabled={!inputText.trim() && selectedFiles.length === 0}
           className="w-full py-5 md:py-6 bg-accent text-accent-foreground font-bold uppercase tracking-[0.2em] text-xs border border-accent hover:bg-primary hover:text-primary-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg rounded-lg"
         >
           Initialize Protocol <ChevronRight size={16} />
@@ -586,6 +589,8 @@ interface ResultViewProps {
   navigate: (path: string) => void;
   topicName: string;
   onReviewMistakes: () => void;
+  onSaveToQuizlets: () => void;
+  onSendToFlashcards: () => void;
 }
 
 const ResultView: React.FC<ResultViewProps> = ({
@@ -597,6 +602,8 @@ const ResultView: React.FC<ResultViewProps> = ({
   navigate,
   topicName,
   onReviewMistakes,
+  onSaveToQuizlets,
+  onSendToFlashcards,
 }) => {
   const safeName = (topicName.split('\n')[0] || 'quiz').replace(/[^a-zA-Z0-9\s-]/g, '').trim().replace(/\s+/g, '-').substring(0, 60) || 'quiz';
   const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
@@ -668,6 +675,16 @@ const ResultView: React.FC<ResultViewProps> = ({
             />
           </div>
 
+          {/* Cross-tool & Save */}
+          <button onClick={onSendToFlashcards}
+            className="w-full py-3 border border-border text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:border-accent hover:text-accent transition-all rounded-lg">
+            <CreditCard size={14} /> Send to Flashcards
+          </button>
+          <button onClick={onSaveToQuizlets}
+            className="w-full py-3 border border-accent text-accent font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-accent hover:text-accent-foreground transition-all rounded-lg">
+            <BookOpen size={14} /> Save to Quizlets
+          </button>
+
           <button
             onClick={() => navigate('/resources')}
             className="w-full py-3 border border-border text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:border-accent hover:text-accent transition-all rounded-lg"
@@ -734,11 +751,12 @@ const ResultView: React.FC<ResultViewProps> = ({
 
 const AIQuizPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState<'upload' | 'generating' | 'quiz' | 'result'>('upload');
   const [inputText, setInputText] = useState(() => {
     try { return JSON.parse(localStorage.getItem('aiquiz_state') || '{}').inputText || ''; } catch { return ''; }
   });
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [rigidity, setRigidity] = useState<Rigidity>(() => {
     try { return JSON.parse(localStorage.getItem('aiquiz_state') || '{}').rigidity || 'Standard'; } catch { return 'Standard'; }
   });
@@ -767,18 +785,17 @@ const AIQuizPage = () => {
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error('File too large. Max 10MB.');
-        return;
-      }
-      setSelectedFile(file);
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files).filter(f => {
+        if (f.size > 10 * 1024 * 1024) { toast.error(`${f.name} too large. Max 10MB.`); return false; }
+        return true;
+      });
+      setSelectedFiles(prev => [...prev, ...newFiles]);
     }
   };
 
-  const removeFile = () => {
-    setSelectedFile(null);
+  const removeFile = (idx: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== idx));
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -789,14 +806,12 @@ const AIQuizPage = () => {
       let fileName = '';
       let imageDataUrl = '';
 
-      if (selectedFile) {
-        fileName = selectedFile.name;
-        const { text, isImage } = await readFileContent(selectedFile);
-        if (isImage) {
-          imageDataUrl = text; // base64 data URL for vision
-        } else {
-          fileContent = text;
-        }
+      if (selectedFiles.length > 0) {
+        const results = await readMultipleFiles(selectedFiles);
+        const { mergedText, imageDataUrls } = mergeFileContents(results);
+        fileContent = mergedText;
+        fileName = selectedFiles.map(f => f.name).join(', ');
+        if (imageDataUrls.length > 0) imageDataUrl = imageDataUrls[0]; // first image for vision
       }
 
       const { data, error } = await supabase.functions.invoke('ai-quiz', {
@@ -899,11 +914,50 @@ const AIQuizPage = () => {
     setQuestions([]);
     setUserAnswers([]);
     setInputText('');
-    setSelectedFile(null);
+    setSelectedFiles([]);
     setCurrentIdx(0);
     stopTimer();
     setTimeElapsed(0);
     localStorage.removeItem('aiquiz_state');
+  };
+
+  const saveToQuizlets = async () => {
+    if (!user) { toast.error('Please sign in to save quizlets'); navigate('/auth'); return; }
+    try {
+      const title = inputText.trim().substring(0, 200) || 'AI Generated Quiz';
+      const { error } = await supabase.from('quizlets').insert({
+        title,
+        description: `${questions.length} questions • ${rigidity} rigidity • ${depth} depth`,
+        questions: questions as any,
+        question_count: questions.length,
+        difficulty: depth,
+        rigidity,
+        created_by: user.id,
+      });
+      if (error) throw error;
+      toast.success('Quiz saved to Quizlets!');
+      navigate('/resources/quizlets');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to save quiz');
+    }
+  };
+
+  const sendToFlashcards = () => {
+    const flashcardData = questions.map(q => ({
+      front: q.question,
+      back: `${q.options[q.correctIndex]}\n\n${q.explanation}`,
+      difficulty: 'Medium' as const,
+    }));
+    localStorage.setItem('flashcard_state', JSON.stringify({
+      topic: inputText.trim().substring(0, 100) || 'Quiz Flashcards',
+      material: '',
+      cards: flashcardData,
+      mastered: [],
+      srMap: {},
+    }));
+    toast.success('Sent to Flashcards!');
+    navigate('/resources/flashcards');
   };
 
   return (
@@ -921,14 +975,13 @@ const AIQuizPage = () => {
               setInputText={setInputText}
               fileInputRef={fileInputRef}
               handleFileChange={handleFileChange}
-              selectedFile={selectedFile}
+              selectedFiles={selectedFiles}
               removeFile={removeFile}
               rigidity={rigidity}
               setRigidity={setRigidity}
               questionCount={questionCount}
               setQuestionCount={setQuestionCount}
               generateQuiz={generateQuiz}
-              navigate={navigate}
               depth={depth}
               setDepth={setDepth}
             />
@@ -960,6 +1013,8 @@ const AIQuizPage = () => {
               userAnswers={userAnswers}
               navigate={navigate}
               topicName={inputText}
+              onSaveToQuizlets={saveToQuizlets}
+              onSendToFlashcards={sendToFlashcards}
               onReviewMistakes={() => {
                 // Filter to only incorrectly answered questions
                 const incorrectIndices = questions.map((q, i) => userAnswers[i] !== q.correctIndex ? i : -1).filter(i => i !== -1);
