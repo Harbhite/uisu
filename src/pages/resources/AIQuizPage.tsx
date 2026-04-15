@@ -75,19 +75,18 @@ const UploadView: React.FC<UploadViewProps> = ({
   setInputText,
   fileInputRef,
   handleFileChange,
-  selectedFile,
+  selectedFiles,
   removeFile,
   rigidity,
   setRigidity,
   questionCount,
   setQuestionCount,
   generateQuiz,
-  navigate,
   depth,
   setDepth,
 }) => (
   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-5xl mx-auto">
-    <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*,.pdf,.docx,.doc,.txt,.xlsx,.xls,.pptx,.ppt" />
+    <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*,.pdf,.docx,.doc,.txt,.xlsx,.xls,.pptx,.ppt" multiple />
 
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <div className="lg:col-span-8 space-y-4">
@@ -101,25 +100,26 @@ const UploadView: React.FC<UploadViewProps> = ({
           />
 
           <AnimatePresence>
-            {selectedFile && (
+            {selectedFiles.length > 0 && selectedFiles.map((file, idx) => (
               <motion.div
+                key={file.name + idx}
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-4 p-4 bg-primary text-primary-foreground flex items-center justify-between border-l-4 border-accent rounded-lg"
+                className="mt-2 p-3 bg-primary text-primary-foreground flex items-center justify-between border-l-4 border-accent rounded-lg"
               >
                 <div className="flex items-center gap-3 overflow-hidden">
-                  {selectedFile.type.startsWith('image/') ? <ImageIcon size={16} className="text-accent" /> : <FileIcon size={16} className="text-accent" />}
+                  {file.type.startsWith('image/') ? <ImageIcon size={16} className="text-accent" /> : <FileIcon size={16} className="text-accent" />}
                   <div className="overflow-hidden">
-                    <div className="text-[9px] font-bold uppercase tracking-widest">Attached Material</div>
-                    <div className="text-[10px] font-mono truncate max-w-[200px] md:max-w-none">{selectedFile.name}</div>
+                    <div className="text-[9px] font-bold uppercase tracking-widest">File {idx + 1}</div>
+                    <div className="text-[10px] font-mono truncate max-w-[200px] md:max-w-none">{file.name}</div>
                   </div>
                 </div>
-                <button onClick={removeFile} className="p-2 hover:bg-destructive transition-colors text-primary-foreground/50 hover:text-primary-foreground rounded-full">
+                <button onClick={() => removeFile(idx)} className="p-2 hover:bg-destructive transition-colors text-primary-foreground/50 hover:text-primary-foreground rounded-full">
                   <Trash2 size={14} />
                 </button>
               </motion.div>
-            )}
+            ))}
           </AnimatePresence>
 
           <div className="mt-4">
@@ -127,7 +127,7 @@ const UploadView: React.FC<UploadViewProps> = ({
               onClick={() => fileInputRef.current?.click()}
               className="flex items-center gap-2 px-4 py-3 border border-border text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:border-accent transition-all rounded-lg"
             >
-              <Upload size={14} /> Attach File
+              <Upload size={14} /> Attach File{selectedFiles.length > 0 ? 's' : ''} {selectedFiles.length > 0 && `(${selectedFiles.length})`}
             </button>
           </div>
         </div>
