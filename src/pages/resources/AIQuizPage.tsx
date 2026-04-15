@@ -1013,6 +1013,8 @@ const AIQuizPage = () => {
               userAnswers={userAnswers}
               navigate={navigate}
               topicName={inputText}
+              onSaveToQuizlets={saveToQuizlets}
+              onSendToFlashcards={sendToFlashcards}
               onReviewMistakes={() => {
                 // Filter to only incorrectly answered questions
                 const incorrectIndices = questions.map((q, i) => userAnswers[i] !== q.correctIndex ? i : -1).filter(i => i !== -1);
