@@ -20,8 +20,6 @@ import {
   FileText,
   CreditCard,
   BookOpen,
-  Save,
-  Send,
 } from 'lucide-react';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
