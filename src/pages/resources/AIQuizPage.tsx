@@ -751,11 +751,12 @@ const ResultView: React.FC<ResultViewProps> = ({
 
 const AIQuizPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState<'upload' | 'generating' | 'quiz' | 'result'>('upload');
   const [inputText, setInputText] = useState(() => {
     try { return JSON.parse(localStorage.getItem('aiquiz_state') || '{}').inputText || ''; } catch { return ''; }
   });
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [rigidity, setRigidity] = useState<Rigidity>(() => {
     try { return JSON.parse(localStorage.getItem('aiquiz_state') || '{}').rigidity || 'Standard'; } catch { return 'Standard'; }
   });
