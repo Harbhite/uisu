@@ -147,6 +147,7 @@ const AppRoutes = () => {
         <Route path="/resources/ai-quiz" element={<PageWrapper><AIQuizPage /></PageWrapper>} />
         <Route path="/resources/flashcards" element={<PageWrapper><FlashcardPage /></PageWrapper>} />
         <Route path="/resources/quizlets" element={<PageWrapper><QuizletsPage /></PageWrapper>} />
+        <Route path="/resources/quizlets/:id" element={<PageWrapper><QuizletsPage /></PageWrapper>} />
         <Route path="/resources/study-aide" element={<PageWrapper><StudyAidePage /></PageWrapper>} />
         <Route path="/resources/timetable" element={<PageWrapper><TimetableBuilderPage /></PageWrapper>} />
         <Route path="/resources/gpa-tracker" element={<PageWrapper><GPATrackerPage /></PageWrapper>} />
