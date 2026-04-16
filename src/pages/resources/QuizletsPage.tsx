@@ -202,10 +202,7 @@ const QuizletsPage = () => {
               
               <div className="pt-4 space-y-3">
                 <button
-                  onClick={() => {
-                    if (!user) { toast.error('Please sign in to take quizzes'); navigate('/auth'); return; }
-                    startQuiz(activeQuizlet);
-                  }}
+                  onClick={() => startQuiz(activeQuizlet)}
                   className="w-full py-4 bg-accent text-accent-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground transition-all rounded-lg"
                 >
                   <BrainCircuit size={16} /> Start Quiz
@@ -489,10 +486,7 @@ const QuizletsPage = () => {
               >
                 <div
                   className="cursor-pointer"
-                  onClick={() => {
-                    if (!user) { toast.error('Please sign in to take quizzes'); navigate('/auth'); return; }
-                    startQuiz(q);
-                  }}
+                  onClick={() => startQuiz(q)}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <h3 className="font-serif text-lg text-primary leading-snug group-hover:text-accent transition-colors line-clamp-2">
