@@ -129,6 +129,34 @@ const QuizletsPage = () => {
     }
   };
 
+  const openEdit = (q: Quizlet, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingQuizlet(q);
+    setEditTitle(q.title);
+    setEditDescription(q.description || '');
+  };
+
+  const saveEdit = async () => {
+    if (!editingQuizlet || !editTitle.trim()) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from('quizlets')
+      .update({ title: editTitle.trim(), description: editDescription.trim() || null } as any)
+      .eq('id', editingQuizlet.id);
+    setSaving(false);
+    if (error) {
+      toast.error('Failed to update quizlet');
+      return;
+    }
+    toast.success('Quizlet updated!');
+    // Update local state
+    setQuizlets(prev => prev.map(q => q.id === editingQuizlet.id ? { ...q, title: editTitle.trim(), description: editDescription.trim() || null } : q));
+    if (activeQuizlet?.id === editingQuizlet.id) {
+      setActiveQuizlet(prev => prev ? { ...prev, title: editTitle.trim(), description: editDescription.trim() || null } : prev);
+    }
+    setEditingQuizlet(null);
+  };
+
   const startQuiz = (quizlet: Quizlet) => {
     setActiveQuizlet(quizlet);
     setQuestions(quizlet.questions);
