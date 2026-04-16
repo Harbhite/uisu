@@ -43,10 +43,17 @@ const QuizletsPage = () => {
   const navigate = useNavigate();
   const { id: quizletId } = useParams<{ id?: string }>();
   const { user } = useAuth();
+  const { isStaff } = useAdminCheck();
   const [quizlets, setQuizlets] = useState<Quizlet[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   
+  // Edit state
+  const [editingQuizlet, setEditingQuizlet] = useState<Quizlet | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [saving, setSaving] = useState(false);
+
   // Quiz-taking state
   const [activeQuizlet, setActiveQuizlet] = useState<Quizlet | null>(null);
   const [step, setStep] = useState<'browse' | 'quiz' | 'result'>('browse');
