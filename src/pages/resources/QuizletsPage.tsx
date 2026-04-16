@@ -562,6 +562,59 @@ const QuizletsPage = () => {
           </div>
         )}
       </div>
+
+      {/* Edit Modal */}
+      <AnimatePresence>
+        {editingQuizlet && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+            onClick={() => setEditingQuizlet(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-card border border-border rounded-lg p-6 w-full max-w-md space-y-5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="font-serif text-xl text-primary">Edit Quizlet</h3>
+              <div className="space-y-1">
+                <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Title</label>
+                <input
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full px-4 py-3 bg-muted/50 border border-border outline-none text-sm focus:border-accent transition-colors rounded-lg"
+                  placeholder="Quiz title..."
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Description</label>
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-3 bg-muted/50 border border-border outline-none text-sm focus:border-accent transition-colors rounded-lg resize-none"
+                  placeholder="Optional description..."
+                />
+              </div>
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  onClick={saveEdit}
+                  disabled={saving || !editTitle.trim()}
+                  className="flex-1 py-3 bg-accent text-accent-foreground font-bold uppercase text-[10px] tracking-[0.2em] hover:bg-primary hover:text-primary-foreground transition-all disabled:opacity-50 rounded-lg"
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+                <button
+                  onClick={() => setEditingQuizlet(null)}
+                  className="px-5 py-3 border border-border text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em] hover:border-accent hover:text-accent transition-all rounded-lg"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
