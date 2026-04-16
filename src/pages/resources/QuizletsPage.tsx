@@ -4,10 +4,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   BookOpen, Clock, Users, ChevronRight, ChevronLeft,
   CheckCircle2, XCircle, Trophy, Sparkles, Search, BrainCircuit,
-  RefreshCcw, Share2, Link as LinkIcon, Copy,
+  RefreshCcw, Link as LinkIcon, Copy, Pencil,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { toast } from 'sonner';
 import { SEO } from '@/components/SEO';
 import AIToolsHeader from '@/components/resources/AIToolsHeader';
@@ -42,10 +43,17 @@ const QuizletsPage = () => {
   const navigate = useNavigate();
   const { id: quizletId } = useParams<{ id?: string }>();
   const { user } = useAuth();
+  const { isStaff } = useAdminCheck();
   const [quizlets, setQuizlets] = useState<Quizlet[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   
+  // Edit state
+  const [editingQuizlet, setEditingQuizlet] = useState<Quizlet | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [saving, setSaving] = useState(false);
+
   // Quiz-taking state
   const [activeQuizlet, setActiveQuizlet] = useState<Quizlet | null>(null);
   const [step, setStep] = useState<'browse' | 'quiz' | 'result'>('browse');
@@ -119,6 +127,34 @@ const QuizletsPage = () => {
     } catch {
       toast.error('Failed to copy link');
     }
+  };
+
+  const openEdit = (q: Quizlet, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingQuizlet(q);
+    setEditTitle(q.title);
+    setEditDescription(q.description || '');
+  };
+
+  const saveEdit = async () => {
+    if (!editingQuizlet || !editTitle.trim()) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from('quizlets')
+      .update({ title: editTitle.trim(), description: editDescription.trim() || null } as any)
+      .eq('id', editingQuizlet.id);
+    setSaving(false);
+    if (error) {
+      toast.error('Failed to update quizlet');
+      return;
+    }
+    toast.success('Quizlet updated!');
+    // Update local state
+    setQuizlets(prev => prev.map(q => q.id === editingQuizlet.id ? { ...q, title: editTitle.trim(), description: editDescription.trim() || null } : q));
+    if (activeQuizlet?.id === editingQuizlet.id) {
+      setActiveQuizlet(prev => prev ? { ...prev, title: editTitle.trim(), description: editDescription.trim() || null } : prev);
+    }
+    setEditingQuizlet(null);
   };
 
   const startQuiz = (quizlet: Quizlet) => {
@@ -503,18 +539,82 @@ const QuizletsPage = () => {
                     <span className="px-2 py-0.5 bg-muted rounded text-[8px]">{q.rigidity}</span>
                   </div>
                 </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); copyQuizletLink(q.id); }}
-                  className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 hover:text-accent transition-colors"
-                  title="Copy shareable link"
-                >
-                  <LinkIcon size={10} /> Share Link
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); copyQuizletLink(q.id); }}
+                    className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 hover:text-accent transition-colors"
+                    title="Copy shareable link"
+                  >
+                    <LinkIcon size={10} /> Share Link
+                  </button>
+                  {isStaff && (
+                    <button
+                      onClick={(e) => openEdit(q, e)}
+                      className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 hover:text-accent transition-colors"
+                      title="Edit quizlet"
+                    >
+                      <Pencil size={10} /> Edit
+                    </button>
+                  )}
+                </div>
               </motion.div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Edit Modal */}
+      <AnimatePresence>
+        {editingQuizlet && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+            onClick={() => setEditingQuizlet(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-card border border-border rounded-lg p-6 w-full max-w-md space-y-5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="font-serif text-xl text-primary">Edit Quizlet</h3>
+              <div className="space-y-1">
+                <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Title</label>
+                <input
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full px-4 py-3 bg-muted/50 border border-border outline-none text-sm focus:border-accent transition-colors rounded-lg"
+                  placeholder="Quiz title..."
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Description</label>
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-3 bg-muted/50 border border-border outline-none text-sm focus:border-accent transition-colors rounded-lg resize-none"
+                  placeholder="Optional description..."
+                />
+              </div>
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  onClick={saveEdit}
+                  disabled={saving || !editTitle.trim()}
+                  className="flex-1 py-3 bg-accent text-accent-foreground font-bold uppercase text-[10px] tracking-[0.2em] hover:bg-primary hover:text-primary-foreground transition-all disabled:opacity-50 rounded-lg"
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+                <button
+                  onClick={() => setEditingQuizlet(null)}
+                  className="px-5 py-3 border border-border text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em] hover:border-accent hover:text-accent transition-all rounded-lg"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
