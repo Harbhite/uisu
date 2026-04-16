@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   BookOpen, Clock, Users, ChevronRight, ChevronLeft,
   CheckCircle2, XCircle, Trophy, Sparkles, Search, BrainCircuit,
-  RefreshCcw,
+  RefreshCcw, Share2, Link as LinkIcon, Copy,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { SEO } from '@/components/SEO';
 import AIToolsHeader from '@/components/resources/AIToolsHeader';
+import SocialShare from '@/components/SocialShare';
 
 interface Question {
   question: string;
@@ -39,6 +40,7 @@ const formatTime = (seconds: number) => {
 
 const QuizletsPage = () => {
   const navigate = useNavigate();
+  const { id: quizletId } = useParams<{ id?: string }>();
   const { user } = useAuth();
   const [quizlets, setQuizlets] = useState<Quizlet[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,8 +57,36 @@ const QuizletsPage = () => {
   const autoAdvanceRef = useRef<number | null>(null);
 
   useEffect(() => {
-    fetchQuizlets();
-  }, []);
+    if (quizletId) {
+      fetchSingleQuizlet(quizletId);
+    } else {
+      fetchQuizlets();
+    }
+  }, [quizletId]);
+
+  const fetchSingleQuizlet = async (id: string) => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('quizlets')
+      .select('*')
+      .eq('id', id)
+      .eq('is_published', true)
+      .single();
+    
+    if (error || !data) {
+      toast.error('Quiz not found or no longer available');
+      navigate('/resources/quizlets');
+      setLoading(false);
+      return;
+    }
+    
+    const quizlet: Quizlet = {
+      ...data,
+      questions: (typeof data.questions === 'string' ? JSON.parse(data.questions) : data.questions) as Question[],
+    };
+    setActiveQuizlet(quizlet);
+    setLoading(false);
+  };
 
   const fetchQuizlets = async () => {
     setLoading(true);
@@ -78,6 +108,19 @@ const QuizletsPage = () => {
     setLoading(false);
   };
 
+  const getQuizletUrl = (id: string) => {
+    return `${window.location.origin}/resources/quizlets/${id}`;
+  };
+
+  const copyQuizletLink = async (id: string) => {
+    try {
+      await navigator.clipboard.writeText(getQuizletUrl(id));
+      toast.success('Quiz link copied to clipboard!');
+    } catch {
+      toast.error('Failed to copy link');
+    }
+  };
+
   const startQuiz = (quizlet: Quizlet) => {
     setActiveQuizlet(quizlet);
     setQuestions(quizlet.questions);
@@ -85,7 +128,6 @@ const QuizletsPage = () => {
     setCurrentIdx(0);
     setTimeElapsed(0);
     setStep('quiz');
-    // Start timer
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = window.setInterval(() => setTimeElapsed(p => p + 1), 1000);
   };
@@ -131,6 +173,65 @@ const QuizletsPage = () => {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
 
+  // Direct link landing: show quiz preview before starting
+  if (quizletId && activeQuizlet && step === 'browse') {
+    return (
+      <div className="min-h-screen bg-background">
+        <SEO title={`${activeQuizlet.title} - Quizlet`} description={activeQuizlet.description || 'Take this quiz'} />
+        <AIToolsHeader title="Quizlets" subtitle="Community Quiz Bank" icon={BookOpen} />
+        <div className="container mx-auto px-4 max-w-2xl py-10">
+          {loading ? (
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-muted rounded w-3/4" />
+              <div className="h-4 bg-muted rounded w-full" />
+            </div>
+          ) : (
+            <div className="bg-card border border-border rounded-lg p-8 text-center space-y-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-accent/10 rounded-full mb-2">
+                <BrainCircuit size={32} className="text-accent" />
+              </div>
+              <h2 className="font-serif text-3xl text-primary">{activeQuizlet.title}</h2>
+              {activeQuizlet.description && (
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">{activeQuizlet.description}</p>
+              )}
+              <div className="flex items-center justify-center gap-6 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                <span className="flex items-center gap-1"><BrainCircuit size={10} /> {activeQuizlet.question_count} Questions</span>
+                <span className="flex items-center gap-1"><Users size={10} /> {activeQuizlet.attempt_count} Attempts</span>
+                <span className="px-2 py-0.5 bg-muted rounded text-[8px]">{activeQuizlet.difficulty}</span>
+              </div>
+              
+              <div className="pt-4 space-y-3">
+                <button
+                  onClick={() => {
+                    if (!user) { toast.error('Please sign in to take quizzes'); navigate('/auth'); return; }
+                    startQuiz(activeQuizlet);
+                  }}
+                  className="w-full py-4 bg-accent text-accent-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground transition-all rounded-lg"
+                >
+                  <BrainCircuit size={16} /> Start Quiz
+                </button>
+                <button
+                  onClick={() => navigate('/resources/quizlets')}
+                  className="w-full py-3 border border-border text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:border-accent hover:text-accent transition-all rounded-lg"
+                >
+                  <ChevronLeft size={14} /> Browse All Quizlets
+                </button>
+              </div>
+
+              <div className="pt-4 border-t border-border">
+                <SocialShare
+                  title={activeQuizlet.title}
+                  url={getQuizletUrl(activeQuizlet.id)}
+                  summary={activeQuizlet.description || `Take this ${activeQuizlet.question_count}-question quiz!`}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (step === 'quiz' && activeQuizlet) {
     const q = questions[currentIdx];
     if (!q) return null;
@@ -143,7 +244,7 @@ const QuizletsPage = () => {
         <AIToolsHeader title={activeQuizlet.title} icon={BrainCircuit} />
         <div className="container mx-auto px-4 max-w-5xl py-10">
           <div className="flex justify-between items-center mb-6">
-            <button onClick={() => { if (timerRef.current) clearInterval(timerRef.current); setStep('browse'); }}
+            <button onClick={() => { if (timerRef.current) clearInterval(timerRef.current); setStep('browse'); if (quizletId) navigate('/resources/quizlets'); }}
               className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent">
               <ChevronLeft size={12} /> Exit Quiz
             </button>
@@ -261,7 +362,22 @@ const QuizletsPage = () => {
                 className="w-full py-4 bg-accent text-accent-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-primary hover:text-primary-foreground border border-accent transition-all rounded-lg">
                 <RefreshCcw size={14} /> Retake Quiz
               </button>
-              <button onClick={() => setStep('browse')}
+
+              {/* Share quiz link */}
+              <button onClick={() => copyQuizletLink(activeQuizlet.id)}
+                className="w-full py-3 border border-border text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:border-accent hover:text-accent transition-all rounded-lg">
+                <Copy size={14} /> Copy Quiz Link
+              </button>
+
+              <div className="bg-card border border-border p-4 rounded-lg">
+                <SocialShare
+                  title={`I scored ${percentage}% on "${activeQuizlet.title}"! Try it:`}
+                  url={getQuizletUrl(activeQuizlet.id)}
+                  summary={`${activeQuizlet.question_count}-question quiz • ${activeQuizlet.difficulty}`}
+                />
+              </div>
+
+              <button onClick={() => { setStep('browse'); if (quizletId) navigate('/resources/quizlets'); }}
                 className="w-full py-3 border border-border text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:border-accent hover:text-accent transition-all rounded-lg">
                 <ChevronLeft size={14} /> Browse Quizlets
               </button>
@@ -369,26 +485,37 @@ const QuizletsPage = () => {
                 key={q.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-card border border-border rounded-lg p-6 hover:border-accent/50 hover:shadow-lg transition-all cursor-pointer group"
-                onClick={() => {
-                  if (!user) { toast.error('Please sign in to take quizzes'); navigate('/auth'); return; }
-                  startQuiz(q);
-                }}
+                className="bg-card border border-border rounded-lg p-6 hover:border-accent/50 hover:shadow-lg transition-all group"
               >
-                <div className="flex items-start justify-between mb-3">
-                  <h3 className="font-serif text-lg text-primary leading-snug group-hover:text-accent transition-colors line-clamp-2">
-                    {q.title}
-                  </h3>
-                  <ChevronRight size={16} className="text-muted-foreground shrink-0 mt-1 group-hover:text-accent transition-colors" />
+                <div
+                  className="cursor-pointer"
+                  onClick={() => {
+                    if (!user) { toast.error('Please sign in to take quizzes'); navigate('/auth'); return; }
+                    startQuiz(q);
+                  }}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <h3 className="font-serif text-lg text-primary leading-snug group-hover:text-accent transition-colors line-clamp-2">
+                      {q.title}
+                    </h3>
+                    <ChevronRight size={16} className="text-muted-foreground shrink-0 mt-1 group-hover:text-accent transition-colors" />
+                  </div>
+                  {q.description && (
+                    <p className="text-xs text-muted-foreground mb-4 line-clamp-2">{q.description}</p>
+                  )}
+                  <div className="flex items-center gap-4 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">
+                    <span className="flex items-center gap-1"><BrainCircuit size={10} /> {q.question_count} Qs</span>
+                    <span className="flex items-center gap-1"><Users size={10} /> {q.attempt_count} attempts</span>
+                    <span className="px-2 py-0.5 bg-muted rounded text-[8px]">{q.rigidity}</span>
+                  </div>
                 </div>
-                {q.description && (
-                  <p className="text-xs text-muted-foreground mb-4 line-clamp-2">{q.description}</p>
-                )}
-                <div className="flex items-center gap-4 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                  <span className="flex items-center gap-1"><BrainCircuit size={10} /> {q.question_count} Qs</span>
-                  <span className="flex items-center gap-1"><Users size={10} /> {q.attempt_count} attempts</span>
-                  <span className="px-2 py-0.5 bg-muted rounded text-[8px]">{q.rigidity}</span>
-                </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); copyQuizletLink(q.id); }}
+                  className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 hover:text-accent transition-colors"
+                  title="Copy shareable link"
+                >
+                  <LinkIcon size={10} /> Share Link
+                </button>
               </motion.div>
             ))}
           </div>
