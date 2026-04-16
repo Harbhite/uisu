@@ -4,10 +4,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   BookOpen, Clock, Users, ChevronRight, ChevronLeft,
   CheckCircle2, XCircle, Trophy, Sparkles, Search, BrainCircuit,
-  RefreshCcw, Share2, Link as LinkIcon, Copy,
+  RefreshCcw, Share2, Link as LinkIcon, Copy, Pencil,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { toast } from 'sonner';
 import { SEO } from '@/components/SEO';
 import AIToolsHeader from '@/components/resources/AIToolsHeader';
