@@ -539,13 +539,24 @@ const QuizletsPage = () => {
                     <span className="px-2 py-0.5 bg-muted rounded text-[8px]">{q.rigidity}</span>
                   </div>
                 </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); copyQuizletLink(q.id); }}
-                  className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 hover:text-accent transition-colors"
-                  title="Copy shareable link"
-                >
-                  <LinkIcon size={10} /> Share Link
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); copyQuizletLink(q.id); }}
+                    className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 hover:text-accent transition-colors"
+                    title="Copy shareable link"
+                  >
+                    <LinkIcon size={10} /> Share Link
+                  </button>
+                  {isStaff && (
+                    <button
+                      onClick={(e) => openEdit(q, e)}
+                      className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 hover:text-accent transition-colors"
+                      title="Edit quizlet"
+                    >
+                      <Pencil size={10} /> Edit
+                    </button>
+                  )}
+                </div>
               </motion.div>
             ))}
           </div>
