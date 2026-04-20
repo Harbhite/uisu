@@ -23,6 +23,7 @@ import { BackToTop } from "@/components/BackToTop";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RecentlyVisited } from "@/components/RecentlyVisited";
 import { OnboardingTour } from "@/components/OnboardingTour";
+import { ExamCountdown } from "@/components/ExamCountdown";
 
 // --- SUB-COMPONENTS ---
 
@@ -612,6 +613,13 @@ const Index = () => {
 
         {/* Trivia Section */}
         <TriviaSection />
+
+        {/* Exam Countdown Widget */}
+        <section className="py-12 bg-slate-50">
+          <div className="container mx-auto px-6 max-w-5xl">
+            <ExamCountdown />
+          </div>
+        </section>
 
         {/* Upcoming Events Section (New Feature) */}
         <section className="py-24 bg-white border-y border-slate-100">

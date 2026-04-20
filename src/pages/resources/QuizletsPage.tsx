@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   BookOpen, Clock, Users, ChevronRight, ChevronLeft,
   CheckCircle2, XCircle, Trophy, Sparkles, Search, BrainCircuit,
-  RefreshCcw, Link as LinkIcon, Copy, Pencil,
+  RefreshCcw, Link as LinkIcon, Copy, Pencil, Trash2,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -31,6 +31,7 @@ interface Quizlet {
   rigidity: string;
   attempt_count: number;
   created_at: string;
+  created_by: string | null;
 }
 
 const formatTime = (seconds: number) => {
@@ -155,6 +156,18 @@ const QuizletsPage = () => {
       setActiveQuizlet(prev => prev ? { ...prev, title: editTitle.trim(), description: editDescription.trim() || null } : prev);
     }
     setEditingQuizlet(null);
+  };
+
+  const deleteQuizlet = async (q: Quizlet, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm(`Delete "${q.title}"? This cannot be undone.`)) return;
+    const { error } = await supabase.from('quizlets').delete().eq('id', q.id);
+    if (error) {
+      toast.error('Failed to delete quizlet');
+      return;
+    }
+    setQuizlets(prev => prev.filter(item => item.id !== q.id));
+    toast.success('Quizlet deleted');
   };
 
   const startQuiz = (quizlet: Quizlet) => {
@@ -554,6 +567,15 @@ const QuizletsPage = () => {
                       title="Edit quizlet"
                     >
                       <Pencil size={10} /> Edit
+                    </button>
+                  )}
+                  {(isStaff || (user && q.created_by === user.id)) && (
+                    <button
+                      onClick={(e) => deleteQuizlet(q, e)}
+                      className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 hover:text-destructive transition-colors"
+                      title="Delete quizlet"
+                    >
+                      <Trash2 size={10} /> Delete
                     </button>
                   )}
                 </div>
