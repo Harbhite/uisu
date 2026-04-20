@@ -1,66 +1,33 @@
+# 15 Innovations & Fixes Across UISU Space
 
+A mix of new features, UX polish, and technical fixes spanning AI tools, community, governance, and infrastructure.
 
-# Redesign: Confessions + Elections Pages
+## New Features
 
-Rebuild both pages to match the modern rounded aesthetic (rounded-2xl cards, rounded-full buttons/pills, rounded-xl inputs, stat pills in hero header).
+**1. Quizlet Leaderboards & Streaks**
+Add a leaderboard per quizlet showing top scorers (by attempt time + accuracy), plus a personal streak counter for daily quiz attempts. Drives engagement on `/resources/quizlets`.
 
----
+**2. Flashcard Study Groups**
+Let users create shared flashcard decks that classmates can join via invite link. Real-time sync of new cards using Supabase Realtime on a new `flashcard_decks` + `deck_members` table.
 
-## 1. Confessions Page
+**3. AI Essay/Assignment Checker**  
+New resource tool at `/resources/essay-check`. Upload an essay, pick criteria (grammar, structure, citations, argument strength), get structured feedback with highlighted excerpts. Reuses the Gemini edge function pattern.
 
-**Hero header redesign**
-- Add stat pills: total confessions count, pending moderation count, total reactions count
-- Change back button from `rounded-sm` to `rounded-full`
-- Add a subtle icon/illustration
+**7. Exam Countdown Widget**
+Homepage widget showing days until next registered exam (pulled from Academic Planner). Nudges student to open study tools.
 
-**Submit box**
-- Card: `rounded-2xl` (currently `rounded-lg`)
-- Textarea: `rounded-xl`
-- Submit button: `rounded-full`
-- Character counter as a pill badge
+## Fixes & Polish
 
-**Confession cards**
-- Cards: `rounded-2xl` with hover shadow transition (currently `rounded-lg`)
-- Reaction buttons already `rounded-full` — keep
-- Admin action buttons: `rounded-full`
-- Reply thread container: `rounded-xl` with softer border
-- Pending badge: `rounded-full` pill style
+**8. Quizlets Delete/Archive for Authors**
+Currently staff can edit, but quiz authors can't remove their own quizlets. Add delete button (with confirmation) for `created_by = auth.uid()` + staff.
 
-**Empty state**
-- Rounded illustration container
+**9. Multi-file Upload Progress per File**
+`multi-file-utils.ts` processes files sequentially but shows a single global spinner. Show per-file status (pending/processing/done/error) so users know which PDF is slow.
 
----
+&nbsp;
 
-## 2. Elections Page
+**14. Image Compression Before Upload**
+Lost & Found, Student Mart, and AI tool image uploads send raw images (often 5MB+ from phones). Add client-side compression (browser-image-compression) to cap at ~800KB.
 
-**Hero header redesign**
-- Add stat pills: total elections, active elections, total votes cast
-- Back button: `rounded-full`
-
-**Elections list cards**
-- Already `rounded-2xl` — keep
-- Status badges: ensure `rounded-full`
-- Add subtle gradient or accent border on active elections
-
-**Election detail view**
-- Candidate cards: already `rounded-2xl` — keep
-- Vote button: `rounded-full`
-- Vote progress bar: already `rounded-full` — keep
-- "Add Candidate" and admin buttons: `rounded-full`
-
-**Dialogs**
-- Already `rounded-2xl` — keep
-- All inputs inside dialogs: `rounded-xl`
-- Dialog buttons: `rounded-full`
-
----
-
-## Files Modified
-
-| File | Change |
-|---|---|
-| `src/pages/ConfessionsPage.tsx` | Full UI refresh with rounded tokens and stat pills |
-| `src/pages/ElectionsPage.tsx` | Rounded buttons/inputs, stat pills in hero |
-
-No database or backend changes needed.
-
+**15. Global Error Reporting Hook**  
+`ErrorBoundary` logs to console only. Add a lightweight Supabase `error_logs` table + edge function to capture runtime errors with route, user, and stack for staff triage
