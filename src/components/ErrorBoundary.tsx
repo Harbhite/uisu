@@ -23,6 +23,14 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught:', error, errorInfo);
+    // Fire-and-forget error reporting
+    import('@/lib/error-reporting').then(({ reportError }) => {
+      reportError({
+        message: error.message,
+        stack: error.stack,
+        metadata: { componentStack: errorInfo.componentStack?.substring(0, 2000) },
+      });
+    }).catch(() => {});
   }
 
   handleRetry = () => {
