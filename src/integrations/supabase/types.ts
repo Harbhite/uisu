@@ -639,6 +639,38 @@ export type Database = {
         }
         Relationships: []
       }
+      deck_members: {
+        Row: {
+          deck_id: string
+          id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          deck_id: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          deck_id?: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deck_members_deck_id_fkey"
+            columns: ["deck_id"]
+            isOneToOne: false
+            referencedRelation: "flashcard_decks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           created_at: string | null
@@ -883,6 +915,72 @@ export type Database = {
           },
         ]
       }
+      error_logs: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          metadata: Json | null
+          route: string | null
+          stack: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          metadata?: Json | null
+          route?: string | null
+          stack?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          metadata?: Json | null
+          route?: string | null
+          stack?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      essay_checks: {
+        Row: {
+          created_at: string
+          criteria: Json
+          essay_text: string
+          feedback: Json
+          id: string
+          overall_score: number | null
+          title: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          criteria?: Json
+          essay_text: string
+          feedback?: Json
+          id?: string
+          overall_score?: number | null
+          title?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          criteria?: Json
+          essay_text?: string
+          feedback?: Json
+          id?: string
+          overall_score?: number | null
+          title?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       event_checkins: {
         Row: {
           checked_in_at: string
@@ -1019,8 +1117,11 @@ export type Database = {
           cards: Json
           created_at: string
           id: string
+          invite_token: string | null
+          is_shared: boolean
           last_reviewed_at: string | null
           sr_data: Json
+          title: string | null
           topic: string
           user_id: string
         }
@@ -1028,8 +1129,11 @@ export type Database = {
           cards?: Json
           created_at?: string
           id?: string
+          invite_token?: string | null
+          is_shared?: boolean
           last_reviewed_at?: string | null
           sr_data?: Json
+          title?: string | null
           topic: string
           user_id: string
         }
@@ -1037,8 +1141,11 @@ export type Database = {
           cards?: Json
           created_at?: string
           id?: string
+          invite_token?: string | null
+          is_shared?: boolean
           last_reviewed_at?: string | null
           sr_data?: Json
+          title?: string | null
           topic?: string
           user_id?: string
         }
@@ -2293,6 +2400,42 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_attempts: {
+        Row: {
+          accuracy: number
+          created_at: string
+          id: string
+          quizlet_id: string
+          score: number
+          time_taken_seconds: number
+          total_questions: number
+          user_display_name: string | null
+          user_id: string | null
+        }
+        Insert: {
+          accuracy?: number
+          created_at?: string
+          id?: string
+          quizlet_id: string
+          score?: number
+          time_taken_seconds?: number
+          total_questions?: number
+          user_display_name?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          accuracy?: number
+          created_at?: string
+          id?: string
+          quizlet_id?: string
+          score?: number
+          time_taken_seconds?: number
+          total_questions?: number
+          user_display_name?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       quizlet_attempts: {
         Row: {
           answers: Json
@@ -2957,6 +3100,36 @@ export type Database = {
           created_at?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_streaks: {
+        Row: {
+          created_at: string
+          current_streak: number
+          id: string
+          last_activity_date: string | null
+          longest_streak: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_streak?: number
+          id?: string
+          last_activity_date?: string | null
+          longest_streak?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_streak?: number
+          id?: string
+          last_activity_date?: string | null
+          longest_streak?: number
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
