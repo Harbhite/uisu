@@ -48,6 +48,7 @@ const StudyBuddyPage = lazy(() => import("./pages/resources/StudyBuddyPage"));
 const AIQuizPage = lazy(() => import("./pages/resources/AIQuizPage"));
 const FlashcardPage = lazy(() => import("./pages/resources/FlashcardPage"));
 const QuizletsPage = lazy(() => import("./pages/resources/QuizletsPage"));
+const EssayCheckPage = lazy(() => import("./pages/resources/EssayCheckPage"));
 const StudyAidePage = lazy(() => import("./pages/resources/StudyAidePage"));
 const TimetableBuilderPage = lazy(() => import("./pages/resources/TimetableBuilderPage"));
 const GPATrackerPage = lazy(() => import("./pages/resources/GPATrackerPage"));
@@ -148,6 +149,7 @@ const AppRoutes = () => {
         <Route path="/resources/flashcards" element={<PageWrapper><FlashcardPage /></PageWrapper>} />
         <Route path="/resources/quizlets" element={<PageWrapper><QuizletsPage /></PageWrapper>} />
         <Route path="/resources/quizlets/:id" element={<PageWrapper><QuizletsPage /></PageWrapper>} />
+        <Route path="/resources/essay-check" element={<PageWrapper><EssayCheckPage /></PageWrapper>} />
         <Route path="/resources/study-aide" element={<PageWrapper><StudyAidePage /></PageWrapper>} />
         <Route path="/resources/timetable" element={<PageWrapper><TimetableBuilderPage /></PageWrapper>} />
         <Route path="/resources/gpa-tracker" element={<PageWrapper><GPATrackerPage /></PageWrapper>} />
