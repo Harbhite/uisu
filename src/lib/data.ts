@@ -456,6 +456,27 @@ export const resourceCategories: ResourceCategory[] = [
     path: '/resources/gpa-tracker'
   },
   {
+    id: 'essaycheck',
+    title: 'AI Essay Checker',
+    description: 'Get AI-powered feedback on your essays, check grammar, and improve your writing structure.',
+    color: 'bg-violet-600',
+    path: '/resources/essay-check'
+  },
+  {
+    id: 'studyaide',
+    title: 'Study Aide',
+    description: 'Your personal AI study assistant to help you break down complex topics and learn faster.',
+    color: 'bg-fuchsia-600',
+    path: '/resources/study-aide'
+  },
+  {
+    id: 'quizlets',
+    title: 'AI Quizlets',
+    description: 'Interactive AI-generated quizlets to test your knowledge and prepare for exams.',
+    color: 'bg-teal-600',
+    path: '/resources/quizlets'
+  },
+  {
     id: 'pastquestions',
     title: 'Past Questions Bank',
     description: 'Browse crowdsourced exam questions with AI-generated solutions.',
