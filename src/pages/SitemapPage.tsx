@@ -5,7 +5,7 @@ import {
   BookOpen, GraduationCap, Briefcase, Brain, Calculator, FlaskConical,
   MessageSquare, Shield, Vote, ClipboardList, Search, History,
   Scale, CreditCard, Package, HelpCircle, Mail, Newspaper,
-  ArrowLeft, ExternalLink
+  ArrowLeft, ExternalLink, PenTool, CheckSquare, ListChecks, CalendarDays
 } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -35,6 +35,7 @@ const sections: SitemapSection[] = [
       { label: "Past Leaders", path: "/past-leaders", description: "Historical administrations" },
       { label: "Constitution", path: "/constitution", description: "Union constitution" },
       { label: "Halls of Residence", path: "/halls", description: "All halls" },
+      { label: "Elections", path: "/elections", description: "Union elections & voting" },
     ],
   },
   {
@@ -47,12 +48,17 @@ const sections: SitemapSection[] = [
       { label: "Lost & Found", path: "/lost-found", description: "Lost & found board" },
       { label: "Complaints", path: "/complaints", description: "Submit complaints" },
       { label: "Polls & Voting", path: "/polls", description: "Active polls" },
+      { label: "Confessions", path: "/confessions", description: "Anonymous campus stories" },
+      { label: "Forms", path: "/forms", description: "Official forms & applications" },
     ],
   },
   {
-    title: "Content",
+    title: "Content & Media",
     icon: <BookOpen size={20} />,
     links: [
+      { label: "Gazette", path: "/gazette", description: "Student news & journalism" },
+      { label: "Gazette Issues", path: "/gazette/issues", description: "Published editions" },
+      { label: "Editorial Board", path: "/gazette/editorial-board", description: "Meet the editors" },
       { label: "Inks Vault", path: "/inks-vault", description: "Articles, poetry & creative writing" },
       { label: "Document Library", path: "/documents", description: "Official documents" },
       { label: "Campus Map", path: "/campus-map", description: "Interactive campus map" },
@@ -71,6 +77,10 @@ const sections: SitemapSection[] = [
       { label: "Scholarships", path: "/resources/scholarships", description: "Scholarship listings" },
       { label: "Student Mart", path: "/resources/student-mart", description: "Buy & sell marketplace" },
       { label: "Freshers' Guide", path: "/resources/freshers-guide", description: "New student guide" },
+      { label: "Alumni Network", path: "/resources/alumni-network", description: "Connect with graduates" },
+      { label: "Past Questions", path: "/resources/past-questions", description: "Exam preparation" },
+      { label: "GPA Tracker", path: "/resources/gpa-tracker", description: "Track grades over time" },
+      { label: "Timetable Builder", path: "/resources/timetable", description: "Plan your classes" },
     ],
   },
   {
@@ -78,8 +88,11 @@ const sections: SitemapSection[] = [
     icon: <Brain size={20} />,
     links: [
       { label: "StudyBuddy", path: "/resources/study-buddy", description: "AI study assistant" },
+      { label: "Study Aide", path: "/resources/study-aide", description: "Smart study helper" },
       { label: "AI Quiz", path: "/resources/ai-quiz", description: "Generate quizzes from materials" },
+      { label: "Quizlets", path: "/resources/quizlets", description: "Interactive quizzes" },
       { label: "Flashcards", path: "/resources/flashcards", description: "AI-generated flashcards" },
+      { label: "Essay Check", path: "/resources/essay-check", description: "AI essay review" },
     ],
   },
   {
@@ -88,7 +101,6 @@ const sections: SitemapSection[] = [
     links: [
       { label: "Tutorials Home", path: "/tutorials", description: "Browse tutorials" },
       { label: "Tutorial Catalog", path: "/tutorials/catalog", description: "All courses" },
-      { label: "Upload Tutorial", path: "/tutorials/upload", description: "Become a tutor" },
     ],
   },
   {
@@ -97,6 +109,7 @@ const sections: SitemapSection[] = [
     links: [
       { label: "Sign In / Sign Up", path: "/auth", description: "Authentication" },
       { label: "Profile Card", path: "/profile-card", description: "Digital ID card" },
+      { label: "Academic Planner", path: "/planner", description: "Plan your semesters" },
       { label: "Budget Tracker", path: "/budget", description: "Personal budget tool" },
       { label: "Academic Calendar", path: "/academic-calendar", description: "Semester dates" },
       { label: "Newsletter", path: "/newsletter", description: "Newsletter archive" },
