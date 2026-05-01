@@ -923,9 +923,13 @@ const AIQuizPage = () => {
 
   const saveToQuizlets = async () => {
     if (!user) { toast.error('Please sign in to save quizlets'); navigate('/auth'); return; }
+    if (!questions || questions.length === 0) {
+      toast.error('No questions to save');
+      return;
+    }
     try {
       const title = inputText.trim().substring(0, 200) || 'AI Generated Quiz';
-      const { error } = await supabase.from('quizlets').insert({
+      const { data, error } = await supabase.from('quizlets').insert({
         title,
         description: `${questions.length} questions • ${rigidity} rigidity • ${depth} depth`,
         questions: questions as any,
@@ -933,13 +937,13 @@ const AIQuizPage = () => {
         difficulty: depth,
         rigidity,
         created_by: user.id,
-      });
+      }).select('id').single();
       if (error) throw error;
       toast.success('Quiz saved to Quizlets!');
-      navigate('/resources/quizlets');
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to save quiz');
+      navigate(data?.id ? `/resources/quizlets/${data.id}` : '/resources/quizlets');
+    } catch (err: any) {
+      console.error('saveToQuizlets failed:', err);
+      toast.error(err?.message ? `Save failed: ${err.message}` : 'Failed to save quiz');
     }
   };
 

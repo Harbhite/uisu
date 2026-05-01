@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   BookOpen, Clock, Users, ChevronRight, ChevronLeft,
   CheckCircle2, XCircle, Trophy, Sparkles, Search, BrainCircuit,
-  RefreshCcw, Link as LinkIcon, Copy, Pencil, Trash2,
+  RefreshCcw, Link as LinkIcon, Copy, Pencil, Trash2, Flame, Medal,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -64,6 +64,43 @@ const QuizletsPage = () => {
   const [timeElapsed, setTimeElapsed] = useState(0);
   const timerRef = useRef<number | null>(null);
   const autoAdvanceRef = useRef<number | null>(null);
+
+  // Leaderboard + streak
+  interface LeaderboardEntry {
+    id: string;
+    user_display_name: string | null;
+    accuracy: number;
+    time_taken_seconds: number;
+    score: number;
+    total_questions: number;
+    created_at: string;
+  }
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [streak, setStreak] = useState<{ current_streak: number; longest_streak: number } | null>(null);
+
+  const fetchLeaderboard = async (quizletId: string) => {
+    const { data } = await supabase
+      .from('quiz_attempts')
+      .select('id,user_display_name,accuracy,time_taken_seconds,score,total_questions,created_at')
+      .eq('quizlet_id', quizletId)
+      .order('accuracy', { ascending: false })
+      .order('time_taken_seconds', { ascending: true })
+      .limit(10);
+    setLeaderboard((data as LeaderboardEntry[]) || []);
+  };
+
+  const fetchStreak = async () => {
+    if (!user) { setStreak(null); return; }
+    const { data } = await supabase
+      .from('user_streaks')
+      .select('current_streak,longest_streak')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    setStreak(data || { current_streak: 0, longest_streak: 0 });
+  };
+
+  useEffect(() => { fetchStreak(); }, [user?.id]);
+  useEffect(() => { if (activeQuizlet) fetchLeaderboard(activeQuizlet.id); }, [activeQuizlet?.id]);
 
   useEffect(() => {
     if (quizletId) {
@@ -197,16 +234,38 @@ const QuizletsPage = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     setStep('result');
 
-    if (user && activeQuizlet) {
-      const score = userAnswers.reduce((acc, val, i) => (val === questions[i]?.correctIndex ? acc + 1 : acc), 0);
-      await supabase.from('quizlet_attempts').insert({
+    if (activeQuizlet) {
+      const finalScore = userAnswers.reduce((acc, val, i) => (val === questions[i]?.correctIndex ? acc + 1 : acc), 0);
+      const accuracy = questions.length > 0 ? Math.round((finalScore / questions.length) * 10000) / 100 : 0;
+
+      // Resolve display name (profile full_name or anonymous)
+      let displayName: string | null = null;
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .maybeSingle();
+        displayName = profile?.full_name || user.email?.split('@')[0] || 'Student';
+      } else {
+        displayName = 'Anonymous';
+      }
+
+      const { error: attemptError } = await supabase.from('quiz_attempts').insert({
         quizlet_id: activeQuizlet.id,
-        user_id: user.id,
-        answers: userAnswers as any,
-        score,
-        total: questions.length,
-        time_seconds: timeElapsed,
+        user_id: user?.id ?? null,
+        user_display_name: displayName,
+        score: finalScore,
+        total_questions: questions.length,
+        accuracy,
+        time_taken_seconds: timeElapsed,
       });
+      if (attemptError) console.error('Failed to record attempt:', attemptError);
+
+      // Refresh leaderboard for this quizlet
+      fetchLeaderboard(activeQuizlet.id);
+      // Refresh personal streak
+      if (user) fetchStreak();
     }
   };
 
@@ -427,6 +486,38 @@ const QuizletsPage = () => {
                 className="w-full py-3 border border-border text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:border-accent hover:text-accent transition-all rounded-lg">
                 <ChevronLeft size={14} /> Browse Quizlets
               </button>
+
+              {/* Leaderboard */}
+              <div className="bg-card border border-border rounded-lg p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Trophy size={14} className="text-accent" />
+                  <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Top Scorers</h4>
+                </div>
+                {leaderboard.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No attempts yet — be the first!</p>
+                ) : (
+                  <ol className="space-y-2">
+                    {leaderboard.map((entry, idx) => {
+                      const isMe = user && entry.user_display_name && (
+                        // Highlight current user's most recent entry by matching name and recency
+                        false
+                      );
+                      const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
+                      return (
+                        <li key={entry.id} className={`flex items-center justify-between gap-2 text-xs py-1.5 px-2 rounded ${isMe ? 'bg-accent/10' : ''}`}>
+                          <span className="flex items-center gap-2 min-w-0">
+                            <span className="shrink-0 w-6 text-center">{medal}</span>
+                            <span className="truncate text-foreground">{entry.user_display_name || 'Anonymous'}</span>
+                          </span>
+                          <span className="shrink-0 text-muted-foreground tabular-nums">
+                            {entry.accuracy.toFixed(0)}% · {formatTime(entry.time_taken_seconds)}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                )}
+              </div>
             </div>
 
             <div className="lg:col-span-8">
@@ -487,6 +578,20 @@ const QuizletsPage = () => {
       <AIToolsHeader title="Quizlets" subtitle="Community Quiz Bank" icon={BookOpen} />
       
       <div className="container mx-auto px-4 max-w-6xl py-10">
+        {user && streak && (
+          <div className="mb-6 flex flex-wrap items-center gap-3">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-accent/15 to-accent/5 border border-accent/30 rounded-full">
+              <Flame size={14} className={streak.current_streak > 0 ? 'text-accent' : 'text-muted-foreground'} />
+              <span className="text-xs font-bold text-primary tabular-nums">{streak.current_streak}-day streak</span>
+            </div>
+            {streak.longest_streak > 0 && (
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-muted/50 border border-border rounded-full">
+                <Medal size={14} className="text-muted-foreground" />
+                <span className="text-xs text-muted-foreground tabular-nums">Best: {streak.longest_streak}</span>
+              </div>
+            )}
+          </div>
+        )}
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8">
           <div className="relative flex-1 max-w-md">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
