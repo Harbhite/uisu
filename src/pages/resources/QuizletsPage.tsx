@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   BookOpen, Clock, Users, ChevronRight, ChevronLeft,
   CheckCircle2, XCircle, Trophy, Sparkles, Search, BrainCircuit,
-  RefreshCcw, Link as LinkIcon, Copy, Pencil, Trash2,
+  RefreshCcw, Link as LinkIcon, Copy, Pencil, Trash2, Flame, Medal,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -64,6 +64,43 @@ const QuizletsPage = () => {
   const [timeElapsed, setTimeElapsed] = useState(0);
   const timerRef = useRef<number | null>(null);
   const autoAdvanceRef = useRef<number | null>(null);
+
+  // Leaderboard + streak
+  interface LeaderboardEntry {
+    id: string;
+    user_display_name: string | null;
+    accuracy: number;
+    time_taken_seconds: number;
+    score: number;
+    total_questions: number;
+    created_at: string;
+  }
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [streak, setStreak] = useState<{ current_streak: number; longest_streak: number } | null>(null);
+
+  const fetchLeaderboard = async (quizletId: string) => {
+    const { data } = await supabase
+      .from('quiz_attempts')
+      .select('id,user_display_name,accuracy,time_taken_seconds,score,total_questions,created_at')
+      .eq('quizlet_id', quizletId)
+      .order('accuracy', { ascending: false })
+      .order('time_taken_seconds', { ascending: true })
+      .limit(10);
+    setLeaderboard((data as LeaderboardEntry[]) || []);
+  };
+
+  const fetchStreak = async () => {
+    if (!user) { setStreak(null); return; }
+    const { data } = await supabase
+      .from('user_streaks')
+      .select('current_streak,longest_streak')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    setStreak(data || { current_streak: 0, longest_streak: 0 });
+  };
+
+  useEffect(() => { fetchStreak(); }, [user?.id]);
+  useEffect(() => { if (activeQuizlet) fetchLeaderboard(activeQuizlet.id); }, [activeQuizlet?.id]);
 
   useEffect(() => {
     if (quizletId) {
