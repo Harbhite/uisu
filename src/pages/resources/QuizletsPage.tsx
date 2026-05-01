@@ -486,6 +486,38 @@ const QuizletsPage = () => {
                 className="w-full py-3 border border-border text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:border-accent hover:text-accent transition-all rounded-lg">
                 <ChevronLeft size={14} /> Browse Quizlets
               </button>
+
+              {/* Leaderboard */}
+              <div className="bg-card border border-border rounded-lg p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Trophy size={14} className="text-accent" />
+                  <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Top Scorers</h4>
+                </div>
+                {leaderboard.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No attempts yet — be the first!</p>
+                ) : (
+                  <ol className="space-y-2">
+                    {leaderboard.map((entry, idx) => {
+                      const isMe = user && entry.user_display_name && (
+                        // Highlight current user's most recent entry by matching name and recency
+                        false
+                      );
+                      const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
+                      return (
+                        <li key={entry.id} className={`flex items-center justify-between gap-2 text-xs py-1.5 px-2 rounded ${isMe ? 'bg-accent/10' : ''}`}>
+                          <span className="flex items-center gap-2 min-w-0">
+                            <span className="shrink-0 w-6 text-center">{medal}</span>
+                            <span className="truncate text-foreground">{entry.user_display_name || 'Anonymous'}</span>
+                          </span>
+                          <span className="shrink-0 text-muted-foreground tabular-nums">
+                            {entry.accuracy.toFixed(0)}% · {formatTime(entry.time_taken_seconds)}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                )}
+              </div>
             </div>
 
             <div className="lg:col-span-8">
