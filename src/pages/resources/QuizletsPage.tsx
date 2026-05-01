@@ -197,16 +197,38 @@ const QuizletsPage = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     setStep('result');
 
-    if (user && activeQuizlet) {
-      const score = userAnswers.reduce((acc, val, i) => (val === questions[i]?.correctIndex ? acc + 1 : acc), 0);
-      await supabase.from('quizlet_attempts').insert({
+    if (activeQuizlet) {
+      const finalScore = userAnswers.reduce((acc, val, i) => (val === questions[i]?.correctIndex ? acc + 1 : acc), 0);
+      const accuracy = questions.length > 0 ? Math.round((finalScore / questions.length) * 10000) / 100 : 0;
+
+      // Resolve display name (profile full_name or anonymous)
+      let displayName: string | null = null;
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .maybeSingle();
+        displayName = profile?.full_name || user.email?.split('@')[0] || 'Student';
+      } else {
+        displayName = 'Anonymous';
+      }
+
+      const { error: attemptError } = await supabase.from('quiz_attempts').insert({
         quizlet_id: activeQuizlet.id,
-        user_id: user.id,
-        answers: userAnswers as any,
-        score,
-        total: questions.length,
-        time_seconds: timeElapsed,
+        user_id: user?.id ?? null,
+        user_display_name: displayName,
+        score: finalScore,
+        total_questions: questions.length,
+        accuracy,
+        time_taken_seconds: timeElapsed,
       });
+      if (attemptError) console.error('Failed to record attempt:', attemptError);
+
+      // Refresh leaderboard for this quizlet
+      fetchLeaderboard(activeQuizlet.id);
+      // Refresh personal streak
+      if (user) fetchStreak();
     }
   };
 
