@@ -31,6 +31,11 @@
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
+  <url>
+    <loc>https://uisu.space/elections</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
   
   <!-- Community & Events -->
   <url>
@@ -47,6 +52,31 @@
     <loc>https://uisu.space/announcements</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://uisu.space/lost-found</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://uisu.space/complaints</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://uisu.space/polls</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://uisu.space/confessions</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://uisu.space/forms</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   
   <!-- Campus -->
@@ -132,6 +162,73 @@
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
+  <url>
+    <loc>https://uisu.space/resources/study-buddy</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://uisu.space/resources/ai-quiz</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://uisu.space/resources/flashcards</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://uisu.space/resources/quizlets</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://uisu.space/resources/essay-check</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://uisu.space/resources/study-aide</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://uisu.space/resources/timetable</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://uisu.space/resources/gpa-tracker</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://uisu.space/resources/past-questions</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://uisu.space/resources/alumni-network</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Gazette -->
+  <url>
+    <loc>https://uisu.space/gazette</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://uisu.space/gazette/issues</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://uisu.space/gazette/editorial-board</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
   
   <!-- Inks Vault (Creative Writing) -->
   <url>
@@ -152,6 +249,23 @@
     <priority>0.6</priority>
   </url>
   
+  <!-- Account & Personal Tools -->
+  <url>
+    <loc>https://uisu.space/planner</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://uisu.space/budget</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://uisu.space/academic-calendar</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
   <!-- Newsletter -->
   <url>
     <loc>https://uisu.space/newsletter</loc>
@@ -172,6 +286,13 @@
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
+
+  <!-- Feedback -->
+  <url>
+    <loc>https://uisu.space/feedback</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
   
   <!-- Legal Pages -->
   <url>
@@ -181,6 +302,11 @@
   </url>
   <url>
     <loc>https://uisu.space/terms-of-service</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://uisu.space/style-guide</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
