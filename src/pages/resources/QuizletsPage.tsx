@@ -578,6 +578,20 @@ const QuizletsPage = () => {
       <AIToolsHeader title="Quizlets" subtitle="Community Quiz Bank" icon={BookOpen} />
       
       <div className="container mx-auto px-4 max-w-6xl py-10">
+        {user && streak && (
+          <div className="mb-6 flex flex-wrap items-center gap-3">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-accent/15 to-accent/5 border border-accent/30 rounded-full">
+              <Flame size={14} className={streak.current_streak > 0 ? 'text-accent' : 'text-muted-foreground'} />
+              <span className="text-xs font-bold text-primary tabular-nums">{streak.current_streak}-day streak</span>
+            </div>
+            {streak.longest_streak > 0 && (
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-muted/50 border border-border rounded-full">
+                <Medal size={14} className="text-muted-foreground" />
+                <span className="text-xs text-muted-foreground tabular-nums">Best: {streak.longest_streak}</span>
+              </div>
+            )}
+          </div>
+        )}
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8">
           <div className="relative flex-1 max-w-md">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
