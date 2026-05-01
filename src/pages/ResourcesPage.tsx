@@ -6,7 +6,8 @@ import { useRef } from 'react';
 import {
   Library, Briefcase, GraduationCap, Heart, Brain,
   Rocket, ShoppingBag, Compass, Users, Activity,
-  ArrowLeft, Search, ArrowRight, Star, Calculator, Grip
+  ArrowLeft, Search, ArrowRight, Star, Calculator, Grip,
+  FileCheck, BookOpen, PenTool
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { resourceCategories } from '@/lib/data';
@@ -28,6 +29,9 @@ const iconMap: { [key: string]: React.ElementType } = {
   aiquiz: Brain,
   timetable: Grip,
   gpatracker: Calculator,
+  essaycheck: FileCheck,
+  studyaide: BookOpen,
+  quizlets: PenTool,
   pastquestions: Library,
 };
 
@@ -48,6 +52,9 @@ const colorMap: { [key: string]: string } = {
   aiquiz: 'bg-rose-800',
   timetable: 'bg-sky-800',
   gpatracker: 'bg-emerald-800',
+  essaycheck: 'bg-violet-800',
+  studyaide: 'bg-fuchsia-800',
+  quizlets: 'bg-teal-800',
   pastquestions: 'bg-indigo-700',
 };
 
