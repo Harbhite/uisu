@@ -997,6 +997,7 @@ const AIQuizPage = () => {
               generateQuiz={generateQuiz}
               depth={depth}
               setDepth={setDepth}
+              fileProgress={fileProgress}
             />
           )}
           {step === 'generating' && <GeneratingView key="generating" />}
