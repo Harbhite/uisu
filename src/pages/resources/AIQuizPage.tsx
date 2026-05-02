@@ -29,9 +29,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { DepthLevel } from '@/lib/file-utils';
-import { readMultipleFiles, mergeFileContents } from '@/lib/multi-file-utils';
+import { readMultipleFiles, mergeFileContents, type FileProgress } from '@/lib/multi-file-utils';
 import { cacheOutput } from '@/lib/ai-cache';
 import GenerationProgress from '@/components/resources/GenerationProgress';
+import { FileProgressList } from '@/components/resources/FileProgressList';
+import { compressImage } from '@/lib/image-compression';
 import { SEO } from '@/components/SEO';
 import AIToolsHeader from '@/components/resources/AIToolsHeader';
 
