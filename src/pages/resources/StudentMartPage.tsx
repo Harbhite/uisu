@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { compressImage } from '@/lib/image-compression';
 
 interface Listing {
   id: string;
