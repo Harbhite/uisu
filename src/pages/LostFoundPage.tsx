@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GridCardSkeleton } from '@/components/skeletons/GenericSkeletons';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, MapPin, Clock, Tag, X, Upload, Phone, Loader2, Trash2, CheckCircle2, ArrowLeft, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Plus, MapPin, Clock, Tag, X, Upload, Phone, Loader2, Trash2, CheckCircle2, ArrowLeft, Sparkles, ChevronDown, ChevronUp, Mic, Wand2, ImagePlus, FileImage, ShieldQuestion, ShieldAlert, CheckCircle, MessageSquareWarning, Newspaper, Route } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
@@ -63,6 +63,9 @@ const LostFoundPage = () => {
   const [currentUser, setCurrentUser] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [enhancing, setEnhancing] = useState(false);
+  const [listening, setListening] = useState(false);
+
   const fileRef = useRef<HTMLInputElement>(null);
 
   // AI Smart Search state
@@ -71,6 +74,22 @@ const LostFoundPage = () => {
   const [aiMatches, setAiMatches] = useState<AIMatch[]>([]);
   const [aiSearching, setAiSearching] = useState(false);
   const [aiSearched, setAiSearched] = useState(false);
+
+
+  const [generatingQuestions, setGeneratingQuestions] = useState(false);
+  const [verificationQuestions, setVerificationQuestions] = useState<string[]>([]);
+  const [claimDescription, setClaimDescription] = useState('');
+  const [verifyingClaim, setVerifyingClaim] = useState(false);
+  const [claimResult, setClaimResult] = useState<{ isSuspicious: boolean, reasoning: string, confidenceScore: number } | null>(null);
+
+
+  const [generatingDigest, setGeneratingDigest] = useState(false);
+  const [analyzingLocation, setAnalyzingLocation] = useState(false);
+  const [routeSuggestion, setRouteSuggestion] = useState<string | null>(null);
+
+  const [analyzingImage, setAnalyzingImage] = useState(false);
+  const aiFileRef = useRef<HTMLInputElement>(null);
+
 
   const [form, setForm] = useState({
     title: '', description: '', category: 'Other', item_type: 'lost',
@@ -107,34 +126,226 @@ const LostFoundPage = () => {
     finally { setUploading(false); }
   };
 
+
+  const handleVoiceIntake = () => {
+    if (!('webkitSpeechRecognition' in window)) {
+      toast.error('Voice input is not supported in this browser.');
+      return;
+    }
+    const SpeechRecognition = (window as unknown as Record<string, unknown>).webkitSpeechRecognition as new () => unknown;
+    const recognition = new SpeechRecognition() as any;
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => {
+      setListening(true);
+      toast.info('Listening... Speak your description.');
+    };
+
+    recognition.onresult = (event: unknown) => {
+      const transcript = event.results[0][0].transcript;
+      setForm(f => ({ ...f, description: (f.description ? f.description + ' ' : '') + transcript }));
+    };
+
+    recognition.onerror = (event: unknown) => {
+      console.error(event.error);
+      toast.error('Voice recognition error.');
+      setListening(false);
+    };
+
+    recognition.onend = () => {
+      setListening(false);
+    };
+
+    recognition.start();
+  };
+
+  const handleEnhanceText = async () => {
+    if (!form.description?.trim()) {
+      toast.error("Please enter a description to enhance");
+      return;
+    }
+    setEnhancing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('lost-found-match', {
+        body: { action: 'enhance-text', payload: { text: form.description } },
+      });
+      if (error) throw error;
+      if (data?.title) setForm(f => ({ ...f, title: data.title }));
+      if (data?.description) setForm(f => ({ ...f, description: data.description }));
+      if (data?.category) setForm(f => ({ ...f, category: data.category }));
+      toast.success("Text enhanced & categorized!");
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to enhance text");
+    } finally {
+      setEnhancing(false);
+    }
+  };
+
+
+
+  const handleAnalyzePhoto = async (e: React.ChangeEvent<HTMLInputElement>, isSearch: boolean = false) => {
+    const rawFile = e.target.files?.[0];
+    if (!rawFile) return;
+
+    // File to base64
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const base64 = event.target?.result;
+      if (!base64 || typeof base64 !== 'string') return;
+
+      setAnalyzingImage(true);
+      toast.info('Analyzing image...');
+
+      try {
+        const { data, error } = await supabase.functions.invoke('lost-found-match', {
+          body: { action: 'analyze-image', payload: { imageData: base64 } }
+        });
+        if (error) throw error;
+
+        if (isSearch) {
+          setAiDescription(data.description || '');
+          toast.success('Extracted description from image! Click "Find Matches" to search.');
+        } else {
+          if (data.title) setForm(f => ({ ...f, title: data.title }));
+          if (data.description) setForm(f => ({ ...f, description: data.description }));
+          if (data.category) setForm(f => ({ ...f, category: data.category }));
+          toast.success('Form auto-filled from image!');
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error('Failed to analyze image');
+      } finally {
+        setAnalyzingImage(false);
+        if (e.target) e.target.value = ''; // Reset file input
+      }
+    };
+    reader.readAsDataURL(rawFile);
+  };
+
+
+  const handleGenerateQuestions = async () => {
+    if (!showDetailModal?.description) return;
+    setGeneratingQuestions(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('lost-found-match', {
+        body: { action: 'generate-questions', payload: { description: showDetailModal.description } }
+      });
+      if (error) throw error;
+      setVerificationQuestions(data.questions || []);
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to generate verification questions');
+    } finally {
+      setGeneratingQuestions(false);
+    }
+  };
+
+  const handleVerifyClaim = async () => {
+    if (!claimDescription.trim() || !showDetailModal?.description) return;
+    setVerifyingClaim(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('lost-found-match', {
+        body: { action: 'verify-claim', payload: { originalDescription: showDetailModal.description, claimDescription } }
+      });
+      if (error) throw error;
+      setClaimResult(data);
+      if (data.isSuspicious) {
+        toast.error('Claim appears suspicious. Review carefully.');
+      } else {
+        toast.success('Claim appears legitimate.');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to verify claim');
+    } finally {
+      setVerifyingClaim(false);
+    }
+  };
+
+
+  const handleDailyDigest = async () => {
+    setGeneratingDigest(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('lost-found-match', {
+        body: { action: 'daily-digest' }
+      });
+      if (error) throw error;
+      toast(
+        <div className="space-y-2">
+          <h4 className="font-bold flex items-center gap-2"><Newspaper size={16}/> Daily Bulletin</h4>
+          <p className="text-sm">{data.summary}</p>
+        </div>,
+        { duration: 8000 }
+      );
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to generate daily digest');
+    } finally {
+      setGeneratingDigest(false);
+    }
+  };
+
+  const handleAnalyzeLocation = async () => {
+    if (!showDetailModal?.location || !showDetailModal?.description) return;
+    setAnalyzingLocation(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('lost-found-match', {
+        body: { action: 'suggest-route', payload: { location: showDetailModal.location, description: showDetailModal.description } }
+      });
+      if (error) throw error;
+      setRouteSuggestion(data.suggestion);
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to analyze location');
+    } finally {
+      setAnalyzingLocation(false);
+    }
+  };
+
   const handleCreate = async () => {
     if (!form.title.trim()) { toast.error('Title is required'); return; }
     if (!currentUser) { toast.error('Please sign in first'); return; }
     setCreating(true);
     try {
-      const { error } = await supabase.from('lost_found_items').insert({
+      const { error, data: newItem } = await supabase.from('lost_found_items').insert({
         user_id: currentUser, title: form.title, description: form.description || null,
         category: form.category, item_type: form.item_type, location: form.location || null,
         contact_info: form.contact_info || null, photos: form.photos,
-      });
+      }).select().single();
       if (error) throw error;
       toast.success('Item posted!');
       setShowCreateModal(false);
+
+      // Feature 1: Semantic match immediately after post
+      if (form.item_type === 'found' && form.description) {
+        toast.info("Scanning for likely owners...");
+        supabase.functions.invoke('lost-found-match', {
+          body: { action: 'match-found-to-lost', payload: { description: form.description, category: form.category } }
+        }).then(({ data }) => {
+          if (data?.matches?.length > 0) {
+             toast.success(`Found ${data.matches.length} possible owners! Check the board.`, { duration: 5000 });
+          }
+        }).catch(err => console.error("Auto-match failed:", err));
+      }
+
       setForm({ title: '', description: '', category: 'Other', item_type: 'lost', location: '', contact_info: '', photos: [] });
       fetchItems();
     } catch { toast.error('Failed to create post'); }
     finally { setCreating(false); }
   };
 
-  const handleResolve = async (id: string) => {
+const handleResolve = async (id: string) => {
     const { error } = await supabase.from('lost_found_items').update({ status: 'resolved' }).eq('id', id);
-    if (!error) { toast.success('Marked as resolved'); fetchItems(); setShowDetailModal(null); }
+    if (!error) { toast.success('Marked as resolved'); fetchItems(); setShowDetailModal(null); setVerificationQuestions([]); setClaimDescription(''); setClaimResult(null); setRouteSuggestion(null);; }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this post?')) return;
     const { error } = await supabase.from('lost_found_items').delete().eq('id', id);
-    if (!error) { toast.success('Deleted'); fetchItems(); setShowDetailModal(null); }
+    if (!error) { toast.success('Deleted'); fetchItems(); setShowDetailModal(null); setVerificationQuestions([]); setClaimDescription(''); setClaimResult(null); setRouteSuggestion(null);; }
   };
 
   const handleAISearch = async () => {
@@ -195,15 +406,30 @@ const LostFoundPage = () => {
       <SEO title="Lost & Found - UISU SPACE" description="Report lost items or post found items on campus" />
 
       <div className="container mx-auto px-6">
-        <button
-          onClick={() => navigate('/')}
-          className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors mb-12"
-        >
-          <div className="p-2 border border-border group-hover:border-nobel-gold transition-colors">
-            <ArrowLeft size={14} />
-          </div>
-          <span>Back</span>
-        </button>
+
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-16">
+          <button
+            onClick={() => navigate('/')}
+            className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-nobel-gold transition-colors"
+          >
+            <div className="p-2 border border-border group-hover:border-nobel-gold transition-colors">
+              <ArrowLeft size={14} />
+            </div>
+            <span>Back</span>
+          </button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDailyDigest}
+            disabled={generatingDigest}
+            className="rounded-full text-xs font-bold uppercase tracking-widest bg-ui-blue text-white border-ui-blue hover:bg-ui-dark"
+          >
+            {generatingDigest ? <Loader2 size={14} className="animate-spin mr-2" /> : <Newspaper size={14} className="mr-2" />}
+            Morning Bulletin
+          </Button>
+        </div>
+
 
         <div className="mb-16">
           <motion.div
@@ -288,6 +514,7 @@ const LostFoundPage = () => {
                     className="rounded-2xl border-border min-h-[100px] text-sm"
                     rows={3}
                   />
+
                   <div className="flex items-center gap-3">
                     <Button
                       onClick={handleAISearch}
@@ -297,12 +524,24 @@ const LostFoundPage = () => {
                       {aiSearching ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
                       {aiSearching ? 'Searching...' : 'Find Matches'}
                     </Button>
+                    <div className="h-6 w-px bg-slate-200"></div>
+                    <Button
+                      variant="outline"
+                      onClick={() => document.getElementById('search-image-upload')?.click()}
+                      disabled={analyzingImage}
+                      className="gap-2 rounded-2xl border-border text-xs uppercase tracking-widest font-bold"
+                    >
+                      {analyzingImage ? <Loader2 size={14} className="animate-spin" /> : <FileImage size={14} />}
+                      Search by Photo
+                    </Button>
+                    <input id="search-image-upload" type="file" accept="image/*" className="hidden" onChange={(e) => handleAnalyzePhoto(e, true)} />
                     {aiSearched && (
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-slate-400 ml-auto">
                         {aiMatches.length} match{aiMatches.length !== 1 ? 'es' : ''} found
                       </span>
                     )}
                   </div>
+
 
                   {/* AI Results */}
                   <AnimatePresence>
@@ -483,6 +722,19 @@ const LostFoundPage = () => {
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border-border">
           <DialogHeader><DialogTitle className="font-serif text-2xl text-ui-blue">Post Lost or Found Item</DialogTitle></DialogHeader>
           <div className="space-y-4 mt-2">
+
+            <div className="flex justify-between items-center bg-slate-50 p-3 rounded-2xl border border-slate-100">
+               <div>
+                  <h4 className="text-sm font-bold text-ui-blue">Auto-fill from Photo</h4>
+                  <p className="text-[10px] text-slate-500">Upload a picture and let AI fill out the details</p>
+               </div>
+               <Button type="button" variant="outline" size="sm" onClick={() => aiFileRef.current?.click()} disabled={analyzingImage} className="gap-2 rounded-2xl h-8">
+                  {analyzingImage ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />}
+                  Upload
+               </Button>
+               <input ref={aiFileRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleAnalyzePhoto(e, false)} />
+            </div>
+
             <Tabs value={form.item_type} onValueChange={v => setForm(f => ({ ...f, item_type: v }))}>
               <TabsList className="w-full rounded-2xl bg-slate-50 border border-border h-auto p-1">
                 <TabsTrigger value="lost" className="flex-1 rounded-2xl py-2 text-[10px] font-bold uppercase tracking-widest data-[state=active]:bg-ui-blue data-[state=active]:text-white">I Lost Something</TabsTrigger>
@@ -495,10 +747,24 @@ const LostFoundPage = () => {
               <Input placeholder="Item name" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="rounded-2xl border-border" />
             </div>
 
+
             <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Description</label>
+              <div className="flex justify-between items-end">
+                <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Description</label>
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={handleVoiceIntake} disabled={listening} className={`h-6 px-2 text-[10px] rounded-2xl ${listening ? 'bg-red-50 text-red-500 border-red-200' : 'text-slate-500'}`}>
+                    {listening ? <Loader2 size={12} className="animate-spin mr-1" /> : <Mic size={12} className="mr-1" />}
+                    {listening ? 'Listening...' : 'Dictate'}
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={handleEnhanceText} disabled={enhancing || !form.description} className="h-6 px-2 text-[10px] rounded-2xl text-nobel-gold border-nobel-gold/30 hover:bg-nobel-gold/10">
+                    {enhancing ? <Loader2 size={12} className="animate-spin mr-1" /> : <Wand2 size={12} className="mr-1" />}
+                    AI Enhance
+                  </Button>
+                </div>
+              </div>
               <Textarea placeholder="Color, brand, identifying features..." value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="rounded-2xl border-border" />
             </div>
+
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -553,7 +819,7 @@ const LostFoundPage = () => {
       </Dialog>
 
       {/* Detail Modal */}
-      <Dialog open={!!showDetailModal} onOpenChange={() => setShowDetailModal(null)}>
+      <Dialog open={!!showDetailModal} onOpenChange={() => setShowDetailModal(null); setVerificationQuestions([]); setClaimDescription(''); setClaimResult(null); setRouteSuggestion(null);}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border-border">
           {showDetailModal && (
             <>
@@ -586,13 +852,28 @@ const LostFoundPage = () => {
               )}
 
               <div className="space-y-3 text-sm border-t border-slate-100 pt-6 mt-2">
+
                 {showDetailModal.location && (
-                  <p className="flex items-center gap-3 text-slate-600">
-                    <MapPin size={16} className="text-nobel-gold" />
-                    <span>{showDetailModal.location}</span>
-                  </p>
+                  <div className="space-y-2">
+                    <p className="flex items-center gap-3 text-slate-600">
+                      <MapPin size={16} className="text-nobel-gold" />
+                      <span>{showDetailModal.location}</span>
+                    </p>
+
+                    {routeSuggestion ? (
+                      <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl text-xs text-slate-600 ml-7">
+                        <div className="font-bold flex items-center gap-1.5 mb-1 text-ui-blue"><Route size={12}/> Route Analysis</div>
+                        {routeSuggestion}
+                      </div>
+                    ) : (
+                      <button onClick={handleAnalyzeLocation} disabled={analyzingLocation} className="text-[10px] text-nobel-gold ml-7 font-bold uppercase tracking-widest hover:underline flex items-center gap-1">
+                        {analyzingLocation ? <Loader2 size={10} className="animate-spin" /> : <Route size={10} />} Analyze Location
+                      </button>
+                    )}
+                  </div>
                 )}
-                {showDetailModal.contact_info && (
+
+                {showDetailModal.contact_info && (currentUser === showDetailModal.user_id || showDetailModal.item_type === 'lost') && (
                   <p className="flex items-center gap-3 text-slate-600">
                     <Phone size={16} className="text-nobel-gold" />
                     <span className="font-medium text-ui-blue">{showDetailModal.contact_info}</span>
@@ -603,6 +884,74 @@ const LostFoundPage = () => {
                   <span>Posted {formatDistanceToNow(new Date(showDetailModal.created_at), { addSuffix: true })}</span>
                 </p>
               </div>
+
+
+              {currentUser === showDetailModal.user_id && showDetailModal.item_type === 'found' && showDetailModal.description && (
+                <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl mt-4">
+                  <h4 className="text-sm font-bold text-ui-blue flex items-center gap-2 mb-2">
+                    <ShieldQuestion size={14} className="text-nobel-gold" /> Verification Questions
+                  </h4>
+                  <p className="text-xs text-slate-500 mb-3">Generate questions to ask claimants to verify true ownership.</p>
+
+                  {verificationQuestions.length > 0 ? (
+                    <ul className="space-y-2 text-sm text-slate-700 list-disc pl-4">
+                      {verificationQuestions.map((q, i) => <li key={i}>{q}</li>)}
+                    </ul>
+                  ) : (
+                    <Button variant="outline" size="sm" onClick={handleGenerateQuestions} disabled={generatingQuestions} className="text-xs rounded-2xl bg-white">
+                      {generatingQuestions ? <Loader2 size={12} className="animate-spin mr-2" /> : null}
+                      Generate Questions
+                    </Button>
+                  )}
+                </div>
+              )}
+
+
+              {currentUser !== showDetailModal.user_id && showDetailModal.item_type === 'found' && (
+                <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl mt-4 space-y-3">
+                  <h4 className="text-sm font-bold text-ui-blue flex items-center gap-2">
+                    <MessageSquareWarning size={14} className="text-nobel-gold" /> Claim this Item
+                  </h4>
+                  <p className="text-xs text-slate-500">Provide a detailed description of your item to view contact information. AI will review your claim to prevent fraud.</p>
+
+                  {!claimResult || claimResult.isSuspicious ? (
+                    <>
+                      <Textarea
+                        placeholder="Describe your item in detail..."
+                        value={claimDescription}
+                        onChange={e => setClaimDescription(e.target.value)}
+                        className="text-sm rounded-2xl border-border bg-white"
+                        rows={2}
+                      />
+                      <Button size="sm" onClick={handleVerifyClaim} disabled={verifyingClaim || !claimDescription} className="w-full text-xs rounded-2xl bg-ui-blue text-white">
+                        {verifyingClaim ? <Loader2 size={12} className="animate-spin mr-2" /> : null}
+                        Verify Claim
+                      </Button>
+
+                      {claimResult && claimResult.isSuspicious && (
+                        <div className="bg-red-50 text-red-600 p-3 rounded-xl border border-red-100 text-xs flex items-start gap-2">
+                          <ShieldAlert size={14} className="mt-0.5 shrink-0" />
+                          <div>
+                            <strong>Suspicious Claim (Score: {claimResult.confidenceScore})</strong>
+                            <p className="mt-1">{claimResult.reasoning}</p>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="bg-green-50 border border-green-200 p-4 rounded-2xl text-center space-y-2">
+                      <CheckCircle className="text-green-500 mx-auto" size={24} />
+                      <p className="text-sm font-bold text-green-700">Claim Verified</p>
+                      <p className="text-xs text-green-600 mb-2">You can now contact the finder.</p>
+                      <div className="inline-flex items-center gap-2 bg-white px-3 py-1.5 rounded-full text-sm font-bold border border-green-200">
+                        <Phone size={14} className="text-green-600" />
+                        {showDetailModal.contact_info || "No contact info provided."}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
 
               {currentUser === showDetailModal.user_id && (
                 <div className="flex gap-2 pt-6 border-t border-slate-100">
