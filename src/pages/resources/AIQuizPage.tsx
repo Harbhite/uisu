@@ -816,7 +816,7 @@ const AIQuizPage = () => {
       let imageDataUrl = '';
 
       if (selectedFiles.length > 0) {
-        const results = await readMultipleFiles(selectedFiles);
+        const results = await readMultipleFiles(selectedFiles, setFileProgress);
         const { mergedText, imageDataUrls } = mergeFileContents(results);
         fileContent = mergedText;
         fileName = selectedFiles.map(f => f.name).join(', ');
