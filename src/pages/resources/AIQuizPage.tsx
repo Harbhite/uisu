@@ -778,6 +778,7 @@ const AIQuizPage = () => {
   const [depth, setDepth] = useState<DepthLevel>(() => {
     try { return (localStorage.getItem('aiquiz_depth') as DepthLevel) || 'intermediate'; } catch { return 'intermediate'; }
   });
+  const [fileProgress, setFileProgress] = useState<FileProgress[]>([]);
 
   // Persist state to localStorage
   useEffect(() => {
