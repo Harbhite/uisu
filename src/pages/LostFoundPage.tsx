@@ -93,10 +93,11 @@ const LostFoundPage = () => {
   };
 
   const handleUploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const rawFile = e.target.files?.[0];
+    if (!rawFile) return;
     setUploading(true);
     try {
+      const file = await compressImage(rawFile);
       const fileName = `${Date.now()}-${file.name}`;
       const { error } = await supabase.storage.from('lost-found').upload(fileName, file);
       if (error) throw error;
