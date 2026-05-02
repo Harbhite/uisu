@@ -1,25 +1,28 @@
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Home, Landmark, Users, FileText, MapPin, Megaphone, Calendar,
-  BookOpen, GraduationCap, Briefcase, Brain, Calculator, FlaskConical,
-  MessageSquare, Shield, Vote, ClipboardList, Search, History,
-  Scale, CreditCard, Package, HelpCircle, Mail, Newspaper,
-  ArrowLeft, ExternalLink, PenTool, CheckSquare, ListChecks, CalendarDays
+  Home, Landmark, Users, BookOpen, GraduationCap, Brain, FlaskConical,
+  Shield, Scale, ArrowUpRight, ArrowLeft, Search, Compass, Hash
 } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { Input } from "@/components/ui/input";
 
 interface SitemapSection {
   title: string;
+  tag: string;
   icon: React.ReactNode;
+  accent: string;
   links: { label: string; path: string; description?: string }[];
 }
 
 const sections: SitemapSection[] = [
   {
     title: "Main",
-    icon: <Home size={20} />,
+    tag: "01",
+    accent: "from-accent/20 to-accent/5",
+    icon: <Home size={18} />,
     links: [
       { label: "Home", path: "/", description: "Landing page" },
       { label: "Search", path: "/search", description: "Search across all content" },
@@ -28,7 +31,9 @@ const sections: SitemapSection[] = [
   },
   {
     title: "Governance",
-    icon: <Landmark size={20} />,
+    tag: "02",
+    accent: "from-primary/15 to-primary/5",
+    icon: <Landmark size={18} />,
     links: [
       { label: "Governance Overview", path: "/governance", description: "Structure & branches" },
       { label: "Current Leaders", path: "/current-leaders", description: "Serving executives" },
@@ -40,7 +45,9 @@ const sections: SitemapSection[] = [
   },
   {
     title: "Community",
-    icon: <Users size={20} />,
+    tag: "03",
+    accent: "from-accent/20 to-accent/5",
+    icon: <Users size={18} />,
     links: [
       { label: "Communities & Clubs", path: "/communities", description: "Student organizations" },
       { label: "Events Calendar", path: "/events", description: "Upcoming events & RSVP" },
@@ -54,7 +61,9 @@ const sections: SitemapSection[] = [
   },
   {
     title: "Content & Media",
-    icon: <BookOpen size={20} />,
+    tag: "04",
+    accent: "from-primary/15 to-primary/5",
+    icon: <BookOpen size={18} />,
     links: [
       { label: "Gazette", path: "/gazette", description: "Student news & journalism" },
       { label: "Gazette Issues", path: "/gazette/issues", description: "Published editions" },
@@ -66,7 +75,9 @@ const sections: SitemapSection[] = [
   },
   {
     title: "Resources & Tools",
-    icon: <GraduationCap size={20} />,
+    tag: "05",
+    accent: "from-accent/20 to-accent/5",
+    icon: <GraduationCap size={18} />,
     links: [
       { label: "Resources Hub", path: "/resources", description: "All student resources" },
       { label: "Academic Bank", path: "/resources/academic-bank", description: "Past questions & materials" },
@@ -85,7 +96,9 @@ const sections: SitemapSection[] = [
   },
   {
     title: "AI Tools",
-    icon: <Brain size={20} />,
+    tag: "06",
+    accent: "from-primary/15 to-primary/5",
+    icon: <Brain size={18} />,
     links: [
       { label: "StudyBuddy", path: "/resources/study-buddy", description: "AI study assistant" },
       { label: "Study Aide", path: "/resources/study-aide", description: "Smart study helper" },
@@ -97,7 +110,9 @@ const sections: SitemapSection[] = [
   },
   {
     title: "Tutorials",
-    icon: <FlaskConical size={20} />,
+    tag: "07",
+    accent: "from-accent/20 to-accent/5",
+    icon: <FlaskConical size={18} />,
     links: [
       { label: "Tutorials Home", path: "/tutorials", description: "Browse tutorials" },
       { label: "Tutorial Catalog", path: "/tutorials/catalog", description: "All courses" },
@@ -105,7 +120,9 @@ const sections: SitemapSection[] = [
   },
   {
     title: "Account & More",
-    icon: <Shield size={20} />,
+    tag: "08",
+    accent: "from-primary/15 to-primary/5",
+    icon: <Shield size={18} />,
     links: [
       { label: "Sign In / Sign Up", path: "/auth", description: "Authentication" },
       { label: "Profile Card", path: "/profile-card", description: "Digital ID card" },
@@ -118,7 +135,9 @@ const sections: SitemapSection[] = [
   },
   {
     title: "Legal",
-    icon: <Scale size={20} />,
+    tag: "09",
+    accent: "from-accent/20 to-accent/5",
+    icon: <Scale size={18} />,
     links: [
       { label: "Privacy Policy", path: "/privacy-policy" },
       { label: "Terms of Service", path: "/terms-of-service" },
@@ -128,70 +147,187 @@ const sections: SitemapSection[] = [
 ];
 
 const SitemapPage = () => {
+  const [query, setQuery] = useState("");
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return sections;
+    return sections
+      .map((s) => ({
+        ...s,
+        links: s.links.filter(
+          (l) =>
+            l.label.toLowerCase().includes(q) ||
+            l.path.toLowerCase().includes(q) ||
+            (l.description ?? "").toLowerCase().includes(q),
+        ),
+      }))
+      .filter((s) => s.links.length > 0);
+  }, [query]);
+
+  const totalPages = sections.reduce((n, s) => n + s.links.length, 0);
+
   return (
-    <div className="min-h-screen bg-background pt-32 pb-20">
+    <div className="min-h-screen bg-background mt-[72px] md:mt-[88px] pb-20">
       <SEO
         title="Site Directory | UISU SPACE"
         description="Browse all pages and features of the UISU SPACE platform. Find governance tools, student resources, AI study tools, and more."
       />
-      <div className="container mx-auto px-6">
-        <Breadcrumbs />
-        <Link
-          to="/"
-          className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] hover:text-accent transition-colors mb-12"
-        >
-          <div className="p-2 border border-border group-hover:border-accent transition-colors">
-            <ArrowLeft size={14} />
-          </div>
-          <span>Back to Home</span>
-        </Link>
 
-        <div className="mb-16">
-          <span className="text-xs font-bold tracking-[0.2em] uppercase text-accent mb-4 block">Platform Directory</span>
-          <h1 className="text-5xl md:text-7xl font-serif text-foreground leading-[0.9]">
-            Site <span className="italic text-muted-foreground">Map</span>
-          </h1>
-          <p className="mt-6 text-muted-foreground max-w-xl">
-            A complete directory of all pages and features available on UISU SPACE.
-          </p>
-        </div>
+      {/* HERO */}
+      <section className="relative bg-primary text-primary-foreground overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.06] pointer-events-none bg-[radial-gradient(circle_at_20%_20%,#fff_1px,transparent_1px)] bg-[size:24px_24px]" />
+        <div className="container mx-auto px-6 pt-12 pb-16 max-w-6xl relative">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-primary-foreground/60 hover:text-accent transition-colors mb-8"
+          >
+            <ArrowLeft size={12} />
+            Back to Home
+          </Link>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {sections.map((section, i) => (
-            <motion.div
-              key={section.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="bg-card border border-border p-6"
-            >
-              <div className="flex items-center gap-3 mb-5">
-                <div className="text-accent">{section.icon}</div>
-                <h2 className="font-serif text-xl font-bold">{section.title}</h2>
+          <div className="grid md:grid-cols-[1fr_auto] gap-8 items-end">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Compass size={14} className="text-accent" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-accent">
+                  Platform Directory
+                </span>
               </div>
-              <ul className="space-y-2">
-                {section.links.map((link) => (
-                  <li key={link.path}>
-                    <Link
-                      to={link.path}
-                      className="group flex items-center justify-between py-2 px-3 -mx-3 hover:bg-muted/50 transition-colors"
-                    >
-                      <div>
-                        <span className="text-sm font-medium group-hover:text-accent transition-colors">
-                          {link.label}
-                        </span>
-                        {link.description && (
-                          <p className="text-xs text-muted-foreground">{link.description}</p>
-                        )}
-                      </div>
-                      <ExternalLink size={12} className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
+              <h1 className="font-serif text-5xl md:text-7xl leading-[0.95] tracking-tight">
+                Site <span className="italic text-accent">Map</span>
+              </h1>
+              <p className="mt-5 text-primary-foreground/70 max-w-xl font-light leading-relaxed">
+                Every page, every tool, every corner of UISU SPACE — organised
+                into nine editorial sections for quick navigation.
+              </p>
+            </div>
+
+            <div className="flex md:flex-col gap-6 md:gap-3 md:text-right">
+              <div>
+                <div className="font-serif text-4xl text-accent tabular-nums">
+                  {totalPages}
+                </div>
+                <div className="text-[9px] font-bold uppercase tracking-[0.3em] text-primary-foreground/50">
+                  Total Pages
+                </div>
+              </div>
+              <div>
+                <div className="font-serif text-4xl text-accent tabular-nums">
+                  {sections.length}
+                </div>
+                <div className="text-[9px] font-bold uppercase tracking-[0.3em] text-primary-foreground/50">
+                  Sections
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Search */}
+          <div className="mt-10 relative max-w-xl">
+            <Search
+              size={16}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-foreground/50 pointer-events-none z-10"
+            />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search pages, tools, descriptions..."
+              className="pl-11 bg-primary-foreground/5 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/40 rounded-2xl h-12 focus-visible:border-accent"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* CONTENT */}
+      <div className="container mx-auto px-6 max-w-6xl mt-12">
+        <Breadcrumbs />
+
+        {/* Section anchors */}
+        <div className="flex flex-wrap gap-2 mb-10">
+          {sections.map((s) => (
+            <a
+              key={s.title}
+              href={`#${s.title.toLowerCase().replace(/\s|&/g, "-")}`}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-card text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground hover:border-accent hover:text-accent transition-colors"
+            >
+              <Hash size={10} />
+              {s.title}
+            </a>
           ))}
         </div>
+
+        {filtered.length === 0 ? (
+          <div className="rounded-2xl border border-border bg-card p-12 text-center">
+            <Search size={28} className="mx-auto text-muted-foreground mb-3" />
+            <p className="font-serif text-xl text-foreground">No matches</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Try a different keyword.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.map((section, i) => (
+              <motion.section
+                key={section.title}
+                id={section.title.toLowerCase().replace(/\s|&/g, "-")}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.1 }}
+                transition={{ delay: Math.min(i * 0.04, 0.3), duration: 0.5 }}
+                className="group relative rounded-2xl border border-border bg-card overflow-hidden hover:border-accent/50 hover:shadow-xl transition-all"
+              >
+                {/* Accent gradient strip */}
+                <div className={`absolute inset-x-0 top-0 h-24 bg-gradient-to-br ${section.accent} pointer-events-none`} />
+
+                <header className="relative p-6 pb-4 border-b border-border/60">
+                  <div className="flex items-start justify-between mb-3">
+                    <span className="font-mono text-[10px] font-bold tracking-[0.3em] text-accent">
+                      № {section.tag}
+                    </span>
+                    <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
+                      {section.links.length} pages
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-primary text-accent">
+                      {section.icon}
+                    </div>
+                    <h2 className="font-serif text-2xl text-foreground leading-tight">
+                      {section.title}
+                    </h2>
+                  </div>
+                </header>
+
+                <ul className="relative divide-y divide-border/50">
+                  {section.links.map((link) => (
+                    <li key={link.path}>
+                      <Link
+                        to={link.path}
+                        className="group/link flex items-start justify-between gap-3 px-6 py-3 hover:bg-muted/40 transition-colors"
+                      >
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold text-foreground group-hover/link:text-accent transition-colors truncate">
+                            {link.label}
+                          </div>
+                          {link.description && (
+                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                              {link.description}
+                            </p>
+                          )}
+                        </div>
+                        <ArrowUpRight
+                          size={14}
+                          className="mt-1 text-muted-foreground opacity-0 -translate-x-1 group-hover/link:opacity-100 group-hover/link:translate-x-0 group-hover/link:text-accent transition-all flex-shrink-0"
+                        />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </motion.section>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
