@@ -791,12 +791,14 @@ const AIQuizPage = () => {
     return () => stopTimer();
   }, []);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const newFiles = Array.from(e.target.files).filter(f => {
+      const rawFiles = Array.from(e.target.files).filter(f => {
         if (f.size > 10 * 1024 * 1024) { toast.error(`${f.name} too large. Max 10MB.`); return false; }
         return true;
       });
+      // Compress any image files before keeping them
+      const newFiles = await Promise.all(rawFiles.map(f => compressImage(f)));
       setSelectedFiles(prev => [...prev, ...newFiles]);
     }
   };
