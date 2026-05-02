@@ -29,9 +29,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { DepthLevel } from '@/lib/file-utils';
-import { readMultipleFiles, mergeFileContents } from '@/lib/multi-file-utils';
+import { readMultipleFiles, mergeFileContents, type FileProgress } from '@/lib/multi-file-utils';
 import { cacheOutput } from '@/lib/ai-cache';
 import GenerationProgress from '@/components/resources/GenerationProgress';
+import { FileProgressList } from '@/components/resources/FileProgressList';
+import { compressImage } from '@/lib/image-compression';
 import { SEO } from '@/components/SEO';
 import AIToolsHeader from '@/components/resources/AIToolsHeader';
 
@@ -66,6 +68,7 @@ interface UploadViewProps {
   generateQuiz: () => void;
   depth: DepthLevel;
   setDepth: (d: DepthLevel) => void;
+  fileProgress: FileProgress[];
 }
 
 const UploadView: React.FC<UploadViewProps> = ({
@@ -82,6 +85,7 @@ const UploadView: React.FC<UploadViewProps> = ({
   generateQuiz,
   depth,
   setDepth,
+  fileProgress,
 }) => (
   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-5xl mx-auto">
     <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*,.pdf,.docx,.doc,.txt,.xlsx,.xls,.pptx,.ppt" multiple />
@@ -119,6 +123,8 @@ const UploadView: React.FC<UploadViewProps> = ({
               </motion.div>
             ))}
           </AnimatePresence>
+
+          <FileProgressList progress={fileProgress} />
 
           <div className="mt-4">
             <button
@@ -772,6 +778,7 @@ const AIQuizPage = () => {
   const [depth, setDepth] = useState<DepthLevel>(() => {
     try { return (localStorage.getItem('aiquiz_depth') as DepthLevel) || 'intermediate'; } catch { return 'intermediate'; }
   });
+  const [fileProgress, setFileProgress] = useState<FileProgress[]>([]);
 
   // Persist state to localStorage
   useEffect(() => {
@@ -784,12 +791,14 @@ const AIQuizPage = () => {
     return () => stopTimer();
   }, []);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const newFiles = Array.from(e.target.files).filter(f => {
+      const rawFiles = Array.from(e.target.files).filter(f => {
         if (f.size > 10 * 1024 * 1024) { toast.error(`${f.name} too large. Max 10MB.`); return false; }
         return true;
       });
+      // Compress any image files before keeping them
+      const newFiles = await Promise.all(rawFiles.map(f => compressImage(f)));
       setSelectedFiles(prev => [...prev, ...newFiles]);
     }
   };
@@ -807,7 +816,7 @@ const AIQuizPage = () => {
       let imageDataUrl = '';
 
       if (selectedFiles.length > 0) {
-        const results = await readMultipleFiles(selectedFiles);
+        const results = await readMultipleFiles(selectedFiles, setFileProgress);
         const { mergedText, imageDataUrls } = mergeFileContents(results);
         fileContent = mergedText;
         fileName = selectedFiles.map(f => f.name).join(', ');
@@ -988,6 +997,7 @@ const AIQuizPage = () => {
               generateQuiz={generateQuiz}
               depth={depth}
               setDepth={setDepth}
+              fileProgress={fileProgress}
             />
           )}
           {step === 'generating' && <GeneratingView key="generating" />}

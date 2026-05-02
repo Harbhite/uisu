@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { compressImage } from '@/lib/image-compression';
 
 interface Listing {
   id: string;
@@ -104,7 +105,8 @@ const StudentMartPage = () => {
     try {
       // Upload photos
       const photoUrls: string[] = [];
-      for (const file of photoFiles) {
+      for (const rawFile of photoFiles) {
+        const file = await compressImage(rawFile);
         const ext = file.name.split('.').pop();
         const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
         const { error: uploadErr } = await supabase.storage.from('marketplace').upload(path, file);
