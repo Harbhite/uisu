@@ -68,6 +68,7 @@ interface UploadViewProps {
   generateQuiz: () => void;
   depth: DepthLevel;
   setDepth: (d: DepthLevel) => void;
+  fileProgress: FileProgress[];
 }
 
 const UploadView: React.FC<UploadViewProps> = ({
