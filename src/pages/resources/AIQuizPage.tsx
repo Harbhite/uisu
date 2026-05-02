@@ -124,6 +124,8 @@ const UploadView: React.FC<UploadViewProps> = ({
             ))}
           </AnimatePresence>
 
+          <FileProgressList progress={fileProgress} />
+
           <div className="mt-4">
             <button
               onClick={() => fileInputRef.current?.click()}
