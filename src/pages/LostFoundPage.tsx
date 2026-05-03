@@ -746,7 +746,7 @@ const LostFoundPage = () => {
                 </p>
               </div>
 
-              {currentUser === showDetailModal.user_id && (
+              {currentUser === showDetailModal.user_id ? (
                 <div className="flex gap-2 pt-6 border-t border-slate-100">
                   <Button variant="outline" size="sm" onClick={() => handleResolve(showDetailModal.id)} className="gap-2 rounded-2xl border-border text-xs uppercase tracking-widest font-bold flex-1">
                     <CheckCircle2 size={14} /> Mark Resolved
@@ -754,6 +754,92 @@ const LostFoundPage = () => {
                   <Button variant="destructive" size="sm" onClick={() => handleDelete(showDetailModal.id)} className="rounded-2xl text-xs uppercase tracking-widest font-bold">
                     <Trash2 size={14} />
                   </Button>
+                </div>
+              ) : showDetailModal.item_type === 'found' && (
+                <div className="pt-6 border-t border-slate-100">
+                  <Button onClick={() => openClaimModal(showDetailModal)} className="w-full gap-2 rounded-2xl bg-nobel-gold hover:bg-nobel-gold/90 text-ui-blue text-xs uppercase tracking-widest font-bold">
+                    <ShieldCheck size={14} /> This is mine — Claim with verification
+                  </Button>
+                  <p className="text-[10px] text-slate-400 mt-2 text-center">AI will ask 2 verification questions to confirm ownership.</p>
+                </div>
+              )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Claim Modal */}
+      <Dialog open={!!claimItem} onOpenChange={() => { setClaimItem(null); setClaimResult(null); }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border-border">
+          {claimItem && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="font-serif text-2xl text-ui-blue flex items-center gap-2">
+                  <ShieldCheck size={20} className="text-nobel-gold" /> Verify Ownership
+                </DialogTitle>
+                <p className="text-xs text-slate-500 mt-1">
+                  Claiming: <span className="font-bold text-ui-blue">{claimItem.title}</span>
+                </p>
+              </DialogHeader>
+
+              {claimResult ? (
+                <div className="space-y-4 py-4">
+                  <div className={`rounded-2xl border p-4 ${claimResult.fraud_score >= 60 ? 'bg-red-50 border-red-200' : claimResult.fraud_score >= 30 ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200'}`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      {claimResult.fraud_score >= 30 ? <AlertTriangle size={16} className="text-amber-600" /> : <CheckCircle2 size={16} className="text-green-600" />}
+                      <p className="text-xs font-bold uppercase tracking-widest">
+                        AI Confidence: {claimResult.fraud_score >= 60 ? 'Low' : claimResult.fraud_score >= 30 ? 'Medium' : 'High'}
+                      </p>
+                    </div>
+                    {claimResult.fraud_reasons && (
+                      <p className="text-xs text-slate-600 italic">{claimResult.fraud_reasons}</p>
+                    )}
+                    <p className="text-xs text-slate-500 mt-2">The finder will review your claim and reach out if confirmed.</p>
+                  </div>
+                  <Button onClick={() => { setClaimItem(null); setClaimResult(null); }} className="w-full rounded-2xl bg-ui-blue text-xs uppercase tracking-widest font-bold">Done</Button>
+                </div>
+              ) : (
+                <div className="space-y-4 mt-2">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Why is this yours?</label>
+                    <Textarea
+                      placeholder="Describe the item in detail and where you lost it..."
+                      value={claimText}
+                      onChange={e => setClaimText(e.target.value)}
+                      className="rounded-2xl border-border min-h-[80px]"
+                    />
+                  </div>
+
+                  {claimLoadingQ ? (
+                    <div className="flex items-center justify-center gap-2 py-4 text-sm text-slate-400">
+                      <Loader2 size={14} className="animate-spin" /> AI generating verification questions…
+                    </div>
+                  ) : claimQuestions.length > 0 ? (
+                    <div className="space-y-3 rounded-2xl border border-nobel-gold/30 bg-nobel-gold/5 p-4">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-nobel-gold flex items-center gap-2">
+                        <Sparkles size={11} /> Verification Questions
+                      </p>
+                      {claimQuestions.map((q, i) => (
+                        <div key={i} className="space-y-1.5">
+                          <p className="text-xs font-medium text-ui-blue">{i + 1}. {q}</p>
+                          <Input
+                            value={claimAnswers[i] || ''}
+                            onChange={e => setClaimAnswers(a => { const n = [...a]; n[i] = e.target.value; return n; })}
+                            className="rounded-2xl border-border text-sm"
+                            placeholder="Your answer"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  <DialogFooter className="gap-2">
+                    <Button variant="outline" onClick={() => setClaimItem(null)} className="rounded-2xl border-border text-xs uppercase tracking-widest font-bold">Cancel</Button>
+                    <Button onClick={submitClaim} disabled={claimSubmitting || claimLoadingQ} className="rounded-2xl bg-nobel-gold text-ui-blue text-xs uppercase tracking-widest font-bold">
+                      {claimSubmitting && <Loader2 size={14} className="animate-spin mr-2" />}
+                      Submit Claim
+                    </Button>
+                  </DialogFooter>
                 </div>
               )}
             </>
