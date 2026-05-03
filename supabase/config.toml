@@ -41,3 +41,15 @@ verify_jwt = false
 
 [functions.study-aide]
 verify_jwt = false
+
+[functions.lf-vision-extract]
+verify_jwt = false
+
+[functions.lf-analyze-post]
+verify_jwt = false
+
+[functions.lf-process-found]
+verify_jwt = false
+
+[functions.lf-verify-claim]
+verify_jwt = false
