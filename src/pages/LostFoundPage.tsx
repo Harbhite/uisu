@@ -79,6 +79,18 @@ const LostFoundPage = () => {
     title: '', description: '', category: 'Other', item_type: 'lost',
     location: '', contact_info: '', photos: [] as string[]
   });
+  const [autofilling, setAutofilling] = useState(false);
+  const [autofillFromNext, setAutofillFromNext] = useState(true);
+  const [postMatches, setPostMatches] = useState<{ lostItem: any; confidence: string; reason: string }[] | null>(null);
+
+  // Claim modal state
+  const [claimItem, setClaimItem] = useState<LostFoundItem | null>(null);
+  const [claimText, setClaimText] = useState('');
+  const [claimQuestions, setClaimQuestions] = useState<string[]>([]);
+  const [claimAnswers, setClaimAnswers] = useState<string[]>(['', '']);
+  const [claimLoadingQ, setClaimLoadingQ] = useState(false);
+  const [claimSubmitting, setClaimSubmitting] = useState(false);
+  const [claimResult, setClaimResult] = useState<{ fraud_score: number; fraud_reasons: string } | null>(null);
 
   useEffect(() => {
     fetchItems();
