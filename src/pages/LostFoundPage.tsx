@@ -111,34 +111,129 @@ const LostFoundPage = () => {
     const rawFile = e.target.files?.[0];
     if (!rawFile) return;
     setUploading(true);
+    let publicUrl: string | null = null;
     try {
       const file = await compressImage(rawFile);
       const fileName = `${Date.now()}-${file.name}`;
       const { error } = await supabase.storage.from('lost-found').upload(fileName, file);
       if (error) throw error;
       const { data: urlData } = supabase.storage.from('lost-found').getPublicUrl(fileName);
+      publicUrl = urlData.publicUrl;
       setForm(f => ({ ...f, photos: [...f.photos, urlData.publicUrl] }));
     } catch { toast.error('Upload failed'); }
     finally { setUploading(false); }
+
+    // Auto-fill empty fields from photo using vision AI (only on first photo + opt-in)
+    if (publicUrl && autofillFromNext && form.photos.length === 0 && !form.title.trim() && !form.description.trim()) {
+      setAutofilling(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('lf-vision-extract', { body: { imageUrl: publicUrl } });
+        if (!error && data && !data.error) {
+          setForm(f => ({
+            ...f,
+            title: f.title || data.title || '',
+            description: f.description || data.description || '',
+            category: data.category && CATEGORIES.includes(data.category) ? data.category : f.category,
+          }));
+          toast.success('AI auto-filled from photo — review before posting');
+        }
+      } catch (err) {
+        console.warn('vision autofill failed', err);
+      } finally {
+        setAutofilling(false);
+      }
+    }
+    if (e.target) e.target.value = '';
   };
 
   const handleCreate = async () => {
     if (!form.title.trim()) { toast.error('Title is required'); return; }
     if (!currentUser) { toast.error('Please sign in first'); return; }
     setCreating(true);
+    setPostMatches(null);
     try {
-      const { error } = await supabase.from('lost_found_items').insert({
+      const { data: inserted, error } = await supabase.from('lost_found_items').insert({
         user_id: currentUser, title: form.title, description: form.description || null,
         category: form.category, item_type: form.item_type, location: form.location || null,
         contact_info: form.contact_info || null, photos: form.photos,
-      });
+      }).select().single();
       if (error) throw error;
       toast.success('Item posted!');
-      setShowCreateModal(false);
+
+      // Fire-and-forget: analyze post (tags, summary, dedup)
+      if (inserted?.id) {
+        supabase.functions.invoke('lf-analyze-post', { body: { itemId: inserted.id } }).catch(() => {});
+      }
+
+      // If found item, scan recent lost reports for matches
+      if (inserted?.id && form.item_type === 'found') {
+        try {
+          const { data: matchData } = await supabase.functions.invoke('lf-process-found', { body: { foundItemId: inserted.id } });
+          if (matchData?.matches?.length) {
+            setPostMatches(matchData.matches);
+            toast.success(`AI found ${matchData.matches.length} possible owner${matchData.matches.length > 1 ? 's' : ''}!`);
+          } else {
+            setShowCreateModal(false);
+          }
+        } catch { setShowCreateModal(false); }
+      } else {
+        setShowCreateModal(false);
+      }
+
       setForm({ title: '', description: '', category: 'Other', item_type: 'lost', location: '', contact_info: '', photos: [] });
       fetchItems();
     } catch { toast.error('Failed to create post'); }
     finally { setCreating(false); }
+  };
+
+  const openClaimModal = async (item: LostFoundItem) => {
+    if (!currentUser) { toast.error('Please sign in to claim'); return; }
+    setClaimItem(item);
+    setClaimText('');
+    setClaimAnswers(['', '']);
+    setClaimResult(null);
+    setClaimQuestions([]);
+    setClaimLoadingQ(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('lf-verify-claim', {
+        body: { foundItemId: item.id, generateQuestionsOnly: true },
+      });
+      if (!error && data?.questions) setClaimQuestions(data.questions);
+    } catch { /* ignore */ }
+    finally { setClaimLoadingQ(false); }
+  };
+
+  const submitClaim = async () => {
+    if (!claimItem || !currentUser) return;
+    if (!claimText.trim()) { toast.error('Describe your claim'); return; }
+    if (claimQuestions.length && claimAnswers.some(a => !a.trim())) { toast.error('Answer all verification questions'); return; }
+    setClaimSubmitting(true);
+    try {
+      // Score fraud risk against full claim (text + answers)
+      const fullClaim = `${claimText}\n\nVerification:\n${claimQuestions.map((q, i) => `Q: ${q}\nA: ${claimAnswers[i]}`).join('\n')}`;
+      const { data: scoreData } = await supabase.functions.invoke('lf-verify-claim', {
+        body: { foundItemId: claimItem.id, claimText: fullClaim },
+      });
+      const fraud_score = scoreData?.fraud_score ?? 0;
+      const fraud_reasons = scoreData?.fraud_reasons ?? '';
+
+      const { error } = await supabase.from('lost_found_claims').insert({
+        found_item_id: claimItem.id,
+        claimant_id: currentUser,
+        claim_text: fullClaim,
+        verification_questions: claimQuestions.map((q, i) => ({ question: q, answer: claimAnswers[i] })),
+        fraud_score,
+        fraud_reasons,
+      });
+      if (error) throw error;
+      setClaimResult({ fraud_score, fraud_reasons });
+      toast.success('Claim submitted — finder will be notified');
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to submit claim');
+    } finally {
+      setClaimSubmitting(false);
+    }
   };
 
   const handleResolve = async (id: string) => {
