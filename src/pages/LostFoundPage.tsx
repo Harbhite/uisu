@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GridCardSkeleton } from '@/components/skeletons/GenericSkeletons';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, MapPin, Clock, Tag, X, Upload, Phone, Loader2, Trash2, CheckCircle2, ArrowLeft, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Plus, MapPin, Clock, Tag, X, Upload, Phone, Loader2, Trash2, CheckCircle2, ArrowLeft, Sparkles, ChevronDown, ChevronUp, Wand2, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,9 @@ interface LostFoundItem {
   contact_info: string | null;
   status: string;
   created_at: string;
+  ai_tags?: string[] | null;
+  ai_summary?: string | null;
+  ai_attributes?: any;
 }
 
 interface AIMatch {
@@ -76,6 +79,18 @@ const LostFoundPage = () => {
     title: '', description: '', category: 'Other', item_type: 'lost',
     location: '', contact_info: '', photos: [] as string[]
   });
+  const [autofilling, setAutofilling] = useState(false);
+  const [autofillFromNext, setAutofillFromNext] = useState(true);
+  const [postMatches, setPostMatches] = useState<{ lostItem: any; confidence: string; reason: string }[] | null>(null);
+
+  // Claim modal state
+  const [claimItem, setClaimItem] = useState<LostFoundItem | null>(null);
+  const [claimText, setClaimText] = useState('');
+  const [claimQuestions, setClaimQuestions] = useState<string[]>([]);
+  const [claimAnswers, setClaimAnswers] = useState<string[]>(['', '']);
+  const [claimLoadingQ, setClaimLoadingQ] = useState(false);
+  const [claimSubmitting, setClaimSubmitting] = useState(false);
+  const [claimResult, setClaimResult] = useState<{ fraud_score: number; fraud_reasons: string } | null>(null);
 
   useEffect(() => {
     fetchItems();
@@ -96,34 +111,129 @@ const LostFoundPage = () => {
     const rawFile = e.target.files?.[0];
     if (!rawFile) return;
     setUploading(true);
+    let publicUrl: string | null = null;
     try {
       const file = await compressImage(rawFile);
       const fileName = `${Date.now()}-${file.name}`;
       const { error } = await supabase.storage.from('lost-found').upload(fileName, file);
       if (error) throw error;
       const { data: urlData } = supabase.storage.from('lost-found').getPublicUrl(fileName);
+      publicUrl = urlData.publicUrl;
       setForm(f => ({ ...f, photos: [...f.photos, urlData.publicUrl] }));
     } catch { toast.error('Upload failed'); }
     finally { setUploading(false); }
+
+    // Auto-fill empty fields from photo using vision AI (only on first photo + opt-in)
+    if (publicUrl && autofillFromNext && form.photos.length === 0 && !form.title.trim() && !form.description.trim()) {
+      setAutofilling(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('lf-vision-extract', { body: { imageUrl: publicUrl } });
+        if (!error && data && !data.error) {
+          setForm(f => ({
+            ...f,
+            title: f.title || data.title || '',
+            description: f.description || data.description || '',
+            category: data.category && CATEGORIES.includes(data.category) ? data.category : f.category,
+          }));
+          toast.success('AI auto-filled from photo — review before posting');
+        }
+      } catch (err) {
+        console.warn('vision autofill failed', err);
+      } finally {
+        setAutofilling(false);
+      }
+    }
+    if (e.target) e.target.value = '';
   };
 
   const handleCreate = async () => {
     if (!form.title.trim()) { toast.error('Title is required'); return; }
     if (!currentUser) { toast.error('Please sign in first'); return; }
     setCreating(true);
+    setPostMatches(null);
     try {
-      const { error } = await supabase.from('lost_found_items').insert({
+      const { data: inserted, error } = await supabase.from('lost_found_items').insert({
         user_id: currentUser, title: form.title, description: form.description || null,
         category: form.category, item_type: form.item_type, location: form.location || null,
         contact_info: form.contact_info || null, photos: form.photos,
-      });
+      }).select().single();
       if (error) throw error;
       toast.success('Item posted!');
-      setShowCreateModal(false);
+
+      // Fire-and-forget: analyze post (tags, summary, dedup)
+      if (inserted?.id) {
+        supabase.functions.invoke('lf-analyze-post', { body: { itemId: inserted.id } }).catch(() => {});
+      }
+
+      // If found item, scan recent lost reports for matches
+      if (inserted?.id && form.item_type === 'found') {
+        try {
+          const { data: matchData } = await supabase.functions.invoke('lf-process-found', { body: { foundItemId: inserted.id } });
+          if (matchData?.matches?.length) {
+            setPostMatches(matchData.matches);
+            toast.success(`AI found ${matchData.matches.length} possible owner${matchData.matches.length > 1 ? 's' : ''}!`);
+          } else {
+            setShowCreateModal(false);
+          }
+        } catch { setShowCreateModal(false); }
+      } else {
+        setShowCreateModal(false);
+      }
+
       setForm({ title: '', description: '', category: 'Other', item_type: 'lost', location: '', contact_info: '', photos: [] });
       fetchItems();
     } catch { toast.error('Failed to create post'); }
     finally { setCreating(false); }
+  };
+
+  const openClaimModal = async (item: LostFoundItem) => {
+    if (!currentUser) { toast.error('Please sign in to claim'); return; }
+    setClaimItem(item);
+    setClaimText('');
+    setClaimAnswers(['', '']);
+    setClaimResult(null);
+    setClaimQuestions([]);
+    setClaimLoadingQ(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('lf-verify-claim', {
+        body: { foundItemId: item.id, generateQuestionsOnly: true },
+      });
+      if (!error && data?.questions) setClaimQuestions(data.questions);
+    } catch { /* ignore */ }
+    finally { setClaimLoadingQ(false); }
+  };
+
+  const submitClaim = async () => {
+    if (!claimItem || !currentUser) return;
+    if (!claimText.trim()) { toast.error('Describe your claim'); return; }
+    if (claimQuestions.length && claimAnswers.some(a => !a.trim())) { toast.error('Answer all verification questions'); return; }
+    setClaimSubmitting(true);
+    try {
+      // Score fraud risk against full claim (text + answers)
+      const fullClaim = `${claimText}\n\nVerification:\n${claimQuestions.map((q, i) => `Q: ${q}\nA: ${claimAnswers[i]}`).join('\n')}`;
+      const { data: scoreData } = await supabase.functions.invoke('lf-verify-claim', {
+        body: { foundItemId: claimItem.id, claimText: fullClaim },
+      });
+      const fraud_score = scoreData?.fraud_score ?? 0;
+      const fraud_reasons = scoreData?.fraud_reasons ?? '';
+
+      const { error } = await supabase.from('lost_found_claims').insert({
+        found_item_id: claimItem.id,
+        claimant_id: currentUser,
+        claim_text: fullClaim,
+        verification_questions: claimQuestions.map((q, i) => ({ question: q, answer: claimAnswers[i] })),
+        fraud_score,
+        fraud_reasons,
+      });
+      if (error) throw error;
+      setClaimResult({ fraud_score, fraud_reasons });
+      toast.success('Claim submitted — finder will be notified');
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to submit claim');
+    } finally {
+      setClaimSubmitting(false);
+    }
   };
 
   const handleResolve = async (id: string) => {
@@ -458,9 +568,16 @@ const LostFoundPage = () => {
                     <h3 className="font-serif text-xl font-bold text-ui-blue mb-2 line-clamp-1 group-hover:text-nobel-gold transition-colors">{item.title}</h3>
 
                     {item.description && (
-                      <p className="text-sm text-slate-500 line-clamp-2 mb-4 font-light leading-relaxed flex-1">
+                      <p className="text-sm text-slate-500 line-clamp-2 mb-3 font-light leading-relaxed flex-1">
                         {item.description}
                       </p>
+                    )}
+                    {item.ai_tags && item.ai_tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        {item.ai_tags.slice(0, 4).map(t => (
+                          <span key={t} className="text-[9px] uppercase tracking-widest text-nobel-gold bg-nobel-gold/5 border border-nobel-gold/15 rounded-2xl px-2 py-0.5">#{t}</span>
+                        ))}
+                      </div>
                     )}
 
                     <div className="mt-auto pt-4 border-t border-slate-100 flex items-center text-xs text-slate-400">
@@ -523,7 +640,13 @@ const LostFoundPage = () => {
             
             {/* Photos */}
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Photos</p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Photos</p>
+                <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 cursor-pointer">
+                  <input type="checkbox" checked={autofillFromNext} onChange={e => setAutofillFromNext(e.target.checked)} className="accent-nobel-gold" />
+                  <Wand2 size={11} className="text-nobel-gold" /> AI auto-fill
+                </label>
+              </div>
               <div className="flex gap-2 flex-wrap">
                 {form.photos.map((url, i) => (
                   <div key={i} className="relative w-20 h-20 bg-slate-50 border border-border rounded-2xl overflow-hidden">
@@ -536,11 +659,30 @@ const LostFoundPage = () => {
                 ))}
                 <button onClick={() => fileRef.current?.click()}
                   className="w-20 h-20 border-2 border-dashed border-border rounded-2xl flex items-center justify-center text-slate-300 hover:border-nobel-gold hover:text-nobel-gold transition-colors">
-                  {uploading ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} />}
+                  {uploading || autofilling ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} />}
                 </button>
                 <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUploadPhoto} />
               </div>
+              {autofilling && <p className="text-[10px] text-nobel-gold mt-2 flex items-center gap-1"><Sparkles size={10} /> AI is reading the photo…</p>}
             </div>
+
+            {postMatches && postMatches.length > 0 && (
+              <div className="rounded-2xl border border-nobel-gold/30 bg-nobel-gold/5 p-4 space-y-2">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-nobel-gold flex items-center gap-2">
+                  <Sparkles size={11} /> Possible owners detected
+                </p>
+                {postMatches.map((m, i) => (
+                  <div key={i} className="text-xs border-t border-nobel-gold/15 pt-2 first:border-t-0 first:pt-0">
+                    <div className="flex items-center gap-2">
+                      <ConfidenceBadge confidence={m.confidence} />
+                      <span className="font-bold text-ui-blue truncate">{m.lostItem.title}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 italic mt-0.5">{m.reason}</p>
+                  </div>
+                ))}
+                <p className="text-[10px] text-slate-500 pt-1">These owners will be notified to reach out to you.</p>
+              </div>
+            )}
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setShowCreateModal(false)} className="rounded-2xl border-border text-xs uppercase tracking-widest font-bold">Cancel</Button>
@@ -593,10 +735,17 @@ const LostFoundPage = () => {
                   </p>
                 )}
                 {showDetailModal.contact_info && (
-                  <p className="flex items-center gap-3 text-slate-600">
-                    <Phone size={16} className="text-nobel-gold" />
-                    <span className="font-medium text-ui-blue">{showDetailModal.contact_info}</span>
-                  </p>
+                  showDetailModal.item_type === 'found' && currentUser !== showDetailModal.user_id ? (
+                    <p className="flex items-center gap-3 text-slate-400 italic text-xs">
+                      <Phone size={16} className="text-slate-300" />
+                      <span>Contact hidden — submit a verified claim to reveal</span>
+                    </p>
+                  ) : (
+                    <p className="flex items-center gap-3 text-slate-600">
+                      <Phone size={16} className="text-nobel-gold" />
+                      <span className="font-medium text-ui-blue">{showDetailModal.contact_info}</span>
+                    </p>
+                  )
                 )}
                 <p className="flex items-center gap-3 text-slate-400">
                   <Clock size={16} />
@@ -604,7 +753,7 @@ const LostFoundPage = () => {
                 </p>
               </div>
 
-              {currentUser === showDetailModal.user_id && (
+              {currentUser === showDetailModal.user_id ? (
                 <div className="flex gap-2 pt-6 border-t border-slate-100">
                   <Button variant="outline" size="sm" onClick={() => handleResolve(showDetailModal.id)} className="gap-2 rounded-2xl border-border text-xs uppercase tracking-widest font-bold flex-1">
                     <CheckCircle2 size={14} /> Mark Resolved
@@ -612,6 +761,92 @@ const LostFoundPage = () => {
                   <Button variant="destructive" size="sm" onClick={() => handleDelete(showDetailModal.id)} className="rounded-2xl text-xs uppercase tracking-widest font-bold">
                     <Trash2 size={14} />
                   </Button>
+                </div>
+              ) : showDetailModal.item_type === 'found' && (
+                <div className="pt-6 border-t border-slate-100">
+                  <Button onClick={() => openClaimModal(showDetailModal)} className="w-full gap-2 rounded-2xl bg-nobel-gold hover:bg-nobel-gold/90 text-ui-blue text-xs uppercase tracking-widest font-bold">
+                    <ShieldCheck size={14} /> This is mine — Claim with verification
+                  </Button>
+                  <p className="text-[10px] text-slate-400 mt-2 text-center">AI will ask 2 verification questions to confirm ownership.</p>
+                </div>
+              )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Claim Modal */}
+      <Dialog open={!!claimItem} onOpenChange={() => { setClaimItem(null); setClaimResult(null); }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border-border">
+          {claimItem && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="font-serif text-2xl text-ui-blue flex items-center gap-2">
+                  <ShieldCheck size={20} className="text-nobel-gold" /> Verify Ownership
+                </DialogTitle>
+                <p className="text-xs text-slate-500 mt-1">
+                  Claiming: <span className="font-bold text-ui-blue">{claimItem.title}</span>
+                </p>
+              </DialogHeader>
+
+              {claimResult ? (
+                <div className="space-y-4 py-4">
+                  <div className={`rounded-2xl border p-4 ${claimResult.fraud_score >= 60 ? 'bg-red-50 border-red-200' : claimResult.fraud_score >= 30 ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200'}`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      {claimResult.fraud_score >= 30 ? <AlertTriangle size={16} className="text-amber-600" /> : <CheckCircle2 size={16} className="text-green-600" />}
+                      <p className="text-xs font-bold uppercase tracking-widest">
+                        AI Confidence: {claimResult.fraud_score >= 60 ? 'Low' : claimResult.fraud_score >= 30 ? 'Medium' : 'High'}
+                      </p>
+                    </div>
+                    {claimResult.fraud_reasons && (
+                      <p className="text-xs text-slate-600 italic">{claimResult.fraud_reasons}</p>
+                    )}
+                    <p className="text-xs text-slate-500 mt-2">The finder will review your claim and reach out if confirmed.</p>
+                  </div>
+                  <Button onClick={() => { setClaimItem(null); setClaimResult(null); }} className="w-full rounded-2xl bg-ui-blue text-xs uppercase tracking-widest font-bold">Done</Button>
+                </div>
+              ) : (
+                <div className="space-y-4 mt-2">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Why is this yours?</label>
+                    <Textarea
+                      placeholder="Describe the item in detail and where you lost it..."
+                      value={claimText}
+                      onChange={e => setClaimText(e.target.value)}
+                      className="rounded-2xl border-border min-h-[80px]"
+                    />
+                  </div>
+
+                  {claimLoadingQ ? (
+                    <div className="flex items-center justify-center gap-2 py-4 text-sm text-slate-400">
+                      <Loader2 size={14} className="animate-spin" /> AI generating verification questions…
+                    </div>
+                  ) : claimQuestions.length > 0 ? (
+                    <div className="space-y-3 rounded-2xl border border-nobel-gold/30 bg-nobel-gold/5 p-4">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-nobel-gold flex items-center gap-2">
+                        <Sparkles size={11} /> Verification Questions
+                      </p>
+                      {claimQuestions.map((q, i) => (
+                        <div key={i} className="space-y-1.5">
+                          <p className="text-xs font-medium text-ui-blue">{i + 1}. {q}</p>
+                          <Input
+                            value={claimAnswers[i] || ''}
+                            onChange={e => setClaimAnswers(a => { const n = [...a]; n[i] = e.target.value; return n; })}
+                            className="rounded-2xl border-border text-sm"
+                            placeholder="Your answer"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  <DialogFooter className="gap-2">
+                    <Button variant="outline" onClick={() => setClaimItem(null)} className="rounded-2xl border-border text-xs uppercase tracking-widest font-bold">Cancel</Button>
+                    <Button onClick={submitClaim} disabled={claimSubmitting || claimLoadingQ} className="rounded-2xl bg-nobel-gold text-ui-blue text-xs uppercase tracking-widest font-bold">
+                      {claimSubmitting && <Loader2 size={14} className="animate-spin mr-2" />}
+                      Submit Claim
+                    </Button>
+                  </DialogFooter>
                 </div>
               )}
             </>
