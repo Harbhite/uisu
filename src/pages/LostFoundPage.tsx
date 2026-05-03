@@ -735,10 +735,17 @@ const LostFoundPage = () => {
                   </p>
                 )}
                 {showDetailModal.contact_info && (
-                  <p className="flex items-center gap-3 text-slate-600">
-                    <Phone size={16} className="text-nobel-gold" />
-                    <span className="font-medium text-ui-blue">{showDetailModal.contact_info}</span>
-                  </p>
+                  showDetailModal.item_type === 'found' && currentUser !== showDetailModal.user_id ? (
+                    <p className="flex items-center gap-3 text-slate-400 italic text-xs">
+                      <Phone size={16} className="text-slate-300" />
+                      <span>Contact hidden — submit a verified claim to reveal</span>
+                    </p>
+                  ) : (
+                    <p className="flex items-center gap-3 text-slate-600">
+                      <Phone size={16} className="text-nobel-gold" />
+                      <span className="font-medium text-ui-blue">{showDetailModal.contact_info}</span>
+                    </p>
+                  )
                 )}
                 <p className="flex items-center gap-3 text-slate-400">
                   <Clock size={16} />
