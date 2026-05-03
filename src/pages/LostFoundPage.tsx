@@ -568,9 +568,16 @@ const LostFoundPage = () => {
                     <h3 className="font-serif text-xl font-bold text-ui-blue mb-2 line-clamp-1 group-hover:text-nobel-gold transition-colors">{item.title}</h3>
 
                     {item.description && (
-                      <p className="text-sm text-slate-500 line-clamp-2 mb-4 font-light leading-relaxed flex-1">
+                      <p className="text-sm text-slate-500 line-clamp-2 mb-3 font-light leading-relaxed flex-1">
                         {item.description}
                       </p>
+                    )}
+                    {item.ai_tags && item.ai_tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        {item.ai_tags.slice(0, 4).map(t => (
+                          <span key={t} className="text-[9px] uppercase tracking-widest text-nobel-gold bg-nobel-gold/5 border border-nobel-gold/15 rounded-2xl px-2 py-0.5">#{t}</span>
+                        ))}
+                      </div>
                     )}
 
                     <div className="mt-auto pt-4 border-t border-slate-100 flex items-center text-xs text-slate-400">
