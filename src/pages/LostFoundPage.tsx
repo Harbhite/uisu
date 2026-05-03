@@ -633,7 +633,13 @@ const LostFoundPage = () => {
             
             {/* Photos */}
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Photos</p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Photos</p>
+                <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 cursor-pointer">
+                  <input type="checkbox" checked={autofillFromNext} onChange={e => setAutofillFromNext(e.target.checked)} className="accent-nobel-gold" />
+                  <Wand2 size={11} className="text-nobel-gold" /> AI auto-fill
+                </label>
+              </div>
               <div className="flex gap-2 flex-wrap">
                 {form.photos.map((url, i) => (
                   <div key={i} className="relative w-20 h-20 bg-slate-50 border border-border rounded-2xl overflow-hidden">
@@ -646,11 +652,30 @@ const LostFoundPage = () => {
                 ))}
                 <button onClick={() => fileRef.current?.click()}
                   className="w-20 h-20 border-2 border-dashed border-border rounded-2xl flex items-center justify-center text-slate-300 hover:border-nobel-gold hover:text-nobel-gold transition-colors">
-                  {uploading ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} />}
+                  {uploading || autofilling ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} />}
                 </button>
                 <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUploadPhoto} />
               </div>
+              {autofilling && <p className="text-[10px] text-nobel-gold mt-2 flex items-center gap-1"><Sparkles size={10} /> AI is reading the photo…</p>}
             </div>
+
+            {postMatches && postMatches.length > 0 && (
+              <div className="rounded-2xl border border-nobel-gold/30 bg-nobel-gold/5 p-4 space-y-2">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-nobel-gold flex items-center gap-2">
+                  <Sparkles size={11} /> Possible owners detected
+                </p>
+                {postMatches.map((m, i) => (
+                  <div key={i} className="text-xs border-t border-nobel-gold/15 pt-2 first:border-t-0 first:pt-0">
+                    <div className="flex items-center gap-2">
+                      <ConfidenceBadge confidence={m.confidence} />
+                      <span className="font-bold text-ui-blue truncate">{m.lostItem.title}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 italic mt-0.5">{m.reason}</p>
+                  </div>
+                ))}
+                <p className="text-[10px] text-slate-500 pt-1">These owners will be notified to reach out to you.</p>
+              </div>
+            )}
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setShowCreateModal(false)} className="rounded-2xl border-border text-xs uppercase tracking-widest font-bold">Cancel</Button>
