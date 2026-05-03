@@ -1921,8 +1921,55 @@ export type Database = {
         }
         Relationships: []
       }
+      lost_found_claims: {
+        Row: {
+          claim_text: string
+          claimant_id: string
+          created_at: string
+          found_item_id: string
+          fraud_reasons: string | null
+          fraud_score: number | null
+          id: string
+          status: string
+          verification_questions: Json | null
+        }
+        Insert: {
+          claim_text: string
+          claimant_id: string
+          created_at?: string
+          found_item_id: string
+          fraud_reasons?: string | null
+          fraud_score?: number | null
+          id?: string
+          status?: string
+          verification_questions?: Json | null
+        }
+        Update: {
+          claim_text?: string
+          claimant_id?: string
+          created_at?: string
+          found_item_id?: string
+          fraud_reasons?: string | null
+          fraud_score?: number | null
+          id?: string
+          status?: string
+          verification_questions?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lost_found_claims_found_item_id_fkey"
+            columns: ["found_item_id"]
+            isOneToOne: false
+            referencedRelation: "lost_found_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lost_found_items: {
         Row: {
+          ai_attributes: Json | null
+          ai_summary: string | null
+          ai_tags: string[] | null
           category: string
           contact_info: string | null
           created_at: string | null
@@ -1937,6 +1984,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_attributes?: Json | null
+          ai_summary?: string | null
+          ai_tags?: string[] | null
           category?: string
           contact_info?: string | null
           created_at?: string | null
@@ -1951,6 +2001,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_attributes?: Json | null
+          ai_summary?: string | null
+          ai_tags?: string[] | null
           category?: string
           contact_info?: string | null
           created_at?: string | null
@@ -1965,6 +2018,51 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      lost_found_matches: {
+        Row: {
+          confidence: string
+          created_at: string
+          found_item_id: string
+          id: string
+          lost_item_id: string
+          reason: string | null
+          viewed_at: string | null
+        }
+        Insert: {
+          confidence: string
+          created_at?: string
+          found_item_id: string
+          id?: string
+          lost_item_id: string
+          reason?: string | null
+          viewed_at?: string | null
+        }
+        Update: {
+          confidence?: string
+          created_at?: string
+          found_item_id?: string
+          id?: string
+          lost_item_id?: string
+          reason?: string | null
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lost_found_matches_found_item_id_fkey"
+            columns: ["found_item_id"]
+            isOneToOne: false
+            referencedRelation: "lost_found_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lost_found_matches_lost_item_id_fkey"
+            columns: ["lost_item_id"]
+            isOneToOne: false
+            referencedRelation: "lost_found_items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       marketplace_listings: {
         Row: {
