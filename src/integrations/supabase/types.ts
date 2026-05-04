@@ -1968,7 +1968,6 @@ export type Database = {
       lost_found_items: {
         Row: {
           ai_attributes: Json | null
-          ai_rewritten_description: string | null
           ai_summary: string | null
           ai_tags: string[] | null
           category: string
@@ -1986,7 +1985,6 @@ export type Database = {
         }
         Insert: {
           ai_attributes?: Json | null
-          ai_rewritten_description?: string | null
           ai_summary?: string | null
           ai_tags?: string[] | null
           category?: string
@@ -2004,7 +2002,6 @@ export type Database = {
         }
         Update: {
           ai_attributes?: Json | null
-          ai_rewritten_description?: string | null
           ai_summary?: string | null
           ai_tags?: string[] | null
           category?: string
