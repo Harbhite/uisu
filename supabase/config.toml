@@ -53,3 +53,18 @@ verify_jwt = false
 
 [functions.lf-verify-claim]
 verify_jwt = false
+
+[functions.lf-photo-similarity]
+verify_jwt = false
+
+[functions.lf-route-reasoning]
+verify_jwt = false
+
+[functions.lf-rewrite-post]
+verify_jwt = false
+
+[functions.lf-daily-digest]
+verify_jwt = false
+
+[functions.lf-voice-structure]
+verify_jwt = false
