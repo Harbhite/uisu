@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GridCardSkeleton } from '@/components/skeletons/GenericSkeletons';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, MapPin, Clock, Tag, X, Upload, Phone, Loader2, Trash2, CheckCircle2, ArrowLeft, Sparkles, ChevronDown, ChevronUp, Wand2, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { Search, Plus, MapPin, Clock, Tag, X, Upload, Phone, Loader2, Trash2, CheckCircle2, ArrowLeft, Sparkles, ChevronDown, ChevronUp, Wand2, ShieldCheck, AlertTriangle, Mic, MicOff, Newspaper, Image as ImageIcon, Type as TypeIcon, Route } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
