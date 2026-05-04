@@ -308,7 +308,122 @@ const LostFoundPage = () => {
     }
   };
 
-  const filtered = items.filter(item => {
+  // Photo similarity search — upload a photo and find visually similar opposite-type items
+  const handlePhotoSearchUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.files?.[0];
+    if (!raw) return;
+    setPhotoSearchUploading(true);
+    setAiSearched(false);
+    setAiMatches([]);
+    try {
+      const file = await compressImage(raw);
+      const fileName = `search-${Date.now()}-${file.name}`;
+      const { error } = await supabase.storage.from('lost-found').upload(fileName, file);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from('lost-found').getPublicUrl(fileName);
+      setPhotoSearchUrl(urlData.publicUrl);
+
+      setAiSearching(true);
+      const { data, error: fnError } = await supabase.functions.invoke('lf-photo-similarity', {
+        body: { imageUrl: urlData.publicUrl, itemType: 'lost' },
+      });
+      if (fnError) throw fnError;
+      const matches = (data?.matches || []).map((m: any) => ({ item: m.item, confidence: m.confidence, reason: m.reason }));
+      setAiMatches(matches);
+      setAiSearched(true);
+      if (matches.length === 0) toast.info('No visually similar items found');
+      else toast.success(`Found ${matches.length} look-alike${matches.length > 1 ? 's' : ''}`);
+    } catch (err) {
+      console.error('photo search error', err);
+      toast.error('Photo search failed');
+    } finally {
+      setPhotoSearchUploading(false);
+      setAiSearching(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  // Daily digest
+  const loadDigest = async () => {
+    setDigestLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('lf-daily-digest', { body: {} });
+      if (error) throw error;
+      setDigest(data?.digest || 'No items in the last 24 hours.');
+    } catch {
+      toast.error('Failed to load digest');
+    } finally { setDigestLoading(false); }
+  };
+
+  // Voice intake
+  const startVoiceIntake = () => {
+    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) { toast.error('Voice input not supported in this browser'); return; }
+    const rec = new SR();
+    rec.lang = 'en-US';
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    rec.onresult = async (ev: any) => {
+      const transcript = ev.results?.[0]?.[0]?.transcript || '';
+      setVoiceListening(false);
+      if (!transcript) return;
+      setVoiceProcessing(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('lf-voice-structure', { body: { transcript } });
+        if (error) throw error;
+        const f = data?.fields;
+        if (f) {
+          setForm(prev => ({
+            ...prev,
+            item_type: f.item_type || prev.item_type,
+            title: f.title || prev.title,
+            description: f.description || prev.description,
+            category: CATEGORIES.includes(f.category) ? f.category : prev.category,
+            location: f.location || prev.location,
+          }));
+          toast.success('Voice transcribed and structured — review before posting');
+        }
+      } catch { toast.error('Voice processing failed'); }
+      finally { setVoiceProcessing(false); }
+    };
+    rec.onerror = () => { setVoiceListening(false); toast.error('Voice capture failed'); };
+    rec.onend = () => setVoiceListening(false);
+    recognitionRef.current = rec;
+    setVoiceListening(true);
+    rec.start();
+  };
+  const stopVoiceIntake = () => { recognitionRef.current?.stop(); setVoiceListening(false); };
+
+  // Route reasoning for found items vs nearby lost reports
+  const loadRouteReasoning = async (item: LostFoundItem) => {
+    setRouteLoading(true);
+    setRouteReasoning(null);
+    try {
+      const oppositeType = item.item_type === 'found' ? 'lost' : 'found';
+      const { data: candidates } = await supabase
+        .from('lost_found_items')
+        .select('location, created_at, title')
+        .eq('status', 'active')
+        .eq('item_type', oppositeType)
+        .eq('category', item.category)
+        .not('location', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      const counterpart = candidates?.[0];
+      if (!counterpart) { setRouteReasoning('No opposite-type post yet to reason against.'); return; }
+      const lostLoc = item.item_type === 'lost' ? item.location : counterpart.location;
+      const foundLoc = item.item_type === 'found' ? item.location : counterpart.location;
+      const lostTime = item.item_type === 'lost' ? item.created_at : counterpart.created_at;
+      const foundTime = item.item_type === 'found' ? item.created_at : counterpart.created_at;
+      const { data, error } = await supabase.functions.invoke('lf-route-reasoning', {
+        body: { lostLocation: lostLoc, foundLocation: foundLoc, lostTime, foundTime, itemTitle: item.title },
+      });
+      if (error) throw error;
+      setRouteReasoning(data?.reasoning || '');
+    } catch { toast.error('Route reasoning failed'); }
+    finally { setRouteLoading(false); }
+  };
+
     if (filter !== 'all' && item.item_type !== filter) return false;
     if (categoryFilter !== 'all' && item.category !== categoryFilter) return false;
     if (searchQuery && !item.title.toLowerCase().includes(searchQuery.toLowerCase()) && !item.description?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
