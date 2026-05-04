@@ -647,6 +647,32 @@ const LostFoundPage = () => {
           </AnimatePresence>
         </motion.div>
 
+        {/* Daily Digest */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="mb-8">
+          {!digest ? (
+            <button
+              onClick={loadDigest}
+              disabled={digestLoading}
+              className="flex items-center gap-3 px-4 py-3 bg-card border border-border rounded-2xl hover:border-nobel-gold transition-all text-left w-full sm:w-auto"
+            >
+              {digestLoading ? <Loader2 size={14} className="animate-spin text-nobel-gold" /> : <Newspaper size={14} className="text-nobel-gold" />}
+              <span className="text-xs font-bold uppercase tracking-widest text-ui-blue">{digestLoading ? 'Generating bulletin…' : "Today's bulletin"}</span>
+              <span className="text-[10px] text-slate-400">AI summary of last 24h</span>
+            </button>
+          ) : (
+            <div className="p-4 bg-gradient-to-r from-nobel-gold/5 to-ui-blue/5 border border-nobel-gold/20 rounded-2xl">
+              <div className="flex items-start gap-3">
+                <Newspaper size={16} className="text-nobel-gold mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-nobel-gold mb-1">Today's Bulletin</p>
+                  <p className="text-sm text-slate-600 leading-relaxed italic">{digest}</p>
+                </div>
+                <button onClick={() => setDigest(null)} className="text-slate-400 hover:text-slate-600"><X size={14} /></button>
+              </div>
+            </div>
+          )}
+        </motion.div>
+
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-12">
           <Tabs value={filter} onValueChange={(v) => setFilter(v as 'all' | 'lost' | 'found')} className="w-full sm:w-auto">
