@@ -927,6 +927,13 @@ const LostFoundPage = () => {
                 </div>
               )}
 
+              {showDetailModal.ai_rewritten_description && (
+                <div className="rounded-2xl border border-nobel-gold/20 bg-nobel-gold/5 p-3 text-sm text-slate-700 leading-relaxed">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-nobel-gold mb-1 flex items-center gap-1"><Sparkles size={10} /> AI Rewritten</p>
+                  {showDetailModal.ai_rewritten_description}
+                </div>
+              )}
+
               {showDetailModal.description && (
                 <p className="text-sm text-slate-600 font-light leading-relaxed whitespace-pre-wrap">
                   {showDetailModal.description}
