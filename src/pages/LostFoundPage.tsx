@@ -964,6 +964,26 @@ const LostFoundPage = () => {
                   <Clock size={16} />
                   <span>Posted {formatDistanceToNow(new Date(showDetailModal.created_at), { addSuffix: true })}</span>
                 </p>
+
+                {showDetailModal.location && (
+                  <div className="pt-2">
+                    {!routeReasoning ? (
+                      <button
+                        onClick={() => loadRouteReasoning(showDetailModal)}
+                        disabled={routeLoading}
+                        className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-nobel-gold hover:text-ui-blue transition-colors"
+                      >
+                        {routeLoading ? <Loader2 size={11} className="animate-spin" /> : <Route size={11} />}
+                        {routeLoading ? 'Reasoning…' : 'AI route reasoning'}
+                      </button>
+                    ) : (
+                      <div className="rounded-2xl border border-nobel-gold/20 bg-nobel-gold/5 p-3">
+                        <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-nobel-gold mb-1 flex items-center gap-1"><Route size={10} /> Likely Route</p>
+                        <p className="text-xs text-slate-600 italic leading-relaxed">{routeReasoning}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {currentUser === showDetailModal.user_id ? (
