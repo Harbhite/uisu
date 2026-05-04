@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GridCardSkeleton } from '@/components/skeletons/GenericSkeletons';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, MapPin, Clock, Tag, X, Upload, Phone, Loader2, Trash2, CheckCircle2, ArrowLeft, Sparkles, ChevronDown, ChevronUp, Wand2, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { Search, Plus, MapPin, Clock, Tag, X, Upload, Phone, Loader2, Trash2, CheckCircle2, ArrowLeft, Sparkles, ChevronDown, ChevronUp, Wand2, ShieldCheck, AlertTriangle, Mic, MicOff, Newspaper, Image as ImageIcon, Type as TypeIcon, Route } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,7 @@ interface LostFoundItem {
   ai_tags?: string[] | null;
   ai_summary?: string | null;
   ai_attributes?: any;
+  ai_rewritten_description?: string | null;
 }
 
 interface AIMatch {
@@ -70,10 +71,27 @@ const LostFoundPage = () => {
 
   // AI Smart Search state
   const [showAISearch, setShowAISearch] = useState(false);
+  const [searchMode, setSearchMode] = useState<'text' | 'photo'>('text');
   const [aiDescription, setAiDescription] = useState('');
   const [aiMatches, setAiMatches] = useState<AIMatch[]>([]);
   const [aiSearching, setAiSearching] = useState(false);
   const [aiSearched, setAiSearched] = useState(false);
+  const [photoSearchUrl, setPhotoSearchUrl] = useState<string | null>(null);
+  const [photoSearchUploading, setPhotoSearchUploading] = useState(false);
+  const photoSearchRef = useRef<HTMLInputElement>(null);
+
+  // Daily digest
+  const [digest, setDigest] = useState<string | null>(null);
+  const [digestLoading, setDigestLoading] = useState(false);
+
+  // Voice intake
+  const [voiceListening, setVoiceListening] = useState(false);
+  const [voiceProcessing, setVoiceProcessing] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  // Route reasoning
+  const [routeReasoning, setRouteReasoning] = useState<string | null>(null);
+  const [routeLoading, setRouteLoading] = useState(false);
 
   const [form, setForm] = useState({
     title: '', description: '', category: 'Other', item_type: 'lost',
@@ -96,6 +114,8 @@ const LostFoundPage = () => {
     fetchItems();
     supabase.auth.getUser().then(({ data }) => setCurrentUser(data.user?.id || null));
   }, []);
+
+  useEffect(() => { setRouteReasoning(null); }, [showDetailModal?.id]);
 
   const fetchItems = async () => {
     const { data, error } = await supabase
@@ -160,9 +180,10 @@ const LostFoundPage = () => {
       if (error) throw error;
       toast.success('Item posted!');
 
-      // Fire-and-forget: analyze post (tags, summary, dedup)
+      // Fire-and-forget: analyze post (tags, summary, dedup) + rewrite
       if (inserted?.id) {
         supabase.functions.invoke('lf-analyze-post', { body: { itemId: inserted.id } }).catch(() => {});
+        supabase.functions.invoke('lf-rewrite-post', { body: { itemId: inserted.id } }).catch(() => {});
       }
 
       // If found item, scan recent lost reports for matches
@@ -290,6 +311,122 @@ const LostFoundPage = () => {
     }
   };
 
+  // Photo similarity search — upload a photo and find visually similar opposite-type items
+  const handlePhotoSearchUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.files?.[0];
+    if (!raw) return;
+    setPhotoSearchUploading(true);
+    setAiSearched(false);
+    setAiMatches([]);
+    try {
+      const file = await compressImage(raw);
+      const fileName = `search-${Date.now()}-${file.name}`;
+      const { error } = await supabase.storage.from('lost-found').upload(fileName, file);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from('lost-found').getPublicUrl(fileName);
+      setPhotoSearchUrl(urlData.publicUrl);
+
+      setAiSearching(true);
+      const { data, error: fnError } = await supabase.functions.invoke('lf-photo-similarity', {
+        body: { imageUrl: urlData.publicUrl, itemType: 'lost' },
+      });
+      if (fnError) throw fnError;
+      const matches = (data?.matches || []).map((m: any) => ({ item: m.item, confidence: m.confidence, reason: m.reason }));
+      setAiMatches(matches);
+      setAiSearched(true);
+      if (matches.length === 0) toast.info('No visually similar items found');
+      else toast.success(`Found ${matches.length} look-alike${matches.length > 1 ? 's' : ''}`);
+    } catch (err) {
+      console.error('photo search error', err);
+      toast.error('Photo search failed');
+    } finally {
+      setPhotoSearchUploading(false);
+      setAiSearching(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  // Daily digest
+  const loadDigest = async () => {
+    setDigestLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('lf-daily-digest', { body: {} });
+      if (error) throw error;
+      setDigest(data?.digest || 'No items in the last 24 hours.');
+    } catch {
+      toast.error('Failed to load digest');
+    } finally { setDigestLoading(false); }
+  };
+
+  // Voice intake
+  const startVoiceIntake = () => {
+    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) { toast.error('Voice input not supported in this browser'); return; }
+    const rec = new SR();
+    rec.lang = 'en-US';
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    rec.onresult = async (ev: any) => {
+      const transcript = ev.results?.[0]?.[0]?.transcript || '';
+      setVoiceListening(false);
+      if (!transcript) return;
+      setVoiceProcessing(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('lf-voice-structure', { body: { transcript } });
+        if (error) throw error;
+        const f = data?.fields;
+        if (f) {
+          setForm(prev => ({
+            ...prev,
+            item_type: f.item_type || prev.item_type,
+            title: f.title || prev.title,
+            description: f.description || prev.description,
+            category: CATEGORIES.includes(f.category) ? f.category : prev.category,
+            location: f.location || prev.location,
+          }));
+          toast.success('Voice transcribed and structured — review before posting');
+        }
+      } catch { toast.error('Voice processing failed'); }
+      finally { setVoiceProcessing(false); }
+    };
+    rec.onerror = () => { setVoiceListening(false); toast.error('Voice capture failed'); };
+    rec.onend = () => setVoiceListening(false);
+    recognitionRef.current = rec;
+    setVoiceListening(true);
+    rec.start();
+  };
+  const stopVoiceIntake = () => { recognitionRef.current?.stop(); setVoiceListening(false); };
+
+  // Route reasoning for found items vs nearby lost reports
+  const loadRouteReasoning = async (item: LostFoundItem) => {
+    setRouteLoading(true);
+    setRouteReasoning(null);
+    try {
+      const oppositeType = item.item_type === 'found' ? 'lost' : 'found';
+      const { data: candidates } = await supabase
+        .from('lost_found_items')
+        .select('location, created_at, title')
+        .eq('status', 'active')
+        .eq('item_type', oppositeType)
+        .eq('category', item.category)
+        .not('location', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      const counterpart = candidates?.[0];
+      if (!counterpart) { setRouteReasoning('No opposite-type post yet to reason against.'); return; }
+      const lostLoc = item.item_type === 'lost' ? item.location : counterpart.location;
+      const foundLoc = item.item_type === 'found' ? item.location : counterpart.location;
+      const lostTime = item.item_type === 'lost' ? item.created_at : counterpart.created_at;
+      const foundTime = item.item_type === 'found' ? item.created_at : counterpart.created_at;
+      const { data, error } = await supabase.functions.invoke('lf-route-reasoning', {
+        body: { lostLocation: lostLoc, foundLocation: foundLoc, lostTime, foundTime, itemTitle: item.title },
+      });
+      if (error) throw error;
+      setRouteReasoning(data?.reasoning || '');
+    } catch { toast.error('Route reasoning failed'); }
+    finally { setRouteLoading(false); }
+  };
+
   const filtered = items.filter(item => {
     if (filter !== 'all' && item.item_type !== filter) return false;
     if (categoryFilter !== 'all' && item.category !== categoryFilter) return false;
@@ -391,28 +528,60 @@ const LostFoundPage = () => {
                 className="overflow-hidden"
               >
                 <div className="border border-t-0 border-ui-blue/10 bg-card p-6 space-y-4">
-                  <Textarea
-                    placeholder="Describe what you lost in detail — color, brand, size, where you last had it, any unique features..."
-                    value={aiDescription}
-                    onChange={e => setAiDescription(e.target.value)}
-                    className="rounded-2xl border-border min-h-[100px] text-sm"
-                    rows={3}
-                  />
-                  <div className="flex items-center gap-3">
-                    <Button
-                      onClick={handleAISearch}
-                      disabled={aiSearching || !aiDescription.trim()}
-                      className="gap-2 rounded-2xl bg-nobel-gold hover:bg-nobel-gold/90 text-ui-blue text-xs uppercase tracking-widest font-bold"
-                    >
-                      {aiSearching ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                      {aiSearching ? 'Searching...' : 'Find Matches'}
-                    </Button>
-                    {aiSearched && (
-                      <span className="text-xs text-slate-400">
-                        {aiMatches.length} match{aiMatches.length !== 1 ? 'es' : ''} found
-                      </span>
-                    )}
-                  </div>
+                  <Tabs value={searchMode} onValueChange={(v) => setSearchMode(v as 'text' | 'photo')}>
+                    <TabsList className="rounded-2xl bg-slate-50 border border-border h-auto p-1 grid grid-cols-2 w-full sm:w-[300px]">
+                      <TabsTrigger value="text" className="rounded-2xl py-2 text-[10px] font-bold uppercase tracking-widest gap-1.5 data-[state=active]:bg-ui-blue data-[state=active]:text-white"><TypeIcon size={11} /> Describe</TabsTrigger>
+                      <TabsTrigger value="photo" className="rounded-2xl py-2 text-[10px] font-bold uppercase tracking-widest gap-1.5 data-[state=active]:bg-ui-blue data-[state=active]:text-white"><ImageIcon size={11} /> Photo</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+
+                  {searchMode === 'text' ? (
+                    <>
+                      <Textarea
+                        placeholder="Describe what you lost in detail — color, brand, size, where you last had it, any unique features..."
+                        value={aiDescription}
+                        onChange={e => setAiDescription(e.target.value)}
+                        className="rounded-2xl border-border min-h-[100px] text-sm"
+                        rows={3}
+                      />
+                      <div className="flex items-center gap-3">
+                        <Button
+                          onClick={handleAISearch}
+                          disabled={aiSearching || !aiDescription.trim()}
+                          className="gap-2 rounded-2xl bg-nobel-gold hover:bg-nobel-gold/90 text-ui-blue text-xs uppercase tracking-widest font-bold"
+                        >
+                          {aiSearching ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                          {aiSearching ? 'Searching...' : 'Find Matches'}
+                        </Button>
+                        {aiSearched && (
+                          <span className="text-xs text-slate-400">
+                            {aiMatches.length} match{aiMatches.length !== 1 ? 'es' : ''} found
+                          </span>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-3">
+                      <p className="text-xs text-slate-500">Upload a photo of your item — AI will find visually similar found items.</p>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => photoSearchRef.current?.click()}
+                          disabled={photoSearchUploading || aiSearching}
+                          className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-nobel-gold text-ui-blue text-xs font-bold uppercase tracking-widest disabled:opacity-50"
+                        >
+                          {photoSearchUploading || aiSearching ? <Loader2 size={14} className="animate-spin" /> : <ImageIcon size={14} />}
+                          {photoSearchUploading ? 'Uploading…' : aiSearching ? 'Analyzing…' : 'Upload photo'}
+                        </button>
+                        {photoSearchUrl && (
+                          <img src={photoSearchUrl} alt="" className="w-12 h-12 object-cover rounded-2xl border border-border" />
+                        )}
+                        {aiSearched && (
+                          <span className="text-xs text-slate-400">{aiMatches.length} look-alike{aiMatches.length !== 1 ? 's' : ''}</span>
+                        )}
+                      </div>
+                      <input ref={photoSearchRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoSearchUpload} />
+                    </div>
+                  )}
 
                   {/* AI Results */}
                   <AnimatePresence>
@@ -478,6 +647,32 @@ const LostFoundPage = () => {
               </motion.div>
             )}
           </AnimatePresence>
+        </motion.div>
+
+        {/* Daily Digest */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="mb-8">
+          {!digest ? (
+            <button
+              onClick={loadDigest}
+              disabled={digestLoading}
+              className="flex items-center gap-3 px-4 py-3 bg-card border border-border rounded-2xl hover:border-nobel-gold transition-all text-left w-full sm:w-auto"
+            >
+              {digestLoading ? <Loader2 size={14} className="animate-spin text-nobel-gold" /> : <Newspaper size={14} className="text-nobel-gold" />}
+              <span className="text-xs font-bold uppercase tracking-widest text-ui-blue">{digestLoading ? 'Generating bulletin…' : "Today's bulletin"}</span>
+              <span className="text-[10px] text-slate-400">AI summary of last 24h</span>
+            </button>
+          ) : (
+            <div className="p-4 bg-gradient-to-r from-nobel-gold/5 to-ui-blue/5 border border-nobel-gold/20 rounded-2xl">
+              <div className="flex items-start gap-3">
+                <Newspaper size={16} className="text-nobel-gold mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-nobel-gold mb-1">Today's Bulletin</p>
+                  <p className="text-sm text-slate-600 leading-relaxed italic">{digest}</p>
+                </div>
+                <button onClick={() => setDigest(null)} className="text-slate-400 hover:text-slate-600"><X size={14} /></button>
+              </div>
+            </div>
+          )}
         </motion.div>
 
         {/* Filters */}
@@ -607,6 +802,19 @@ const LostFoundPage = () => {
               </TabsList>
             </Tabs>
 
+            {/* Voice intake */}
+            <button
+              type="button"
+              onClick={voiceListening ? stopVoiceIntake : startVoiceIntake}
+              disabled={voiceProcessing}
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border text-xs font-bold uppercase tracking-widest transition-all ${
+                voiceListening ? 'bg-red-50 border-red-300 text-red-600 animate-pulse' : 'bg-nobel-gold/10 border-nobel-gold/30 text-ui-blue hover:bg-nobel-gold/20'
+              }`}
+            >
+              {voiceProcessing ? <Loader2 size={14} className="animate-spin" /> : voiceListening ? <MicOff size={14} /> : <Mic size={14} />}
+              {voiceProcessing ? 'AI structuring…' : voiceListening ? 'Listening — tap to stop' : 'Speak to fill form'}
+            </button>
+
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Title</label>
               <Input placeholder="Item name" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="rounded-2xl border-border" />
@@ -721,6 +929,13 @@ const LostFoundPage = () => {
                 </div>
               )}
 
+              {showDetailModal.ai_rewritten_description && (
+                <div className="rounded-2xl border border-nobel-gold/20 bg-nobel-gold/5 p-3 text-sm text-slate-700 leading-relaxed">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-nobel-gold mb-1 flex items-center gap-1"><Sparkles size={10} /> AI Rewritten</p>
+                  {showDetailModal.ai_rewritten_description}
+                </div>
+              )}
+
               {showDetailModal.description && (
                 <p className="text-sm text-slate-600 font-light leading-relaxed whitespace-pre-wrap">
                   {showDetailModal.description}
@@ -751,6 +966,26 @@ const LostFoundPage = () => {
                   <Clock size={16} />
                   <span>Posted {formatDistanceToNow(new Date(showDetailModal.created_at), { addSuffix: true })}</span>
                 </p>
+
+                {showDetailModal.location && (
+                  <div className="pt-2">
+                    {!routeReasoning ? (
+                      <button
+                        onClick={() => loadRouteReasoning(showDetailModal)}
+                        disabled={routeLoading}
+                        className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-nobel-gold hover:text-ui-blue transition-colors"
+                      >
+                        {routeLoading ? <Loader2 size={11} className="animate-spin" /> : <Route size={11} />}
+                        {routeLoading ? 'Reasoning…' : 'AI route reasoning'}
+                      </button>
+                    ) : (
+                      <div className="rounded-2xl border border-nobel-gold/20 bg-nobel-gold/5 p-3">
+                        <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-nobel-gold mb-1 flex items-center gap-1"><Route size={10} /> Likely Route</p>
+                        <p className="text-xs text-slate-600 italic leading-relaxed">{routeReasoning}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {currentUser === showDetailModal.user_id ? (
