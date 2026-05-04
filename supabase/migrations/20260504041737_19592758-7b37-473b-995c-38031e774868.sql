@@ -1,0 +1,1 @@
+ALTER TABLE public.lost_found_items ADD COLUMN IF NOT EXISTS ai_rewritten_description text;
