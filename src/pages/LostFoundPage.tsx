@@ -115,6 +115,8 @@ const LostFoundPage = () => {
     supabase.auth.getUser().then(({ data }) => setCurrentUser(data.user?.id || null));
   }, []);
 
+  useEffect(() => { setRouteReasoning(null); }, [showDetailModal?.id]);
+
   const fetchItems = async () => {
     const { data, error } = await supabase
       .from('lost_found_items')
