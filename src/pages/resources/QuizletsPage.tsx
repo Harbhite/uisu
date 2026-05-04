@@ -211,7 +211,17 @@ const QuizletsPage = () => {
     toast.success('Quizlet deleted');
   };
 
-  const startQuiz = (quizlet: Quizlet) => {
+  const startQuiz = (quizlet: Quizlet, anonDisplayName?: string) => {
+    if (!user && anonDisplayName === undefined) {
+      // Ask guest for optional name first
+      setPendingQuizlet(quizlet);
+      setAnonName('');
+      return;
+    }
+    if (anonDisplayName !== undefined) {
+      // store sanitized chosen name on the quizlet object via a ref-like state slot
+      (quizlet as any)._anonName = anonDisplayName.trim();
+    }
     setActiveQuizlet(quizlet);
     setQuestions(quizlet.questions);
     setUserAnswers([]);
