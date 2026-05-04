@@ -33,6 +33,7 @@ interface LostFoundItem {
   ai_tags?: string[] | null;
   ai_summary?: string | null;
   ai_attributes?: any;
+  ai_rewritten_description?: string | null;
 }
 
 interface AIMatch {
