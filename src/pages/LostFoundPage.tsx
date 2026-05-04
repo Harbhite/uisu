@@ -424,6 +424,7 @@ const LostFoundPage = () => {
     finally { setRouteLoading(false); }
   };
 
+  const filtered = items.filter(item => {
     if (filter !== 'all' && item.item_type !== filter) return false;
     if (categoryFilter !== 'all' && item.category !== categoryFilter) return false;
     if (searchQuery && !item.title.toLowerCase().includes(searchQuery.toLowerCase()) && !item.description?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
