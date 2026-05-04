@@ -65,6 +65,10 @@ const QuizletsPage = () => {
   const timerRef = useRef<number | null>(null);
   const autoAdvanceRef = useRef<number | null>(null);
 
+  // Anonymous name prompt
+  const [pendingQuizlet, setPendingQuizlet] = useState<Quizlet | null>(null);
+  const [anonName, setAnonName] = useState('');
+
   // Leaderboard + streak
   interface LeaderboardEntry {
     id: string;
