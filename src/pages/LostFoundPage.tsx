@@ -526,28 +526,60 @@ const LostFoundPage = () => {
                 className="overflow-hidden"
               >
                 <div className="border border-t-0 border-ui-blue/10 bg-card p-6 space-y-4">
-                  <Textarea
-                    placeholder="Describe what you lost in detail — color, brand, size, where you last had it, any unique features..."
-                    value={aiDescription}
-                    onChange={e => setAiDescription(e.target.value)}
-                    className="rounded-2xl border-border min-h-[100px] text-sm"
-                    rows={3}
-                  />
-                  <div className="flex items-center gap-3">
-                    <Button
-                      onClick={handleAISearch}
-                      disabled={aiSearching || !aiDescription.trim()}
-                      className="gap-2 rounded-2xl bg-nobel-gold hover:bg-nobel-gold/90 text-ui-blue text-xs uppercase tracking-widest font-bold"
-                    >
-                      {aiSearching ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                      {aiSearching ? 'Searching...' : 'Find Matches'}
-                    </Button>
-                    {aiSearched && (
-                      <span className="text-xs text-slate-400">
-                        {aiMatches.length} match{aiMatches.length !== 1 ? 'es' : ''} found
-                      </span>
-                    )}
-                  </div>
+                  <Tabs value={searchMode} onValueChange={(v) => setSearchMode(v as 'text' | 'photo')}>
+                    <TabsList className="rounded-2xl bg-slate-50 border border-border h-auto p-1 grid grid-cols-2 w-full sm:w-[300px]">
+                      <TabsTrigger value="text" className="rounded-2xl py-2 text-[10px] font-bold uppercase tracking-widest gap-1.5 data-[state=active]:bg-ui-blue data-[state=active]:text-white"><TypeIcon size={11} /> Describe</TabsTrigger>
+                      <TabsTrigger value="photo" className="rounded-2xl py-2 text-[10px] font-bold uppercase tracking-widest gap-1.5 data-[state=active]:bg-ui-blue data-[state=active]:text-white"><ImageIcon size={11} /> Photo</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+
+                  {searchMode === 'text' ? (
+                    <>
+                      <Textarea
+                        placeholder="Describe what you lost in detail — color, brand, size, where you last had it, any unique features..."
+                        value={aiDescription}
+                        onChange={e => setAiDescription(e.target.value)}
+                        className="rounded-2xl border-border min-h-[100px] text-sm"
+                        rows={3}
+                      />
+                      <div className="flex items-center gap-3">
+                        <Button
+                          onClick={handleAISearch}
+                          disabled={aiSearching || !aiDescription.trim()}
+                          className="gap-2 rounded-2xl bg-nobel-gold hover:bg-nobel-gold/90 text-ui-blue text-xs uppercase tracking-widest font-bold"
+                        >
+                          {aiSearching ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                          {aiSearching ? 'Searching...' : 'Find Matches'}
+                        </Button>
+                        {aiSearched && (
+                          <span className="text-xs text-slate-400">
+                            {aiMatches.length} match{aiMatches.length !== 1 ? 'es' : ''} found
+                          </span>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-3">
+                      <p className="text-xs text-slate-500">Upload a photo of your item — AI will find visually similar found items.</p>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => photoSearchRef.current?.click()}
+                          disabled={photoSearchUploading || aiSearching}
+                          className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-nobel-gold text-ui-blue text-xs font-bold uppercase tracking-widest disabled:opacity-50"
+                        >
+                          {photoSearchUploading || aiSearching ? <Loader2 size={14} className="animate-spin" /> : <ImageIcon size={14} />}
+                          {photoSearchUploading ? 'Uploading…' : aiSearching ? 'Analyzing…' : 'Upload photo'}
+                        </button>
+                        {photoSearchUrl && (
+                          <img src={photoSearchUrl} alt="" className="w-12 h-12 object-cover rounded-2xl border border-border" />
+                        )}
+                        {aiSearched && (
+                          <span className="text-xs text-slate-400">{aiMatches.length} look-alike{aiMatches.length !== 1 ? 's' : ''}</span>
+                        )}
+                      </div>
+                      <input ref={photoSearchRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoSearchUpload} />
+                    </div>
+                  )}
 
                   {/* AI Results */}
                   <AnimatePresence>
