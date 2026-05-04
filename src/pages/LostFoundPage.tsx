@@ -800,6 +800,19 @@ const LostFoundPage = () => {
               </TabsList>
             </Tabs>
 
+            {/* Voice intake */}
+            <button
+              type="button"
+              onClick={voiceListening ? stopVoiceIntake : startVoiceIntake}
+              disabled={voiceProcessing}
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border text-xs font-bold uppercase tracking-widest transition-all ${
+                voiceListening ? 'bg-red-50 border-red-300 text-red-600 animate-pulse' : 'bg-nobel-gold/10 border-nobel-gold/30 text-ui-blue hover:bg-nobel-gold/20'
+              }`}
+            >
+              {voiceProcessing ? <Loader2 size={14} className="animate-spin" /> : voiceListening ? <MicOff size={14} /> : <Mic size={14} />}
+              {voiceProcessing ? 'AI structuring…' : voiceListening ? 'Listening — tap to stop' : 'Speak to fill form'}
+            </button>
+
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Title</label>
               <Input placeholder="Item name" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="rounded-2xl border-border" />
