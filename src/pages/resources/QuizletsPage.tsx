@@ -262,7 +262,8 @@ const QuizletsPage = () => {
           .maybeSingle();
         displayName = profile?.full_name || user.email?.split('@')[0] || 'Student';
       } else {
-        displayName = 'Anonymous';
+        const stored = (activeQuizlet as any)._anonName;
+        displayName = stored && stored.length > 0 ? stored.slice(0, 40) : 'Anonymous';
       }
 
       const { error: attemptError } = await supabase.from('quiz_attempts').insert({
