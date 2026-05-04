@@ -178,9 +178,10 @@ const LostFoundPage = () => {
       if (error) throw error;
       toast.success('Item posted!');
 
-      // Fire-and-forget: analyze post (tags, summary, dedup)
+      // Fire-and-forget: analyze post (tags, summary, dedup) + rewrite
       if (inserted?.id) {
         supabase.functions.invoke('lf-analyze-post', { body: { itemId: inserted.id } }).catch(() => {});
+        supabase.functions.invoke('lf-rewrite-post', { body: { itemId: inserted.id } }).catch(() => {});
       }
 
       // If found item, scan recent lost reports for matches
