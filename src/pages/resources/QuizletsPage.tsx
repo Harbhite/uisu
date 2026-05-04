@@ -710,6 +710,54 @@ const QuizletsPage = () => {
         )}
       </div>
 
+      {/* Anonymous name prompt */}
+      <AnimatePresence>
+        {pendingQuizlet && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+            onClick={() => setPendingQuizlet(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-card border border-border rounded-lg p-6 w-full max-w-md space-y-5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div>
+                <h3 className="font-serif text-xl text-primary">Before you start</h3>
+                <p className="text-sm text-muted-foreground mt-1">Add a name for the leaderboard, or stay anonymous.</p>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Display name (optional)</label>
+                <input
+                  autoFocus
+                  value={anonName}
+                  onChange={(e) => setAnonName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { const q = pendingQuizlet; setPendingQuizlet(null); startQuiz(q!, anonName); } }}
+                  maxLength={40}
+                  className="w-full px-4 py-3 bg-muted/50 border border-border outline-none text-sm focus:border-accent transition-colors rounded-lg"
+                  placeholder="e.g. Ade"
+                />
+              </div>
+              <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+                <button
+                  onClick={() => { const q = pendingQuizlet; setPendingQuizlet(null); startQuiz(q!, ''); }}
+                  className="px-4 py-3 border border-border rounded-lg text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:border-accent transition-colors"
+                >
+                  Stay anonymous
+                </button>
+                <button
+                  onClick={() => { const q = pendingQuizlet; setPendingQuizlet(null); startQuiz(q!, anonName); }}
+                  className="px-5 py-3 bg-accent text-accent-foreground rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-all"
+                >
+                  Start Quiz
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Edit Modal */}
       <AnimatePresence>
         {editingQuizlet && (
