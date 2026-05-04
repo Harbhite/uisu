@@ -70,10 +70,27 @@ const LostFoundPage = () => {
 
   // AI Smart Search state
   const [showAISearch, setShowAISearch] = useState(false);
+  const [searchMode, setSearchMode] = useState<'text' | 'photo'>('text');
   const [aiDescription, setAiDescription] = useState('');
   const [aiMatches, setAiMatches] = useState<AIMatch[]>([]);
   const [aiSearching, setAiSearching] = useState(false);
   const [aiSearched, setAiSearched] = useState(false);
+  const [photoSearchUrl, setPhotoSearchUrl] = useState<string | null>(null);
+  const [photoSearchUploading, setPhotoSearchUploading] = useState(false);
+  const photoSearchRef = useRef<HTMLInputElement>(null);
+
+  // Daily digest
+  const [digest, setDigest] = useState<string | null>(null);
+  const [digestLoading, setDigestLoading] = useState(false);
+
+  // Voice intake
+  const [voiceListening, setVoiceListening] = useState(false);
+  const [voiceProcessing, setVoiceProcessing] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  // Route reasoning
+  const [routeReasoning, setRouteReasoning] = useState<string | null>(null);
+  const [routeLoading, setRouteLoading] = useState(false);
 
   const [form, setForm] = useState({
     title: '', description: '', category: 'Other', item_type: 'lost',
