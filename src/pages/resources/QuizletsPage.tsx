@@ -40,6 +40,60 @@ const formatTime = (seconds: number) => {
   return `${m}:${s.toString().padStart(2, '0')}`;
 };
 
+const ANON_NAME_KEY = 'uisu-quizlet-anon-name';
+const ANON_CHOICE_KEY = 'uisu-quizlet-anon-choice'; // 'set' | 'anonymous'
+
+// Compact, unique hero for Quizlets — distinct from AI Tools suite
+const QuizletsHero: React.FC<{ compact?: boolean; rightContent?: React.ReactNode; subtitle?: string; title?: string }> = ({
+  compact = false,
+  rightContent,
+  subtitle = 'Community Quiz Bank',
+  title = 'Quizlets',
+}) => {
+  const navigate = useNavigate();
+  return (
+    <div className="relative bg-gradient-to-br from-primary via-primary to-primary/95 text-primary-foreground overflow-hidden border-b-2 border-accent/40">
+      {/* Decorative dotted band */}
+      <div
+        className="absolute inset-0 opacity-[0.06] pointer-events-none"
+        style={{
+          backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)',
+          backgroundSize: '14px 14px',
+        }}
+      />
+      <div className="absolute top-0 right-0 w-64 h-64 bg-accent/10 blur-3xl pointer-events-none" />
+
+      <div className={`container mx-auto px-4 max-w-6xl relative ${compact ? 'pt-20 pb-4' : 'pt-20 pb-6'}`}>
+        <button
+          onClick={() => navigate('/resources')}
+          className="group flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.3em] text-primary-foreground/50 hover:text-accent transition-colors mb-4"
+        >
+          <ChevronLeft size={12} className="transition-transform group-hover:-translate-x-1" />
+          <span>Resources</span>
+        </button>
+
+        <div className="flex items-end justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-accent/20 border border-accent/40 ring-1 ring-accent/20">
+              <BookOpen size={18} className="text-accent" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="h-px w-5 bg-accent" />
+                <span className="text-[8px] font-bold uppercase tracking-[0.4em] text-accent">{subtitle}</span>
+              </div>
+              <h1 className="font-serif text-2xl md:text-3xl leading-none tracking-tight">
+                {title}<span className="text-accent">.</span>
+              </h1>
+            </div>
+          </div>
+          {rightContent}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const QuizletsPage = () => {
   const navigate = useNavigate();
   const { id: quizletId } = useParams<{ id?: string }>();
