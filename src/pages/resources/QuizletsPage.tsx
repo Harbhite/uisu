@@ -11,7 +11,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { toast } from 'sonner';
 import { SEO } from '@/components/SEO';
-import AIToolsHeader from '@/components/resources/AIToolsHeader';
 import SocialShare from '@/components/SocialShare';
 
 interface Question {
@@ -38,6 +37,60 @@ const formatTime = (seconds: number) => {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return `${m}:${s.toString().padStart(2, '0')}`;
+};
+
+const ANON_NAME_KEY = 'uisu-quizlet-anon-name';
+const ANON_CHOICE_KEY = 'uisu-quizlet-anon-choice'; // 'set' | 'anonymous'
+
+// Compact, unique hero for Quizlets — distinct from AI Tools suite
+const QuizletsHero: React.FC<{ compact?: boolean; rightContent?: React.ReactNode; subtitle?: string; title?: string }> = ({
+  compact = false,
+  rightContent,
+  subtitle = 'Community Quiz Bank',
+  title = 'Quizlets',
+}) => {
+  const navigate = useNavigate();
+  return (
+    <div className="relative bg-gradient-to-br from-primary via-primary to-primary/95 text-primary-foreground overflow-hidden border-b-2 border-accent/40">
+      {/* Decorative dotted band */}
+      <div
+        className="absolute inset-0 opacity-[0.06] pointer-events-none"
+        style={{
+          backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)',
+          backgroundSize: '14px 14px',
+        }}
+      />
+      <div className="absolute top-0 right-0 w-64 h-64 bg-accent/10 blur-3xl pointer-events-none" />
+
+      <div className={`container mx-auto px-4 max-w-6xl relative ${compact ? 'pt-20 pb-4' : 'pt-20 pb-6'}`}>
+        <button
+          onClick={() => navigate('/resources')}
+          className="group flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.3em] text-primary-foreground/50 hover:text-accent transition-colors mb-4"
+        >
+          <ChevronLeft size={12} className="transition-transform group-hover:-translate-x-1" />
+          <span>Resources</span>
+        </button>
+
+        <div className="flex items-end justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-accent/20 border border-accent/40 ring-1 ring-accent/20">
+              <BookOpen size={18} className="text-accent" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="h-px w-5 bg-accent" />
+                <span className="text-[8px] font-bold uppercase tracking-[0.4em] text-accent">{subtitle}</span>
+              </div>
+              <h1 className="font-serif text-2xl md:text-3xl leading-none tracking-tight">
+                {title}<span className="text-accent">.</span>
+              </h1>
+            </div>
+          </div>
+          {rightContent}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const QuizletsPage = () => {
@@ -213,14 +266,34 @@ const QuizletsPage = () => {
 
   const startQuiz = (quizlet: Quizlet, anonDisplayName?: string) => {
     if (!user && anonDisplayName === undefined) {
-      // Ask guest for optional name first
+      // Check for previously saved choice — skip the modal if available
+      try {
+        const choice = localStorage.getItem(ANON_CHOICE_KEY);
+        if (choice === 'set' || choice === 'anonymous') {
+          const stored = choice === 'set' ? (localStorage.getItem(ANON_NAME_KEY) || '') : '';
+          return startQuiz(quizlet, stored);
+        }
+      } catch { /* localStorage unavailable */ }
+      // First-time guest — ask for optional name, prefill any saved value
+      try {
+        const saved = localStorage.getItem(ANON_NAME_KEY) || '';
+        setAnonName(saved);
+      } catch { setAnonName(''); }
       setPendingQuizlet(quizlet);
-      setAnonName('');
       return;
     }
     if (anonDisplayName !== undefined) {
-      // store sanitized chosen name on the quizlet object via a ref-like state slot
-      (quizlet as any)._anonName = anonDisplayName.trim();
+      const trimmed = anonDisplayName.trim();
+      (quizlet as any)._anonName = trimmed;
+      // Persist guest choice for future sessions
+      try {
+        if (trimmed.length > 0) {
+          localStorage.setItem(ANON_NAME_KEY, trimmed.slice(0, 40));
+          localStorage.setItem(ANON_CHOICE_KEY, 'set');
+        } else {
+          localStorage.setItem(ANON_CHOICE_KEY, 'anonymous');
+        }
+      } catch { /* ignore */ }
     }
     setActiveQuizlet(quizlet);
     setQuestions(quizlet.questions);
@@ -301,7 +374,7 @@ const QuizletsPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <SEO title={`${activeQuizlet.title} - Quizlet`} description={activeQuizlet.description || 'Take this quiz'} />
-        <AIToolsHeader title="Quizlets" subtitle="Community Quiz Bank" icon={BookOpen} />
+        <QuizletsHero compact />
         <div className="container mx-auto px-4 max-w-2xl py-10">
           {loading ? (
             <div className="animate-pulse space-y-4">
@@ -409,7 +482,7 @@ const QuizletsPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <SEO title={`${activeQuizlet.title} - Quizlet`} description="Take a quiz" />
-        <AIToolsHeader title={activeQuizlet.title} icon={BrainCircuit} />
+        <QuizletsHero compact title={activeQuizlet.title} subtitle="Quiz In Progress" />
         <div className="container mx-auto px-4 max-w-5xl py-10">
           <div className="flex justify-between items-center mb-6">
             <button onClick={() => { if (timerRef.current) clearInterval(timerRef.current); setStep('browse'); if (quizletId) navigate('/resources/quizlets'); }}
@@ -501,7 +574,7 @@ const QuizletsPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <SEO title={`Results - ${activeQuizlet.title}`} description="Quiz results" />
-        <AIToolsHeader title={activeQuizlet.title} icon={BrainCircuit} />
+        <QuizletsHero compact title={activeQuizlet.title} subtitle="Quiz Results" />
         <div className="container mx-auto px-4 max-w-5xl py-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             <div className="lg:col-span-4 lg:sticky lg:top-32 space-y-4">
@@ -638,7 +711,7 @@ const QuizletsPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO title="Quizlets - Community Quiz Bank" description="Browse and take quizzes created by the community." />
-      <AIToolsHeader title="Quizlets" subtitle="Community Quiz Bank" icon={BookOpen} />
+      <QuizletsHero compact />
       
       <div className="container mx-auto px-4 max-w-6xl py-10">
         <div className="mb-6 flex flex-wrap items-center gap-3">
