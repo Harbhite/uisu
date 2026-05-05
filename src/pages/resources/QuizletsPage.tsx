@@ -12,7 +12,6 @@ import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { toast } from 'sonner';
 import { SEO } from '@/components/SEO';
 import SocialShare from '@/components/SocialShare';
-import { Link } from 'react-router-dom';
 
 interface Question {
   question: string;
