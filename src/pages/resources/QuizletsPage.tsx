@@ -555,7 +555,7 @@ const QuizletsPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <SEO title={`Results - ${activeQuizlet.title}`} description="Quiz results" />
-        <QuizletsHero compact title={activeQuizlet.title} subtitle="Quiz In Progress" />
+        <QuizletsHero compact title={activeQuizlet.title} subtitle="Quiz Results" />
         <div className="container mx-auto px-4 max-w-5xl py-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             <div className="lg:col-span-4 lg:sticky lg:top-32 space-y-4">
