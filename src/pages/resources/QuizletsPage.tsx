@@ -355,7 +355,7 @@ const QuizletsPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <SEO title={`${activeQuizlet.title} - Quizlet`} description={activeQuizlet.description || 'Take this quiz'} />
-        <AIToolsHeader title="Quizlets" subtitle="Community Quiz Bank" icon={BookOpen} />
+        <QuizletsHero compact />
         <div className="container mx-auto px-4 max-w-2xl py-10">
           {loading ? (
             <div className="animate-pulse space-y-4">
@@ -463,7 +463,7 @@ const QuizletsPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <SEO title={`${activeQuizlet.title} - Quizlet`} description="Take a quiz" />
-        <AIToolsHeader title={activeQuizlet.title} icon={BrainCircuit} />
+        <QuizletsHero compact title={activeQuizlet.title} subtitle="Quiz In Progress" />
         <div className="container mx-auto px-4 max-w-5xl py-10">
           <div className="flex justify-between items-center mb-6">
             <button onClick={() => { if (timerRef.current) clearInterval(timerRef.current); setStep('browse'); if (quizletId) navigate('/resources/quizlets'); }}
@@ -555,7 +555,7 @@ const QuizletsPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <SEO title={`Results - ${activeQuizlet.title}`} description="Quiz results" />
-        <AIToolsHeader title={activeQuizlet.title} icon={BrainCircuit} />
+        <QuizletsHero compact title={activeQuizlet.title} subtitle="Quiz In Progress" />
         <div className="container mx-auto px-4 max-w-5xl py-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             <div className="lg:col-span-4 lg:sticky lg:top-32 space-y-4">
@@ -692,7 +692,7 @@ const QuizletsPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO title="Quizlets - Community Quiz Bank" description="Browse and take quizzes created by the community." />
-      <AIToolsHeader title="Quizlets" subtitle="Community Quiz Bank" icon={BookOpen} />
+      <QuizletsHero compact />
       
       <div className="container mx-auto px-4 max-w-6xl py-10">
         <div className="mb-6 flex flex-wrap items-center gap-3">
