@@ -65,6 +65,10 @@ const QuizletsPage = () => {
   const timerRef = useRef<number | null>(null);
   const autoAdvanceRef = useRef<number | null>(null);
 
+  // Anonymous name prompt
+  const [pendingQuizlet, setPendingQuizlet] = useState<Quizlet | null>(null);
+  const [anonName, setAnonName] = useState('');
+
   // Leaderboard + streak
   interface LeaderboardEntry {
     id: string;
@@ -207,7 +211,17 @@ const QuizletsPage = () => {
     toast.success('Quizlet deleted');
   };
 
-  const startQuiz = (quizlet: Quizlet) => {
+  const startQuiz = (quizlet: Quizlet, anonDisplayName?: string) => {
+    if (!user && anonDisplayName === undefined) {
+      // Ask guest for optional name first
+      setPendingQuizlet(quizlet);
+      setAnonName('');
+      return;
+    }
+    if (anonDisplayName !== undefined) {
+      // store sanitized chosen name on the quizlet object via a ref-like state slot
+      (quizlet as any)._anonName = anonDisplayName.trim();
+    }
     setActiveQuizlet(quizlet);
     setQuestions(quizlet.questions);
     setUserAnswers([]);
@@ -248,7 +262,8 @@ const QuizletsPage = () => {
           .maybeSingle();
         displayName = profile?.full_name || user.email?.split('@')[0] || 'Student';
       } else {
-        displayName = 'Anonymous';
+        const stored = (activeQuizlet as any)._anonName;
+        displayName = stored && stored.length > 0 ? stored.slice(0, 40) : 'Anonymous';
       }
 
       const { error: attemptError } = await supabase.from('quiz_attempts').insert({
@@ -694,6 +709,54 @@ const QuizletsPage = () => {
           </div>
         )}
       </div>
+
+      {/* Anonymous name prompt */}
+      <AnimatePresence>
+        {pendingQuizlet && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+            onClick={() => setPendingQuizlet(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-card border border-border rounded-lg p-6 w-full max-w-md space-y-5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div>
+                <h3 className="font-serif text-xl text-primary">Before you start</h3>
+                <p className="text-sm text-muted-foreground mt-1">Add a name for the leaderboard, or stay anonymous.</p>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Display name (optional)</label>
+                <input
+                  autoFocus
+                  value={anonName}
+                  onChange={(e) => setAnonName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { const q = pendingQuizlet; setPendingQuizlet(null); startQuiz(q!, anonName); } }}
+                  maxLength={40}
+                  className="w-full px-4 py-3 bg-muted/50 border border-border outline-none text-sm focus:border-accent transition-colors rounded-lg"
+                  placeholder="e.g. Ade"
+                />
+              </div>
+              <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+                <button
+                  onClick={() => { const q = pendingQuizlet; setPendingQuizlet(null); startQuiz(q!, ''); }}
+                  className="px-4 py-3 border border-border rounded-lg text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:border-accent transition-colors"
+                >
+                  Stay anonymous
+                </button>
+                <button
+                  onClick={() => { const q = pendingQuizlet; setPendingQuizlet(null); startQuiz(q!, anonName); }}
+                  className="px-5 py-3 bg-accent text-accent-foreground rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-all"
+                >
+                  Start Quiz
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Edit Modal */}
       <AnimatePresence>
