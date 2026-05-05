@@ -267,14 +267,34 @@ const QuizletsPage = () => {
 
   const startQuiz = (quizlet: Quizlet, anonDisplayName?: string) => {
     if (!user && anonDisplayName === undefined) {
-      // Ask guest for optional name first
+      // Check for previously saved choice — skip the modal if available
+      try {
+        const choice = localStorage.getItem(ANON_CHOICE_KEY);
+        if (choice === 'set' || choice === 'anonymous') {
+          const stored = choice === 'set' ? (localStorage.getItem(ANON_NAME_KEY) || '') : '';
+          return startQuiz(quizlet, stored);
+        }
+      } catch { /* localStorage unavailable */ }
+      // First-time guest — ask for optional name, prefill any saved value
+      try {
+        const saved = localStorage.getItem(ANON_NAME_KEY) || '';
+        setAnonName(saved);
+      } catch { setAnonName(''); }
       setPendingQuizlet(quizlet);
-      setAnonName('');
       return;
     }
     if (anonDisplayName !== undefined) {
-      // store sanitized chosen name on the quizlet object via a ref-like state slot
-      (quizlet as any)._anonName = anonDisplayName.trim();
+      const trimmed = anonDisplayName.trim();
+      (quizlet as any)._anonName = trimmed;
+      // Persist guest choice for future sessions
+      try {
+        if (trimmed.length > 0) {
+          localStorage.setItem(ANON_NAME_KEY, trimmed.slice(0, 40));
+          localStorage.setItem(ANON_CHOICE_KEY, 'set');
+        } else {
+          localStorage.setItem(ANON_CHOICE_KEY, 'anonymous');
+        }
+      } catch { /* ignore */ }
     }
     setActiveQuizlet(quizlet);
     setQuestions(quizlet.questions);
