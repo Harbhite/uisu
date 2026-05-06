@@ -6,13 +6,17 @@ const corsHeaders = {
 };
 
 const LOVABLE_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const GEMINI_GATEWAY = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
 const QWEN_GATEWAY = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions";
+const GEMINI_MODEL = "gemini-2.5-flash";
 const QWEN_MODEL = "qwen-plus";
 const MAX_INPUT_CHARS = 800_000;
 const TRUNCATION_NOTICE = "\n\n[... Remaining material omitted to fit AI processing limits.]";
 
+// Tries: Lovable AI -> Gemini direct -> Qwen
 async function callWithFallback(body: Record<string, unknown>) {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
   const QWEN_API_KEY = Deno.env.get("QWEN_API_KEY");
 
   if (LOVABLE_API_KEY) {
@@ -21,14 +25,25 @@ async function callWithFallback(body: Record<string, unknown>) {
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-
     if (response.ok) return { response, provider: "lovable" };
     if (response.status !== 429 && response.status !== 402) return { response, provider: "lovable" };
-    console.log(`Lovable AI returned ${response.status}, falling back to Qwen...`);
+    console.log(`Lovable AI returned ${response.status}, falling back to Gemini direct...`);
     await response.text();
   }
 
-  if (!QWEN_API_KEY) throw new Error("Both Lovable AI and Qwen API keys are unavailable");
+  if (GEMINI_API_KEY) {
+    const geminiBody = { ...body, model: GEMINI_MODEL };
+    const response = await fetch(GEMINI_GATEWAY, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${GEMINI_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify(geminiBody),
+    });
+    if (response.ok) return { response, provider: "gemini" };
+    console.log(`Gemini direct returned ${response.status}, falling back to Qwen...`);
+    await response.text();
+  }
+
+  if (!QWEN_API_KEY) throw new Error("All AI providers (Lovable, Gemini, Qwen) are unavailable");
 
   const qwenBody = { ...body, model: QWEN_MODEL };
   const response = await fetch(QWEN_GATEWAY, {
