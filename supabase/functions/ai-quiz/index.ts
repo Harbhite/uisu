@@ -116,17 +116,17 @@ Ensure intellectual depth, variety across the material, and strict adherence to 
                       explanation: { type: "string" },
                     },
                     required: ["question", "options", "correctIndex", "explanation"],
-                    additionalProperties: false,
+
                   },
                 },
               },
               required: ["questions"],
-              additionalProperties: false,
+
             },
           },
         },
       ],
-      tool_choice: { type: "function", function: { name: "generate_quiz" } },
+      tool_choice: "auto",
     };
 
     const { response, provider } = await callWithFallback(requestBody);
