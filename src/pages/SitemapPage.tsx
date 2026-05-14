@@ -100,6 +100,7 @@ const sections: SitemapSection[] = [
     accent: "from-primary/15 to-primary/5",
     icon: <Brain size={18} />,
     links: [
+      { label: "MyNotes", path: "/resources/notie", description: "Saved study outputs" },
       { label: "StudyBuddy", path: "/resources/study-buddy", description: "AI study assistant" },
       { label: "Study Aide", path: "/resources/study-aide", description: "Smart study helper" },
       { label: "AI Quiz", path: "/resources/ai-quiz", description: "Generate quizzes from materials" },

@@ -468,6 +468,33 @@ const StudyBuddyPage = () => {
   };
 
   // Cross-tool pipeline
+  const saveToNotie = async () => {
+    if (!user) {
+      toast.error('Please sign in to save to MyNotes');
+      navigate('/auth');
+      return;
+    }
+    if (!response) {
+      toast.error('No generated content to save');
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from('noties').insert({
+        title: topic.trim().substring(0, 100) || 'StudyBuddy Output',
+        content: response,
+        mode: currentMode.label,
+        created_by: user.id
+      });
+      if (error) throw error;
+      toast.success('Saved to MyNotes!');
+      navigate('/resources/notie');
+    } catch (err: any) {
+      console.error('Failed to save to Notie:', err);
+      toast.error(err?.message || 'Failed to save note');
+    }
+  };
+
   const sendToFlashcards = () => {
     localStorage.setItem('flashcard_state', JSON.stringify({ topic: topic.trim().substring(0, 200), material: response, cards: [] }));
     navigate('/resources/flashcards');
