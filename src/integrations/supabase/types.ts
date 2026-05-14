@@ -2578,6 +2578,42 @@ export type Database = {
           },
         ]
       }
+
+      noties: {
+        Row: {
+          id: string
+          created_at: string
+          created_by: string | null
+          title: string
+          content: string
+          mode: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          created_by?: string | null
+          title: string
+          content: string
+          mode?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          created_by?: string | null
+          title?: string
+          content?: string
+          mode?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "noties_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quizlets: {
         Row: {
           attempt_count: number

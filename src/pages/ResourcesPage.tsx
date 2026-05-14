@@ -7,7 +7,7 @@ import {
   Library, Briefcase, GraduationCap, Heart, Brain,
   Rocket, ShoppingBag, Compass, Users, Activity,
   ArrowLeft, Search, ArrowRight, Star, Calculator, Grip,
-  FileCheck, BookOpen, PenTool
+  FileCheck, BookOpen, PenTool, Bookmark
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { resourceCategories } from '@/lib/data';
@@ -25,6 +25,7 @@ const iconMap: { [key: string]: React.ElementType } = {
   health: Activity,
   gpa: Calculator,
   calculators: Grip,
+  notie: Bookmark,
   studybuddy: Brain,
   aiquiz: Brain,
   timetable: Grip,
@@ -48,6 +49,7 @@ const colorMap: { [key: string]: string } = {
   health: 'bg-red-800',
   gpa: 'bg-emerald-700',
   calculators: 'bg-violet-700',
+  notie: 'bg-emerald-800',
   studybuddy: 'bg-blue-800',
   aiquiz: 'bg-rose-800',
   timetable: 'bg-sky-800',
