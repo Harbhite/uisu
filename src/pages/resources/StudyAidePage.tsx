@@ -67,42 +67,171 @@ const ExportDropdown: React.FC<{ content: string; topic: string }> = ({ content,
   };
 
   const exportPdf = async () => {
-    const doc = new jsPDF();
+    if (!contentRef?.current) {
+      toast.error('No content to export');
+      return;
+    }
+    const { jsPDF } = await import('jspdf');
+    const html2canvas = (await import('html2canvas')).default;
+
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const margin = 20;
+    const maxWidth = pageWidth - 2 * margin;
+    let y = margin;
+
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(16);
-    doc.text(topic || 'Study Aide', 20, 20);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    const lines = doc.splitTextToSize(stripMd(content), 170);
-    let y = 35;
-    for (const line of lines) {
-      if (y > 280) { doc.addPage(); y = 20; }
-      doc.text(line, 20, y);
-      y += 5;
+    doc.text(topic || 'Study Aide', margin, y);
+    y += 10;
+
+    const children = Array.from(contentRef.current.children);
+
+    for (const el of children) {
+      const tag = el.tagName.toLowerCase();
+
+      if (y > pageHeight - margin) {
+        doc.addPage();
+        y = margin;
+      }
+
+      if (tag.match(/^h[1-6]$/)) {
+        doc.setFont('helvetica', 'bold');
+        const size = tag === 'h1' ? 16 : tag === 'h2' ? 14 : 12;
+        doc.setFontSize(size);
+        const textLines = doc.splitTextToSize((el as HTMLElement).innerText, maxWidth);
+        for (const line of textLines) {
+          if (y > pageHeight - margin) { doc.addPage(); y = margin; }
+          doc.text(line, margin, y);
+          y += (size / 2) + 2;
+        }
+        y += 4;
+      } else if (tag === 'p' || tag === 'blockquote') {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        const textLines = doc.splitTextToSize((el as HTMLElement).innerText, maxWidth);
+        for (const line of textLines) {
+          if (y > pageHeight - margin) { doc.addPage(); y = margin; }
+          doc.text(line, margin, y);
+          y += 5;
+        }
+        y += 4;
+      } else if (tag === 'ul' || tag === 'ol') {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        const items = Array.from(el.children);
+        for (const item of items) {
+          const textLines = doc.splitTextToSize('• ' + (item as HTMLElement).innerText, maxWidth);
+          for (const line of textLines) {
+            if (y > pageHeight - margin) { doc.addPage(); y = margin; }
+            doc.text(line, margin, y);
+            y += 5;
+          }
+        }
+        y += 4;
+      } else if (el.classList.contains('my-6') || tag === 'figure' || tag === 'div' || tag === 'table' || tag === 'pre') {
+        // Diagram, Table, or Code block
+        const canvas = await html2canvas(el as HTMLElement, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = maxWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        if (y + imgHeight > pageHeight - margin && imgHeight < pageHeight - 2 * margin) {
+          doc.addPage();
+          y = margin;
+        }
+
+        doc.addImage(imgData, 'PNG', margin, y, imgWidth, imgHeight);
+        y += imgHeight + 6;
+      } else {
+        // Fallback
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        const textLines = doc.splitTextToSize((el as HTMLElement).innerText, maxWidth);
+        for (const line of textLines) {
+          if (y > pageHeight - margin) { doc.addPage(); y = margin; }
+          doc.text(line, margin, y);
+          y += 5;
+        }
+        y += 4;
+      }
     }
+
     doc.save(`${safeName}.pdf`);
     toast.success('Downloaded as PDF');
     setOpen(false);
   };
 
   const exportDocx = async () => {
-    const paragraphs = stripMd(content).split('\n').filter(Boolean).map(line =>
-      new Paragraph({
-        children: [new TextRun({ text: line, size: 22 })],
-        spacing: { after: 120 },
-      })
-    );
-    const doc = new Document({
+    if (!contentRef?.current) {
+      toast.error('No content to export');
+      return;
+    }
+    const html2canvas = (await import('html2canvas')).default;
+    const children = Array.from(contentRef.current.children);
+    const docElements: any[] = [];
+
+    docElements.push(new Paragraph({ text: topic || 'Study Aide', heading: HeadingLevel.HEADING_1 }));
+
+    for (const el of children) {
+      const tag = el.tagName.toLowerCase();
+
+      if (tag.match(/^h[1-6]$/)) {
+        const level = parseInt(tag[1]);
+        docElements.push(new Paragraph({
+          text: (el as HTMLElement).innerText,
+          heading: HeadingLevel[`HEADING_${level}` as keyof typeof HeadingLevel],
+        }));
+      } else if (tag === 'p' || tag === 'blockquote') {
+        docElements.push(new Paragraph({
+          children: [new TextRun({ text: (el as HTMLElement).innerText, size: 22 })],
+        }));
+      } else if (tag === 'ul' || tag === 'ol') {
+        const items = Array.from(el.children);
+        for (const item of items) {
+          docElements.push(new Paragraph({
+            text: (item as HTMLElement).innerText,
+            bullet: { level: 0 },
+          }));
+        }
+      } else if (el.classList.contains('my-6') || tag === 'figure' || tag === 'div' || tag === 'table' || tag === 'pre') {
+        // Diagram, Table, or Code block
+        const canvas = await html2canvas(el as HTMLElement, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+        const imgData = canvas.toDataURL('image/png');
+        const response = await fetch(imgData);
+        const blobData = await response.blob();
+        const arrayBuffer = await blobData.arrayBuffer();
+
+        const imgWidth = 600;
+        const imgHeight = 600 * (canvas.height / canvas.width);
+
+        docElements.push(new Paragraph({
+          children: [
+            new ImageRun({
+              data: arrayBuffer,
+              transformation: { width: imgWidth, height: imgHeight }
+            })
+          ]
+        }));
+      } else {
+        if ((el as HTMLElement).innerText.trim() !== '') {
+          docElements.push(new Paragraph({
+            children: [new TextRun({ text: (el as HTMLElement).innerText, size: 22 })],
+          }));
+        }
+      }
+    }
+
+    const docFile = new Document({
       sections: [{
         properties: {},
-        children: [
-          new Paragraph({ text: topic || 'Study Aide', heading: HeadingLevel.HEADING_1, spacing: { after: 300 } }),
-          ...paragraphs,
-        ],
-      }],
+        children: docElements
+      }]
     });
-    const buffer = await Packer.toBlob(doc);
-    saveAs(buffer, `${safeName}.docx`);
+
+    const blob = await Packer.toBlob(docFile);
+    saveAs(blob, `${safeName}.docx`);
     toast.success('Downloaded as DOCX');
     setOpen(false);
   };
