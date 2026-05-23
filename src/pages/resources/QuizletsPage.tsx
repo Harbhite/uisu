@@ -31,6 +31,8 @@ interface Quizlet {
   attempt_count: number;
   created_at: string;
   created_by: string | null;
+  timing_format?: 'timed' | 'free-living';
+  time_limit?: number | null;
 }
 
 const formatTime = (seconds: number) => {
@@ -106,6 +108,8 @@ const QuizletsPage = () => {
   const [editingQuizlet, setEditingQuizlet] = useState<Quizlet | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
+  const [editTimingFormat, setEditTimingFormat] = useState<'timed' | 'free-living'>('free-living');
+  const [editTimeLimit, setEditTimeLimit] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Quiz-taking state
@@ -229,6 +233,8 @@ const QuizletsPage = () => {
     setEditingQuizlet(q);
     setEditTitle(q.title);
     setEditDescription(q.description || '');
+    setEditTimingFormat(q.timing_format || 'free-living');
+    setEditTimeLimit(q.time_limit || null);
   };
 
   const saveEdit = async () => {
@@ -236,7 +242,12 @@ const QuizletsPage = () => {
     setSaving(true);
     const { error } = await supabase
       .from('quizlets')
-      .update({ title: editTitle.trim(), description: editDescription.trim() || null } as any)
+      .update({
+        title: editTitle.trim(),
+        description: editDescription.trim() || null,
+        timing_format: editTimingFormat,
+        time_limit: editTimeLimit
+      } as any)
       .eq('id', editingQuizlet.id);
     setSaving(false);
     if (error) {
@@ -245,9 +256,9 @@ const QuizletsPage = () => {
     }
     toast.success('Quizlet updated!');
     // Update local state
-    setQuizlets(prev => prev.map(q => q.id === editingQuizlet.id ? { ...q, title: editTitle.trim(), description: editDescription.trim() || null } : q));
+    setQuizlets(prev => prev.map(q => q.id === editingQuizlet.id ? { ...q, title: editTitle.trim(), description: editDescription.trim() || null, timing_format: editTimingFormat, time_limit: editTimeLimit } : q));
     if (activeQuizlet?.id === editingQuizlet.id) {
-      setActiveQuizlet(prev => prev ? { ...prev, title: editTitle.trim(), description: editDescription.trim() || null } : prev);
+      setActiveQuizlet(prev => prev ? { ...prev, title: editTitle.trim(), description: editDescription.trim() || null, timing_format: editTimingFormat, time_limit: editTimeLimit } : prev);
     }
     setEditingQuizlet(null);
   };
@@ -368,6 +379,16 @@ const QuizletsPage = () => {
   useEffect(() => {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
+
+  // Timer logic for timed quizzes
+  useEffect(() => {
+    if (step === 'quiz' && activeQuizlet?.timing_format === 'timed' && activeQuizlet.time_limit) {
+      if (timeElapsed >= activeQuizlet.time_limit) {
+        toast.info("Time's up! Submitting your quiz...");
+        finishQuiz();
+      }
+    }
+  }, [timeElapsed, step, activeQuizlet]);
 
   // Direct link landing: show quiz preview before starting
   if (quizletId && activeQuizlet && step === 'browse') {
@@ -490,8 +511,12 @@ const QuizletsPage = () => {
               <ChevronLeft size={12} /> Exit Quiz
             </button>
             <div className="flex items-center gap-2">
-              <Clock size={14} className="text-muted-foreground" />
-              <span className="text-lg font-mono text-primary">{formatTime(timeElapsed)}</span>
+              <Clock size={14} className={activeQuizlet.timing_format === 'timed' && activeQuizlet.time_limit && activeQuizlet.time_limit - timeElapsed <= 60 ? "text-destructive animate-pulse" : "text-muted-foreground"} />
+              <span className={`text-lg font-mono ${activeQuizlet.timing_format === 'timed' && activeQuizlet.time_limit && activeQuizlet.time_limit - timeElapsed <= 60 ? "text-destructive" : "text-primary"}`}>
+                {activeQuizlet.timing_format === 'timed' && activeQuizlet.time_limit
+                  ? formatTime(Math.max(0, activeQuizlet.time_limit - timeElapsed))
+                  : formatTime(timeElapsed)}
+              </span>
             </div>
           </div>
 
@@ -912,6 +937,33 @@ const QuizletsPage = () => {
                   placeholder="Optional description..."
                 />
               </div>
+              <div className="space-y-1">
+                <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Timing Format</label>
+                <select
+                  value={editTimingFormat}
+                  onChange={(e) => setEditTimingFormat(e.target.value as 'timed' | 'free-living')}
+                  className="w-full px-4 py-3 bg-muted/50 border border-border outline-none text-sm focus:border-accent transition-colors rounded-lg"
+                >
+                  <option value="free-living">Free-living (No time limit)</option>
+                  <option value="timed">Timed Quiz</option>
+                </select>
+              </div>
+              {editTimingFormat === 'timed' && (
+                <div className="space-y-1">
+                  <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Time Limit (minutes)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={editTimeLimit ? Math.floor(editTimeLimit / 60) : ''}
+                    onChange={(e) => {
+                      const mins = parseInt(e.target.value, 10);
+                      setEditTimeLimit(isNaN(mins) ? null : mins * 60);
+                    }}
+                    className="w-full px-4 py-3 bg-muted/50 border border-border outline-none text-sm focus:border-accent transition-colors rounded-lg"
+                    placeholder="e.g. 10 for 10 minutes"
+                  />
+                </div>
+              )}
               <div className="flex items-center gap-3 pt-2">
                 <button
                   onClick={saveEdit}
