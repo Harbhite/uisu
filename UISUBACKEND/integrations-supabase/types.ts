@@ -494,76 +494,6 @@ export type Database = {
         }
         Relationships: []
       }
-      confession_reactions: {
-        Row: {
-          confession_id: string
-          created_at: string | null
-          id: string
-          reaction_type: string
-          user_id: string
-        }
-        Insert: {
-          confession_id: string
-          created_at?: string | null
-          id?: string
-          reaction_type?: string
-          user_id: string
-        }
-        Update: {
-          confession_id?: string
-          created_at?: string | null
-          id?: string
-          reaction_type?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "confession_reactions_confession_id_fkey"
-            columns: ["confession_id"]
-            isOneToOne: false
-            referencedRelation: "confessions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      confessions: {
-        Row: {
-          content: string
-          created_at: string | null
-          id: string
-          is_approved: boolean | null
-          is_flagged: boolean | null
-          parent_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          content: string
-          created_at?: string | null
-          id?: string
-          is_approved?: boolean | null
-          is_flagged?: boolean | null
-          parent_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          content?: string
-          created_at?: string | null
-          id?: string
-          is_approved?: boolean | null
-          is_flagged?: boolean | null
-          parent_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "confessions_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "confessions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       contact_messages: {
         Row: {
           created_at: string
@@ -639,38 +569,6 @@ export type Database = {
         }
         Relationships: []
       }
-      deck_members: {
-        Row: {
-          deck_id: string
-          id: string
-          joined_at: string
-          role: string
-          user_id: string
-        }
-        Insert: {
-          deck_id: string
-          id?: string
-          joined_at?: string
-          role?: string
-          user_id: string
-        }
-        Update: {
-          deck_id?: string
-          id?: string
-          joined_at?: string
-          role?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "deck_members_deck_id_fkey"
-            columns: ["deck_id"]
-            isOneToOne: false
-            referencedRelation: "flashcard_decks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       documents: {
         Row: {
           created_at: string | null
@@ -719,158 +617,6 @@ export type Database = {
         }
         Relationships: []
       }
-      editorial_board: {
-        Row: {
-          avatar_url: string | null
-          bio: string | null
-          created_at: string | null
-          display_name: string
-          id: string
-          is_active: boolean | null
-          role: string
-          user_id: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string | null
-          display_name: string
-          id?: string
-          is_active?: boolean | null
-          role?: string
-          user_id: string
-        }
-        Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string | null
-          display_name?: string
-          id?: string
-          is_active?: boolean | null
-          role?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      election_candidates: {
-        Row: {
-          created_at: string | null
-          election_id: string
-          id: string
-          manifesto: string | null
-          name: string
-          photo_url: string | null
-          position: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          election_id: string
-          id?: string
-          manifesto?: string | null
-          name: string
-          photo_url?: string | null
-          position: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          election_id?: string
-          id?: string
-          manifesto?: string | null
-          name?: string
-          photo_url?: string | null
-          position?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "election_candidates_election_id_fkey"
-            columns: ["election_id"]
-            isOneToOne: false
-            referencedRelation: "elections"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      election_votes: {
-        Row: {
-          candidate_id: string
-          created_at: string | null
-          election_id: string
-          id: string
-          position: string
-          user_id: string
-        }
-        Insert: {
-          candidate_id: string
-          created_at?: string | null
-          election_id: string
-          id?: string
-          position: string
-          user_id: string
-        }
-        Update: {
-          candidate_id?: string
-          created_at?: string | null
-          election_id?: string
-          id?: string
-          position?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "election_votes_candidate_id_fkey"
-            columns: ["candidate_id"]
-            isOneToOne: false
-            referencedRelation: "election_candidates"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "election_votes_election_id_fkey"
-            columns: ["election_id"]
-            isOneToOne: false
-            referencedRelation: "elections"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      elections: {
-        Row: {
-          created_at: string | null
-          created_by: string | null
-          description: string | null
-          ends_at: string | null
-          id: string
-          starts_at: string | null
-          status: string
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          ends_at?: string | null
-          id?: string
-          starts_at?: string | null
-          status?: string
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          ends_at?: string | null
-          id?: string
-          starts_at?: string | null
-          status?: string
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       email_tracking: {
         Row: {
           ab_variant: string | null
@@ -914,72 +660,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      error_logs: {
-        Row: {
-          created_at: string
-          id: string
-          message: string
-          metadata: Json | null
-          route: string | null
-          stack: string | null
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          message: string
-          metadata?: Json | null
-          route?: string | null
-          stack?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          message?: string
-          metadata?: Json | null
-          route?: string | null
-          stack?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      essay_checks: {
-        Row: {
-          created_at: string
-          criteria: Json
-          essay_text: string
-          feedback: Json
-          id: string
-          overall_score: number | null
-          title: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          criteria?: Json
-          essay_text: string
-          feedback?: Json
-          id?: string
-          overall_score?: number | null
-          title?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          criteria?: Json
-          essay_text?: string
-          feedback?: Json
-          id?: string
-          overall_score?: number | null
-          title?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
       }
       event_checkins: {
         Row: {
@@ -1117,11 +797,8 @@ export type Database = {
           cards: Json
           created_at: string
           id: string
-          invite_token: string | null
-          is_shared: boolean
           last_reviewed_at: string | null
           sr_data: Json
-          title: string | null
           topic: string
           user_id: string
         }
@@ -1129,11 +806,8 @@ export type Database = {
           cards?: Json
           created_at?: string
           id?: string
-          invite_token?: string | null
-          is_shared?: boolean
           last_reviewed_at?: string | null
           sr_data?: Json
-          title?: string | null
           topic: string
           user_id: string
         }
@@ -1141,11 +815,8 @@ export type Database = {
           cards?: Json
           created_at?: string
           id?: string
-          invite_token?: string | null
-          is_shared?: boolean
           last_reviewed_at?: string | null
           sr_data?: Json
-          title?: string | null
           topic?: string
           user_id?: string
         }
@@ -1310,218 +981,6 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
-      }
-      gazette_articles: {
-        Row: {
-          article_type: string
-          author_id: string | null
-          author_name: string
-          category: string
-          content: Json
-          cover_image: string | null
-          created_at: string | null
-          id: string
-          is_featured: boolean | null
-          is_published: boolean | null
-          issue_id: string | null
-          published_at: string | null
-          reading_time: number | null
-          slug: string
-          summary: string | null
-          tags: string[] | null
-          title: string
-          updated_at: string | null
-          view_count: number | null
-        }
-        Insert: {
-          article_type?: string
-          author_id?: string | null
-          author_name: string
-          category?: string
-          content?: Json
-          cover_image?: string | null
-          created_at?: string | null
-          id?: string
-          is_featured?: boolean | null
-          is_published?: boolean | null
-          issue_id?: string | null
-          published_at?: string | null
-          reading_time?: number | null
-          slug: string
-          summary?: string | null
-          tags?: string[] | null
-          title: string
-          updated_at?: string | null
-          view_count?: number | null
-        }
-        Update: {
-          article_type?: string
-          author_id?: string | null
-          author_name?: string
-          category?: string
-          content?: Json
-          cover_image?: string | null
-          created_at?: string | null
-          id?: string
-          is_featured?: boolean | null
-          is_published?: boolean | null
-          issue_id?: string | null
-          published_at?: string | null
-          reading_time?: number | null
-          slug?: string
-          summary?: string | null
-          tags?: string[] | null
-          title?: string
-          updated_at?: string | null
-          view_count?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "gazette_articles_issue_id_fkey"
-            columns: ["issue_id"]
-            isOneToOne: false
-            referencedRelation: "gazette_issues"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      gazette_bookmarks: {
-        Row: {
-          article_id: string
-          created_at: string | null
-          id: string
-          user_id: string
-        }
-        Insert: {
-          article_id: string
-          created_at?: string | null
-          id?: string
-          user_id: string
-        }
-        Update: {
-          article_id?: string
-          created_at?: string | null
-          id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "gazette_bookmarks_article_id_fkey"
-            columns: ["article_id"]
-            isOneToOne: false
-            referencedRelation: "gazette_articles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      gazette_comments: {
-        Row: {
-          article_id: string
-          content: string
-          created_at: string | null
-          id: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          article_id: string
-          content: string
-          created_at?: string | null
-          id?: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          article_id?: string
-          content?: string
-          created_at?: string | null
-          id?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "gazette_comments_article_id_fkey"
-            columns: ["article_id"]
-            isOneToOne: false
-            referencedRelation: "gazette_articles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      gazette_issues: {
-        Row: {
-          cover_image: string | null
-          created_at: string | null
-          created_by: string | null
-          description: string | null
-          id: string
-          issue_number: number
-          published_at: string | null
-          status: string
-          title: string
-          updated_at: string | null
-          volume_number: number
-        }
-        Insert: {
-          cover_image?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          issue_number: number
-          published_at?: string | null
-          status?: string
-          title: string
-          updated_at?: string | null
-          volume_number: number
-        }
-        Update: {
-          cover_image?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          issue_number?: number
-          published_at?: string | null
-          status?: string
-          title?: string
-          updated_at?: string | null
-          volume_number?: number
-        }
-        Relationships: []
-      }
-      gazette_reactions: {
-        Row: {
-          article_id: string
-          created_at: string | null
-          id: string
-          reaction_type: string
-          user_id: string
-        }
-        Insert: {
-          article_id: string
-          created_at?: string | null
-          id?: string
-          reaction_type: string
-          user_id: string
-        }
-        Update: {
-          article_id?: string
-          created_at?: string | null
-          id?: string
-          reaction_type?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "gazette_reactions_article_id_fkey"
-            columns: ["article_id"]
-            isOneToOne: false
-            referencedRelation: "gazette_articles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       gpa_records: {
         Row: {
@@ -1921,56 +1380,8 @@ export type Database = {
         }
         Relationships: []
       }
-      lost_found_claims: {
-        Row: {
-          claim_text: string
-          claimant_id: string
-          created_at: string
-          found_item_id: string
-          fraud_reasons: string | null
-          fraud_score: number | null
-          id: string
-          status: string
-          verification_questions: Json | null
-        }
-        Insert: {
-          claim_text: string
-          claimant_id: string
-          created_at?: string
-          found_item_id: string
-          fraud_reasons?: string | null
-          fraud_score?: number | null
-          id?: string
-          status?: string
-          verification_questions?: Json | null
-        }
-        Update: {
-          claim_text?: string
-          claimant_id?: string
-          created_at?: string
-          found_item_id?: string
-          fraud_reasons?: string | null
-          fraud_score?: number | null
-          id?: string
-          status?: string
-          verification_questions?: Json | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "lost_found_claims_found_item_id_fkey"
-            columns: ["found_item_id"]
-            isOneToOne: false
-            referencedRelation: "lost_found_items"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       lost_found_items: {
         Row: {
-          ai_attributes: Json | null
-          ai_rewritten_description: string | null
-          ai_summary: string | null
-          ai_tags: string[] | null
           category: string
           contact_info: string | null
           created_at: string | null
@@ -1985,10 +1396,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          ai_attributes?: Json | null
-          ai_rewritten_description?: string | null
-          ai_summary?: string | null
-          ai_tags?: string[] | null
           category?: string
           contact_info?: string | null
           created_at?: string | null
@@ -2003,10 +1410,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          ai_attributes?: Json | null
-          ai_rewritten_description?: string | null
-          ai_summary?: string | null
-          ai_tags?: string[] | null
           category?: string
           contact_info?: string | null
           created_at?: string | null
@@ -2021,51 +1424,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
-      }
-      lost_found_matches: {
-        Row: {
-          confidence: string
-          created_at: string
-          found_item_id: string
-          id: string
-          lost_item_id: string
-          reason: string | null
-          viewed_at: string | null
-        }
-        Insert: {
-          confidence: string
-          created_at?: string
-          found_item_id: string
-          id?: string
-          lost_item_id: string
-          reason?: string | null
-          viewed_at?: string | null
-        }
-        Update: {
-          confidence?: string
-          created_at?: string
-          found_item_id?: string
-          id?: string
-          lost_item_id?: string
-          reason?: string | null
-          viewed_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "lost_found_matches_found_item_id_fkey"
-            columns: ["found_item_id"]
-            isOneToOne: false
-            referencedRelation: "lost_found_items"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lost_found_matches_lost_item_id_fkey"
-            columns: ["lost_item_id"]
-            isOneToOne: false
-            referencedRelation: "lost_found_items"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       marketplace_listings: {
         Row: {
@@ -2241,51 +1599,6 @@ export type Database = {
           level?: string | null
           source?: string | null
           subscribed_at?: string
-        }
-        Relationships: []
-      }
-      past_questions: {
-        Row: {
-          ai_solution: string | null
-          course_code: string
-          course_title: string
-          created_at: string
-          faculty: string
-          id: string
-          is_approved: boolean
-          question_text: string
-          semester: string
-          submitted_by: string | null
-          updated_at: string
-          year: string
-        }
-        Insert: {
-          ai_solution?: string | null
-          course_code: string
-          course_title?: string
-          created_at?: string
-          faculty?: string
-          id?: string
-          is_approved?: boolean
-          question_text: string
-          semester?: string
-          submitted_by?: string | null
-          updated_at?: string
-          year?: string
-        }
-        Update: {
-          ai_solution?: string | null
-          course_code?: string
-          course_title?: string
-          created_at?: string
-          faculty?: string
-          id?: string
-          is_approved?: boolean
-          question_text?: string
-          semester?: string
-          submitted_by?: string | null
-          updated_at?: string
-          year?: string
         }
         Relationships: []
       }
@@ -2501,128 +1814,6 @@ export type Database = {
         }
         Relationships: []
       }
-      quiz_attempts: {
-        Row: {
-          accuracy: number
-          created_at: string
-          id: string
-          quizlet_id: string
-          score: number
-          time_taken_seconds: number
-          total_questions: number
-          user_display_name: string | null
-          user_id: string | null
-        }
-        Insert: {
-          accuracy?: number
-          created_at?: string
-          id?: string
-          quizlet_id: string
-          score?: number
-          time_taken_seconds?: number
-          total_questions?: number
-          user_display_name?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          accuracy?: number
-          created_at?: string
-          id?: string
-          quizlet_id?: string
-          score?: number
-          time_taken_seconds?: number
-          total_questions?: number
-          user_display_name?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      quizlet_attempts: {
-        Row: {
-          answers: Json
-          completed_at: string
-          id: string
-          quizlet_id: string
-          score: number
-          time_seconds: number
-          total: number
-          user_id: string
-        }
-        Insert: {
-          answers?: Json
-          completed_at?: string
-          id?: string
-          quizlet_id: string
-          score?: number
-          time_seconds?: number
-          total?: number
-          user_id: string
-        }
-        Update: {
-          answers?: Json
-          completed_at?: string
-          id?: string
-          quizlet_id?: string
-          score?: number
-          time_seconds?: number
-          total?: number
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "quizlet_attempts_quizlet_id_fkey"
-            columns: ["quizlet_id"]
-            isOneToOne: false
-            referencedRelation: "quizlets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      quizlets: {
-        Row: {
-          attempt_count: number
-          created_at: string
-          created_by: string | null
-          description: string | null
-          difficulty: string
-          id: string
-          is_published: boolean
-          question_count: number
-          questions: Json
-          rigidity: string
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          attempt_count?: number
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          difficulty?: string
-          id?: string
-          is_published?: boolean
-          question_count?: number
-          questions?: Json
-          rigidity?: string
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          attempt_count?: number
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          difficulty?: string
-          id?: string
-          is_published?: boolean
-          question_count?: number
-          questions?: Json
-          rigidity?: string
-          title?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       resources: {
         Row: {
           category: string
@@ -2775,51 +1966,6 @@ export type Database = {
         }
         Relationships: []
       }
-      timetable_entries: {
-        Row: {
-          color: string | null
-          course_code: string | null
-          course_name: string
-          created_at: string | null
-          day_of_week: number
-          end_time: string
-          id: string
-          lecturer: string | null
-          location: string | null
-          start_time: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          color?: string | null
-          course_code?: string | null
-          course_name: string
-          created_at?: string | null
-          day_of_week: number
-          end_time: string
-          id?: string
-          lecturer?: string | null
-          location?: string | null
-          start_time: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          color?: string | null
-          course_code?: string | null
-          course_name?: string
-          created_at?: string | null
-          day_of_week?: number
-          end_time?: string
-          id?: string
-          lecturer?: string | null
-          location?: string | null
-          start_time?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       tutor_applications: {
         Row: {
           bio: string
@@ -2966,36 +2112,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      tutorial_notes: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          module_id: string
-          tutorial_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          content?: string
-          created_at?: string
-          id?: string
-          module_id: string
-          tutorial_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          module_id?: string
-          tutorial_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
       }
       tutorial_progress: {
         Row: {
@@ -3205,36 +2321,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_streaks: {
-        Row: {
-          created_at: string
-          current_streak: number
-          id: string
-          last_activity_date: string | null
-          longest_streak: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          current_streak?: number
-          id?: string
-          last_activity_date?: string | null
-          longest_streak?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          current_streak?: number
-          id?: string
-          last_activity_date?: string | null
-          longest_streak?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
@@ -3257,7 +2343,6 @@ export type Database = {
         Returns: undefined
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
-      is_gazette_editor: { Args: { _user_id: string }; Returns: boolean }
       is_moderator_or_admin: { Args: { _user_id: string }; Returns: boolean }
       sync_profile_emails: { Args: never; Returns: undefined }
     }

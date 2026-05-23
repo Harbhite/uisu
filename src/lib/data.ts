@@ -421,13 +421,6 @@ export const resourceCategories: ResourceCategory[] = [
     path: '/resources/calculator-suite'
   },
   {
-    id: 'notie',
-    title: 'MyNotes',
-    description: 'Access and review your saved generated content from StudyBuddy.',
-    color: 'bg-emerald-600',
-    path: '/resources/notie'
-  },
-  {
     id: 'studybuddy',
     title: 'StudyBuddy AI',
     description: 'AI-powered tool to explain concepts, plan study schedules, summarize materials, and debate topics.',
