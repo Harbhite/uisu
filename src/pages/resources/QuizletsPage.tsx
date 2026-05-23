@@ -18,6 +18,7 @@ interface Question {
   options: string[];
   correctIndex: number;
   explanation: string;
+  timing_mode?: 'timing' | 'timed quiz';
 }
 
 interface Quizlet {
@@ -106,6 +107,7 @@ const QuizletsPage = () => {
   const [editingQuizlet, setEditingQuizlet] = useState<Quizlet | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
+  const [editTimingFormat, setEditTimingFormat] = useState<'timing' | 'timed quiz'>('timing');
   const [saving, setSaving] = useState(false);
 
   // Quiz-taking state
@@ -117,6 +119,10 @@ const QuizletsPage = () => {
   const [timeElapsed, setTimeElapsed] = useState(0);
   const timerRef = useRef<number | null>(null);
   const autoAdvanceRef = useRef<number | null>(null);
+
+  // Timed Quiz
+  const isTimedQuiz = activeQuizlet?.questions?.[0]?.timing_mode === 'timed quiz';
+  const timeLimit = isTimedQuiz ? questions.length * 60 : 0; // 60s per question
 
   // Anonymous name prompt
   const [pendingQuizlet, setPendingQuizlet] = useState<Quizlet | null>(null);
@@ -229,14 +235,22 @@ const QuizletsPage = () => {
     setEditingQuizlet(q);
     setEditTitle(q.title);
     setEditDescription(q.description || '');
+    setEditTimingFormat(q.questions?.[0]?.timing_mode || 'timing');
   };
 
   const saveEdit = async () => {
     if (!editingQuizlet || !editTitle.trim()) return;
     setSaving(true);
+
+    // Update the timing mode on the first question
+    const updatedQuestions = [...editingQuizlet.questions];
+    if (updatedQuestions.length > 0) {
+      updatedQuestions[0] = { ...updatedQuestions[0], timing_mode: editTimingFormat };
+    }
+
     const { error } = await supabase
       .from('quizlets')
-      .update({ title: editTitle.trim(), description: editDescription.trim() || null } as any)
+      .update({ title: editTitle.trim(), description: editDescription.trim() || null, questions: updatedQuestions } as any)
       .eq('id', editingQuizlet.id);
     setSaving(false);
     if (error) {
@@ -245,9 +259,9 @@ const QuizletsPage = () => {
     }
     toast.success('Quizlet updated!');
     // Update local state
-    setQuizlets(prev => prev.map(q => q.id === editingQuizlet.id ? { ...q, title: editTitle.trim(), description: editDescription.trim() || null } : q));
+    setQuizlets(prev => prev.map(q => q.id === editingQuizlet.id ? { ...q, title: editTitle.trim(), description: editDescription.trim() || null, questions: updatedQuestions } : q));
     if (activeQuizlet?.id === editingQuizlet.id) {
-      setActiveQuizlet(prev => prev ? { ...prev, title: editTitle.trim(), description: editDescription.trim() || null } : prev);
+      setActiveQuizlet(prev => prev ? { ...prev, title: editTitle.trim(), description: editDescription.trim() || null, questions: updatedQuestions } : prev);
     }
     setEditingQuizlet(null);
   };
@@ -369,6 +383,12 @@ const QuizletsPage = () => {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
 
+  useEffect(() => {
+    if (step === 'quiz' && isTimedQuiz && timeElapsed >= timeLimit) {
+      finishQuiz();
+    }
+  }, [timeElapsed, step, isTimedQuiz, timeLimit]);
+
   // Direct link landing: show quiz preview before starting
   if (quizletId && activeQuizlet && step === 'browse') {
     return (
@@ -394,6 +414,7 @@ const QuizletsPage = () => {
                 <span className="flex items-center gap-1"><BrainCircuit size={10} /> {activeQuizlet.question_count} Questions</span>
                 <span className="flex items-center gap-1"><Users size={10} /> {activeQuizlet.attempt_count} Attempts</span>
                 <span className="px-2 py-0.5 bg-muted rounded text-[8px]">{activeQuizlet.difficulty}</span>
+                <span className="px-2 py-0.5 bg-muted rounded text-[8px]">{isTimedQuiz ? 'Timed Quiz' : 'Open Time'}</span>
               </div>
               
               <div className="pt-4 space-y-3">
@@ -491,7 +512,13 @@ const QuizletsPage = () => {
             </button>
             <div className="flex items-center gap-2">
               <Clock size={14} className="text-muted-foreground" />
-              <span className="text-lg font-mono text-primary">{formatTime(timeElapsed)}</span>
+              {isTimedQuiz ? (
+                <span className={`text-lg font-mono ${(timeLimit - timeElapsed) <= 10 ? 'text-destructive animate-pulse' : 'text-primary'}`}>
+                  {formatTime(timeLimit - timeElapsed)}
+                </span>
+              ) : (
+                <span className="text-lg font-mono text-primary">{formatTime(timeElapsed)}</span>
+              )}
             </div>
           </div>
 
@@ -796,6 +823,7 @@ const QuizletsPage = () => {
                     <span className="flex items-center gap-1"><BrainCircuit size={10} /> {q.question_count} Qs</span>
                     <span className="flex items-center gap-1"><Users size={10} /> {q.attempt_count} attempts</span>
                     <span className="px-2 py-0.5 bg-muted rounded text-[8px]">{q.rigidity}</span>
+                    <span className="px-2 py-0.5 bg-muted rounded text-[8px]">{q.questions?.[0]?.timing_mode === 'timed quiz' ? 'Timed' : 'Timing'}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -911,6 +939,17 @@ const QuizletsPage = () => {
                   className="w-full px-4 py-3 bg-muted/50 border border-border outline-none text-sm focus:border-accent transition-colors rounded-lg resize-none"
                   placeholder="Optional description..."
                 />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Timing Format</label>
+                <select
+                  value={editTimingFormat}
+                  onChange={(e) => setEditTimingFormat(e.target.value as 'timing' | 'timed quiz')}
+                  className="w-full px-4 py-3 bg-muted/50 border border-border outline-none text-sm focus:border-accent transition-colors rounded-lg"
+                >
+                  <option value="timing">Timing (Count Up)</option>
+                  <option value="timed quiz">Timed Quiz (Count Down)</option>
+                </select>
               </div>
               <div className="flex items-center gap-3 pt-2">
                 <button
