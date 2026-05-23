@@ -6,6 +6,9 @@ import { reportError } from "./lib/error-reporting";
 import App from "./App.tsx";
 import "./index.css";
 
+// Clear the reload flag if the page loads successfully
+sessionStorage.removeItem('chunk_failed_reload');
+
 // Global runtime error capture (uncaught errors + unhandled promise rejections).
 // Throttled to avoid logging the same error repeatedly.
 const recentErrors = new Map<string, number>();
@@ -25,7 +28,7 @@ const shouldReport = (key: string) => {
 window.addEventListener("error", (event) => {
   const message = event.message || "Unknown error";
   // Skip noisy benign errors
-  if (/ResizeObserver|Script error|Loading chunk/i.test(message)) return;
+  if (/ResizeObserver|Script error|Loading chunk|Failed to fetch dynamically imported module|Importing a module script failed/i.test(message)) return;
   const key = `err:${message}`;
   if (!shouldReport(key)) return;
   reportError({
@@ -38,7 +41,7 @@ window.addEventListener("error", (event) => {
 window.addEventListener("unhandledrejection", (event) => {
   const reason = event.reason;
   const message = typeof reason === "string" ? reason : reason?.message || "Unhandled promise rejection";
-  if (/AbortError|cancelled/i.test(message)) return;
+  if (/AbortError|cancelled|Failed to fetch dynamically imported module|Importing a module script failed/i.test(message)) return;
   const key = `rej:${message}`;
   if (!shouldReport(key)) return;
   reportError({
