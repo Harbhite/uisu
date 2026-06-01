@@ -49,12 +49,29 @@ A dedicated platform for peer-to-peer learning and academic support.
 - **3D Visualization**: Custom 3D pins for Halls of Residence (The Republics) and key landmarks.
 - **Hall Lore**: Detailed history and lore for individual halls.
 
+### 📰 The Gazette
+A full editorial publication system for the student press — issues, categories, editorial board, article bookmarks, and a rich gazette editor for staff writers.
+
+### 🤖 AI-Powered Study Suite
+Resilient AI tools backed by a **3-tier failover chain** (Lovable AI → Direct Gemini → Qwen) so features keep working even when one provider hits a rate limit.
+- **Study Buddy** — conversational tutor with streaming markdown
+- **AI Quiz & Quizlets** — auto-generated quizzes with shareable links, display names, and an anonymous play mode
+- **Flashcard Generator**, **Essay Check**, **Past Questions Solver**, **Study Aide**
+
+### 📧 Newsletter & Notifications
+Double opt-in newsletter, custom HTML/Markdown editor, transactional emails for form submissions, contact messages, and staff alerts via dedicated edge functions.
+
+### 🧭 Community & Engagement
+Lost & Found (with AI smart-match), Anonymous Confessions, Polls, Complaints, Events with RSVP/QR check-in, Communities & Clubs, Forms builder, and a sitewide Command Palette.
+
 ### 🎨 The Aluta Protocol
-- **Design System**: A comprehensive style guide (`/style-guide`) documenting the UI/UX language—typography, colors (`nobel` and `ui` palettes), components, and 3D assets (React Three Fiber & GSAP).
+- **Design System**: A comprehensive style guide (`/style-guide`) documenting the UI/UX language — newsroom serif typography, Navy (#003366) + Gold (#C5A059) palette, rounded-2xl components, and 3D assets (React Three Fiber & GSAP).
 
 ### 🔐 Admin Dashboard
-- **Role-Based Access**: Secure management for Staff and Moderators.
-- **Content Moderation**: Tools to review and publish Inks Vault submissions, Tutor Applications, and Tutorials.
+- **Role-Based Access**: Secure management for Staff and Moderators via a dedicated `user_roles` table.
+- **Content Moderation**: Tools to review and publish Inks Vault submissions, Gazette articles, Tutor Applications, Tutorials, and community submissions.
+- **Analytics & Feedback**: Recharts dashboards and anonymous suggestion review.
+
 
 ---
 
