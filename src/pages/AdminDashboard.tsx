@@ -1124,6 +1124,10 @@ const AdminDashboard = () => {
   };
 
   // Send newsletter function
+  // Resolve the active custom template shell (if selectedTemplate matches a custom row id)
+  const getCustomShell = (): string | undefined =>
+    customTemplates.find((t) => t.id === selectedTemplate)?.html_shell;
+
   const sendNewsletter = async (scheduled = false) => {
     if (!composeSubject.trim() || !composeContent.trim()) {
       toast({
