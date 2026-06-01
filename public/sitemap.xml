@@ -248,6 +248,26 @@
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
+  <url>
+    <loc>https://uisu.space/tutorials/upload</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+  <!-- Gazette extras -->
+  <url>
+    <loc>https://uisu.space/gazette/bookmarks</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+  <!-- Site map page -->
+  <url>
+    <loc>https://uisu.space/sitemap</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
   
   <!-- Account & Personal Tools -->
   <url>
