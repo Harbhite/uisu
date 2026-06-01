@@ -1140,7 +1140,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const resend = new Resend(resendApiKey);
 
-    const { campaignId, subject, content, template = 'classic', testEmail, scheduledAt, abEnabled, abVariantA, abVariantB }: SendNewsletterRequest = await req.json();
+    const { campaignId, subject, content, template = 'classic', testEmail, scheduledAt, customTemplateHtml, abEnabled, abVariantA, abVariantB }: SendNewsletterRequest = await req.json();
 
     if (!subject || !content) {
       throw new Error("Subject and content are required");
