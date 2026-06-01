@@ -15,11 +15,22 @@ interface SendNewsletterRequest {
   template?: string;
   testEmail?: string;
   scheduledAt?: string;
+  // Custom template support: raw HTML shell with tokens {{content}}, {{subject}}, {{email}}, {{unsubscribe_url}}
+  customTemplateHtml?: string;
   // A/B Testing
   abEnabled?: boolean;
   abVariantA?: string;
   abVariantB?: string;
 }
+
+// Render a custom template shell by substituting tokens
+const renderCustomTemplate = (shell: string, content: string, subject: string, email: string): string => {
+  return shell
+    .replace(/\{\{\s*content\s*\}\}/g, content)
+    .replace(/\{\{\s*subject\s*\}\}/g, subject)
+    .replace(/\{\{\s*email\s*\}\}/g, email)
+    .replace(/\{\{\s*unsubscribe_url\s*\}\}/g, getUnsubscribeUrl(email));
+};
 
 // Hosted gold fist logo URL
 const logoUrl = "https://uisu.lovable.app/newsletter-logo.png";
