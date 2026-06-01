@@ -2244,6 +2244,42 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_templates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          html_shell: string
+          id: string
+          is_active: boolean
+          name: string
+          thumbnail_color: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          html_shell: string
+          id?: string
+          is_active?: boolean
+          name: string
+          thumbnail_color?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          html_shell?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          thumbnail_color?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       past_questions: {
         Row: {
           ai_solution: string | null
