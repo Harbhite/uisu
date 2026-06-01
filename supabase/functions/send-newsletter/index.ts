@@ -1182,7 +1182,7 @@ const handler = async (req: Request): Promise<Response> => {
             template,
             status: 'scheduled',
             scheduled_at: scheduledAt,
-            html_content: generateNewsletterHtml(content, subject, template, 'preview@example.com'),
+            html_content: generateNewsletterHtml(content, subject, template, 'preview@example.com', customTemplateHtml),
           })
           .select()
           .single();
