@@ -1220,6 +1220,7 @@ const AdminDashboard = () => {
           subject: composeSubject.trim(), 
           content: composeContent.trim(),
           template: abEnabled ? undefined : selectedTemplate,
+          customTemplateHtml: abEnabled ? undefined : getCustomShell(),
           abEnabled,
           abVariantA: abEnabled ? abVariantA : undefined,
           abVariantB: abEnabled ? abVariantB : undefined,
