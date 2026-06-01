@@ -1,8 +1,8 @@
-# UISU Archive
+# UISU SPACE
 
-The **UISU Archive** is the official digital platform for the **University of Ibadan Students' Union (UISU)**. It serves as a comprehensive management system, a historical archive, and a dynamic hub for student activities, governance, and creative expression.
+The **UISU SPACE** (formerly UISU Archive) is the official digital platform for the **University of Ibadan Students' Union (UISU)**. It is a newsroom-styled, AI-enhanced hub that combines governance, publications, community tooling, academic resources, and a full student Gazette into a single experience for the Greatest Uites.
 
-Designed to preserve the legacy of the union while modernizing its operations, the platform bridges the gap between the students and their leaders, providing transparency, accessibility, and a dedicated space for the "Aluta" spirit to thrive digitally.
+Designed to preserve the legacy of the union while modernizing its operations, it bridges the gap between students and their leaders — providing transparency, accessibility, and a dedicated space for the "Aluta" spirit to thrive digitally.
 
 ## 📑 Table of Contents
 
