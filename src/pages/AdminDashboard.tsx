@@ -1291,6 +1291,7 @@ const AdminDashboard = () => {
           subject: composeSubject.trim(), 
           content: composeContent.trim(),
           template: selectedTemplate,
+          customTemplateHtml: getCustomShell(),
           testEmail: testEmail.trim(),
         },
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
