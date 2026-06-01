@@ -1073,7 +1073,11 @@ const convertMarkdown = (content: string) => {
 };
 
 // Main template generator (without tracking pixel - added separately per campaign)
-const generateNewsletterHtml = (content: string, subject: string, template: string = 'classic', email: string = '') => {
+const generateNewsletterHtml = (content: string, subject: string, template: string = 'classic', email: string = '', customShell?: string) => {
+  // If a custom template shell is provided, render it directly (takes priority over named templates)
+  if (customShell && customShell.trim().length > 0) {
+    return renderCustomTemplate(customShell, content, subject, email);
+  }
   switch (template) {
     case 'minimal':
       return generateMinimalTemplate(content, subject, email);
