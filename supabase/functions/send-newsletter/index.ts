@@ -1148,7 +1148,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // If test email is provided, send only to that email (no tracking for tests)
     if (testEmail) {
-      const htmlContent = generateNewsletterHtml(content, subject, template, testEmail);
+      const htmlContent = generateNewsletterHtml(content, subject, template, testEmail, customTemplateHtml);
       
       await resend.emails.send({
         from: "UISU Archive <newsletter@uisu.space>",
