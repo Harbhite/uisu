@@ -21,6 +21,7 @@ import { SEO } from "@/components/SEO";
 import { SubscriberImport } from "@/components/admin/SubscriberImport";
 import { ABTestingSection } from "@/components/admin/ABTestingSection";
 import { NewsletterRichEditor } from "@/components/admin/NewsletterRichEditor";
+import { NewsletterTemplatesManager, type NewsletterTemplateRow } from "@/components/admin/NewsletterTemplatesManager";
 import { AdminAnalytics } from "@/components/admin/AdminAnalytics";
 import { AdminFeedback } from "@/components/admin/AdminFeedback";
 
@@ -197,7 +198,9 @@ const AdminDashboard = () => {
   const [sendingNewsletter, setSendingNewsletter] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [testEmail, setTestEmail] = useState("");
-  const [selectedTemplate, setSelectedTemplate] = useState<"classic" | "minimal" | "announcement" | "newspaper" | "longform" | "telegram" | "artdeco" | "blueprint" | "postbox" | "friendly" | "corporate">("classic");
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("classic");
+  const [customTemplates, setCustomTemplates] = useState<NewsletterTemplateRow[]>([]);
+  const [showTemplatesManager, setShowTemplatesManager] = useState(false);
   const [scheduleDate, setScheduleDate] = useState("");
   const [scheduleTime, setScheduleTime] = useState("");
   const [isScheduling, setIsScheduling] = useState(false);
