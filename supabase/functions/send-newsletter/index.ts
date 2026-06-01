@@ -15,11 +15,23 @@ interface SendNewsletterRequest {
   template?: string;
   testEmail?: string;
   scheduledAt?: string;
+  // Custom template support: raw HTML shell with tokens {{content}}, {{subject}}, {{email}}, {{unsubscribe_url}}
+  customTemplateHtml?: string;
   // A/B Testing
   abEnabled?: boolean;
   abVariantA?: string;
   abVariantB?: string;
 }
+
+// Render a custom template shell by substituting tokens
+const renderCustomTemplate = (shell: string, content: string, subject: string, email: string): string => {
+  const unsubUrl = `https://uisu.lovable.app/unsubscribe?email=${encodeURIComponent(email)}`;
+  return shell
+    .replace(/\{\{\s*content\s*\}\}/g, content)
+    .replace(/\{\{\s*subject\s*\}\}/g, subject)
+    .replace(/\{\{\s*email\s*\}\}/g, email)
+    .replace(/\{\{\s*unsubscribe_url\s*\}\}/g, unsubUrl);
+};
 
 // Hosted gold fist logo URL
 const logoUrl = "https://uisu.lovable.app/newsletter-logo.png";
@@ -1061,7 +1073,11 @@ const convertMarkdown = (content: string) => {
 };
 
 // Main template generator (without tracking pixel - added separately per campaign)
-const generateNewsletterHtml = (content: string, subject: string, template: string = 'classic', email: string = '') => {
+const generateNewsletterHtml = (content: string, subject: string, template: string = 'classic', email: string = '', customShell?: string) => {
+  // If a custom template shell is provided, render it directly (takes priority over named templates)
+  if (customShell && customShell.trim().length > 0) {
+    return renderCustomTemplate(customShell, content, subject, email);
+  }
   switch (template) {
     case 'minimal':
       return generateMinimalTemplate(content, subject, email);
@@ -1124,7 +1140,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const resend = new Resend(resendApiKey);
 
-    const { campaignId, subject, content, template = 'classic', testEmail, scheduledAt, abEnabled, abVariantA, abVariantB }: SendNewsletterRequest = await req.json();
+    const { campaignId, subject, content, template = 'classic', testEmail, scheduledAt, customTemplateHtml, abEnabled, abVariantA, abVariantB }: SendNewsletterRequest = await req.json();
 
     if (!subject || !content) {
       throw new Error("Subject and content are required");
@@ -1132,7 +1148,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // If test email is provided, send only to that email (no tracking for tests)
     if (testEmail) {
-      const htmlContent = generateNewsletterHtml(content, subject, template, testEmail);
+      const htmlContent = generateNewsletterHtml(content, subject, template, testEmail, customTemplateHtml);
       
       await resend.emails.send({
         from: "UISU Archive <newsletter@uisu.space>",
@@ -1166,7 +1182,7 @@ const handler = async (req: Request): Promise<Response> => {
             template,
             status: 'scheduled',
             scheduled_at: scheduledAt,
-            html_content: generateNewsletterHtml(content, subject, template, 'preview@example.com'),
+            html_content: generateNewsletterHtml(content, subject, template, 'preview@example.com', customTemplateHtml),
           })
           .select()
           .single();
@@ -1216,7 +1232,7 @@ const handler = async (req: Request): Promise<Response> => {
           template: abEnabled ? null : template,
           status: 'sending',
           recipients_count: subscribers.length,
-          html_content: generateNewsletterHtml(content, subject, template, 'preview@example.com'),
+          html_content: generateNewsletterHtml(content, subject, template, 'preview@example.com', customTemplateHtml),
           ab_enabled: abEnabled || false,
           ab_variant_a_template: abEnabled ? abVariantA : null,
           ab_variant_b_template: abEnabled ? abVariantB : null,
@@ -1250,8 +1266,8 @@ const handler = async (req: Request): Promise<Response> => {
           emailTemplate = variant === 'A' ? abVariantA : abVariantB;
         }
 
-        // Generate email with template
-        const baseHtml = generateNewsletterHtml(content, subject, emailTemplate, subscriber.email);
+        // Generate email with template (A/B custom shells not supported — only the primary path carries customTemplateHtml)
+        const baseHtml = generateNewsletterHtml(content, subject, emailTemplate, subscriber.email, abEnabled ? undefined : customTemplateHtml);
         // Add tracking pixel and wrap links
         const trackedHtml = addTrackingToHtml(baseHtml, activeCampaignId, subscriber.email);
         

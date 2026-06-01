@@ -21,6 +21,7 @@ import { SEO } from "@/components/SEO";
 import { SubscriberImport } from "@/components/admin/SubscriberImport";
 import { ABTestingSection } from "@/components/admin/ABTestingSection";
 import { NewsletterRichEditor } from "@/components/admin/NewsletterRichEditor";
+import { NewsletterTemplatesManager, type NewsletterTemplateRow } from "@/components/admin/NewsletterTemplatesManager";
 import { AdminAnalytics } from "@/components/admin/AdminAnalytics";
 import { AdminFeedback } from "@/components/admin/AdminFeedback";
 
@@ -197,7 +198,9 @@ const AdminDashboard = () => {
   const [sendingNewsletter, setSendingNewsletter] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [testEmail, setTestEmail] = useState("");
-  const [selectedTemplate, setSelectedTemplate] = useState<"classic" | "minimal" | "announcement" | "newspaper" | "longform" | "telegram" | "artdeco" | "blueprint" | "postbox" | "friendly" | "corporate">("classic");
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("classic");
+  const [customTemplates, setCustomTemplates] = useState<NewsletterTemplateRow[]>([]);
+  const [showTemplatesManager, setShowTemplatesManager] = useState(false);
   const [scheduleDate, setScheduleDate] = useState("");
   const [scheduleTime, setScheduleTime] = useState("");
   const [isScheduling, setIsScheduling] = useState(false);
@@ -398,7 +401,7 @@ const AdminDashboard = () => {
         );
         setAuditLogs(logsWithProfiles);
       } else if (activeTab === "newsletter") {
-        const [subsResult, campaignsResult] = await Promise.all([
+        const [subsResult, campaignsResult, templatesResult] = await Promise.all([
           supabase
             .from("newsletter_subscribers")
             .select("*")
@@ -407,12 +410,18 @@ const AdminDashboard = () => {
             .from("newsletter_campaigns")
             .select("*")
             .order("created_at", { ascending: false })
-            .limit(20)
+            .limit(20),
+          supabase
+            .from("newsletter_templates" as any)
+            .select("*")
+            .eq("is_active", true)
+            .order("created_at", { ascending: false })
         ]);
         
         if (subsResult.error) throw subsResult.error;
         setNewsletterSubscribers(subsResult.data || []);
         setNewsletterCampaigns(campaignsResult.data || []);
+        setCustomTemplates(((templatesResult.data || []) as unknown as NewsletterTemplateRow[]));
       } else if (activeTab === "complaints") {
         const { data, error } = await supabase
           .from("complaints")
@@ -1115,6 +1124,10 @@ const AdminDashboard = () => {
   };
 
   // Send newsletter function
+  // Resolve the active custom template shell (if selectedTemplate matches a custom row id)
+  const getCustomShell = (): string | undefined =>
+    customTemplates.find((t) => t.id === selectedTemplate)?.html_shell;
+
   const sendNewsletter = async (scheduled = false) => {
     if (!composeSubject.trim() || !composeContent.trim()) {
       toast({
@@ -1159,6 +1172,7 @@ const AdminDashboard = () => {
             subject: composeSubject.trim(), 
             content: composeContent.trim(),
             template: abEnabled ? undefined : selectedTemplate,
+            customTemplateHtml: abEnabled ? undefined : getCustomShell(),
             scheduledAt: scheduledDateTime.toISOString(),
             abEnabled,
             abVariantA: abEnabled ? abVariantA : undefined,
@@ -1206,6 +1220,7 @@ const AdminDashboard = () => {
           subject: composeSubject.trim(), 
           content: composeContent.trim(),
           template: abEnabled ? undefined : selectedTemplate,
+          customTemplateHtml: abEnabled ? undefined : getCustomShell(),
           abEnabled,
           abVariantA: abEnabled ? abVariantA : undefined,
           abVariantB: abEnabled ? abVariantB : undefined,
@@ -1276,6 +1291,7 @@ const AdminDashboard = () => {
           subject: composeSubject.trim(), 
           content: composeContent.trim(),
           template: selectedTemplate,
+          customTemplateHtml: getCustomShell(),
           testEmail: testEmail.trim(),
         },
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
@@ -1998,7 +2014,16 @@ const AdminDashboard = () => {
 
                     {/* Template Selector */}
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Template Style</label>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Template Style</label>
+                        <button
+                          type="button"
+                          onClick={() => setShowTemplatesManager(true)}
+                          className="text-xs font-bold uppercase tracking-widest text-nobel-gold hover:underline"
+                        >
+                          + Manage Custom Templates
+                        </button>
+                      </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         {[
                           { id: 'classic', name: 'Classic', desc: 'Editorial with gold accents' },
@@ -2016,7 +2041,7 @@ const AdminDashboard = () => {
                           <button
                             key={tmpl.id}
                             type="button"
-                            onClick={() => setSelectedTemplate(tmpl.id as any)}
+                            onClick={() => setSelectedTemplate(tmpl.id)}
                             className={`p-3 border text-left transition-all ${
                               selectedTemplate === tmpl.id 
                                 ? 'border-nobel-gold bg-nobel-gold/10' 
@@ -2027,8 +2052,31 @@ const AdminDashboard = () => {
                             <p className="text-xs text-muted-foreground">{tmpl.desc}</p>
                           </button>
                         ))}
+                        {customTemplates.map((tmpl) => (
+                          <button
+                            key={tmpl.id}
+                            type="button"
+                            onClick={() => setSelectedTemplate(tmpl.id)}
+                            className={`p-3 border text-left transition-all relative ${
+                              selectedTemplate === tmpl.id 
+                                ? 'border-nobel-gold bg-nobel-gold/10' 
+                                : 'border-border hover:border-muted-foreground'
+                            }`}
+                          >
+                            <span className="absolute top-1 right-1 text-[9px] uppercase tracking-widest text-nobel-gold font-bold">Custom</span>
+                            <p className="text-sm font-medium text-foreground truncate pr-12">{tmpl.name}</p>
+                            <p className="text-xs text-muted-foreground line-clamp-2">{tmpl.description || 'Custom layout'}</p>
+                          </button>
+                        ))}
                       </div>
                     </div>
+
+                    <NewsletterTemplatesManager
+                      open={showTemplatesManager}
+                      onClose={() => setShowTemplatesManager(false)}
+                      onChanged={(rows) => setCustomTemplates(rows.filter((r) => r.is_active))}
+                    />
+
 
                     {/* A/B Testing Section */}
                     <ABTestingSection
