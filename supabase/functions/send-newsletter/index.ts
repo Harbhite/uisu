@@ -1266,8 +1266,8 @@ const handler = async (req: Request): Promise<Response> => {
           emailTemplate = variant === 'A' ? abVariantA : abVariantB;
         }
 
-        // Generate email with template
-        const baseHtml = generateNewsletterHtml(content, subject, emailTemplate, subscriber.email);
+        // Generate email with template (A/B custom shells not supported — only the primary path carries customTemplateHtml)
+        const baseHtml = generateNewsletterHtml(content, subject, emailTemplate, subscriber.email, abEnabled ? undefined : customTemplateHtml);
         // Add tracking pixel and wrap links
         const trackedHtml = addTrackingToHtml(baseHtml, activeCampaignId, subscriber.email);
         
