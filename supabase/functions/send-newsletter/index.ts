@@ -1232,7 +1232,7 @@ const handler = async (req: Request): Promise<Response> => {
           template: abEnabled ? null : template,
           status: 'sending',
           recipients_count: subscribers.length,
-          html_content: generateNewsletterHtml(content, subject, template, 'preview@example.com'),
+          html_content: generateNewsletterHtml(content, subject, template, 'preview@example.com', customTemplateHtml),
           ab_enabled: abEnabled || false,
           ab_variant_a_template: abEnabled ? abVariantA : null,
           ab_variant_b_template: abEnabled ? abVariantB : null,
