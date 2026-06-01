@@ -84,14 +84,18 @@ Built with a focus on performance, accessibility, and modern web standards.
 | **Frontend Framework** | [React 18](https://react.dev/) + [Vite](https://vitejs.dev/) |
 | **Language** | [TypeScript](https://www.typescriptlang.org/) |
 | **Styling** | [Tailwind CSS](https://tailwindcss.com/) + [Shadcn UI](https://ui.shadcn.com/) |
-| **Backend & Auth** | [Supabase](https://supabase.com/) |
-| **Offline Storage** | [sql.js](https://sql.js.org/) (for Tutorials offline mode) |
-| **State Management** | [TanStack Query](https://tanstack.com/query) + [Zustand](https://zustand-demo.pmnd.rs/) |
+| **Backend & Auth** | [Lovable Cloud](https://lovable.dev/) (managed Supabase: Postgres, Auth, Storage, Edge Functions) |
+| **AI** | Lovable AI Gateway (Gemini 2.5) → Direct Gemini → Qwen (3-tier failover) |
+| **Offline Storage** | [sql.js](https://sql.js.org/) (Tutorials offline mode) |
+| **State Management** | [TanStack Query](https://tanstack.com/query) + [Zustand](https://zustand-demo.pmnd.rs/) (`uisu-app-store`) |
 | **Animations** | [Framer Motion](https://www.framer.com/motion/) + [GSAP](https://gsap.com/) |
 | **3D Graphics** | [React Three Fiber](https://docs.pmnd.rs/react-three-fiber) + [Drei](https://github.com/pmndrs/drei) |
-| **Rich Text Editor** | [Editor.js](https://editorjs.io/) |
+| **Rich Text Editors** | [Editor.js](https://editorjs.io/) (Inks Vault) + custom newsroom editor (Gazette / Newsletter) |
+| **Security** | [DOMPurify](https://github.com/cure53/DOMPurify) for all user-rendered HTML; RLS on every table |
+| **PDF / Files** | `pdfjs-dist` (client-side extraction), `jsPDF` (certificates & CV exports) |
 | **Testing** | [Playwright](https://playwright.dev/) |
-| **Package Manager** | [Bun](https://bun.sh/) (Supported & Recommended) |
+| **Package Manager** | [Bun](https://bun.sh/) (recommended) |
+
 
 ---
 
