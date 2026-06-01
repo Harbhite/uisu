@@ -25,11 +25,12 @@ interface SendNewsletterRequest {
 
 // Render a custom template shell by substituting tokens
 const renderCustomTemplate = (shell: string, content: string, subject: string, email: string): string => {
+  const unsubUrl = `https://uisu.lovable.app/unsubscribe?email=${encodeURIComponent(email)}`;
   return shell
     .replace(/\{\{\s*content\s*\}\}/g, content)
     .replace(/\{\{\s*subject\s*\}\}/g, subject)
     .replace(/\{\{\s*email\s*\}\}/g, email)
-    .replace(/\{\{\s*unsubscribe_url\s*\}\}/g, getUnsubscribeUrl(email));
+    .replace(/\{\{\s*unsubscribe_url\s*\}\}/g, unsubUrl);
 };
 
 // Hosted gold fist logo URL
