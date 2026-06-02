@@ -33,6 +33,9 @@ verify_jwt = false
 [functions.flashcard-gen]
 verify_jwt = false
 
+[functions.newsletter-template-ai]
+verify_jwt = false
+
 [functions.essay-check]
 verify_jwt = false
 
