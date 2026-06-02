@@ -764,7 +764,16 @@ const StudyBuddyPage = () => {
                         content={response}
                         filenameBase={(topic || `studybuddy-${currentMode.label.toLowerCase()}`).replace(/[^a-zA-Z0-9\s-]/g, '').trim().replace(/\s+/g, '-').substring(0, 60)}
                         title={`StudyBuddy — ${currentMode.label}`}
+                        getNode={() => responseContentRef.current}
                       />
+                      <button
+                        onClick={handleShare}
+                        disabled={sharing || !lastSessionId}
+                        className="p-2 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-all rounded-sm disabled:opacity-50"
+                        title={lastSessionId ? 'Create public share link' : 'Sign in to share'}
+                      >
+                        {sharing ? <Loader2 size={13} className="animate-spin" /> : <Share2 size={13} />}
+                      </button>
                       <button
                         onClick={handleCopy}
                         className="p-2 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-all rounded-sm"
