@@ -793,6 +793,26 @@ const StudyBuddyPage = () => {
                 </div>
               </div>
 
+              {/* Share link banner */}
+              {shareUrl && (
+                <div className="mb-4 p-3 border border-accent/30 bg-accent/5 rounded-sm flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Link2 size={13} className="text-accent shrink-0" />
+                    <a href={shareUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] text-accent underline truncate">
+                      {shareUrl}
+                    </a>
+                  </div>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(shareUrl); toast.success('Link copied'); }}
+                    className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent"
+                  >
+                    Copy link
+                  </button>
+                </div>
+              )}
+
+
+
               {/* Generated Image */}
               {generatedImage && (
                 <motion.div
