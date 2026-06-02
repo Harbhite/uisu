@@ -294,11 +294,16 @@ const StudyBuddyPage = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const responseRef = useRef<HTMLDivElement>(null);
+  const responseContentRef = useRef<HTMLDivElement>(null);
   const [depth, setDepth] = useState<DepthLevel>(() => {
     try { return (localStorage.getItem('studybuddy_depth') as DepthLevel) || 'intermediate'; } catch { return 'intermediate'; }
   });
   // Conversation memory: stores {role, content} pairs
   const [chatHistory, setChatHistory] = useState<Array<{role: string; content: string}>>([]);
+  // Last saved session id (for share link)
+  const [lastSessionId, setLastSessionId] = useState<string | null>(null);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(false);
 
   const currentMode = modes.find(m => m.id === activeMode)!;
 
@@ -448,13 +453,17 @@ const StudyBuddyPage = () => {
       if (fullText) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          await supabase.from('study_sessions' as any).insert({
+          const { data: inserted } = await supabase.from('study_sessions' as any).insert({
             user_id: user.id,
             mode: activeMode,
             topic: topic.trim() || null,
             material_preview: material.trim().substring(0, 200) || null,
             response: fullText,
-          });
+          }).select('id').single();
+          if (inserted && (inserted as any).id) {
+            setLastSessionId((inserted as any).id);
+            setShareUrl(null);
+          }
         }
       }
       // Update chat history for conversation memory
