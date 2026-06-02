@@ -539,6 +539,33 @@ const StudyBuddyPage = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleShare = async () => {
+    if (!response || !lastSessionId) {
+      toast.error('Generate an output first to share it');
+      return;
+    }
+    setSharing(true);
+    try {
+      // Generate token client-side, persist + flip flag
+      const token = (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
+        ? crypto.randomUUID().replace(/-/g, '')
+        : Math.random().toString(36).slice(2) + Date.now().toString(36);
+      const { error } = await supabase
+        .from('study_sessions' as any)
+        .update({ share_token: token, is_shared: true, shared_at: new Date().toISOString() })
+        .eq('id', lastSessionId);
+      if (error) throw error;
+      const url = `${window.location.origin}/study/shared/${token}`;
+      setShareUrl(url);
+      try { await navigator.clipboard.writeText(url); toast.success('Share link copied to clipboard'); }
+      catch { toast.success('Share link ready'); }
+    } catch (e: any) {
+      toast.error('Could not create share link', { description: e?.message });
+    } finally {
+      setSharing(false);
+    }
+  };
+
   const handleLoadSession = (session: any) => {
     setActiveMode(session.mode);
     setTopic(session.topic || '');
