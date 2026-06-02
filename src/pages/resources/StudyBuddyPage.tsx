@@ -106,9 +106,15 @@ const CollapsibleDiagram: React.FC<{ label: string; children: React.ReactNode }>
   );
 };
 
-// Reusable Export Dropdown for TXT, PDF, DOCX
-const ExportDropdown: React.FC<{ content: string; filenameBase: string; title: string }> = ({ content, filenameBase, title }) => {
+// Reusable Export Dropdown — renders the live DOM (with diagrams + tables) into images for PDF/DOCX
+const ExportDropdown: React.FC<{
+  content: string;
+  filenameBase: string;
+  title: string;
+  getNode?: () => HTMLElement | null;
+}> = ({ content, filenameBase, title, getNode }) => {
   const [open, setOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -126,55 +132,131 @@ const ExportDropdown: React.FC<{ content: string; filenameBase: string; title: s
     setOpen(false);
   };
 
+  // Capture the live DOM as a single canvas, then paginate it into a PDF.
+  // This preserves rendered diagrams (mermaid SVG), tables, headings, etc.
   const exportPdf = async () => {
-    const { jsPDF } = await import('jspdf');
-    const doc = new jsPDF();
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.text(title, 20, 20);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    const lines = doc.splitTextToSize(plainText, 170);
-    let y = 32;
-    for (const line of lines) {
-      if (y > 280) { doc.addPage(); y = 20; }
-      doc.text(line, 20, y);
-      y += 5;
-    }
-    doc.save(`${filenameBase}.pdf`);
-    toast.success('Downloaded as PDF');
+    setExporting(true);
     setOpen(false);
+    try {
+      const node = getNode?.();
+      const { jsPDF } = await import('jspdf');
+      if (!node) {
+        // Fallback: plain text
+        const doc = new jsPDF();
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.text(title, 20, 20);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+        const lines = doc.splitTextToSize(plainText, 170);
+        let y = 32;
+        for (const line of lines) {
+          if (y > 280) { doc.addPage(); y = 20; }
+          doc.text(line, 20, y); y += 5;
+        }
+        doc.save(`${filenameBase}.pdf`);
+      } else {
+        const html2canvas = (await import('html2canvas')).default;
+        const canvas = await html2canvas(node, {
+          backgroundColor: '#ffffff',
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          windowWidth: node.scrollWidth,
+        });
+        const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+        const pageW = pdf.internal.pageSize.getWidth();
+        const pageH = pdf.internal.pageSize.getHeight();
+        const imgW = pageW;
+        const imgH = (canvas.height * imgW) / canvas.width;
+        let heightLeft = imgH;
+        let position = 0;
+        const imgData = canvas.toDataURL('image/png');
+        pdf.addImage(imgData, 'PNG', 0, position, imgW, imgH);
+        heightLeft -= pageH;
+        while (heightLeft > 0) {
+          position = heightLeft - imgH;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, position, imgW, imgH);
+          heightLeft -= pageH;
+        }
+        pdf.save(`${filenameBase}.pdf`);
+      }
+      toast.success('Downloaded as PDF');
+    } catch (e) {
+      console.error(e);
+      toast.error('PDF export failed');
+    } finally {
+      setExporting(false);
+    }
   };
 
+  // DOCX export: render the live DOM into a PNG and embed it. Preserves diagrams + tables visually.
   const exportDocx = async () => {
-    const paragraphs = plainText.split('\n').filter(Boolean).map(
-      line => new Paragraph({ children: [new TextRun({ text: line, size: 22 })] })
-    );
-    const docFile = new Document({
-      sections: [{
-        children: [
-          new Paragraph({ text: title, heading: HeadingLevel.HEADING_1 }),
-          ...paragraphs,
-        ],
-      }],
-    });
-    const blob = await Packer.toBlob(docFile);
-    saveAs(blob, `${filenameBase}.docx`);
-    toast.success('Downloaded as DOCX');
+    setExporting(true);
     setOpen(false);
+    try {
+      const node = getNode?.();
+      if (!node) {
+        const paragraphs = plainText.split('\n').filter(Boolean).map(
+          line => new Paragraph({ children: [new TextRun({ text: line, size: 22 })] })
+        );
+        const docFile = new Document({
+          sections: [{ children: [new Paragraph({ text: title, heading: HeadingLevel.HEADING_1 }), ...paragraphs] }],
+        });
+        const blob = await Packer.toBlob(docFile);
+        saveAs(blob, `${filenameBase}.docx`);
+      } else {
+        const html2canvas = (await import('html2canvas')).default;
+        const { ImageRun } = await import('docx');
+        const canvas = await html2canvas(node, {
+          backgroundColor: '#ffffff',
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          windowWidth: node.scrollWidth,
+        });
+        const blob: Blob = await new Promise((res) => canvas.toBlob((b) => res(b!), 'image/png'));
+        const arrayBuf = await blob.arrayBuffer();
+        // Scale image to fit ~600px (A4 page printable width-ish in DOCX layout units)
+        const targetW = 600;
+        const targetH = Math.round((canvas.height * targetW) / canvas.width);
+        const docFile = new Document({
+          sections: [{
+            children: [
+              new Paragraph({ text: title, heading: HeadingLevel.HEADING_1 }),
+              new Paragraph({
+                children: [
+                  new ImageRun({
+                    data: new Uint8Array(arrayBuf),
+                    transformation: { width: targetW, height: targetH },
+                  } as any),
+                ],
+              }),
+            ],
+          }],
+        });
+        const docBlob = await Packer.toBlob(docFile);
+        saveAs(docBlob, `${filenameBase}.docx`);
+      }
+      toast.success('Downloaded as DOCX');
+    } catch (e) {
+      console.error(e);
+      toast.error('DOCX export failed');
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="p-2 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-all rounded-sm flex items-center gap-1"
+        disabled={exporting}
+        className="p-2 border border-border hover:border-accent text-muted-foreground hover:text-accent transition-all rounded-sm flex items-center gap-1 disabled:opacity-60"
         title="Export"
       >
-        <Download size={13} />
+        {exporting ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
         <ChevronDown size={10} />
       </button>
-      {open && (
+      {open && !exporting && (
         <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg shadow-lg z-50 min-w-[140px] py-1">
           <button onClick={exportTxt} className="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:bg-muted/50 flex items-center gap-2">
             <FileText size={12} /> TXT
