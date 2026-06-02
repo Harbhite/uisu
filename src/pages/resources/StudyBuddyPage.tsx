@@ -7,7 +7,7 @@ import {
   BookOpen, CalendarDays, Layers, Swords,
   Send, Loader2, Sparkles, ImageIcon, RefreshCcw, Copy, Check,
   Upload, FileIcon, Trash2, Table2, Code2, Download,
-  ChevronDown, ChevronUp, Eye, EyeOff, History, FileText, FileDown
+  ChevronDown, ChevronUp, Eye, EyeOff, History, FileText, FileDown, Share2, Link2
 } from 'lucide-react';
 import { saveAs } from 'file-saver';
 import { Document, Packer, Paragraph, HeadingLevel, TextRun } from 'docx';
