@@ -2244,6 +2244,56 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_template_versions: {
+        Row: {
+          created_at: string
+          description: string | null
+          edit_note: string | null
+          edited_by: string | null
+          html_shell: string
+          id: string
+          is_active: boolean
+          name: string
+          template_id: string
+          thumbnail_color: string | null
+          version_number: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          edit_note?: string | null
+          edited_by?: string | null
+          html_shell: string
+          id?: string
+          is_active?: boolean
+          name: string
+          template_id: string
+          thumbnail_color?: string | null
+          version_number: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          edit_note?: string | null
+          edited_by?: string | null
+          html_shell?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          template_id?: string
+          thumbnail_color?: string | null
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_template_versions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       newsletter_templates: {
         Row: {
           created_at: string
@@ -2785,29 +2835,41 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_shared: boolean
           material_preview: string | null
           mode: string
           response: string
+          share_token: string | null
+          shared_at: string | null
           topic: string | null
           user_id: string
+          view_count: number
         }
         Insert: {
           created_at?: string
           id?: string
+          is_shared?: boolean
           material_preview?: string | null
           mode?: string
           response: string
+          share_token?: string | null
+          shared_at?: string | null
           topic?: string | null
           user_id: string
+          view_count?: number
         }
         Update: {
           created_at?: string
           id?: string
+          is_shared?: boolean
           material_preview?: string | null
           mode?: string
           response?: string
+          share_token?: string | null
+          shared_at?: string | null
           topic?: string | null
           user_id?: string
+          view_count?: number
         }
         Relationships: []
       }
