@@ -3338,6 +3338,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bump_shared_session_view: { Args: { _token: string }; Returns: undefined }
       get_user_role: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {

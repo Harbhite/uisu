@@ -43,12 +43,8 @@ const SharedStudyOutputPage = () => {
         setError("This shared output isn't available or has been unshared.");
       } else {
         setSession(data as any);
-        // Best-effort view counter (RLS may block; ignore failures).
-        supabase
-          .from("study_sessions" as any)
-          .update({ view_count: ((data as any).view_count || 0) + 1 })
-          .eq("share_token", token)
-          .then(() => {});
+        // Bump view counter via SECURITY DEFINER RPC (works for anon).
+        supabase.rpc("bump_shared_session_view" as any, { _token: token }).then(() => {});
       }
       setLoading(false);
     })();
