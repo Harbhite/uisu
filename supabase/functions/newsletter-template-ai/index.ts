@@ -92,11 +92,12 @@ serve(async (req) => {
       : `CREATE a new newsletter template matching this brief: ${prompt}`;
 
     const { r, provider } = await callWithFallback({
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-2.5-pro",
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userMessage },
       ],
+      temperature: 0.95,
       stream: false,
     });
 
