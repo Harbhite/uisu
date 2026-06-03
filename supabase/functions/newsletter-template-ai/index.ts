@@ -120,12 +120,20 @@ serve(async (req) => {
       .replace(/```\s*$/i, "")
       .trim();
 
+    // Auto-inject UISU logo if the model forgot it
+    if (!html.includes("newsletter-logo.png") && !html.includes("uisu-logo")) {
+      const logoTag = `<img src="${UISU_LOGO_URL}" alt="UISU SPACE" width="120" style="display:block;border:0;outline:none;text-decoration:none;max-width:120px;height:auto;margin:0 auto 16px;" />`;
+      // Try to insert right after <body ...> opening tag
+      html = html.replace(/<body([^>]*)>/i, (m) => `${m}\n${logoTag}\n`);
+    }
+
     // Lightweight validation
     const issues: string[] = [];
     if (!html.includes("{{content}}")) issues.push("Missing required {{content}} token — content will not be injected.");
     if (!/^<!DOCTYPE/i.test(html)) issues.push("Missing <!DOCTYPE html> declaration.");
     if (!/<\/html>/i.test(html)) issues.push("Missing closing </html> tag.");
     if (/<script/i.test(html)) issues.push("Contains <script> tag — not allowed in email clients.");
+    if (!html.includes("newsletter-logo.png") && !html.includes("uisu-logo")) issues.push("Missing UISU logo.");
 
     return new Response(JSON.stringify({ html, issues, provider, mode: mode || (existingHtml ? "edit" : "create") }), {
       headers: { ...corsHeaders, "Content-Type": "application/json", "X-AI-Provider": provider },
