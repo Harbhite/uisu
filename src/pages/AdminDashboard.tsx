@@ -1327,7 +1327,17 @@ const AdminDashboard = () => {
     const subject = composeSubject || 'Newsletter Subject';
     const content = htmlContent || '<p>Your newsletter content will appear here...</p>';
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    
+
+    // Custom user-created templates: substitute tokens in the stored html_shell
+    const customShell = customTemplates.find((t) => t.id === selectedTemplate)?.html_shell;
+    if (customShell) {
+      return customShell
+        .replace(/\{\{\s*content\s*\}\}/gi, content)
+        .replace(/\{\{\s*subject\s*\}\}/gi, subject)
+        .replace(/\{\{\s*email\s*\}\}/gi, 'preview@uisu.space')
+        .replace(/\{\{\s*unsubscribe_url\s*\}\}/gi, '#preview-unsubscribe');
+    }
+
     const goldLogo = `<svg width="48" height="48" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="45" fill="none" stroke="#C5A059" stroke-width="3"/><circle cx="50" cy="50" r="35" fill="none" stroke="#C5A059" stroke-width="2"/><text x="50" y="58" font-family="Georgia, serif" font-size="24" font-weight="bold" fill="#C5A059" text-anchor="middle">UI</text><text x="50" y="75" font-family="Georgia, serif" font-size="10" fill="#C5A059" text-anchor="middle">SU</text></svg>`;
     
     if (selectedTemplate === 'minimal') {
