@@ -106,7 +106,8 @@ const CollapsibleDiagram: React.FC<{ label: string; children: React.ReactNode }>
   );
 };
 
-// Reusable Export Dropdown — renders the live DOM (with diagrams + tables) into images for PDF/DOCX
+// Hybrid Export: text stays as real (selectable, editable) text;
+// diagrams (Mermaid/ASCII/SVG) and tables are rasterized at configurable DPI.
 const ExportDropdown: React.FC<{
   content: string;
   filenameBase: string;
@@ -115,6 +116,12 @@ const ExportDropdown: React.FC<{
 }> = ({ content, filenameBase, title, getNode }) => {
   const [open, setOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
+  // DPI/scale multiplier for rasterized blocks (diagrams + tables only)
+  const [scale, setScale] = useState<2 | 3 | 4>(() => {
+    const v = parseInt(localStorage.getItem('sb_export_scale') || '2', 10);
+    return (v === 3 || v === 4 ? v : 2) as 2 | 3 | 4;
+  });
+  useEffect(() => { localStorage.setItem('sb_export_scale', String(scale)); }, [scale]);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -132,117 +139,215 @@ const ExportDropdown: React.FC<{
     setOpen(false);
   };
 
-  // Capture the live DOM as a single canvas, then paginate it into a PDF.
-  // This preserves rendered diagrams (mermaid SVG), tables, headings, etc.
+  // Detect whether a DOM node should be rasterized (diagrams, tables, code blocks)
+  const shouldRasterize = (el: Element): boolean => {
+    if (!(el instanceof HTMLElement)) return false;
+    if (el.querySelector('svg')) return true;            // mermaid diagrams
+    if (el.tagName === 'TABLE' || el.querySelector('table')) return true;
+    if (el.tagName === 'PRE') return true;               // preformatted code/ascii
+    const cls = (el.className || '').toString().toLowerCase();
+    if (/mermaid|ascii|diagram/.test(cls)) return true;
+    return false;
+  };
+
+  // Snapshot a DOM subtree to a PNG dataURL at the configured scale
+  const snapshotNode = async (el: HTMLElement): Promise<{ data: string; w: number; h: number } | null> => {
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+      const canvas = await html2canvas(el, {
+        backgroundColor: '#ffffff',
+        scale,
+        useCORS: true,
+        logging: false,
+        windowWidth: el.scrollWidth,
+      });
+      return { data: canvas.toDataURL('image/png'), w: canvas.width, h: canvas.height };
+    } catch (e) {
+      console.error('snapshot failed', e);
+      return null;
+    }
+  };
+
+  // Walk the rendered output into a flat block list of either text or image segments.
+  type Block =
+    | { kind: 'heading'; level: 1 | 2 | 3 | 4; text: string }
+    | { kind: 'paragraph'; text: string }
+    | { kind: 'list'; items: string[]; ordered: boolean }
+    | { kind: 'quote'; text: string }
+    | { kind: 'image'; el: HTMLElement };
+
+  const buildBlocks = (root: HTMLElement): Block[] => {
+    const blocks: Block[] = [];
+    const children = Array.from(root.children) as HTMLElement[];
+    const walk = (nodes: HTMLElement[]) => {
+      for (const el of nodes) {
+        if (shouldRasterize(el)) { blocks.push({ kind: 'image', el }); continue; }
+        const tag = el.tagName.toLowerCase();
+        if (/^h[1-4]$/.test(tag)) {
+          blocks.push({ kind: 'heading', level: parseInt(tag[1], 10) as 1|2|3|4, text: el.innerText.trim() });
+        } else if (tag === 'p') {
+          const t = el.innerText.trim();
+          if (t) blocks.push({ kind: 'paragraph', text: t });
+        } else if (tag === 'ul' || tag === 'ol') {
+          const items = Array.from(el.querySelectorAll(':scope > li')).map((li) => (li as HTMLElement).innerText.trim()).filter(Boolean);
+          if (items.length) blocks.push({ kind: 'list', items, ordered: tag === 'ol' });
+        } else if (tag === 'blockquote') {
+          blocks.push({ kind: 'quote', text: el.innerText.trim() });
+        } else if (el.children.length > 0) {
+          walk(Array.from(el.children) as HTMLElement[]);
+        } else {
+          const t = el.innerText?.trim();
+          if (t) blocks.push({ kind: 'paragraph', text: t });
+        }
+      }
+    };
+    walk(children);
+    return blocks;
+  };
+
   const exportPdf = async () => {
     setExporting(true);
     setOpen(false);
     try {
       const node = getNode?.();
       const { jsPDF } = await import('jspdf');
-      if (!node) {
-        // Fallback: plain text
-        const doc = new jsPDF();
-        doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.text(title, 20, 20);
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
-        const lines = doc.splitTextToSize(plainText, 170);
-        let y = 32;
+      const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const margin = 48;
+      const contentW = pageW - margin * 2;
+      let y = margin;
+
+      const ensureSpace = (needed: number) => {
+        if (y + needed > pageH - margin) { pdf.addPage(); y = margin; }
+      };
+      const writeWrapped = (text: string, fontSize: number, bold = false, indent = 0) => {
+        pdf.setFont('helvetica', bold ? 'bold' : 'normal');
+        pdf.setFontSize(fontSize);
+        const lines = pdf.splitTextToSize(text, contentW - indent) as string[];
+        const lh = fontSize * 1.35;
         for (const line of lines) {
-          if (y > 280) { doc.addPage(); y = 20; }
-          doc.text(line, 20, y); y += 5;
+          ensureSpace(lh);
+          pdf.text(line, margin + indent, y);
+          y += lh;
         }
-        doc.save(`${filenameBase}.pdf`);
+      };
+
+      // Title
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(18);
+      pdf.text(title, margin, y); y += 26;
+
+      if (!node) {
+        writeWrapped(plainText, 11);
       } else {
-        const html2canvas = (await import('html2canvas')).default;
-        const canvas = await html2canvas(node, {
-          backgroundColor: '#ffffff',
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          windowWidth: node.scrollWidth,
-        });
-        const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
-        const pageW = pdf.internal.pageSize.getWidth();
-        const pageH = pdf.internal.pageSize.getHeight();
-        const imgW = pageW;
-        const imgH = (canvas.height * imgW) / canvas.width;
-        let heightLeft = imgH;
-        let position = 0;
-        const imgData = canvas.toDataURL('image/png');
-        pdf.addImage(imgData, 'PNG', 0, position, imgW, imgH);
-        heightLeft -= pageH;
-        while (heightLeft > 0) {
-          position = heightLeft - imgH;
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 0, position, imgW, imgH);
-          heightLeft -= pageH;
+        const blocks = buildBlocks(node);
+        for (const b of blocks) {
+          if (b.kind === 'heading') {
+            y += 8; ensureSpace(28);
+            const sizes = { 1: 16, 2: 14, 3: 12, 4: 11 } as const;
+            writeWrapped(b.text, sizes[b.level], true);
+            y += 4;
+          } else if (b.kind === 'paragraph') {
+            writeWrapped(b.text, 11); y += 6;
+          } else if (b.kind === 'list') {
+            b.items.forEach((it, i) => {
+              const prefix = b.ordered ? `${i + 1}. ` : '• ';
+              writeWrapped(prefix + it, 11, false, 14);
+            });
+            y += 4;
+          } else if (b.kind === 'quote') {
+            pdf.setDrawColor(197, 160, 89);
+            const startY = y;
+            writeWrapped(b.text, 11, false, 12);
+            pdf.setLineWidth(2); pdf.line(margin + 2, startY - 10, margin + 2, y - 6);
+            y += 6;
+          } else if (b.kind === 'image') {
+            const snap = await snapshotNode(b.el);
+            if (!snap) continue;
+            const imgW = contentW;
+            const imgH = (snap.h * imgW) / snap.w;
+            // If too tall for a single page, paginate
+            if (imgH <= pageH - margin * 2) {
+              ensureSpace(imgH + 8);
+              pdf.addImage(snap.data, 'PNG', margin, y, imgW, imgH, undefined, 'FAST');
+              y += imgH + 10;
+            } else {
+              // Place on a new page and slice across pages by repositioning
+              pdf.addPage(); y = margin;
+              let remaining = imgH;
+              let position = y;
+              pdf.addImage(snap.data, 'PNG', margin, position, imgW, imgH, undefined, 'FAST');
+              remaining -= (pageH - margin);
+              while (remaining > 0) {
+                pdf.addPage();
+                position = margin - (imgH - remaining);
+                pdf.addImage(snap.data, 'PNG', margin, position, imgW, imgH, undefined, 'FAST');
+                remaining -= (pageH - margin * 2);
+              }
+              y = pageH; // force next ensureSpace to add a new page
+            }
+          }
         }
-        pdf.save(`${filenameBase}.pdf`);
       }
-      toast.success('Downloaded as PDF');
+      pdf.save(`${filenameBase}.pdf`);
+      toast.success(`PDF exported (${scale}× quality)`);
     } catch (e) {
       console.error(e);
       toast.error('PDF export failed');
-    } finally {
-      setExporting(false);
-    }
+    } finally { setExporting(false); }
   };
 
-  // DOCX export: render the live DOM into a PNG and embed it. Preserves diagrams + tables visually.
   const exportDocx = async () => {
     setExporting(true);
     setOpen(false);
     try {
       const node = getNode?.();
+      const { ImageRun } = await import('docx');
+      const sectionChildren: any[] = [
+        new Paragraph({ text: title, heading: HeadingLevel.HEADING_1 }),
+      ];
+
       if (!node) {
-        const paragraphs = plainText.split('\n').filter(Boolean).map(
-          line => new Paragraph({ children: [new TextRun({ text: line, size: 22 })] })
+        plainText.split('\n').filter(Boolean).forEach((line) =>
+          sectionChildren.push(new Paragraph({ children: [new TextRun({ text: line, size: 22 })] }))
         );
-        const docFile = new Document({
-          sections: [{ children: [new Paragraph({ text: title, heading: HeadingLevel.HEADING_1 }), ...paragraphs] }],
-        });
-        const blob = await Packer.toBlob(docFile);
-        saveAs(blob, `${filenameBase}.docx`);
       } else {
-        const html2canvas = (await import('html2canvas')).default;
-        const { ImageRun } = await import('docx');
-        const canvas = await html2canvas(node, {
-          backgroundColor: '#ffffff',
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          windowWidth: node.scrollWidth,
-        });
-        const blob: Blob = await new Promise((res) => canvas.toBlob((b) => res(b!), 'image/png'));
-        const arrayBuf = await blob.arrayBuffer();
-        // Scale image to fit ~600px (A4 page printable width-ish in DOCX layout units)
-        const targetW = 600;
-        const targetH = Math.round((canvas.height * targetW) / canvas.width);
-        const docFile = new Document({
-          sections: [{
-            children: [
-              new Paragraph({ text: title, heading: HeadingLevel.HEADING_1 }),
-              new Paragraph({
-                children: [
-                  new ImageRun({
-                    data: new Uint8Array(arrayBuf),
-                    transformation: { width: targetW, height: targetH },
-                  } as any),
-                ],
-              }),
-            ],
-          }],
-        });
-        const docBlob = await Packer.toBlob(docFile);
-        saveAs(docBlob, `${filenameBase}.docx`);
+        const blocks = buildBlocks(node);
+        const headingLevel = { 1: HeadingLevel.HEADING_1, 2: HeadingLevel.HEADING_2, 3: HeadingLevel.HEADING_3, 4: HeadingLevel.HEADING_4 } as const;
+        for (const b of blocks) {
+          if (b.kind === 'heading') {
+            sectionChildren.push(new Paragraph({ text: b.text, heading: headingLevel[b.level] }));
+          } else if (b.kind === 'paragraph') {
+            sectionChildren.push(new Paragraph({ children: [new TextRun({ text: b.text, size: 22 })] }));
+          } else if (b.kind === 'list') {
+            b.items.forEach((it, i) => {
+              const prefix = b.ordered ? `${i + 1}. ` : '• ';
+              sectionChildren.push(new Paragraph({ children: [new TextRun({ text: prefix + it, size: 22 })] }));
+            });
+          } else if (b.kind === 'quote') {
+            sectionChildren.push(new Paragraph({ children: [new TextRun({ text: b.text, italics: true, size: 22, color: '555555' })] }));
+          } else if (b.kind === 'image') {
+            const snap = await snapshotNode(b.el);
+            if (!snap) continue;
+            const blob: Blob = await (await fetch(snap.data)).blob();
+            const buf = await blob.arrayBuffer();
+            const targetW = 600;
+            const targetH = Math.round((snap.h * targetW) / snap.w);
+            sectionChildren.push(new Paragraph({
+              children: [new ImageRun({ data: new Uint8Array(buf), transformation: { width: targetW, height: targetH } } as any)],
+            }));
+          }
+        }
       }
-      toast.success('Downloaded as DOCX');
+
+      const docFile = new Document({ sections: [{ children: sectionChildren }] });
+      const docBlob = await Packer.toBlob(docFile);
+      saveAs(docBlob, `${filenameBase}.docx`);
+      toast.success(`DOCX exported (${scale}× quality)`);
     } catch (e) {
       console.error(e);
       toast.error('DOCX export failed');
-    } finally {
-      setExporting(false);
-    }
+    } finally { setExporting(false); }
   };
 
   return (
@@ -257,21 +362,38 @@ const ExportDropdown: React.FC<{
         <ChevronDown size={10} />
       </button>
       {open && !exporting && (
-        <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg shadow-lg z-50 min-w-[140px] py-1">
+        <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg shadow-lg z-50 min-w-[180px] py-1">
+          <div className="px-3 py-2 border-b border-border">
+            <p className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">Diagram/Table Quality</p>
+            <div className="flex gap-1">
+              {([2, 3, 4] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={(e) => { e.stopPropagation(); setScale(s); }}
+                  className={`flex-1 px-2 py-1 text-[10px] font-bold rounded-sm border transition-all ${
+                    scale === s ? 'bg-accent text-accent-foreground border-accent' : 'border-border text-muted-foreground hover:border-accent'
+                  }`}
+                >
+                  {s}×
+                </button>
+              ))}
+            </div>
+          </div>
           <button onClick={exportTxt} className="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:bg-muted/50 flex items-center gap-2">
             <FileText size={12} /> TXT
           </button>
           <button onClick={exportPdf} className="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:bg-muted/50 flex items-center gap-2">
-            <FileDown size={12} /> PDF
+            <FileDown size={12} /> PDF <span className="ml-auto text-[8px] text-muted-foreground/60">editable text</span>
           </button>
           <button onClick={exportDocx} className="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-accent hover:bg-muted/50 flex items-center gap-2">
-            <FileIcon size={12} /> DOCX
+            <FileIcon size={12} /> DOCX <span className="ml-auto text-[8px] text-muted-foreground/60">editable text</span>
           </button>
         </div>
       )}
     </div>
   );
 };
+
 
 const StudyBuddyPage = () => {
   const navigate = useNavigate();
