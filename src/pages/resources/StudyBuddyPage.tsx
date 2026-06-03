@@ -139,14 +139,17 @@ const ExportDropdown: React.FC<{
     setOpen(false);
   };
 
-  // Detect whether a DOM node should be rasterized (diagrams, tables, code blocks)
+  // Decide whether a DOM node should be rasterized. We ONLY rasterize the
+  // specific visual leaf elements (diagrams, tables, code blocks). We never
+  // rasterize generic container nodes just because they happen to contain an
+  // <svg> deeper down — otherwise the whole output gets captured as a single
+  // screenshot, which is exactly what we want to avoid.
   const shouldRasterize = (el: Element): boolean => {
     if (!(el instanceof HTMLElement)) return false;
-    if (el.querySelector('svg')) return true;            // mermaid diagrams
-    if (el.tagName === 'TABLE' || el.querySelector('table')) return true;
+    if (el.dataset?.exportRasterize) return true;        // explicit opt-in (Mermaid wrapper)
+    if (el.tagName === 'TABLE') return true;
     if (el.tagName === 'PRE') return true;               // preformatted code/ascii
-    const cls = (el.className || '').toString().toLowerCase();
-    if (/mermaid|ascii|diagram/.test(cls)) return true;
+    if (el.tagName === 'SVG') return true;
     return false;
   };
 

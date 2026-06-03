@@ -144,7 +144,7 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ content, label }) => {
   }
 
   return (
-    <div className="my-6 border border-border rounded-sm overflow-hidden group">
+    <div className="my-6 border border-border rounded-sm overflow-hidden group" data-export-rasterize="diagram">
       {/* Toolbar */}
       <div className="flex items-center justify-between px-4 py-2.5 bg-muted/50 border-b border-border">
         <div className="flex items-center gap-2">
