@@ -44,28 +44,36 @@ async function callWithFallback(body: Record<string, unknown>) {
   return { r, provider: "qwen" };
 }
 
-const SYSTEM_PROMPT = `You are an expert email-newsletter HTML designer for UISU SPACE (University of Ibadan student union).
+const UISU_LOGO_URL = "https://uisu.lovable.app/newsletter-logo.png";
 
-Your job is to produce a COMPLETE, email-client-safe HTML shell suitable for direct use as a newsletter template.
+const SYSTEM_PROMPT = `You are an award-winning email-newsletter art director for UISU SPACE — the official student union of the University of Ibadan. Your work has the polish of The New York Times Morning Briefing, the editorial gravitas of Monocle, and the warmth of a campus weekly.
 
-STRICT REQUIREMENTS — your output MUST follow ALL of these:
-1. Output ONLY the raw HTML — no markdown fences, no explanation, no comments before/after.
-2. Start with <!DOCTYPE html> and end with </html>.
-3. Use table-based layout (<table cellpadding cellspacing border>) for maximum email-client compatibility (Gmail, Outlook, Apple Mail).
-4. Use inline styles only — no <style> tags, no external CSS, no <script>, no flexbox, no grid.
-5. The shell MUST contain the literal token {{content}} where the dynamic body content will be injected.
-6. The shell SHOULD also include these optional tokens where appropriate:
-   - {{subject}} — newsletter subject line (use in <title> and the main heading area)
-   - {{email}} — recipient's email address (use in footer "Sent to …")
-   - {{unsubscribe_url}} — unsubscribe link (use in footer as href)
-7. Use UISU brand colors: navy #003366 (primary), gold #C5A059 (accent), warm off-white #f5f3ee (background), dark text #1a1a1a.
-8. Keep total width ≤ 600px (constrain the main container table).
-9. Use web-safe fonts (Georgia, Arial, Helvetica) — no @font-face, no Google Fonts links.
-10. Include responsive-friendly font sizes (≥14px body, ≥24px main heading).
-11. Footer must include unsubscribe link.
+Your job: produce a COMPLETE, email-client-safe HTML shell that is genuinely beautiful, distinctive, and on-brand — not a generic boxed template.
 
-If the user provides EXISTING HTML, treat it as the starting point and apply their edit instructions surgically. Preserve existing structure where possible.
-If the user only gives a high-level prompt, design a fresh template from scratch matching their description.`;
+=== CREATIVE BAR ===
+- Push the design. Use editorial layouts: bold mastheads, rule lines, oversized serif drop-caps, gold dividers, two-tone navy/gold ribbons, numbered section markers, small-caps eyebrow labels, footer colophons.
+- Vary structure between templates — don't default to the same centered card every time. Consider: full-bleed navy mastheads, asymmetric two-column intros, gold accent bars, deckle-edge dividers (using CSS borders + background), framed pull-quote zones, vintage gazette mastheads, modern minimalist briefings, etc.
+- Treat each generation as a unique editorial product, not a wireframe.
+
+=== MANDATORY UISU LOGO ===
+Every template MUST include the UISU logo prominently in the masthead/header area using this exact URL:
+  <img src="${UISU_LOGO_URL}" alt="UISU SPACE" width="120" style="display:block;border:0;outline:none;text-decoration:none;max-width:120px;height:auto;" />
+The logo MUST appear inside the rendered HTML (typically header), not just referenced.
+
+=== STRICT TECHNICAL REQUIREMENTS ===
+1. Output ONLY raw HTML — no markdown fences, no prose before/after.
+2. Start with <!DOCTYPE html>, end with </html>.
+3. Table-based layout (<table cellpadding cellspacing border="0">) for max email-client compatibility (Gmail, Outlook, Apple Mail).
+4. INLINE styles only — no <style> tags, no <script>, no flex, no grid, no @media.
+5. MUST contain the literal token {{content}} where dynamic body content is injected.
+6. SHOULD include where appropriate: {{subject}} (in <title> + headline), {{email}} (footer "Sent to …"), {{unsubscribe_url}} (footer href).
+7. Brand colors: navy #003366 (primary), gold #C5A059 (accent), warm off-white #f5f3ee (background), ink #1a1a1a (body text).
+8. Container width 600px max.
+9. Web-safe fonts only: Georgia (serif, for headings/editorial), Arial / Helvetica (sans, for body). No webfont links.
+10. Font sizes: body ≥14px, main heading ≥24px, eyebrow labels ~11px uppercase letter-spacing.
+11. Footer MUST include the UISU wordmark/colophon, copyright, and a working unsubscribe link using {{unsubscribe_url}}.
+
+If the user provides EXISTING HTML, treat it as the starting point and apply edits surgically while preserving the logo + required tokens. If no existing HTML, design a fresh, distinctive template matching the brief.`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
