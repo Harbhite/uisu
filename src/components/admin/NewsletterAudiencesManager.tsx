@@ -58,7 +58,7 @@ export const NewsletterAudiencesManager = ({ open, onClose, onChanged }: Props) 
       toast({ title: "Failed to load members", description: error.message, variant: "destructive" });
       return;
     }
-    setMembers((data || []) as any);
+    setMembers(((data || []) as unknown) as any);
   }, [toast]);
 
   useEffect(() => {
