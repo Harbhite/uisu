@@ -22,6 +22,7 @@ import { SubscriberImport } from "@/components/admin/SubscriberImport";
 import { ABTestingSection } from "@/components/admin/ABTestingSection";
 import { NewsletterRichEditor } from "@/components/admin/NewsletterRichEditor";
 import { NewsletterTemplatesManager, type NewsletterTemplateRow } from "@/components/admin/NewsletterTemplatesManager";
+import { NewsletterAudiencesManager, type NewsletterAudienceRow } from "@/components/admin/NewsletterAudiencesManager";
 import { AdminAnalytics } from "@/components/admin/AdminAnalytics";
 import { AdminFeedback } from "@/components/admin/AdminFeedback";
 
@@ -210,6 +211,14 @@ const AdminDashboard = () => {
   const [abEnabled, setAbEnabled] = useState(false);
   const [abVariantA, setAbVariantA] = useState("classic");
   const [abVariantB, setAbVariantB] = useState("minimal");
+
+  // Sender name + audience targeting
+  const [senderName, setSenderName] = useState("UISU Archive");
+  const [audienceMode, setAudienceMode] = useState<"all" | "saved" | "adhoc">("all");
+  const [selectedAudienceId, setSelectedAudienceId] = useState<string>("");
+  const [adhocEmailsText, setAdhocEmailsText] = useState("");
+  const [audiences, setAudiences] = useState<NewsletterAudienceRow[]>([]);
+  const [showAudiencesManager, setShowAudiencesManager] = useState(false);
   // Audit log filters
   const [auditSearchQuery, setAuditSearchQuery] = useState("");
   const [auditActionFilter, setAuditActionFilter] = useState<string>("all");
@@ -401,7 +410,7 @@ const AdminDashboard = () => {
         );
         setAuditLogs(logsWithProfiles);
       } else if (activeTab === "newsletter") {
-        const [subsResult, campaignsResult, templatesResult] = await Promise.all([
+        const [subsResult, campaignsResult, templatesResult, audiencesResult] = await Promise.all([
           supabase
             .from("newsletter_subscribers")
             .select("*")
@@ -415,13 +424,18 @@ const AdminDashboard = () => {
             .from("newsletter_templates" as any)
             .select("*")
             .eq("is_active", true)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("newsletter_audiences" as any)
+            .select("id, name, description, type, member_count, created_at")
             .order("created_at", { ascending: false })
         ]);
-        
+
         if (subsResult.error) throw subsResult.error;
         setNewsletterSubscribers(subsResult.data || []);
         setNewsletterCampaigns(campaignsResult.data || []);
         setCustomTemplates(((templatesResult.data || []) as unknown as NewsletterTemplateRow[]));
+        setAudiences(((audiencesResult.data || []) as unknown as NewsletterAudienceRow[]));
       } else if (activeTab === "complaints") {
         const { data, error } = await supabase
           .from("complaints")
@@ -1128,6 +1142,35 @@ const AdminDashboard = () => {
   const getCustomShell = (): string | undefined =>
     customTemplates.find((t) => t.id === selectedTemplate)?.html_shell;
 
+  // Build audience payload for edge function
+  const getAudiencePayload = (): { audienceId?: string; audienceEmails?: string[] } => {
+    if (audienceMode === "saved" && selectedAudienceId) {
+      return { audienceId: selectedAudienceId };
+    }
+    if (audienceMode === "adhoc") {
+      const emails = Array.from(
+        new Set(
+          adhocEmailsText
+            .split(/[\s,;\n]+/)
+            .map((e) => e.trim().toLowerCase())
+            .filter((e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e))
+        )
+      );
+      return { audienceEmails: emails };
+    }
+    return {};
+  };
+
+  const getRecipientCount = (): number => {
+    if (audienceMode === "saved") {
+      return audiences.find((a) => a.id === selectedAudienceId)?.member_count || 0;
+    }
+    if (audienceMode === "adhoc") {
+      return getAudiencePayload().audienceEmails?.length || 0;
+    }
+    return newsletterSubscribers.filter((s) => s.is_active).length;
+  };
+
   const sendNewsletter = async (scheduled = false) => {
     if (!composeSubject.trim() || !composeContent.trim()) {
       toast({
@@ -1138,11 +1181,13 @@ const AdminDashboard = () => {
       return;
     }
 
-    const activeSubscribers = newsletterSubscribers.filter(s => s.is_active).length;
-    if (activeSubscribers === 0 && !scheduled) {
+    const previewCount = getRecipientCount();
+    if (previewCount === 0 && !scheduled) {
       toast({
-        title: "No subscribers",
-        description: "There are no active subscribers to send to.",
+        title: "No recipients",
+        description: audienceMode === "all"
+          ? "There are no active subscribers to send to."
+          : "The selected audience has no valid recipients.",
         variant: "destructive",
       });
       return;
@@ -1168,8 +1213,8 @@ const AdminDashboard = () => {
         const token = sessionData?.session?.access_token;
 
         const response = await supabase.functions.invoke('send-newsletter', {
-          body: { 
-            subject: composeSubject.trim(), 
+          body: {
+            subject: composeSubject.trim(),
             content: composeContent.trim(),
             template: abEnabled ? undefined : selectedTemplate,
             customTemplateHtml: abEnabled ? undefined : getCustomShell(),
@@ -1177,6 +1222,8 @@ const AdminDashboard = () => {
             abEnabled,
             abVariantA: abEnabled ? abVariantA : undefined,
             abVariantB: abEnabled ? abVariantB : undefined,
+            senderName: senderName.trim() || undefined,
+            ...getAudiencePayload(),
           },
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
@@ -1208,7 +1255,8 @@ const AdminDashboard = () => {
       return;
     }
 
-    if (!confirm(`Send this newsletter to ${activeSubscribers} subscriber(s)?`)) return;
+    const recipientCount = getRecipientCount();
+    if (!confirm(`Send this newsletter to ${recipientCount} recipient(s)?`)) return;
 
     setSendingNewsletter(true);
     try {
@@ -1216,14 +1264,16 @@ const AdminDashboard = () => {
       const token = sessionData?.session?.access_token;
 
       const response = await supabase.functions.invoke('send-newsletter', {
-        body: { 
-          subject: composeSubject.trim(), 
+        body: {
+          subject: composeSubject.trim(),
           content: composeContent.trim(),
           template: abEnabled ? undefined : selectedTemplate,
           customTemplateHtml: abEnabled ? undefined : getCustomShell(),
           abEnabled,
           abVariantA: abEnabled ? abVariantA : undefined,
           abVariantB: abEnabled ? abVariantB : undefined,
+          senderName: senderName.trim() || undefined,
+          ...getAudiencePayload(),
         },
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
@@ -1233,18 +1283,18 @@ const AdminDashboard = () => {
       }
 
       const result = response.data;
-      
+
       await logAuditAction('send_newsletter', 'newsletter_campaigns', null, null, {
         subject: composeSubject,
         template: selectedTemplate,
-        recipients: result.stats?.total || activeSubscribers,
+        recipients: result.stats?.total || recipientCount,
         successful: result.stats?.successful || 0,
         failed: result.stats?.failed || 0,
       });
 
       toast({
         title: "Newsletter sent!",
-        description: result.message || `Sent to ${result.stats?.successful || activeSubscribers} subscribers.`,
+        description: result.message || `Sent to ${result.stats?.successful || recipientCount} recipient(s).`,
       });
 
       setComposeSubject("");
@@ -1287,12 +1337,13 @@ const AdminDashboard = () => {
       const token = sessionData?.session?.access_token;
 
       const response = await supabase.functions.invoke('send-newsletter', {
-        body: { 
-          subject: composeSubject.trim(), 
+        body: {
+          subject: composeSubject.trim(),
           content: composeContent.trim(),
           template: selectedTemplate,
           customTemplateHtml: getCustomShell(),
           testEmail: testEmail.trim(),
+          senderName: senderName.trim() || undefined,
         },
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
@@ -2014,6 +2065,85 @@ const AdminDashboard = () => {
                         className="w-full px-4 py-3 bg-background border border-border focus:border-nobel-gold focus:outline-none"
                       />
                     </div>
+
+                    {/* From Name */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">
+                        From name <span className="text-muted-foreground/70 normal-case font-normal">(appears as the sender)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={senderName}
+                        onChange={(e) => setSenderName(e.target.value)}
+                        placeholder="UISU Archive"
+                        maxLength={80}
+                        className="w-full px-4 py-3 bg-background border border-border focus:border-nobel-gold focus:outline-none"
+                      />
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        Will appear as <strong>{(senderName.trim() || "UISU Archive")} &lt;newsletter@uisu.space&gt;</strong>
+                      </p>
+                    </div>
+
+                    {/* Audience targeting */}
+                    <div className="border border-border rounded-lg p-4 bg-muted/30 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Send to</label>
+                        <button
+                          type="button"
+                          onClick={() => setShowAudiencesManager(true)}
+                          className="text-xs font-bold uppercase tracking-widest text-nobel-gold hover:underline"
+                        >
+                          + Manage Audiences
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        {([
+                          { id: "all", label: "All active subscribers" },
+                          { id: "saved", label: "Saved audience" },
+                          { id: "adhoc", label: "Custom email list" },
+                        ] as const).map((opt) => (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => setAudienceMode(opt.id)}
+                            className={`p-3 border text-left text-sm transition ${
+                              audienceMode === opt.id
+                                ? "border-nobel-gold bg-nobel-gold/10 text-foreground"
+                                : "border-border hover:border-muted-foreground text-muted-foreground"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                      {audienceMode === "saved" && (
+                        <select
+                          value={selectedAudienceId}
+                          onChange={(e) => setSelectedAudienceId(e.target.value)}
+                          className="w-full px-3 py-2.5 bg-background border border-border focus:border-nobel-gold focus:outline-none text-sm"
+                        >
+                          <option value="">Choose an audience…</option>
+                          {audiences.map((a) => (
+                            <option key={a.id} value={a.id}>
+                              {a.name} — {a.member_count} recipient(s)
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                      {audienceMode === "adhoc" && (
+                        <textarea
+                          value={adhocEmailsText}
+                          onChange={(e) => setAdhocEmailsText(e.target.value)}
+                          placeholder="Paste emails separated by commas, spaces or new lines…"
+                          rows={3}
+                          className="w-full px-3 py-2.5 bg-background border border-border focus:border-nobel-gold focus:outline-none text-sm font-mono"
+                        />
+                      )}
+                      <p className="text-[11px] text-muted-foreground">
+                        Will be sent to <strong>{getRecipientCount()}</strong> recipient(s).
+                      </p>
+                    </div>
+
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Content</label>
                       <NewsletterRichEditor
@@ -2086,6 +2216,13 @@ const AdminDashboard = () => {
                       onClose={() => setShowTemplatesManager(false)}
                       onChanged={(rows) => setCustomTemplates(rows.filter((r) => r.is_active))}
                     />
+
+                    <NewsletterAudiencesManager
+                      open={showAudiencesManager}
+                      onClose={() => setShowAudiencesManager(false)}
+                      onChanged={(rows) => setAudiences(rows)}
+                    />
+
 
 
                     {/* A/B Testing Section */}
@@ -2179,7 +2316,7 @@ const AdminDashboard = () => {
 
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2 border-t border-border">
                       <p className="text-sm text-muted-foreground">
-                        Will be sent to <strong>{newsletterSubscribers.filter(s => s.is_active).length}</strong> active subscriber(s) from <strong>newsletter@uisu.space</strong>
+                        Will be sent to <strong>{getRecipientCount()}</strong> recipient(s) from <strong>{(senderName.trim() || "UISU Archive")} &lt;newsletter@uisu.space&gt;</strong>
                       </p>
                       <button
                         onClick={() => sendNewsletter(false)}

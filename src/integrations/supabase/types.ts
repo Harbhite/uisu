@@ -2121,6 +2121,71 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_audience_members: {
+        Row: {
+          audience_id: string
+          created_at: string
+          email: string
+          id: string
+        }
+        Insert: {
+          audience_id: string
+          created_at?: string
+          email: string
+          id?: string
+        }
+        Update: {
+          audience_id?: string
+          created_at?: string
+          email?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_audience_members_audience_id_fkey"
+            columns: ["audience_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_audiences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      newsletter_audiences: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          filter_source: string | null
+          id: string
+          member_count: number
+          name: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          filter_source?: string | null
+          id?: string
+          member_count?: number
+          name: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          filter_source?: string | null
+          id?: string
+          member_count?: number
+          name?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       newsletter_campaigns: {
         Row: {
           ab_enabled: boolean | null
@@ -2132,6 +2197,7 @@ export type Database = {
           ab_variant_b_opens: number | null
           ab_variant_b_sent: number | null
           ab_variant_b_template: string | null
+          audience_id: string | null
           click_count: number | null
           content: string
           created_at: string
@@ -2141,6 +2207,7 @@ export type Database = {
           open_count: number | null
           recipients_count: number | null
           scheduled_at: string | null
+          sender_name: string | null
           sent_at: string | null
           sent_by: string | null
           status: string
@@ -2161,6 +2228,7 @@ export type Database = {
           ab_variant_b_opens?: number | null
           ab_variant_b_sent?: number | null
           ab_variant_b_template?: string | null
+          audience_id?: string | null
           click_count?: number | null
           content: string
           created_at?: string
@@ -2170,6 +2238,7 @@ export type Database = {
           open_count?: number | null
           recipients_count?: number | null
           scheduled_at?: string | null
+          sender_name?: string | null
           sent_at?: string | null
           sent_by?: string | null
           status?: string
@@ -2190,6 +2259,7 @@ export type Database = {
           ab_variant_b_opens?: number | null
           ab_variant_b_sent?: number | null
           ab_variant_b_template?: string | null
+          audience_id?: string | null
           click_count?: number | null
           content?: string
           created_at?: string
@@ -2199,6 +2269,7 @@ export type Database = {
           open_count?: number | null
           recipients_count?: number | null
           scheduled_at?: string | null
+          sender_name?: string | null
           sent_at?: string | null
           sent_by?: string | null
           status?: string
