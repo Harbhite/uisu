@@ -1253,7 +1253,8 @@ const AdminDashboard = () => {
       return;
     }
 
-    if (!confirm(`Send this newsletter to ${activeSubscribers} subscriber(s)?`)) return;
+    const recipientCount = getRecipientCount();
+    if (!confirm(`Send this newsletter to ${recipientCount} recipient(s)?`)) return;
 
     setSendingNewsletter(true);
     try {
