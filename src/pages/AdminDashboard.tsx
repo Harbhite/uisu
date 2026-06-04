@@ -1142,6 +1142,35 @@ const AdminDashboard = () => {
   const getCustomShell = (): string | undefined =>
     customTemplates.find((t) => t.id === selectedTemplate)?.html_shell;
 
+  // Build audience payload for edge function
+  const getAudiencePayload = (): { audienceId?: string; audienceEmails?: string[] } => {
+    if (audienceMode === "saved" && selectedAudienceId) {
+      return { audienceId: selectedAudienceId };
+    }
+    if (audienceMode === "adhoc") {
+      const emails = Array.from(
+        new Set(
+          adhocEmailsText
+            .split(/[\s,;\n]+/)
+            .map((e) => e.trim().toLowerCase())
+            .filter((e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e))
+        )
+      );
+      return { audienceEmails: emails };
+    }
+    return {};
+  };
+
+  const getRecipientCount = (): number => {
+    if (audienceMode === "saved") {
+      return audiences.find((a) => a.id === selectedAudienceId)?.member_count || 0;
+    }
+    if (audienceMode === "adhoc") {
+      return getAudiencePayload().audienceEmails?.length || 0;
+    }
+    return newsletterSubscribers.filter((s) => s.is_active).length;
+  };
+
   const sendNewsletter = async (scheduled = false) => {
     if (!composeSubject.trim() || !composeContent.trim()) {
       toast({
