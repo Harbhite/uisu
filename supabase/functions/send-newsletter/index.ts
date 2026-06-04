@@ -15,13 +15,24 @@ interface SendNewsletterRequest {
   template?: string;
   testEmail?: string;
   scheduledAt?: string;
-  // Custom template support: raw HTML shell with tokens {{content}}, {{subject}}, {{email}}, {{unsubscribe_url}}
   customTemplateHtml?: string;
-  // A/B Testing
   abEnabled?: boolean;
   abVariantA?: string;
   abVariantB?: string;
+  // NEW: display sender name (domain stays uisu.space)
+  senderName?: string;
+  // NEW: audience targeting — saved audience id, or ad-hoc list of emails
+  audienceId?: string;
+  audienceEmails?: string[];
 }
+
+const SENDER_EMAIL = "newsletter@uisu.space";
+const DEFAULT_SENDER_NAME = "UISU Archive";
+const sanitizeSenderName = (name?: string): string => {
+  const cleaned = (name || "").replace(/[\r\n<>"]/g, "").trim();
+  return cleaned.length > 0 ? cleaned.slice(0, 80) : DEFAULT_SENDER_NAME;
+};
+const buildFromHeader = (name?: string) => `${sanitizeSenderName(name)} <${SENDER_EMAIL}>`;
 
 // Render a custom template shell by substituting tokens
 const renderCustomTemplate = (shell: string, content: string, subject: string, email: string): string => {
