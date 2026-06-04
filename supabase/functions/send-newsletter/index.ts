@@ -1326,7 +1326,7 @@ const handler = async (req: Request): Promise<Response> => {
         const trackedHtml = addTrackingToHtml(baseHtml, activeCampaignId, subscriber.email);
         
         await resend.emails.send({
-          from: "UISU Archive <newsletter@uisu.space>",
+          from: fromHeader,
           to: [subscriber.email],
           subject,
           html: trackedHtml,
