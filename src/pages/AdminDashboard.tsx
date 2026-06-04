@@ -1337,12 +1337,13 @@ const AdminDashboard = () => {
       const token = sessionData?.session?.access_token;
 
       const response = await supabase.functions.invoke('send-newsletter', {
-        body: { 
-          subject: composeSubject.trim(), 
+        body: {
+          subject: composeSubject.trim(),
           content: composeContent.trim(),
           template: selectedTemplate,
           customTemplateHtml: getCustomShell(),
           testEmail: testEmail.trim(),
+          senderName: senderName.trim() || undefined,
         },
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
