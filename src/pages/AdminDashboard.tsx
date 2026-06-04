@@ -1264,14 +1264,16 @@ const AdminDashboard = () => {
       const token = sessionData?.session?.access_token;
 
       const response = await supabase.functions.invoke('send-newsletter', {
-        body: { 
-          subject: composeSubject.trim(), 
+        body: {
+          subject: composeSubject.trim(),
           content: composeContent.trim(),
           template: abEnabled ? undefined : selectedTemplate,
           customTemplateHtml: abEnabled ? undefined : getCustomShell(),
           abEnabled,
           abVariantA: abEnabled ? abVariantA : undefined,
           abVariantB: abEnabled ? abVariantB : undefined,
+          senderName: senderName.trim() || undefined,
+          ...getAudiencePayload(),
         },
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
@@ -1281,18 +1283,18 @@ const AdminDashboard = () => {
       }
 
       const result = response.data;
-      
+
       await logAuditAction('send_newsletter', 'newsletter_campaigns', null, null, {
         subject: composeSubject,
         template: selectedTemplate,
-        recipients: result.stats?.total || activeSubscribers,
+        recipients: result.stats?.total || recipientCount,
         successful: result.stats?.successful || 0,
         failed: result.stats?.failed || 0,
       });
 
       toast({
         title: "Newsletter sent!",
-        description: result.message || `Sent to ${result.stats?.successful || activeSubscribers} subscribers.`,
+        description: result.message || `Sent to ${result.stats?.successful || recipientCount} recipient(s).`,
       });
 
       setComposeSubject("");
