@@ -42,7 +42,7 @@ export const NewsletterAudiencesManager = ({ open, onClose, onChanged }: Props) 
       toast({ title: "Failed to load audiences", description: error.message, variant: "destructive" });
       return;
     }
-    const list = (data || []) as NewsletterAudienceRow[];
+    const list = ((data || []) as unknown) as NewsletterAudienceRow[];
     setRows(list);
     onChanged?.(list);
     if (!activeId && list.length > 0) setActiveId(list[0].id);
