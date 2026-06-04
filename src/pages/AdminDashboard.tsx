@@ -1211,8 +1211,8 @@ const AdminDashboard = () => {
         const token = sessionData?.session?.access_token;
 
         const response = await supabase.functions.invoke('send-newsletter', {
-          body: { 
-            subject: composeSubject.trim(), 
+          body: {
+            subject: composeSubject.trim(),
             content: composeContent.trim(),
             template: abEnabled ? undefined : selectedTemplate,
             customTemplateHtml: abEnabled ? undefined : getCustomShell(),
@@ -1220,6 +1220,8 @@ const AdminDashboard = () => {
             abEnabled,
             abVariantA: abEnabled ? abVariantA : undefined,
             abVariantB: abEnabled ? abVariantB : undefined,
+            senderName: senderName.trim() || undefined,
+            ...getAudiencePayload(),
           },
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
