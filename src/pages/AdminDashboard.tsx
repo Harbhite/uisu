@@ -1181,11 +1181,13 @@ const AdminDashboard = () => {
       return;
     }
 
-    const activeSubscribers = newsletterSubscribers.filter(s => s.is_active).length;
-    if (activeSubscribers === 0 && !scheduled) {
+    const previewCount = getRecipientCount();
+    if (previewCount === 0 && !scheduled) {
       toast({
-        title: "No subscribers",
-        description: "There are no active subscribers to send to.",
+        title: "No recipients",
+        description: audienceMode === "all"
+          ? "There are no active subscribers to send to."
+          : "The selected audience has no valid recipients.",
         variant: "destructive",
       });
       return;
