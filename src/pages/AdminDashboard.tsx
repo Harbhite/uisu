@@ -211,6 +211,14 @@ const AdminDashboard = () => {
   const [abEnabled, setAbEnabled] = useState(false);
   const [abVariantA, setAbVariantA] = useState("classic");
   const [abVariantB, setAbVariantB] = useState("minimal");
+
+  // Sender name + audience targeting
+  const [senderName, setSenderName] = useState("UISU Archive");
+  const [audienceMode, setAudienceMode] = useState<"all" | "saved" | "adhoc">("all");
+  const [selectedAudienceId, setSelectedAudienceId] = useState<string>("");
+  const [adhocEmailsText, setAdhocEmailsText] = useState("");
+  const [audiences, setAudiences] = useState<NewsletterAudienceRow[]>([]);
+  const [showAudiencesManager, setShowAudiencesManager] = useState(false);
   // Audit log filters
   const [auditSearchQuery, setAuditSearchQuery] = useState("");
   const [auditActionFilter, setAuditActionFilter] = useState<string>("all");
