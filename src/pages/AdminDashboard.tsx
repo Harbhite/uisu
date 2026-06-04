@@ -410,7 +410,7 @@ const AdminDashboard = () => {
         );
         setAuditLogs(logsWithProfiles);
       } else if (activeTab === "newsletter") {
-        const [subsResult, campaignsResult, templatesResult] = await Promise.all([
+        const [subsResult, campaignsResult, templatesResult, audiencesResult] = await Promise.all([
           supabase
             .from("newsletter_subscribers")
             .select("*")
@@ -424,13 +424,18 @@ const AdminDashboard = () => {
             .from("newsletter_templates" as any)
             .select("*")
             .eq("is_active", true)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("newsletter_audiences" as any)
+            .select("id, name, description, type, member_count, created_at")
             .order("created_at", { ascending: false })
         ]);
-        
+
         if (subsResult.error) throw subsResult.error;
         setNewsletterSubscribers(subsResult.data || []);
         setNewsletterCampaigns(campaignsResult.data || []);
         setCustomTemplates(((templatesResult.data || []) as unknown as NewsletterTemplateRow[]));
+        setAudiences(((audiencesResult.data || []) as unknown as NewsletterAudienceRow[]));
       } else if (activeTab === "complaints") {
         const { data, error } = await supabase
           .from("complaints")
