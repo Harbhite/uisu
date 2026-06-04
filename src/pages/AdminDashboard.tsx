@@ -2316,7 +2316,7 @@ const AdminDashboard = () => {
 
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2 border-t border-border">
                       <p className="text-sm text-muted-foreground">
-                        Will be sent to <strong>{newsletterSubscribers.filter(s => s.is_active).length}</strong> active subscriber(s) from <strong>newsletter@uisu.space</strong>
+                        Will be sent to <strong>{getRecipientCount()}</strong> recipient(s) from <strong>{(senderName.trim() || "UISU Archive")} &lt;newsletter@uisu.space&gt;</strong>
                       </p>
                       <button
                         onClick={() => sendNewsletter(false)}
