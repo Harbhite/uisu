@@ -1151,26 +1151,29 @@ const handler = async (req: Request): Promise<Response> => {
 
     const resend = new Resend(resendApiKey);
 
-    const { campaignId, subject, content, template = 'classic', testEmail, scheduledAt, customTemplateHtml, abEnabled, abVariantA, abVariantB }: SendNewsletterRequest = await req.json();
+    const { campaignId, subject, content, template = 'classic', testEmail, scheduledAt, customTemplateHtml, abEnabled, abVariantA, abVariantB, senderName, audienceId, audienceEmails }: SendNewsletterRequest = await req.json();
 
     if (!subject || !content) {
       throw new Error("Subject and content are required");
     }
 
+    const fromHeader = buildFromHeader(senderName);
+    const resolvedSenderName = sanitizeSenderName(senderName);
+
     // If test email is provided, send only to that email (no tracking for tests)
     if (testEmail) {
       const htmlContent = generateNewsletterHtml(content, subject, template, testEmail, customTemplateHtml);
-      
+
       await resend.emails.send({
-        from: "UISU Archive <newsletter@uisu.space>",
+        from: fromHeader,
         to: [testEmail],
         subject: `[TEST] ${subject}`,
         html: htmlContent,
       });
 
       return new Response(
-        JSON.stringify({ 
-          success: true, 
+        JSON.stringify({
+          success: true,
           message: `Test email sent to ${testEmail}`,
           testEmail: true
         }),
@@ -1182,9 +1185,8 @@ const handler = async (req: Request): Promise<Response> => {
     if (scheduledAt) {
       const scheduledTime = new Date(scheduledAt);
       const now = new Date();
-      
+
       if (scheduledTime > now) {
-        // Store campaign as scheduled (tracking will be added when sent)
         const { data: newCampaign, error: campaignError } = await supabase
           .from("newsletter_campaigns")
           .insert({
@@ -1194,6 +1196,8 @@ const handler = async (req: Request): Promise<Response> => {
             status: 'scheduled',
             scheduled_at: scheduledAt,
             html_content: generateNewsletterHtml(content, subject, template, 'preview@example.com', customTemplateHtml),
+            sender_name: resolvedSenderName,
+            audience_id: audienceId || null,
           })
           .select()
           .single();
@@ -1204,8 +1208,8 @@ const handler = async (req: Request): Promise<Response> => {
         }
 
         return new Response(
-          JSON.stringify({ 
-            success: true, 
+          JSON.stringify({
+            success: true,
             message: `Newsletter scheduled for ${scheduledTime.toLocaleString()}`,
             scheduled: true,
             campaignId: newCampaign?.id
@@ -1215,24 +1219,60 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Get active subscribers
-    const { data: subscribers, error: subError } = await supabase
-      .from("newsletter_subscribers")
-      .select("email")
-      .eq("is_active", true);
+    // ---- Resolve recipient list (audience targeting) ----
+    const normalizeEmail = (e: string) => (e || "").trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    let recipientEmails: string[] = [];
+    let audienceLabel = "all active subscribers";
 
-    if (subError) {
-      throw new Error("Failed to fetch subscribers");
+    if (Array.isArray(audienceEmails) && audienceEmails.length > 0) {
+      // Ad-hoc list pasted from the composer
+      recipientEmails = Array.from(new Set(audienceEmails.map(normalizeEmail).filter((e) => emailRegex.test(e))));
+      audienceLabel = `custom list (${recipientEmails.length} recipients)`;
+    } else if (audienceId) {
+      const { data: audience, error: audErr } = await supabase
+        .from("newsletter_audiences")
+        .select("id, name, type")
+        .eq("id", audienceId)
+        .single();
+      if (audErr || !audience) {
+        throw new Error("Selected audience not found");
+      }
+      audienceLabel = audience.name;
+      if (audience.type === "all") {
+        const { data: subs } = await supabase
+          .from("newsletter_subscribers")
+          .select("email")
+          .eq("is_active", true);
+        recipientEmails = (subs || []).map((s: any) => normalizeEmail(s.email)).filter((e) => emailRegex.test(e));
+      } else {
+        // manual list
+        const { data: members } = await supabase
+          .from("newsletter_audience_members")
+          .select("email")
+          .eq("audience_id", audienceId);
+        recipientEmails = Array.from(new Set((members || []).map((m: any) => normalizeEmail(m.email)).filter((e) => emailRegex.test(e))));
+      }
+    } else {
+      // Default: all active subscribers
+      const { data: subs, error: subError } = await supabase
+        .from("newsletter_subscribers")
+        .select("email")
+        .eq("is_active", true);
+      if (subError) throw new Error("Failed to fetch subscribers");
+      recipientEmails = (subs || []).map((s: any) => normalizeEmail(s.email)).filter((e) => emailRegex.test(e));
     }
 
-    if (!subscribers || subscribers.length === 0) {
+    if (recipientEmails.length === 0) {
       return new Response(
-        JSON.stringify({ success: false, message: "No active subscribers found" }),
+        JSON.stringify({ success: false, message: `No recipients found for ${audienceLabel}` }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // Create campaign record first to get campaign ID for tracking
+    const subscribers = recipientEmails.map((email) => ({ email }));
+
+    // Create campaign record
     let activeCampaignId: string = campaignId || '';
     if (!activeCampaignId) {
       const { data: newCampaign, error: insertError } = await supabase
@@ -1247,6 +1287,8 @@ const handler = async (req: Request): Promise<Response> => {
           ab_enabled: abEnabled || false,
           ab_variant_a_template: abEnabled ? abVariantA : null,
           ab_variant_b_template: abEnabled ? abVariantB : null,
+          sender_name: resolvedSenderName,
+          audience_id: audienceId || null,
         })
         .select()
         .single();
@@ -1257,6 +1299,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
       activeCampaignId = newCampaign.id;
     }
+
 
     // Send to all subscribers with tracking
     let successCount = 0;
