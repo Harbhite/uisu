@@ -2065,6 +2065,85 @@ const AdminDashboard = () => {
                         className="w-full px-4 py-3 bg-background border border-border focus:border-nobel-gold focus:outline-none"
                       />
                     </div>
+
+                    {/* From Name */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">
+                        From name <span className="text-muted-foreground/70 normal-case font-normal">(appears as the sender)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={senderName}
+                        onChange={(e) => setSenderName(e.target.value)}
+                        placeholder="UISU Archive"
+                        maxLength={80}
+                        className="w-full px-4 py-3 bg-background border border-border focus:border-nobel-gold focus:outline-none"
+                      />
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        Will appear as <strong>{(senderName.trim() || "UISU Archive")} &lt;newsletter@uisu.space&gt;</strong>
+                      </p>
+                    </div>
+
+                    {/* Audience targeting */}
+                    <div className="border border-border rounded-lg p-4 bg-muted/30 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Send to</label>
+                        <button
+                          type="button"
+                          onClick={() => setShowAudiencesManager(true)}
+                          className="text-xs font-bold uppercase tracking-widest text-nobel-gold hover:underline"
+                        >
+                          + Manage Audiences
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        {([
+                          { id: "all", label: "All active subscribers" },
+                          { id: "saved", label: "Saved audience" },
+                          { id: "adhoc", label: "Custom email list" },
+                        ] as const).map((opt) => (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => setAudienceMode(opt.id)}
+                            className={`p-3 border text-left text-sm transition ${
+                              audienceMode === opt.id
+                                ? "border-nobel-gold bg-nobel-gold/10 text-foreground"
+                                : "border-border hover:border-muted-foreground text-muted-foreground"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                      {audienceMode === "saved" && (
+                        <select
+                          value={selectedAudienceId}
+                          onChange={(e) => setSelectedAudienceId(e.target.value)}
+                          className="w-full px-3 py-2.5 bg-background border border-border focus:border-nobel-gold focus:outline-none text-sm"
+                        >
+                          <option value="">Choose an audience…</option>
+                          {audiences.map((a) => (
+                            <option key={a.id} value={a.id}>
+                              {a.name} — {a.member_count} recipient(s)
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                      {audienceMode === "adhoc" && (
+                        <textarea
+                          value={adhocEmailsText}
+                          onChange={(e) => setAdhocEmailsText(e.target.value)}
+                          placeholder="Paste emails separated by commas, spaces or new lines…"
+                          rows={3}
+                          className="w-full px-3 py-2.5 bg-background border border-border focus:border-nobel-gold focus:outline-none text-sm font-mono"
+                        />
+                      )}
+                      <p className="text-[11px] text-muted-foreground">
+                        Will be sent to <strong>{getRecipientCount()}</strong> recipient(s).
+                      </p>
+                    </div>
+
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Content</label>
                       <NewsletterRichEditor
