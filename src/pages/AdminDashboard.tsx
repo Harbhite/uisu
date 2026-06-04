@@ -2217,6 +2217,13 @@ const AdminDashboard = () => {
                       onChanged={(rows) => setCustomTemplates(rows.filter((r) => r.is_active))}
                     />
 
+                    <NewsletterAudiencesManager
+                      open={showAudiencesManager}
+                      onClose={() => setShowAudiencesManager(false)}
+                      onChanged={(rows) => setAudiences(rows)}
+                    />
+
+
 
                     {/* A/B Testing Section */}
                     <ABTestingSection
