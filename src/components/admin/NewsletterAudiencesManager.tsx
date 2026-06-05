@@ -107,34 +107,127 @@ export const NewsletterAudiencesManager = ({ open, onClose, onChanged }: Props) 
     await fetchRows();
   };
 
-  const addEmails = async () => {
-    if (!activeId) return;
-    const parsed = Array.from(
-      new Set(
-        emailsText
-          .split(/[\s,;\n]+/)
-          .map((e) => e.trim().toLowerCase())
-          .filter((e) => emailRegex.test(e))
-      )
-    );
-    if (parsed.length === 0) {
-      toast({ title: "No valid emails found", variant: "destructive" });
-      return;
-    }
-    setAdding(true);
-    const payload = parsed.map((email) => ({ audience_id: activeId, email }));
+  // Insert a normalized list of {email, first_name, full_name} rows
+  const upsertRows = async (
+    rows: { email: string; first_name?: string | null; full_name?: string | null }[]
+  ): Promise<{ inserted: number; error?: string }> => {
+    if (!activeId) return { inserted: 0, error: "No audience selected" };
+    const seen = new Set<string>();
+    const cleaned = rows
+      .map((r) => ({
+        email: (r.email || "").trim().toLowerCase(),
+        first_name: r.first_name ? String(r.first_name).trim().slice(0, 80) || null : null,
+        full_name: r.full_name ? String(r.full_name).trim().slice(0, 160) || null : null,
+      }))
+      .filter((r) => emailRegex.test(r.email) && !seen.has(r.email) && seen.add(r.email));
+    if (cleaned.length === 0) return { inserted: 0, error: "No valid emails" };
+    const payload = cleaned.map((r) => ({ audience_id: activeId, ...r }));
     const { error } = await supabase
       .from("newsletter_audience_members" as any)
-      .upsert(payload, { onConflict: "audience_id,email", ignoreDuplicates: true });
+      .upsert(payload, { onConflict: "audience_id,email", ignoreDuplicates: false });
+    if (error) return { inserted: 0, error: error.message };
+    return { inserted: cleaned.length };
+  };
+
+  const addEmails = async () => {
+    if (!activeId) return;
+    // Allow lines like "alice@example.com, Alice" or "alice@example.com | Alice Smith"
+    const rows = emailsText
+      .split(/\n+/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .flatMap((line) => {
+        // If line contains delimiter, treat as "email, name"
+        if (/[,;|\t]/.test(line)) {
+          const parts = line.split(/[,;|\t]/).map((p) => p.trim());
+          const email = parts.find((p) => emailRegex.test(p)) || "";
+          const name = parts.find((p) => p && p !== email) || "";
+          return [{ email, full_name: name || null, first_name: name ? name.split(/\s+/)[0] : null }];
+        }
+        // Otherwise split on spaces — assume pure emails
+        return line
+          .split(/[\s]+/)
+          .filter((e) => emailRegex.test(e))
+          .map((email) => ({ email, full_name: null, first_name: null }));
+      });
+    setAdding(true);
+    const { inserted, error } = await upsertRows(rows);
     setAdding(false);
     if (error) {
-      toast({ title: "Failed to add", description: error.message, variant: "destructive" });
+      toast({ title: "Failed to add", description: error, variant: "destructive" });
       return;
     }
     setEmailsText("");
-    toast({ title: `Added ${parsed.length} email(s)` });
+    toast({ title: `Added ${inserted} recipient(s)` });
     await fetchMembers(activeId);
     await fetchRows();
+  };
+
+  const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !activeId) return;
+    setImporting(true);
+    try {
+      const name = file.name.toLowerCase();
+      let records: any[] = [];
+      if (name.endsWith(".csv") || file.type === "text/csv") {
+        const text = await file.text();
+        const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
+        records = (parsed.data || []) as any[];
+        // If no headers detected, retry without header
+        if (!records.length || (records[0] && Object.keys(records[0]).length === 1 && !records[0].email && !records[0].Email)) {
+          const noHdr = Papa.parse(text, { header: false, skipEmptyLines: true });
+          records = (noHdr.data || []).map((row: any) => ({ email: row[0], full_name: row[1] }));
+        }
+      } else if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
+        const buf = await file.arrayBuffer();
+        const wb = XLSX.read(buf, { type: "array" });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        records = XLSX.utils.sheet_to_json(sheet, { defval: "" }) as any[];
+        if (!records.length) {
+          const aoa = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" }) as any[];
+          records = aoa.map((row: any[]) => ({ email: row[0], full_name: row[1] }));
+        }
+      } else {
+        toast({ title: "Unsupported file", description: "Upload a .csv, .xlsx, or .xls file.", variant: "destructive" });
+        return;
+      }
+
+      // Normalize column names (case-insensitive lookup)
+      const pick = (row: any, keys: string[]) => {
+        const lower: Record<string, any> = {};
+        for (const k of Object.keys(row)) lower[k.toLowerCase().trim()] = row[k];
+        for (const k of keys) if (lower[k] != null && String(lower[k]).trim()) return String(lower[k]).trim();
+        return null;
+      };
+      const normalized = records.map((row: any) => {
+        const email = pick(row, ["email", "e-mail", "mail", "email address", "address"]) || "";
+        const full = pick(row, ["full_name", "fullname", "name", "full name"]);
+        const first = pick(row, ["first_name", "firstname", "first name", "first"]);
+        const last = pick(row, ["last_name", "lastname", "last name", "surname"]);
+        return {
+          email,
+          first_name: first || (full ? full.split(/\s+/)[0] : null),
+          full_name: full || (first ? `${first}${last ? " " + last : ""}` : null),
+        };
+      });
+      const { inserted, error } = await upsertRows(normalized);
+      if (error) {
+        toast({ title: "Import failed", description: error, variant: "destructive" });
+      } else {
+        toast({
+          title: "Import complete",
+          description: `${inserted} of ${normalized.length} row(s) imported. Duplicates updated, invalid emails skipped.`,
+        });
+        await fetchMembers(activeId);
+        await fetchRows();
+      }
+    } catch (err: any) {
+      toast({ title: "Import failed", description: err.message || "Could not parse file", variant: "destructive" });
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const removeMember = async (memberId: string) => {
