@@ -1,7 +1,9 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Trash2, X, Users, Mail } from "lucide-react";
+import { Loader2, Plus, Trash2, X, Users, Mail, Upload, FileSpreadsheet } from "lucide-react";
+import Papa from "papaparse";
+import * as XLSX from "xlsx";
 
 export interface NewsletterAudienceRow {
   id: string;
