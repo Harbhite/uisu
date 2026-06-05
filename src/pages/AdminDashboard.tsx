@@ -2402,6 +2402,69 @@ const AdminDashboard = () => {
                       </div>
                     </div>
 
+                    {/* Preview as a real recipient (personalization preview) */}
+                    <div className="border border-border rounded-lg p-4 bg-muted/30">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                          Preview as a recipient
+                        </p>
+                        <button
+                          onClick={() => setShowRecipientPreview((s) => !s)}
+                          className="flex items-center gap-2 text-xs text-ui-blue hover:text-nobel-gold transition-colors"
+                        >
+                          <Eye size={14} />
+                          {showRecipientPreview ? "Hide" : "Show"}
+                        </button>
+                      </div>
+                      {showRecipientPreview && (
+                        <div className="space-y-3">
+                          <p className="text-[11px] text-muted-foreground">
+                            Pick someone from the selected audience to see exactly how the email will render for them — including personalization tokens like <code>{`{{first_name}}`}</code> and <code>{`{{name}}`}</code>.
+                          </p>
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <select
+                              value={recipientPreviewEmail}
+                              onChange={(e) => setRecipientPreviewEmail(e.target.value)}
+                              className="flex-1 px-3 py-2.5 bg-background border border-border focus:border-nobel-gold focus:outline-none text-sm"
+                            >
+                              <option value="">
+                                {recipientPreviewOptions.length === 0
+                                  ? "No recipients available — pick an audience first"
+                                  : `Choose recipient (${recipientPreviewOptions.length} available)…`}
+                              </option>
+                              {recipientPreviewOptions.slice(0, 200).map((r) => (
+                                <option key={r.email} value={r.email}>
+                                  {r.full_name || r.first_name ? `${r.full_name || r.first_name} — ${r.email}` : r.email}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              onClick={runRecipientPreview}
+                              disabled={recipientPreviewLoading || !recipientPreviewEmail}
+                              className="flex items-center justify-center gap-2 px-4 py-2.5 border border-ui-blue text-ui-blue text-xs font-bold uppercase tracking-widest hover:bg-ui-blue hover:text-white transition-all disabled:opacity-50 whitespace-nowrap"
+                            >
+                              {recipientPreviewLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Eye size={12} />}
+                              Render Preview
+                            </button>
+                          </div>
+                          {recipientPreviewMeta && (
+                            <div className="text-[11px] text-muted-foreground space-y-1 border-l-2 border-nobel-gold pl-3">
+                              <p><strong>From:</strong> {recipientPreviewMeta.from}</p>
+                              <p><strong>Greeting resolves to:</strong> {recipientPreviewMeta.first} <span className="text-muted-foreground/60">(full: {recipientPreviewMeta.full})</span></p>
+                            </div>
+                          )}
+                          {recipientPreviewHtml && (
+                            <iframe
+                              title="Recipient preview"
+                              srcDoc={recipientPreviewHtml}
+                              className="w-full h-[520px] border border-border rounded bg-white"
+                              sandbox=""
+                            />
+                          )}
+                        </div>
+                      )}
+                    </div>
+
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2 border-t border-border">
                       <p className="text-sm text-muted-foreground">
                         Will be sent to <strong>{getRecipientCount()}</strong> recipient(s) from <strong>{(senderName.trim() || "UISU Archive")} &lt;newsletter@uisu.space&gt;</strong>
