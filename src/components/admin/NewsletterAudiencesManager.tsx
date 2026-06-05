@@ -27,11 +27,13 @@ export const NewsletterAudiencesManager = ({ open, onClose, onChanged }: Props) 
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<NewsletterAudienceRow[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [members, setMembers] = useState<{ id: string; email: string }[]>([]);
+  const [members, setMembers] = useState<{ id: string; email: string; first_name: string | null; full_name: string | null }[]>([]);
   const [newName, setNewName] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [emailsText, setEmailsText] = useState("");
   const [adding, setAdding] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchRows = useCallback(async () => {
     setLoading(true);
