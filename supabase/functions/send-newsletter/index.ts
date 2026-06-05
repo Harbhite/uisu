@@ -8,6 +8,10 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+interface RecipientNames {
+  first_name?: string | null;
+  full_name?: string | null;
+}
 interface SendNewsletterRequest {
   campaignId?: string;
   subject: string;
@@ -19,29 +23,80 @@ interface SendNewsletterRequest {
   abEnabled?: boolean;
   abVariantA?: string;
   abVariantB?: string;
-  // NEW: display sender name (domain stays uisu.space)
   senderName?: string;
-  // NEW: audience targeting — saved audience id, or ad-hoc list of emails
   audienceId?: string;
   audienceEmails?: string[];
+  // NEW: preview mode — returns rendered HTML for a recipient without sending
+  previewOnly?: boolean;
+  previewEmail?: string;
+  previewFirstName?: string;
+  previewFullName?: string;
 }
 
 const SENDER_EMAIL = "newsletter@uisu.space";
 const DEFAULT_SENDER_NAME = "UISU Archive";
 const sanitizeSenderName = (name?: string): string => {
-  const cleaned = (name || "").replace(/[\r\n<>"]/g, "").trim();
+  const cleaned = (name || "").replace(/[\r\n<>"\\]/g, "").trim();
   return cleaned.length > 0 ? cleaned.slice(0, 80) : DEFAULT_SENDER_NAME;
 };
-const buildFromHeader = (name?: string) => `${sanitizeSenderName(name)} <${SENDER_EMAIL}>`;
+// RFC 5322 — always quote the display name to maximise client compatibility
+const buildFromHeader = (name?: string) => {
+  const display = sanitizeSenderName(name);
+  return `"${display}" <${SENDER_EMAIL}>`;
+};
+
+// Derive a friendly first name from an email local part as a soft fallback.
+const nameFromEmail = (email: string): string => {
+  const local = (email.split("@")[0] || "").split("+")[0];
+  const parts = local.split(/[._\-]+/).filter(Boolean);
+  const first = parts[0] || "";
+  if (!first || first.length < 3 || /\d/.test(first)) return "there";
+  if (["info", "admin", "hello", "contact", "support", "team", "no-reply", "noreply"].includes(first.toLowerCase())) return "there";
+  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+};
+
+const resolveFirstName = (email: string, names?: RecipientNames): string => {
+  const fn = (names?.first_name || "").trim();
+  if (fn) return fn;
+  const full = (names?.full_name || "").trim();
+  if (full) return full.split(/\s+/)[0];
+  return nameFromEmail(email);
+};
+
+const resolveFullName = (email: string, names?: RecipientNames): string => {
+  const full = (names?.full_name || "").trim();
+  if (full) return full;
+  const fn = (names?.first_name || "").trim();
+  if (fn) return fn;
+  return nameFromEmail(email);
+};
+
+// Apply personalization tokens to ANY string (subject, content, rendered HTML).
+const personalizeText = (text: string, email: string, names?: RecipientNames): string => {
+  if (!text) return text;
+  const firstName = resolveFirstName(email, names);
+  const fullName = resolveFullName(email, names);
+  const unsubUrl = `https://uisu.lovable.app/unsubscribe?email=${encodeURIComponent(email)}`;
+  return text
+    .replace(/\{\{\s*first_name\s*\}\}/gi, firstName)
+    .replace(/\{\{\s*firstname\s*\}\}/gi, firstName)
+    .replace(/\{\{\s*name\s*\}\}/gi, fullName)
+    .replace(/\{\{\s*full_name\s*\}\}/gi, fullName)
+    .replace(/\{\{\s*email\s*\}\}/gi, email)
+    .replace(/\{\{\s*unsubscribe_url\s*\}\}/gi, unsubUrl);
+};
 
 // Render a custom template shell by substituting tokens
-const renderCustomTemplate = (shell: string, content: string, subject: string, email: string): string => {
+const renderCustomTemplate = (shell: string, content: string, subject: string, email: string, names?: RecipientNames): string => {
   const unsubUrl = `https://uisu.lovable.app/unsubscribe?email=${encodeURIComponent(email)}`;
-  return shell
-    .replace(/\{\{\s*content\s*\}\}/g, content)
-    .replace(/\{\{\s*subject\s*\}\}/g, subject)
+  const personalizedContent = personalizeText(content, email, names);
+  const personalizedSubject = personalizeText(subject, email, names);
+  const rendered = shell
+    .replace(/\{\{\s*content\s*\}\}/g, personalizedContent)
+    .replace(/\{\{\s*subject\s*\}\}/g, personalizedSubject)
     .replace(/\{\{\s*email\s*\}\}/g, email)
     .replace(/\{\{\s*unsubscribe_url\s*\}\}/g, unsubUrl);
+  return personalizeText(rendered, email, names);
 };
 
 // Hosted gold fist logo URL
