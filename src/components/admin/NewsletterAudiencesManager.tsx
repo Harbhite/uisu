@@ -328,13 +328,36 @@ export const NewsletterAudiencesManager = ({ open, onClose, onChanged }: Props) 
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                    Add emails (comma, space or newline separated)
-                  </label>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                      Add recipients
+                    </label>
+                    <div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        onChange={handleFileImport}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={importing}
+                        className="flex items-center gap-2 px-3 py-1.5 border border-nobel-gold text-nobel-gold text-[11px] font-bold uppercase tracking-widest rounded hover:bg-nobel-gold hover:text-foreground transition disabled:opacity-50"
+                      >
+                        {importing ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileSpreadsheet size={12} />}
+                        {importing ? "Importing…" : "Import CSV / XLSX"}
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Paste emails (and optional names) below — one per line, or as <code>email, Full Name</code>. Or import a CSV/XLSX file with columns like <code>email</code>, <code>first_name</code>, <code>full_name</code>.
+                  </p>
                   <textarea
                     value={emailsText}
                     onChange={(e) => setEmailsText(e.target.value)}
-                    placeholder="alice@example.com, bob@example.com&#10;carol@example.com"
+                    placeholder={"alice@example.com, Alice Johnson\nbob@example.com\ncarol@example.com | Carol Smith"}
                     rows={4}
                     className="w-full px-3 py-2 text-sm bg-background border border-border rounded focus:border-nobel-gold focus:outline-none font-mono"
                   />
@@ -344,7 +367,7 @@ export const NewsletterAudiencesManager = ({ open, onClose, onChanged }: Props) 
                     className="flex items-center gap-2 px-4 py-2 bg-ui-blue text-white text-xs font-bold uppercase tracking-widest rounded hover:bg-nobel-gold hover:text-foreground transition disabled:opacity-50"
                   >
                     {adding ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus size={12} />}
-                    Add Emails
+                    Add Recipients
                   </button>
                 </div>
 
@@ -358,10 +381,17 @@ export const NewsletterAudiencesManager = ({ open, onClose, onChanged }: Props) 
                     )}
                     {members.map((m) => (
                       <div key={m.id} className="flex items-center justify-between px-3 py-2 hover:bg-muted/30">
-                        <span className="text-sm text-foreground">{m.email}</span>
+                        <div className="min-w-0">
+                          <p className="text-sm text-foreground truncate">{m.email}</p>
+                          {(m.first_name || m.full_name) && (
+                            <p className="text-[11px] text-muted-foreground truncate">
+                              {m.full_name || m.first_name}
+                            </p>
+                          )}
+                        </div>
                         <button
                           onClick={() => removeMember(m.id)}
-                          className="p-1 text-destructive hover:bg-destructive/10 rounded"
+                          className="p-1 text-destructive hover:bg-destructive/10 rounded shrink-0 ml-2"
                           title="Remove"
                         >
                           <X size={14} />
