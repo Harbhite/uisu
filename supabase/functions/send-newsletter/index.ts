@@ -1421,14 +1421,16 @@ const handler = async (req: Request): Promise<Response> => {
         }
 
         // Generate email with template (A/B custom shells not supported — only the primary path carries customTemplateHtml)
-        const baseHtml = generateNewsletterHtml(content, subject, emailTemplate, subscriber.email, abEnabled ? undefined : customTemplateHtml);
+        const names: RecipientNames = { first_name: subscriber.first_name, full_name: subscriber.full_name };
+        const baseHtml = generateNewsletterHtml(content, subject, emailTemplate, subscriber.email, abEnabled ? undefined : customTemplateHtml, names);
         // Add tracking pixel and wrap links
         const trackedHtml = addTrackingToHtml(baseHtml, activeCampaignId, subscriber.email);
-        
+        const personalizedSubject = personalizeText(subject, subscriber.email, names);
+
         await resend.emails.send({
           from: fromHeader,
           to: [subscriber.email],
-          subject,
+          subject: personalizedSubject,
           html: trackedHtml,
         });
         successCount++;
