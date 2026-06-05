@@ -2233,7 +2233,12 @@ const AdminDashboard = () => {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Content</label>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Content</label>
+                        <p className="text-[10px] text-muted-foreground">
+                          Tokens: <code className="text-nobel-gold">{`{{first_name}}`}</code> · <code className="text-nobel-gold">{`{{name}}`}</code> · <code className="text-nobel-gold">{`{{email}}`}</code> · <code className="text-nobel-gold">{`{{unsubscribe_url}}`}</code>
+                        </p>
+                      </div>
                       <NewsletterRichEditor
                         value={composeContent}
                         onChange={setComposeContent}
