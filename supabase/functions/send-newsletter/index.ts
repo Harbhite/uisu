@@ -1311,55 +1311,66 @@ const handler = async (req: Request): Promise<Response> => {
     // ---- Resolve recipient list (audience targeting) ----
     const normalizeEmail = (e: string) => (e || "").trim().toLowerCase();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    let recipientEmails: string[] = [];
+    type Recipient = { email: string; first_name?: string | null; full_name?: string | null };
+    let recipients: Recipient[] = [];
     let audienceLabel = "all active subscribers";
 
     if (Array.isArray(audienceEmails) && audienceEmails.length > 0) {
-      // Ad-hoc list pasted from the composer
-      recipientEmails = Array.from(new Set(audienceEmails.map(normalizeEmail).filter((e) => emailRegex.test(e))));
-      audienceLabel = `custom list (${recipientEmails.length} recipients)`;
+      const seen = new Set<string>();
+      for (const raw of audienceEmails) {
+        const e = normalizeEmail(raw);
+        if (emailRegex.test(e) && !seen.has(e)) { seen.add(e); recipients.push({ email: e }); }
+      }
+      audienceLabel = `custom list (${recipients.length} recipients)`;
     } else if (audienceId) {
       const { data: audience, error: audErr } = await supabase
         .from("newsletter_audiences")
         .select("id, name, type")
         .eq("id", audienceId)
         .single();
-      if (audErr || !audience) {
-        throw new Error("Selected audience not found");
-      }
+      if (audErr || !audience) throw new Error("Selected audience not found");
       audienceLabel = audience.name;
       if (audience.type === "all") {
         const { data: subs } = await supabase
           .from("newsletter_subscribers")
-          .select("email")
+          .select("email, first_name")
           .eq("is_active", true);
-        recipientEmails = (subs || []).map((s: any) => normalizeEmail(s.email)).filter((e) => emailRegex.test(e));
+        recipients = (subs || [])
+          .map((s: any) => ({ email: normalizeEmail(s.email), first_name: s.first_name }))
+          .filter((r) => emailRegex.test(r.email));
       } else {
-        // manual list
         const { data: members } = await supabase
           .from("newsletter_audience_members")
-          .select("email")
+          .select("email, first_name, full_name")
           .eq("audience_id", audienceId);
-        recipientEmails = Array.from(new Set((members || []).map((m: any) => normalizeEmail(m.email)).filter((e) => emailRegex.test(e))));
+        const seen = new Set<string>();
+        for (const m of members || []) {
+          const e = normalizeEmail((m as any).email);
+          if (emailRegex.test(e) && !seen.has(e)) {
+            seen.add(e);
+            recipients.push({ email: e, first_name: (m as any).first_name, full_name: (m as any).full_name });
+          }
+        }
       }
     } else {
-      // Default: all active subscribers
       const { data: subs, error: subError } = await supabase
         .from("newsletter_subscribers")
-        .select("email")
+        .select("email, first_name")
         .eq("is_active", true);
       if (subError) throw new Error("Failed to fetch subscribers");
-      recipientEmails = (subs || []).map((s: any) => normalizeEmail(s.email)).filter((e) => emailRegex.test(e));
+      recipients = (subs || [])
+        .map((s: any) => ({ email: normalizeEmail(s.email), first_name: s.first_name }))
+        .filter((r) => emailRegex.test(r.email));
     }
 
-    if (recipientEmails.length === 0) {
+    if (recipients.length === 0) {
       return new Response(
         JSON.stringify({ success: false, message: `No recipients found for ${audienceLabel}` }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    const subscribers = recipientEmails.map((email) => ({ email }));
+    const subscribers = recipients;
 
     // Create campaign record
     let activeCampaignId: string = campaignId || '';
