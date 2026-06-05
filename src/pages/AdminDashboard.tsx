@@ -219,6 +219,13 @@ const AdminDashboard = () => {
   const [adhocEmailsText, setAdhocEmailsText] = useState("");
   const [audiences, setAudiences] = useState<NewsletterAudienceRow[]>([]);
   const [showAudiencesManager, setShowAudiencesManager] = useState(false);
+  // Recipient-preview state
+  const [recipientPreviewEmail, setRecipientPreviewEmail] = useState("");
+  const [recipientPreviewOptions, setRecipientPreviewOptions] = useState<{ email: string; first_name: string | null; full_name: string | null }[]>([]);
+  const [recipientPreviewHtml, setRecipientPreviewHtml] = useState<string>("");
+  const [recipientPreviewMeta, setRecipientPreviewMeta] = useState<{ from?: string; first?: string; full?: string } | null>(null);
+  const [recipientPreviewLoading, setRecipientPreviewLoading] = useState(false);
+  const [showRecipientPreview, setShowRecipientPreview] = useState(false);
   // Audit log filters
   const [auditSearchQuery, setAuditSearchQuery] = useState("");
   const [auditActionFilter, setAuditActionFilter] = useState<string>("all");
