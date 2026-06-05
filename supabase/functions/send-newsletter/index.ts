@@ -8,6 +8,10 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+interface RecipientNames {
+  first_name?: string | null;
+  full_name?: string | null;
+}
 interface SendNewsletterRequest {
   campaignId?: string;
   subject: string;
@@ -19,29 +23,80 @@ interface SendNewsletterRequest {
   abEnabled?: boolean;
   abVariantA?: string;
   abVariantB?: string;
-  // NEW: display sender name (domain stays uisu.space)
   senderName?: string;
-  // NEW: audience targeting — saved audience id, or ad-hoc list of emails
   audienceId?: string;
   audienceEmails?: string[];
+  // NEW: preview mode — returns rendered HTML for a recipient without sending
+  previewOnly?: boolean;
+  previewEmail?: string;
+  previewFirstName?: string;
+  previewFullName?: string;
 }
 
 const SENDER_EMAIL = "newsletter@uisu.space";
 const DEFAULT_SENDER_NAME = "UISU Archive";
 const sanitizeSenderName = (name?: string): string => {
-  const cleaned = (name || "").replace(/[\r\n<>"]/g, "").trim();
+  const cleaned = (name || "").replace(/[\r\n<>"\\]/g, "").trim();
   return cleaned.length > 0 ? cleaned.slice(0, 80) : DEFAULT_SENDER_NAME;
 };
-const buildFromHeader = (name?: string) => `${sanitizeSenderName(name)} <${SENDER_EMAIL}>`;
+// RFC 5322 — always quote the display name to maximise client compatibility
+const buildFromHeader = (name?: string) => {
+  const display = sanitizeSenderName(name);
+  return `"${display}" <${SENDER_EMAIL}>`;
+};
+
+// Derive a friendly first name from an email local part as a soft fallback.
+const nameFromEmail = (email: string): string => {
+  const local = (email.split("@")[0] || "").split("+")[0];
+  const parts = local.split(/[._\-]+/).filter(Boolean);
+  const first = parts[0] || "";
+  if (!first || first.length < 3 || /\d/.test(first)) return "there";
+  if (["info", "admin", "hello", "contact", "support", "team", "no-reply", "noreply"].includes(first.toLowerCase())) return "there";
+  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+};
+
+const resolveFirstName = (email: string, names?: RecipientNames): string => {
+  const fn = (names?.first_name || "").trim();
+  if (fn) return fn;
+  const full = (names?.full_name || "").trim();
+  if (full) return full.split(/\s+/)[0];
+  return nameFromEmail(email);
+};
+
+const resolveFullName = (email: string, names?: RecipientNames): string => {
+  const full = (names?.full_name || "").trim();
+  if (full) return full;
+  const fn = (names?.first_name || "").trim();
+  if (fn) return fn;
+  return nameFromEmail(email);
+};
+
+// Apply personalization tokens to ANY string (subject, content, rendered HTML).
+const personalizeText = (text: string, email: string, names?: RecipientNames): string => {
+  if (!text) return text;
+  const firstName = resolveFirstName(email, names);
+  const fullName = resolveFullName(email, names);
+  const unsubUrl = `https://uisu.lovable.app/unsubscribe?email=${encodeURIComponent(email)}`;
+  return text
+    .replace(/\{\{\s*first_name\s*\}\}/gi, firstName)
+    .replace(/\{\{\s*firstname\s*\}\}/gi, firstName)
+    .replace(/\{\{\s*name\s*\}\}/gi, fullName)
+    .replace(/\{\{\s*full_name\s*\}\}/gi, fullName)
+    .replace(/\{\{\s*email\s*\}\}/gi, email)
+    .replace(/\{\{\s*unsubscribe_url\s*\}\}/gi, unsubUrl);
+};
 
 // Render a custom template shell by substituting tokens
-const renderCustomTemplate = (shell: string, content: string, subject: string, email: string): string => {
+const renderCustomTemplate = (shell: string, content: string, subject: string, email: string, names?: RecipientNames): string => {
   const unsubUrl = `https://uisu.lovable.app/unsubscribe?email=${encodeURIComponent(email)}`;
-  return shell
-    .replace(/\{\{\s*content\s*\}\}/g, content)
-    .replace(/\{\{\s*subject\s*\}\}/g, subject)
+  const personalizedContent = personalizeText(content, email, names);
+  const personalizedSubject = personalizeText(subject, email, names);
+  const rendered = shell
+    .replace(/\{\{\s*content\s*\}\}/g, personalizedContent)
+    .replace(/\{\{\s*subject\s*\}\}/g, personalizedSubject)
     .replace(/\{\{\s*email\s*\}\}/g, email)
     .replace(/\{\{\s*unsubscribe_url\s*\}\}/g, unsubUrl);
+  return personalizeText(rendered, email, names);
 };
 
 // Hosted gold fist logo URL
@@ -1084,36 +1139,30 @@ const convertMarkdown = (content: string) => {
 };
 
 // Main template generator (without tracking pixel - added separately per campaign)
-const generateNewsletterHtml = (content: string, subject: string, template: string = 'classic', email: string = '', customShell?: string) => {
+const generateNewsletterHtml = (content: string, subject: string, template: string = 'classic', email: string = '', customShell?: string, names?: RecipientNames) => {
   // If a custom template shell is provided, render it directly (takes priority over named templates)
   if (customShell && customShell.trim().length > 0) {
-    return renderCustomTemplate(customShell, content, subject, email);
+    return renderCustomTemplate(customShell, content, subject, email, names);
   }
+  const personalizedContent = personalizeText(content, email, names);
+  const personalizedSubject = personalizeText(subject, email, names);
+  let rendered: string;
   switch (template) {
-    case 'minimal':
-      return generateMinimalTemplate(content, subject, email);
-    case 'announcement':
-      return generateAnnouncementTemplate(content, subject, email);
-    case 'newspaper':
-      return generateNewspaperTemplate(content, subject, email);
-    case 'longform':
-      return generateLongformTemplate(content, subject, email);
-    case 'telegram':
-      return generateTelegramTemplate(content, subject, email);
-    case 'artdeco':
-      return generateArtDecoTemplate(content, subject, email);
-    case 'blueprint':
-      return generateBlueprintTemplate(content, subject, email);
-    case 'postbox':
-      return generatePostboxTemplate(content, subject, email);
-    case 'friendly':
-      return generateFriendlyTemplate(content, subject, email);
-    case 'corporate':
-      return generateCorporateTemplate(content, subject, email);
+    case 'minimal': rendered = generateMinimalTemplate(personalizedContent, personalizedSubject, email); break;
+    case 'announcement': rendered = generateAnnouncementTemplate(personalizedContent, personalizedSubject, email); break;
+    case 'newspaper': rendered = generateNewspaperTemplate(personalizedContent, personalizedSubject, email); break;
+    case 'longform': rendered = generateLongformTemplate(personalizedContent, personalizedSubject, email); break;
+    case 'telegram': rendered = generateTelegramTemplate(personalizedContent, personalizedSubject, email); break;
+    case 'artdeco': rendered = generateArtDecoTemplate(personalizedContent, personalizedSubject, email); break;
+    case 'blueprint': rendered = generateBlueprintTemplate(personalizedContent, personalizedSubject, email); break;
+    case 'postbox': rendered = generatePostboxTemplate(personalizedContent, personalizedSubject, email); break;
+    case 'friendly': rendered = generateFriendlyTemplate(personalizedContent, personalizedSubject, email); break;
+    case 'corporate': rendered = generateCorporateTemplate(personalizedContent, personalizedSubject, email); break;
     case 'classic':
-    default:
-      return generateClassicTemplate(content, subject, email);
+    default: rendered = generateClassicTemplate(personalizedContent, personalizedSubject, email); break;
   }
+  // Catch any remaining tokens the template's static shell may contain
+  return personalizeText(rendered, email, names);
 };
 
 // Add tracking pixel and wrap links for a campaign
@@ -1151,7 +1200,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const resend = new Resend(resendApiKey);
 
-    const { campaignId, subject, content, template = 'classic', testEmail, scheduledAt, customTemplateHtml, abEnabled, abVariantA, abVariantB, senderName, audienceId, audienceEmails }: SendNewsletterRequest = await req.json();
+    const { campaignId, subject, content, template = 'classic', testEmail, scheduledAt, customTemplateHtml, abEnabled, abVariantA, abVariantB, senderName, audienceId, audienceEmails, previewOnly, previewEmail, previewFirstName, previewFullName }: SendNewsletterRequest = await req.json();
 
     if (!subject || !content) {
       throw new Error("Subject and content are required");
@@ -1159,15 +1208,55 @@ const handler = async (req: Request): Promise<Response> => {
 
     const fromHeader = buildFromHeader(senderName);
     const resolvedSenderName = sanitizeSenderName(senderName);
+    console.log(`[send-newsletter] from header: ${fromHeader}`);
+
+    // ---- Preview-only mode: render HTML for a chosen recipient and return it ----
+    if (previewOnly) {
+      const pEmail = (previewEmail || "preview@example.com").trim().toLowerCase();
+      let names: RecipientNames = { first_name: previewFirstName || null, full_name: previewFullName || null };
+      // Auto-fetch stored names if not provided
+      if (!names.first_name && !names.full_name) {
+        if (audienceId) {
+          const { data: m } = await supabase
+            .from("newsletter_audience_members")
+            .select("first_name, full_name")
+            .eq("audience_id", audienceId)
+            .eq("email", pEmail)
+            .maybeSingle();
+          if (m) names = { first_name: (m as any).first_name, full_name: (m as any).full_name };
+        }
+        if (!names.first_name && !names.full_name) {
+          const { data: s } = await supabase
+            .from("newsletter_subscribers")
+            .select("first_name")
+            .eq("email", pEmail)
+            .maybeSingle();
+          if (s) names.first_name = (s as any).first_name;
+        }
+      }
+      const html = generateNewsletterHtml(content, subject, template, pEmail, customTemplateHtml, names);
+      return new Response(
+        JSON.stringify({
+          success: true,
+          previewOnly: true,
+          html,
+          from: fromHeader,
+          resolvedFirstName: resolveFirstName(pEmail, names),
+          resolvedFullName: resolveFullName(pEmail, names),
+        }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     // If test email is provided, send only to that email (no tracking for tests)
     if (testEmail) {
       const htmlContent = generateNewsletterHtml(content, subject, template, testEmail, customTemplateHtml);
+      const personalizedTestSubject = personalizeText(subject, testEmail);
 
       await resend.emails.send({
         from: fromHeader,
         to: [testEmail],
-        subject: `[TEST] ${subject}`,
+        subject: `[TEST] ${personalizedTestSubject}`,
         html: htmlContent,
       });
 
@@ -1222,55 +1311,66 @@ const handler = async (req: Request): Promise<Response> => {
     // ---- Resolve recipient list (audience targeting) ----
     const normalizeEmail = (e: string) => (e || "").trim().toLowerCase();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    let recipientEmails: string[] = [];
+    type Recipient = { email: string; first_name?: string | null; full_name?: string | null };
+    let recipients: Recipient[] = [];
     let audienceLabel = "all active subscribers";
 
     if (Array.isArray(audienceEmails) && audienceEmails.length > 0) {
-      // Ad-hoc list pasted from the composer
-      recipientEmails = Array.from(new Set(audienceEmails.map(normalizeEmail).filter((e) => emailRegex.test(e))));
-      audienceLabel = `custom list (${recipientEmails.length} recipients)`;
+      const seen = new Set<string>();
+      for (const raw of audienceEmails) {
+        const e = normalizeEmail(raw);
+        if (emailRegex.test(e) && !seen.has(e)) { seen.add(e); recipients.push({ email: e }); }
+      }
+      audienceLabel = `custom list (${recipients.length} recipients)`;
     } else if (audienceId) {
       const { data: audience, error: audErr } = await supabase
         .from("newsletter_audiences")
         .select("id, name, type")
         .eq("id", audienceId)
         .single();
-      if (audErr || !audience) {
-        throw new Error("Selected audience not found");
-      }
+      if (audErr || !audience) throw new Error("Selected audience not found");
       audienceLabel = audience.name;
       if (audience.type === "all") {
         const { data: subs } = await supabase
           .from("newsletter_subscribers")
-          .select("email")
+          .select("email, first_name")
           .eq("is_active", true);
-        recipientEmails = (subs || []).map((s: any) => normalizeEmail(s.email)).filter((e) => emailRegex.test(e));
+        recipients = (subs || [])
+          .map((s: any) => ({ email: normalizeEmail(s.email), first_name: s.first_name }))
+          .filter((r) => emailRegex.test(r.email));
       } else {
-        // manual list
         const { data: members } = await supabase
           .from("newsletter_audience_members")
-          .select("email")
+          .select("email, first_name, full_name")
           .eq("audience_id", audienceId);
-        recipientEmails = Array.from(new Set((members || []).map((m: any) => normalizeEmail(m.email)).filter((e) => emailRegex.test(e))));
+        const seen = new Set<string>();
+        for (const m of members || []) {
+          const e = normalizeEmail((m as any).email);
+          if (emailRegex.test(e) && !seen.has(e)) {
+            seen.add(e);
+            recipients.push({ email: e, first_name: (m as any).first_name, full_name: (m as any).full_name });
+          }
+        }
       }
     } else {
-      // Default: all active subscribers
       const { data: subs, error: subError } = await supabase
         .from("newsletter_subscribers")
-        .select("email")
+        .select("email, first_name")
         .eq("is_active", true);
       if (subError) throw new Error("Failed to fetch subscribers");
-      recipientEmails = (subs || []).map((s: any) => normalizeEmail(s.email)).filter((e) => emailRegex.test(e));
+      recipients = (subs || [])
+        .map((s: any) => ({ email: normalizeEmail(s.email), first_name: s.first_name }))
+        .filter((r) => emailRegex.test(r.email));
     }
 
-    if (recipientEmails.length === 0) {
+    if (recipients.length === 0) {
       return new Response(
         JSON.stringify({ success: false, message: `No recipients found for ${audienceLabel}` }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    const subscribers = recipientEmails.map((email) => ({ email }));
+    const subscribers = recipients;
 
     // Create campaign record
     let activeCampaignId: string = campaignId || '';
@@ -1321,14 +1421,16 @@ const handler = async (req: Request): Promise<Response> => {
         }
 
         // Generate email with template (A/B custom shells not supported — only the primary path carries customTemplateHtml)
-        const baseHtml = generateNewsletterHtml(content, subject, emailTemplate, subscriber.email, abEnabled ? undefined : customTemplateHtml);
+        const names: RecipientNames = { first_name: subscriber.first_name, full_name: subscriber.full_name };
+        const baseHtml = generateNewsletterHtml(content, subject, emailTemplate, subscriber.email, abEnabled ? undefined : customTemplateHtml, names);
         // Add tracking pixel and wrap links
         const trackedHtml = addTrackingToHtml(baseHtml, activeCampaignId, subscriber.email);
-        
+        const personalizedSubject = personalizeText(subject, subscriber.email, names);
+
         await resend.emails.send({
           from: fromHeader,
           to: [subscriber.email],
-          subject,
+          subject: personalizedSubject,
           html: trackedHtml,
         });
         successCount++;

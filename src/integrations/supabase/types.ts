@@ -2126,18 +2126,24 @@ export type Database = {
           audience_id: string
           created_at: string
           email: string
+          first_name: string | null
+          full_name: string | null
           id: string
         }
         Insert: {
           audience_id: string
           created_at?: string
           email: string
+          first_name?: string | null
+          full_name?: string | null
           id?: string
         }
         Update: {
           audience_id?: string
           created_at?: string
           email?: string
+          first_name?: string | null
+          full_name?: string | null
           id?: string
         }
         Relationships: [
@@ -2286,6 +2292,7 @@ export type Database = {
         Row: {
           email: string
           faculty: string | null
+          first_name: string | null
           hall: string | null
           id: string
           is_active: boolean
@@ -2296,6 +2303,7 @@ export type Database = {
         Insert: {
           email: string
           faculty?: string | null
+          first_name?: string | null
           hall?: string | null
           id?: string
           is_active?: boolean
@@ -2306,6 +2314,7 @@ export type Database = {
         Update: {
           email?: string
           faculty?: string | null
+          first_name?: string | null
           hall?: string | null
           id?: string
           is_active?: boolean

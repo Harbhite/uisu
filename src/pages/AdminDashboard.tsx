@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { TableSkeleton } from '@/components/skeletons/GenericSkeletons';
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -219,6 +219,13 @@ const AdminDashboard = () => {
   const [adhocEmailsText, setAdhocEmailsText] = useState("");
   const [audiences, setAudiences] = useState<NewsletterAudienceRow[]>([]);
   const [showAudiencesManager, setShowAudiencesManager] = useState(false);
+  // Recipient-preview state
+  const [recipientPreviewEmail, setRecipientPreviewEmail] = useState("");
+  const [recipientPreviewOptions, setRecipientPreviewOptions] = useState<{ email: string; first_name: string | null; full_name: string | null }[]>([]);
+  const [recipientPreviewHtml, setRecipientPreviewHtml] = useState<string>("");
+  const [recipientPreviewMeta, setRecipientPreviewMeta] = useState<{ from?: string; first?: string; full?: string } | null>(null);
+  const [recipientPreviewLoading, setRecipientPreviewLoading] = useState(false);
+  const [showRecipientPreview, setShowRecipientPreview] = useState(false);
   // Audit log filters
   const [auditSearchQuery, setAuditSearchQuery] = useState("");
   const [auditActionFilter, setAuditActionFilter] = useState<string>("all");
@@ -1170,6 +1177,87 @@ const AdminDashboard = () => {
     }
     return newsletterSubscribers.filter((s) => s.is_active).length;
   };
+
+  // Load recipient options for the per-recipient preview, based on chosen audience
+  const loadRecipientPreviewOptions = useCallback(async () => {
+    try {
+      if (audienceMode === "saved" && selectedAudienceId) {
+        const aud = audiences.find((a) => a.id === selectedAudienceId);
+        if (aud?.type === "all") {
+          const { data } = await supabase
+            .from("newsletter_subscribers")
+            .select("email, first_name")
+            .eq("is_active", true)
+            .limit(500);
+          setRecipientPreviewOptions((data || []).map((s: any) => ({ email: s.email, first_name: s.first_name, full_name: null })));
+        } else {
+          const { data } = await supabase
+            .from("newsletter_audience_members" as any)
+            .select("email, first_name, full_name")
+            .eq("audience_id", selectedAudienceId)
+            .limit(500);
+          setRecipientPreviewOptions(((data || []) as any[]).map((m: any) => ({ email: m.email, first_name: m.first_name, full_name: m.full_name })));
+        }
+      } else if (audienceMode === "adhoc") {
+        const emails = getAudiencePayload().audienceEmails || [];
+        setRecipientPreviewOptions(emails.map((e) => ({ email: e, first_name: null, full_name: null })));
+      } else {
+        const { data } = await supabase
+          .from("newsletter_subscribers")
+          .select("email, first_name")
+          .eq("is_active", true)
+          .limit(500);
+        setRecipientPreviewOptions((data || []).map((s: any) => ({ email: s.email, first_name: s.first_name, full_name: null })));
+      }
+    } catch (err) {
+      console.error("Failed to load preview options", err);
+    }
+  }, [audienceMode, selectedAudienceId, audiences, adhocEmailsText]);
+
+  useEffect(() => {
+    if (showRecipientPreview) loadRecipientPreviewOptions();
+  }, [showRecipientPreview, loadRecipientPreviewOptions]);
+
+  const runRecipientPreview = async () => {
+    if (!composeSubject.trim() || !composeContent.trim()) {
+      toast({ title: "Add a subject and content first", variant: "destructive" });
+      return;
+    }
+    const picked = recipientPreviewOptions.find((r) => r.email === recipientPreviewEmail);
+    if (!picked) {
+      toast({ title: "Choose a recipient to preview", variant: "destructive" });
+      return;
+    }
+    setRecipientPreviewLoading(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      const response = await supabase.functions.invoke("send-newsletter", {
+        body: {
+          subject: composeSubject.trim(),
+          content: composeContent.trim(),
+          template: selectedTemplate,
+          customTemplateHtml: getCustomShell(),
+          senderName: senderName.trim() || undefined,
+          previewOnly: true,
+          previewEmail: picked.email,
+          previewFirstName: picked.first_name || undefined,
+          previewFullName: picked.full_name || undefined,
+          audienceId: audienceMode === "saved" ? selectedAudienceId : undefined,
+        },
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (response.error) throw new Error(response.error.message || "Preview failed");
+      const data = response.data as any;
+      setRecipientPreviewHtml(data.html || "");
+      setRecipientPreviewMeta({ from: data.from, first: data.resolvedFirstName, full: data.resolvedFullName });
+    } catch (err: any) {
+      toast({ title: "Preview failed", description: err.message, variant: "destructive" });
+    } finally {
+      setRecipientPreviewLoading(false);
+    }
+  };
+
 
   const sendNewsletter = async (scheduled = false) => {
     if (!composeSubject.trim() || !composeContent.trim()) {
@@ -2145,7 +2233,12 @@ const AdminDashboard = () => {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Content</label>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Content</label>
+                        <p className="text-[10px] text-muted-foreground">
+                          Tokens: <code className="text-nobel-gold">{`{{first_name}}`}</code> · <code className="text-nobel-gold">{`{{name}}`}</code> · <code className="text-nobel-gold">{`{{email}}`}</code> · <code className="text-nobel-gold">{`{{unsubscribe_url}}`}</code>
+                        </p>
+                      </div>
                       <NewsletterRichEditor
                         value={composeContent}
                         onChange={setComposeContent}
@@ -2312,6 +2405,69 @@ const AdminDashboard = () => {
                           {sendingTest ? "Sending..." : "Send Test"}
                         </button>
                       </div>
+                    </div>
+
+                    {/* Preview as a real recipient (personalization preview) */}
+                    <div className="border border-border rounded-lg p-4 bg-muted/30">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                          Preview as a recipient
+                        </p>
+                        <button
+                          onClick={() => setShowRecipientPreview((s) => !s)}
+                          className="flex items-center gap-2 text-xs text-ui-blue hover:text-nobel-gold transition-colors"
+                        >
+                          <Eye size={14} />
+                          {showRecipientPreview ? "Hide" : "Show"}
+                        </button>
+                      </div>
+                      {showRecipientPreview && (
+                        <div className="space-y-3">
+                          <p className="text-[11px] text-muted-foreground">
+                            Pick someone from the selected audience to see exactly how the email will render for them — including personalization tokens like <code>{`{{first_name}}`}</code> and <code>{`{{name}}`}</code>.
+                          </p>
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <select
+                              value={recipientPreviewEmail}
+                              onChange={(e) => setRecipientPreviewEmail(e.target.value)}
+                              className="flex-1 px-3 py-2.5 bg-background border border-border focus:border-nobel-gold focus:outline-none text-sm"
+                            >
+                              <option value="">
+                                {recipientPreviewOptions.length === 0
+                                  ? "No recipients available — pick an audience first"
+                                  : `Choose recipient (${recipientPreviewOptions.length} available)…`}
+                              </option>
+                              {recipientPreviewOptions.slice(0, 200).map((r) => (
+                                <option key={r.email} value={r.email}>
+                                  {r.full_name || r.first_name ? `${r.full_name || r.first_name} — ${r.email}` : r.email}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              onClick={runRecipientPreview}
+                              disabled={recipientPreviewLoading || !recipientPreviewEmail}
+                              className="flex items-center justify-center gap-2 px-4 py-2.5 border border-ui-blue text-ui-blue text-xs font-bold uppercase tracking-widest hover:bg-ui-blue hover:text-white transition-all disabled:opacity-50 whitespace-nowrap"
+                            >
+                              {recipientPreviewLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Eye size={12} />}
+                              Render Preview
+                            </button>
+                          </div>
+                          {recipientPreviewMeta && (
+                            <div className="text-[11px] text-muted-foreground space-y-1 border-l-2 border-nobel-gold pl-3">
+                              <p><strong>From:</strong> {recipientPreviewMeta.from}</p>
+                              <p><strong>Greeting resolves to:</strong> {recipientPreviewMeta.first} <span className="text-muted-foreground/60">(full: {recipientPreviewMeta.full})</span></p>
+                            </div>
+                          )}
+                          {recipientPreviewHtml && (
+                            <iframe
+                              title="Recipient preview"
+                              srcDoc={recipientPreviewHtml}
+                              className="w-full h-[520px] border border-border rounded bg-white"
+                              sandbox=""
+                            />
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2 border-t border-border">
