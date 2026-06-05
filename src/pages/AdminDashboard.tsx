@@ -1178,6 +1178,87 @@ const AdminDashboard = () => {
     return newsletterSubscribers.filter((s) => s.is_active).length;
   };
 
+  // Load recipient options for the per-recipient preview, based on chosen audience
+  const loadRecipientPreviewOptions = useCallback(async () => {
+    try {
+      if (audienceMode === "saved" && selectedAudienceId) {
+        const aud = audiences.find((a) => a.id === selectedAudienceId);
+        if (aud?.type === "all") {
+          const { data } = await supabase
+            .from("newsletter_subscribers")
+            .select("email, first_name")
+            .eq("is_active", true)
+            .limit(500);
+          setRecipientPreviewOptions((data || []).map((s: any) => ({ email: s.email, first_name: s.first_name, full_name: null })));
+        } else {
+          const { data } = await supabase
+            .from("newsletter_audience_members" as any)
+            .select("email, first_name, full_name")
+            .eq("audience_id", selectedAudienceId)
+            .limit(500);
+          setRecipientPreviewOptions(((data || []) as any[]).map((m: any) => ({ email: m.email, first_name: m.first_name, full_name: m.full_name })));
+        }
+      } else if (audienceMode === "adhoc") {
+        const emails = getAudiencePayload().audienceEmails || [];
+        setRecipientPreviewOptions(emails.map((e) => ({ email: e, first_name: null, full_name: null })));
+      } else {
+        const { data } = await supabase
+          .from("newsletter_subscribers")
+          .select("email, first_name")
+          .eq("is_active", true)
+          .limit(500);
+        setRecipientPreviewOptions((data || []).map((s: any) => ({ email: s.email, first_name: s.first_name, full_name: null })));
+      }
+    } catch (err) {
+      console.error("Failed to load preview options", err);
+    }
+  }, [audienceMode, selectedAudienceId, audiences, adhocEmailsText]);
+
+  useEffect(() => {
+    if (showRecipientPreview) loadRecipientPreviewOptions();
+  }, [showRecipientPreview, loadRecipientPreviewOptions]);
+
+  const runRecipientPreview = async () => {
+    if (!composeSubject.trim() || !composeContent.trim()) {
+      toast({ title: "Add a subject and content first", variant: "destructive" });
+      return;
+    }
+    const picked = recipientPreviewOptions.find((r) => r.email === recipientPreviewEmail);
+    if (!picked) {
+      toast({ title: "Choose a recipient to preview", variant: "destructive" });
+      return;
+    }
+    setRecipientPreviewLoading(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      const response = await supabase.functions.invoke("send-newsletter", {
+        body: {
+          subject: composeSubject.trim(),
+          content: composeContent.trim(),
+          template: selectedTemplate,
+          customTemplateHtml: getCustomShell(),
+          senderName: senderName.trim() || undefined,
+          previewOnly: true,
+          previewEmail: picked.email,
+          previewFirstName: picked.first_name || undefined,
+          previewFullName: picked.full_name || undefined,
+          audienceId: audienceMode === "saved" ? selectedAudienceId : undefined,
+        },
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (response.error) throw new Error(response.error.message || "Preview failed");
+      const data = response.data as any;
+      setRecipientPreviewHtml(data.html || "");
+      setRecipientPreviewMeta({ from: data.from, first: data.resolvedFirstName, full: data.resolvedFullName });
+    } catch (err: any) {
+      toast({ title: "Preview failed", description: err.message, variant: "destructive" });
+    } finally {
+      setRecipientPreviewLoading(false);
+    }
+  };
+
+
   const sendNewsletter = async (scheduled = false) => {
     if (!composeSubject.trim() || !composeContent.trim()) {
       toast({
