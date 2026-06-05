@@ -1139,36 +1139,30 @@ const convertMarkdown = (content: string) => {
 };
 
 // Main template generator (without tracking pixel - added separately per campaign)
-const generateNewsletterHtml = (content: string, subject: string, template: string = 'classic', email: string = '', customShell?: string) => {
+const generateNewsletterHtml = (content: string, subject: string, template: string = 'classic', email: string = '', customShell?: string, names?: RecipientNames) => {
   // If a custom template shell is provided, render it directly (takes priority over named templates)
   if (customShell && customShell.trim().length > 0) {
-    return renderCustomTemplate(customShell, content, subject, email);
+    return renderCustomTemplate(customShell, content, subject, email, names);
   }
+  const personalizedContent = personalizeText(content, email, names);
+  const personalizedSubject = personalizeText(subject, email, names);
+  let rendered: string;
   switch (template) {
-    case 'minimal':
-      return generateMinimalTemplate(content, subject, email);
-    case 'announcement':
-      return generateAnnouncementTemplate(content, subject, email);
-    case 'newspaper':
-      return generateNewspaperTemplate(content, subject, email);
-    case 'longform':
-      return generateLongformTemplate(content, subject, email);
-    case 'telegram':
-      return generateTelegramTemplate(content, subject, email);
-    case 'artdeco':
-      return generateArtDecoTemplate(content, subject, email);
-    case 'blueprint':
-      return generateBlueprintTemplate(content, subject, email);
-    case 'postbox':
-      return generatePostboxTemplate(content, subject, email);
-    case 'friendly':
-      return generateFriendlyTemplate(content, subject, email);
-    case 'corporate':
-      return generateCorporateTemplate(content, subject, email);
+    case 'minimal': rendered = generateMinimalTemplate(personalizedContent, personalizedSubject, email); break;
+    case 'announcement': rendered = generateAnnouncementTemplate(personalizedContent, personalizedSubject, email); break;
+    case 'newspaper': rendered = generateNewspaperTemplate(personalizedContent, personalizedSubject, email); break;
+    case 'longform': rendered = generateLongformTemplate(personalizedContent, personalizedSubject, email); break;
+    case 'telegram': rendered = generateTelegramTemplate(personalizedContent, personalizedSubject, email); break;
+    case 'artdeco': rendered = generateArtDecoTemplate(personalizedContent, personalizedSubject, email); break;
+    case 'blueprint': rendered = generateBlueprintTemplate(personalizedContent, personalizedSubject, email); break;
+    case 'postbox': rendered = generatePostboxTemplate(personalizedContent, personalizedSubject, email); break;
+    case 'friendly': rendered = generateFriendlyTemplate(personalizedContent, personalizedSubject, email); break;
+    case 'corporate': rendered = generateCorporateTemplate(personalizedContent, personalizedSubject, email); break;
     case 'classic':
-    default:
-      return generateClassicTemplate(content, subject, email);
+    default: rendered = generateClassicTemplate(personalizedContent, personalizedSubject, email); break;
   }
+  // Catch any remaining tokens the template's static shell may contain
+  return personalizeText(rendered, email, names);
 };
 
 // Add tracking pixel and wrap links for a campaign
