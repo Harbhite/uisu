@@ -1200,7 +1200,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const resend = new Resend(resendApiKey);
 
-    const { campaignId, subject, content, template = 'classic', testEmail, scheduledAt, customTemplateHtml, abEnabled, abVariantA, abVariantB, senderName, audienceId, audienceEmails }: SendNewsletterRequest = await req.json();
+    const { campaignId, subject, content, template = 'classic', testEmail, scheduledAt, customTemplateHtml, abEnabled, abVariantA, abVariantB, senderName, audienceId, audienceEmails, previewOnly, previewEmail, previewFirstName, previewFullName }: SendNewsletterRequest = await req.json();
 
     if (!subject || !content) {
       throw new Error("Subject and content are required");
@@ -1208,15 +1208,55 @@ const handler = async (req: Request): Promise<Response> => {
 
     const fromHeader = buildFromHeader(senderName);
     const resolvedSenderName = sanitizeSenderName(senderName);
+    console.log(`[send-newsletter] from header: ${fromHeader}`);
+
+    // ---- Preview-only mode: render HTML for a chosen recipient and return it ----
+    if (previewOnly) {
+      const pEmail = (previewEmail || "preview@example.com").trim().toLowerCase();
+      let names: RecipientNames = { first_name: previewFirstName || null, full_name: previewFullName || null };
+      // Auto-fetch stored names if not provided
+      if (!names.first_name && !names.full_name) {
+        if (audienceId) {
+          const { data: m } = await supabase
+            .from("newsletter_audience_members")
+            .select("first_name, full_name")
+            .eq("audience_id", audienceId)
+            .eq("email", pEmail)
+            .maybeSingle();
+          if (m) names = { first_name: (m as any).first_name, full_name: (m as any).full_name };
+        }
+        if (!names.first_name && !names.full_name) {
+          const { data: s } = await supabase
+            .from("newsletter_subscribers")
+            .select("first_name")
+            .eq("email", pEmail)
+            .maybeSingle();
+          if (s) names.first_name = (s as any).first_name;
+        }
+      }
+      const html = generateNewsletterHtml(content, subject, template, pEmail, customTemplateHtml, names);
+      return new Response(
+        JSON.stringify({
+          success: true,
+          previewOnly: true,
+          html,
+          from: fromHeader,
+          resolvedFirstName: resolveFirstName(pEmail, names),
+          resolvedFullName: resolveFullName(pEmail, names),
+        }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     // If test email is provided, send only to that email (no tracking for tests)
     if (testEmail) {
       const htmlContent = generateNewsletterHtml(content, subject, template, testEmail, customTemplateHtml);
+      const personalizedTestSubject = personalizeText(subject, testEmail);
 
       await resend.emails.send({
         from: fromHeader,
         to: [testEmail],
-        subject: `[TEST] ${subject}`,
+        subject: `[TEST] ${personalizedTestSubject}`,
         html: htmlContent,
       });
 
