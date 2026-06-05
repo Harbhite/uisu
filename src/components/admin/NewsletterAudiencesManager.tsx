@@ -55,7 +55,7 @@ export const NewsletterAudiencesManager = ({ open, onClose, onChanged }: Props) 
   const fetchMembers = useCallback(async (audienceId: string) => {
     const { data, error } = await supabase
       .from("newsletter_audience_members" as any)
-      .select("id, email")
+      .select("id, email, first_name, full_name")
       .eq("audience_id", audienceId)
       .order("created_at", { ascending: false });
     if (error) {
