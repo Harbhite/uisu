@@ -2538,6 +2538,14 @@ const AdminDashboard = () => {
                                 {Math.round(((campaign.unique_opens || 0) / campaign.successful_count) * 100)}% open rate
                               </span>
                             )}
+                            <button
+                              type="button"
+                              onClick={() => setHistoryCampaign({ id: campaign.id, subject: campaign.subject })}
+                              title="View send history & per-recipient errors"
+                              className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 border border-border hover:border-nobel-gold hover:text-nobel-gold text-muted-foreground rounded-full transition-colors"
+                            >
+                              History
+                            </button>
                             <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${
                               campaign.status === 'sent' 
                                 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
@@ -2548,6 +2556,7 @@ const AdminDashboard = () => {
                               {campaign.status}
                             </span>
                           </div>
+
                         </div>
                       ))}
                     </div>
