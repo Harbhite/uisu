@@ -404,19 +404,29 @@ export const NewsletterTemplatesManager = ({ open, onClose, onChanged }: Props) 
               </div>
 
               {/* Token insertion toolbar */}
-              <div className="flex flex-wrap items-center gap-2 p-2 border border-border bg-muted/20 rounded">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mr-1">Insert Token:</span>
-                {KNOWN_TOKENS.map((tok) => (
-                  <button
-                    key={tok}
-                    type="button"
-                    onClick={() => insertTokenAtCursor(tok)}
-                    className="px-2 py-1 text-[10px] font-mono bg-background border border-border hover:border-accent hover:text-accent rounded"
-                  >
-                    {tok}
-                  </button>
+              <div className="space-y-2 p-3 border border-border bg-muted/20 rounded">
+                {([
+                  { label: "Shell", tokens: SHELL_TOKENS as readonly string[] },
+                  { label: "Recipient", tokens: RECIPIENT_TOKENS as readonly string[] },
+                  { label: "Template / Clock", tokens: TEMPLATE_TOKENS as readonly string[] },
+                ]).map((group) => (
+                  <div key={group.label} className="flex flex-wrap items-center gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground w-24 shrink-0">{group.label}:</span>
+                    {group.tokens.map((tok) => (
+                      <button
+                        key={tok}
+                        type="button"
+                        onClick={() => insertTokenAtCursor(tok)}
+                        title={`Insert ${tok}`}
+                        className="px-2 py-1 text-[10px] font-mono bg-background border border-border hover:border-accent hover:text-accent rounded"
+                      >
+                        {tok}
+                      </button>
+                    ))}
+                  </div>
                 ))}
               </div>
+
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">HTML Shell</label>
