@@ -23,6 +23,7 @@ import { ABTestingSection } from "@/components/admin/ABTestingSection";
 import { NewsletterRichEditor } from "@/components/admin/NewsletterRichEditor";
 import { NewsletterTemplatesManager, type NewsletterTemplateRow } from "@/components/admin/NewsletterTemplatesManager";
 import { NewsletterAudiencesManager, type NewsletterAudienceRow } from "@/components/admin/NewsletterAudiencesManager";
+import { CampaignSendHistory } from "@/components/admin/CampaignSendHistory";
 import { AdminAnalytics } from "@/components/admin/AdminAnalytics";
 import { AdminFeedback } from "@/components/admin/AdminFeedback";
 
@@ -226,6 +227,7 @@ const AdminDashboard = () => {
   const [recipientPreviewMeta, setRecipientPreviewMeta] = useState<{ from?: string; first?: string; full?: string } | null>(null);
   const [recipientPreviewLoading, setRecipientPreviewLoading] = useState(false);
   const [showRecipientPreview, setShowRecipientPreview] = useState(false);
+  const [historyCampaign, setHistoryCampaign] = useState<{ id: string; subject: string } | null>(null);
   // Audit log filters
   const [auditSearchQuery, setAuditSearchQuery] = useState("");
   const [auditActionFilter, setAuditActionFilter] = useState<string>("all");
@@ -2236,14 +2238,30 @@ const AdminDashboard = () => {
                       <div className="flex items-center justify-between mb-2">
                         <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Content</label>
                         <p className="text-[10px] text-muted-foreground">
-                          Tokens: <code className="text-nobel-gold">{`{{first_name}}`}</code> · <code className="text-nobel-gold">{`{{name}}`}</code> · <code className="text-nobel-gold">{`{{email}}`}</code> · <code className="text-nobel-gold">{`{{unsubscribe_url}}`}</code>
+                          Click any token below to insert it where your cursor is.
                         </p>
                       </div>
                       <NewsletterRichEditor
                         value={composeContent}
                         onChange={setComposeContent}
+                        tokens={[
+                          { label: "{{first_name}}", token: "{{first_name}}" },
+                          { label: "{{last_name}}", token: "{{last_name}}" },
+                          { label: "{{name}}", token: "{{name}}" },
+                          { label: "{{salutation}}", token: "{{salutation}}" },
+                          { label: "{{email}}", token: "{{email}}" },
+                          { label: "{{email_local}}", token: "{{email_local}}" },
+                          { label: "{{current_date}}", token: "{{current_date}}" },
+                          { label: "{{current_time}}", token: "{{current_time}}" },
+                          { label: "{{current_year}}", token: "{{current_year}}" },
+                          { label: "{{day_of_week}}", token: "{{day_of_week}}" },
+                          { label: "{{site_name}}", token: "{{site_name}}" },
+                          { label: "{{site_url}}", token: "{{site_url}}" },
+                          { label: "{{unsubscribe_url}}", token: "{{unsubscribe_url}}" },
+                        ]}
                       />
                     </div>
+
 
                     {/* Template Selector */}
                     <div>
@@ -2315,6 +2333,14 @@ const AdminDashboard = () => {
                       onClose={() => setShowAudiencesManager(false)}
                       onChanged={(rows) => setAudiences(rows)}
                     />
+
+                    {historyCampaign && (
+                      <CampaignSendHistory
+                        campaignId={historyCampaign.id}
+                        subject={historyCampaign.subject}
+                        onClose={() => setHistoryCampaign(null)}
+                      />
+                    )}
 
 
 
@@ -2522,6 +2548,14 @@ const AdminDashboard = () => {
                                 {Math.round(((campaign.unique_opens || 0) / campaign.successful_count) * 100)}% open rate
                               </span>
                             )}
+                            <button
+                              type="button"
+                              onClick={() => setHistoryCampaign({ id: campaign.id, subject: campaign.subject })}
+                              title="View send history & per-recipient errors"
+                              className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 border border-border hover:border-nobel-gold hover:text-nobel-gold text-muted-foreground rounded-full transition-colors"
+                            >
+                              History
+                            </button>
                             <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${
                               campaign.status === 'sent' 
                                 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
@@ -2532,6 +2566,7 @@ const AdminDashboard = () => {
                               {campaign.status}
                             </span>
                           </div>
+
                         </div>
                       ))}
                     </div>

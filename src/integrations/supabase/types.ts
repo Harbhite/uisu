@@ -2288,6 +2288,65 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_send_log: {
+        Row: {
+          audience_id: string | null
+          audience_label: string | null
+          audience_mode: string | null
+          campaign_id: string | null
+          created_at: string
+          errors: Json
+          failed_count: number
+          id: string
+          meta: Json
+          recipients_count: number
+          sender_name: string | null
+          sent_by: string | null
+          status: string
+          success_count: number
+        }
+        Insert: {
+          audience_id?: string | null
+          audience_label?: string | null
+          audience_mode?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          errors?: Json
+          failed_count?: number
+          id?: string
+          meta?: Json
+          recipients_count?: number
+          sender_name?: string | null
+          sent_by?: string | null
+          status?: string
+          success_count?: number
+        }
+        Update: {
+          audience_id?: string | null
+          audience_label?: string | null
+          audience_mode?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          errors?: Json
+          failed_count?: number
+          id?: string
+          meta?: Json
+          recipients_count?: number
+          sender_name?: string | null
+          sent_by?: string | null
+          status?: string
+          success_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_send_log_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       newsletter_subscribers: {
         Row: {
           email: string

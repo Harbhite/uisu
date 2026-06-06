@@ -17,6 +17,7 @@ import { toast } from "sonner";
 interface NewsletterRichEditorProps {
   value: string;
   onChange: (html: string) => void;
+  tokens?: { label: string; token: string }[];
 }
 
 const ToolbarButton = ({
@@ -75,7 +76,7 @@ const EMOJI_LIST = [
   "📌", "⭐", "🎉", "🗳️", "📝", "🔔", "💼", "🌟",
 ];
 
-export const NewsletterRichEditor = ({ value, onChange }: NewsletterRichEditorProps) => {
+export const NewsletterRichEditor = ({ value, onChange, tokens }: NewsletterRichEditorProps) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [wordCount, setWordCount] = useState(0);
@@ -590,6 +591,30 @@ export const NewsletterRichEditor = ({ value, onChange }: NewsletterRichEditorPr
           <RemoveFormatting size={14} />
         </ToolbarButton>
       </div>
+
+      {/* Tokens row */}
+      {tokens && tokens.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 px-2 py-1.5 bg-muted/20 border-b border-border">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mr-1">
+            Insert Token:
+          </span>
+          {tokens.map((t) => (
+            <button
+              key={t.token}
+              type="button"
+              title={`Insert ${t.token}`}
+              onClick={() => {
+                editorRef.current?.focus();
+                exec("insertText", t.token);
+              }}
+              className="px-2 py-0.5 text-[10px] font-mono bg-background border border-border text-muted-foreground hover:border-nobel-gold hover:text-nobel-gold rounded transition-colors"
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
+
 
       {/* Editor area */}
       <div
