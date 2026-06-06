@@ -17,6 +17,7 @@ import { toast } from "sonner";
 interface NewsletterRichEditorProps {
   value: string;
   onChange: (html: string) => void;
+  tokens?: { label: string; token: string }[];
 }
 
 const ToolbarButton = ({
