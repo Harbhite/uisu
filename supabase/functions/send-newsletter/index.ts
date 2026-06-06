@@ -63,6 +63,15 @@ const resolveFirstName = (email: string, names?: RecipientNames): string => {
   return nameFromEmail(email);
 };
 
+const resolveLastName = (email: string, names?: RecipientNames): string => {
+  const full = (names?.full_name || "").trim();
+  if (full) {
+    const parts = full.split(/\s+/);
+    if (parts.length > 1) return parts[parts.length - 1];
+  }
+  return "";
+};
+
 const resolveFullName = (email: string, names?: RecipientNames): string => {
   const full = (names?.full_name || "").trim();
   if (full) return full;
@@ -71,19 +80,53 @@ const resolveFullName = (email: string, names?: RecipientNames): string => {
   return nameFromEmail(email);
 };
 
+const SITE_NAME = "UISU Archive";
+const SITE_URL = "https://uisu.space";
+
 // Apply personalization tokens to ANY string (subject, content, rendered HTML).
 const personalizeText = (text: string, email: string, names?: RecipientNames): string => {
   if (!text) return text;
   const firstName = resolveFirstName(email, names);
+  const lastName = resolveLastName(email, names);
   const fullName = resolveFullName(email, names);
+  const emailLocal = (email.split("@")[0] || "").toLowerCase();
+  const emailDomain = (email.split("@")[1] || "").toLowerCase();
+  const hasRealName = !!(names?.first_name || names?.full_name);
+  const salutation = hasRealName ? `Dear ${firstName}` : "Hello there";
+  const initial = firstName ? firstName.charAt(0).toUpperCase() + "." : "";
   const unsubUrl = `https://uisu.lovable.app/unsubscribe?email=${encodeURIComponent(email)}`;
+
+  const now = new Date();
+  const dateFmt = (opts: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat("en-US", { timeZone: "Africa/Lagos", ...opts }).format(now);
+  const currentDate = dateFmt({ year: "numeric", month: "long", day: "numeric" });
+  const currentTime = dateFmt({ hour: "2-digit", minute: "2-digit", hour12: true }) + " WAT";
+  const currentYear = String(now.getUTCFullYear());
+  const currentMonth = dateFmt({ month: "long" });
+  const dayOfWeek = dateFmt({ weekday: "long" });
+
   return text
+    // recipient
     .replace(/\{\{\s*first_name\s*\}\}/gi, firstName)
     .replace(/\{\{\s*firstname\s*\}\}/gi, firstName)
+    .replace(/\{\{\s*last_name\s*\}\}/gi, lastName)
+    .replace(/\{\{\s*lastname\s*\}\}/gi, lastName)
     .replace(/\{\{\s*name\s*\}\}/gi, fullName)
     .replace(/\{\{\s*full_name\s*\}\}/gi, fullName)
+    .replace(/\{\{\s*initial\s*\}\}/gi, initial)
+    .replace(/\{\{\s*salutation\s*\}\}/gi, salutation)
     .replace(/\{\{\s*email\s*\}\}/gi, email)
-    .replace(/\{\{\s*unsubscribe_url\s*\}\}/gi, unsubUrl);
+    .replace(/\{\{\s*email_local\s*\}\}/gi, emailLocal)
+    .replace(/\{\{\s*email_domain\s*\}\}/gi, emailDomain)
+    .replace(/\{\{\s*unsubscribe_url\s*\}\}/gi, unsubUrl)
+    // template / clock
+    .replace(/\{\{\s*current_date\s*\}\}/gi, currentDate)
+    .replace(/\{\{\s*current_time\s*\}\}/gi, currentTime)
+    .replace(/\{\{\s*current_year\s*\}\}/gi, currentYear)
+    .replace(/\{\{\s*current_month\s*\}\}/gi, currentMonth)
+    .replace(/\{\{\s*day_of_week\s*\}\}/gi, dayOfWeek)
+    .replace(/\{\{\s*site_name\s*\}\}/gi, SITE_NAME)
+    .replace(/\{\{\s*site_url\s*\}\}/gi, SITE_URL);
 };
 
 // Render a custom template shell by substituting tokens
