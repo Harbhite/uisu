@@ -2236,14 +2236,30 @@ const AdminDashboard = () => {
                       <div className="flex items-center justify-between mb-2">
                         <label className="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Content</label>
                         <p className="text-[10px] text-muted-foreground">
-                          Tokens: <code className="text-nobel-gold">{`{{first_name}}`}</code> · <code className="text-nobel-gold">{`{{name}}`}</code> · <code className="text-nobel-gold">{`{{email}}`}</code> · <code className="text-nobel-gold">{`{{unsubscribe_url}}`}</code>
+                          Click any token below to insert it where your cursor is.
                         </p>
                       </div>
                       <NewsletterRichEditor
                         value={composeContent}
                         onChange={setComposeContent}
+                        tokens={[
+                          { label: "{{first_name}}", token: "{{first_name}}" },
+                          { label: "{{last_name}}", token: "{{last_name}}" },
+                          { label: "{{name}}", token: "{{name}}" },
+                          { label: "{{salutation}}", token: "{{salutation}}" },
+                          { label: "{{email}}", token: "{{email}}" },
+                          { label: "{{email_local}}", token: "{{email_local}}" },
+                          { label: "{{current_date}}", token: "{{current_date}}" },
+                          { label: "{{current_time}}", token: "{{current_time}}" },
+                          { label: "{{current_year}}", token: "{{current_year}}" },
+                          { label: "{{day_of_week}}", token: "{{day_of_week}}" },
+                          { label: "{{site_name}}", token: "{{site_name}}" },
+                          { label: "{{site_url}}", token: "{{site_url}}" },
+                          { label: "{{unsubscribe_url}}", token: "{{unsubscribe_url}}" },
+                        ]}
                       />
                     </div>
+
 
                     {/* Template Selector */}
                     <div>
