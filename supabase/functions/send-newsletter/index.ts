@@ -1449,6 +1449,7 @@ const handler = async (req: Request): Promise<Response> => {
     let failCount = 0;
     let variantASent = 0;
     let variantBSent = 0;
+    const sendErrors: Array<{ email: string; error: string }> = [];
 
     for (let i = 0; i < subscribers.length; i++) {
       const subscriber = subscribers[i];
@@ -1491,9 +1492,12 @@ const handler = async (req: Request): Promise<Response> => {
             ab_variant: variant,
           });
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Failed to send to ${subscriber.email}:`, error);
         failCount++;
+        if (sendErrors.length < 50) {
+          sendErrors.push({ email: subscriber.email, error: String(error?.message || error).slice(0, 500) });
+        }
       }
     }
 
@@ -1515,6 +1519,31 @@ const handler = async (req: Request): Promise<Response> => {
       .from("newsletter_campaigns")
       .update(updateData)
       .eq("id", activeCampaignId);
+
+    // Write a send-history / audit-log entry for this campaign
+    const audienceMode = Array.isArray(audienceEmails) && audienceEmails.length > 0
+      ? "adhoc"
+      : audienceId ? "saved" : "all";
+    await supabase.from("newsletter_send_log").insert({
+      campaign_id: activeCampaignId,
+      sender_name: resolvedSenderName,
+      audience_id: audienceId || null,
+      audience_label: audienceLabel,
+      audience_mode: audienceMode,
+      recipients_count: subscribers.length,
+      success_count: successCount,
+      failed_count: failCount,
+      status: failCount === 0 ? "completed" : successCount === 0 ? "failed" : "partial",
+      errors: sendErrors,
+      meta: {
+        template,
+        ab_enabled: !!abEnabled,
+        ab_variant_a_sent: variantASent,
+        ab_variant_b_sent: variantBSent,
+        from: fromHeader,
+      },
+    });
+
 
     return new Response(
       JSON.stringify({ 
