@@ -76,7 +76,7 @@ const EMOJI_LIST = [
   "📌", "⭐", "🎉", "🗳️", "📝", "🔔", "💼", "🌟",
 ];
 
-export const NewsletterRichEditor = ({ value, onChange }: NewsletterRichEditorProps) => {
+export const NewsletterRichEditor = ({ value, onChange, tokens }: NewsletterRichEditorProps) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [wordCount, setWordCount] = useState(0);
