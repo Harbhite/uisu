@@ -23,6 +23,7 @@ import { ABTestingSection } from "@/components/admin/ABTestingSection";
 import { NewsletterRichEditor } from "@/components/admin/NewsletterRichEditor";
 import { NewsletterTemplatesManager, type NewsletterTemplateRow } from "@/components/admin/NewsletterTemplatesManager";
 import { NewsletterAudiencesManager, type NewsletterAudienceRow } from "@/components/admin/NewsletterAudiencesManager";
+import { CampaignSendHistory } from "@/components/admin/CampaignSendHistory";
 import { AdminAnalytics } from "@/components/admin/AdminAnalytics";
 import { AdminFeedback } from "@/components/admin/AdminFeedback";
 
