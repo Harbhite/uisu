@@ -2334,6 +2334,14 @@ const AdminDashboard = () => {
                       onChanged={(rows) => setAudiences(rows)}
                     />
 
+                    {historyCampaign && (
+                      <CampaignSendHistory
+                        campaignId={historyCampaign.id}
+                        subject={historyCampaign.subject}
+                        onClose={() => setHistoryCampaign(null)}
+                      />
+                    )}
+
 
 
                     {/* A/B Testing Section */}
