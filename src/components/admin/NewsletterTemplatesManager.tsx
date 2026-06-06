@@ -61,18 +61,28 @@ const DEFAULT_SHELL = `<!DOCTYPE html>
 </body>
 </html>`;
 
-const KNOWN_TOKENS = ["{{content}}", "{{subject}}", "{{email}}", "{{unsubscribe_url}}"] as const;
+const SHELL_TOKENS = ["{{content}}", "{{subject}}", "{{email}}", "{{unsubscribe_url}}"] as const;
+const RECIPIENT_TOKENS = [
+  "{{first_name}}", "{{last_name}}", "{{name}}", "{{initial}}",
+  "{{salutation}}", "{{email_local}}", "{{email_domain}}",
+] as const;
+const TEMPLATE_TOKENS = [
+  "{{current_date}}", "{{current_time}}", "{{current_year}}",
+  "{{current_month}}", "{{day_of_week}}", "{{site_name}}", "{{site_url}}",
+] as const;
+const KNOWN_TOKENS = [...SHELL_TOKENS, ...RECIPIENT_TOKENS, ...TEMPLATE_TOKENS] as const;
 const REQUIRED_TOKENS = ["{{content}}"] as const;
 
 function validateShell(shell: string) {
-  const findings: { token: string; present: boolean; required: boolean }[] = KNOWN_TOKENS.map((t) => ({
+  const findings: { token: string; present: boolean; required: boolean }[] = SHELL_TOKENS.map((t) => ({
     token: t,
     present: shell.includes(t),
     required: REQUIRED_TOKENS.includes(t as any),
   }));
   // Detect unknown tokens
-  const allTokens = Array.from(shell.matchAll(/\{\{\s*([a-z0-9_]+)\s*\}\}/gi)).map((m) => `{{${m[1]}}}`);
-  const unknown = Array.from(new Set(allTokens.filter((t) => !KNOWN_TOKENS.includes(t.toLowerCase() as any))));
+  const allTokens = Array.from(shell.matchAll(/\{\{\s*([a-z0-9_]+)\s*\}\}/gi)).map((m) => `{{${m[1].toLowerCase()}}}`);
+  const knownLower = KNOWN_TOKENS.map((t) => t.toLowerCase());
+  const unknown = Array.from(new Set(allTokens.filter((t) => !knownLower.includes(t))));
   const hasScript = /<script/i.test(shell);
   const hasDoctype = /^<!DOCTYPE/i.test(shell.trim());
   return { findings, unknown, hasScript, hasDoctype };
