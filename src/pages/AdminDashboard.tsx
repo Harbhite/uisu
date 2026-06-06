@@ -227,6 +227,7 @@ const AdminDashboard = () => {
   const [recipientPreviewMeta, setRecipientPreviewMeta] = useState<{ from?: string; first?: string; full?: string } | null>(null);
   const [recipientPreviewLoading, setRecipientPreviewLoading] = useState(false);
   const [showRecipientPreview, setShowRecipientPreview] = useState(false);
+  const [historyCampaign, setHistoryCampaign] = useState<{ id: string; subject: string } | null>(null);
   // Audit log filters
   const [auditSearchQuery, setAuditSearchQuery] = useState("");
   const [auditActionFilter, setAuditActionFilter] = useState<string>("all");
