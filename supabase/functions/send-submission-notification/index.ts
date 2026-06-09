@@ -257,7 +257,8 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         name: 'UISU Career Hub',
-        to: [email],
+        from: 'onboarding@resend.dev',
+        to: email,
         subject: subject,
         body: html,
       }),

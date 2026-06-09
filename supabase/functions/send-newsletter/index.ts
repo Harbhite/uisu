@@ -1299,8 +1299,9 @@ const handler = async (req: Request): Promise<Response> => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${plunkApiKey}` },
         body: JSON.stringify({
-          name: fromHeader.replace(/<.*>/, '').trim(),
-          to: [testEmail],
+          name: (fromHeader.match(/^(.*?)\s*</) || [])[1] || undefined,
+          from: (fromHeader.match(/<(.+)>/) || [])[1] || fromHeader,
+          to: testEmail,
           subject: `[TEST] ${personalizedTestSubject}`,
           body: htmlContent
         })
@@ -1478,8 +1479,9 @@ const handler = async (req: Request): Promise<Response> => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${plunkApiKey}` },
           body: JSON.stringify({
-            name: fromHeader.replace(/<.*>/, '').trim(),
-            to: [subscriber.email],
+            name: (fromHeader.match(/^(.*?)\s*</) || [])[1] || undefined,
+          from: (fromHeader.match(/<(.+)>/) || [])[1] || fromHeader,
+            to: subscriber.email,
             subject: personalizedSubject,
             body: trackedHtml
           })

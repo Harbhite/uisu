@@ -45,7 +45,8 @@ serve(async (req) => {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${PLUNK_API_KEY}` },
       body: JSON.stringify({
         name: 'UISU Forms',
-        to: [respondentEmail],
+        from: 'noreply@uisu.space',
+        to: respondentEmail,
         subject: `Submission confirmed: ${formTitle}`,
         body: emailHtml,
       }),

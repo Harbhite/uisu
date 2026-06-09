@@ -153,7 +153,8 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         name: 'UISU Archive',
-        to: [email],
+        from: 'onboarding@resend.dev', // Note: Need to verify if this domain is allowed in Plunk
+        to: email,
         subject: subject,
         body: html,
       }),
