@@ -28,8 +28,9 @@ const sendWelcomeEmail = async (plunkApiKey: string, email: string) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${plunkApiKey}` },
       body: JSON.stringify({
-        name: 'UISU Archive <newsletter@uisu.space>'.replace(/<.*>/, '').trim(),
-        to: [email],
+        name: 'UISU Archive',
+        from: 'newsletter@uisu.space',
+        to: email,
         subject: "Welcome to the Archive — UISU Newsletter",
         body: `
         <!DOCTYPE html>
@@ -198,8 +199,9 @@ const sendAdminNotification = async (plunkApiKey: string, subscriberEmail: strin
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${plunkApiKey}` },
       body: JSON.stringify({
-        name: 'UISU Archive <newsletter@uisu.space>'.replace(/<.*>/, '').trim(),
-        to: [ADMIN_EMAIL],
+        name: 'UISU Archive',
+        from: 'newsletter@uisu.space',
+        to: ADMIN_EMAIL,
         subject: `📬 New Newsletter Subscriber: ${subscriberEmail}`,
         body: `
         <!DOCTYPE html>

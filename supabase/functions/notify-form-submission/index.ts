@@ -41,7 +41,8 @@ serve(async (req) => {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${PLUNK_API_KEY}` },
       body: JSON.stringify({
         name: 'UISU Forms',
-        to: notifyEmails,
+        from: 'forms@updates.uisu.com.ng',
+        to: notifyEmails.join(','),
         subject: `New response: ${formTitle}`,
         body: emailHtml,
       }),

@@ -50,7 +50,8 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         name: 'UISU Archive',
-        to: ["contact@uisu.space"],
+        from: 'noreply@uisu.space',
+        to: 'contact@uisu.space',
         subject: `New Contact Message from ${name}`,
         body: `
           <h2>New Contact Form Submission</h2>
