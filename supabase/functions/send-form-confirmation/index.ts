@@ -53,6 +53,10 @@ const plunk = new Plunk(PLUNK_API_KEY || '');
     const res = { ok: true, json: async () => resData };
 
     const result = await res.json();
+    if (!res.ok) {
+      console.error("Plunk API error:", result);
+      throw new Error(result.message || "Failed to send email");
+    }
     return new Response(JSON.stringify(result), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error) {
     return new Response(JSON.stringify({ error: (error as Error).message }), { status: 500, headers: corsHeaders });

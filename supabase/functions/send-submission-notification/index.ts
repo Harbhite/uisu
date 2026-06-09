@@ -72,7 +72,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     let subject: string;
-    let body: string;
+    let html: string;
     const greeting = recipientName ? `Hello ${recipientName},` : 'Hello,';
 
     if (type === "internship_approved") {
@@ -254,7 +254,7 @@ const handler = async (req: Request): Promise<Response> => {
     const plunk = new Plunk(PLUNK_API_KEY || '');
     const resData = await plunk.emails.send({
         name: 'UISU Career Hub',
-        from: 'onboarding@resend.dev',
+        from: 'noreply@uisu.space',
         to: email,
         subject: subject,
         body: html,

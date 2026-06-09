@@ -65,6 +65,11 @@ const handler = async (req: Request): Promise<Response> => {
     const emailData = await emailResponse.json();
     console.log("Email sent:", emailData);
 
+    if (!emailResponse.ok) {
+      console.error("Plunk API error:", emailData);
+      throw new Error(emailData.message || "Failed to send email");
+    }
+
     return new Response(
       JSON.stringify({ success: true, message: "Message sent successfully" }),
       {

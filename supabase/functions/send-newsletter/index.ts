@@ -1237,8 +1237,8 @@ const handler = async (req: Request): Promise<Response> => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const plunkApiKey = Deno.env.get("PLUNK_API_KEY");
-    if (!resendApiKey) {
-      throw new Error("RESEND_API_KEY is not configured");
+    if (!plunkApiKey) {
+      throw new Error("PLUNK_API_KEY is not configured");
     }
 
     const plunk = plunkApiKey;
@@ -1296,13 +1296,22 @@ const handler = async (req: Request): Promise<Response> => {
       const htmlContent = generateNewsletterHtml(content, subject, template, testEmail, customTemplateHtml);
       const personalizedTestSubject = personalizeText(subject, testEmail);
 
-      await plunk.emails.send({
+      const testRes = await fetch('https://api.useplunk.com/v1/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${plunkApiKey}` },
+        body: JSON.stringify({
           name: (fromHeader.match(/^(.*?)\s*</) || [])[1] || undefined,
           from: (fromHeader.match(/<(.+)>/) || [])[1] || fromHeader,
           to: testEmail,
           subject: `[TEST] ${personalizedTestSubject}`,
           body: htmlContent
         });
+
+      if (!testRes.ok) {
+        const testErr = await testRes.json();
+        console.error("[send-newsletter] Test email failed:", testErr);
+        throw new Error(testErr.message || "Failed to send test email");
+      }
 
       return new Response(
         JSON.stringify({
@@ -1472,13 +1481,23 @@ const handler = async (req: Request): Promise<Response> => {
         const trackedHtml = addTrackingToHtml(baseHtml, activeCampaignId, subscriber.email);
         const personalizedSubject = personalizeText(subject, subscriber.email, names);
 
-        await plunk.emails.send({
+        const campaignRes = await fetch('https://api.useplunk.com/v1/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${plunkApiKey}` },
+          body: JSON.stringify({
             name: (fromHeader.match(/^(.*?)\s*</) || [])[1] || undefined,
-          from: (fromHeader.match(/<(.+)>/) || [])[1] || fromHeader,
+            from: (fromHeader.match(/<(.+)>/) || [])[1] || fromHeader,
             to: subscriber.email,
             subject: personalizedSubject,
             body: trackedHtml
-          });
+          })
+        });
+
+        if (!campaignRes.ok) {
+          const campaignErr = await campaignRes.json();
+          console.error(`[send-newsletter] Failed to send to ${subscriber.email}:`, campaignErr);
+          // Continue to next recipient instead of failing the whole batch
+        }
         successCount++;
         
         // Track variant assignment
