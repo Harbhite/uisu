@@ -70,7 +70,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     let subject: string;
-    let body: string;
+    let html: string;
     const greeting = recipientName ? `Hello ${recipientName},` : 'Hello,';
 
     if (type === "internship_approved") {
@@ -257,7 +257,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         name: 'UISU Career Hub',
-        from: 'onboarding@resend.dev',
+        from: 'noreply@uisu.space',
         to: email,
         subject: subject,
         body: html,

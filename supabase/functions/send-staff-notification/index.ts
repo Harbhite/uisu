@@ -38,7 +38,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Processing ${type} notification for ${email}`);
 
     let subject: string;
-    let body: string;
+    let html: string;
 
     if (type === "invite") {
       subject = "You've been invited to join UISU Archive as Staff";
@@ -153,7 +153,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         name: 'UISU Archive',
-        from: 'onboarding@resend.dev', // Note: Need to verify if this domain is allowed in Plunk
+        from: 'noreply@uisu.space',
         to: email,
         subject: subject,
         body: html,
