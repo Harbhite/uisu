@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const PLUNK_API_KEY = Deno.env.get("PLUNK_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,7 +38,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Processing ${type} notification for ${email}`);
 
     let subject: string;
-    let html: string;
+    let body: string;
 
     if (type === "invite") {
       subject = "You've been invited to join UISU Archive as Staff";
@@ -145,24 +145,24 @@ const handler = async (req: Request): Promise<Response> => {
       `;
     }
 
-    const res = await fetch("https://api.resend.com/emails", {
+    const res = await fetch("https://api.useplunk.com/v1/send", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
+        Authorization: `Bearer ${PLUNK_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "UISU Archive <onboarding@resend.dev>",
+        name: 'UISU Archive',
         to: [email],
         subject: subject,
-        html: html,
+        body: html,
       }),
     });
 
     const emailResponse = await res.json();
 
     if (!res.ok) {
-      console.error("Resend API error:", emailResponse);
+      console.error("Plunk API error:", emailResponse);
       throw new Error(emailResponse.message || "Failed to send email");
     }
 

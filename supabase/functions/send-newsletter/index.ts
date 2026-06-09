@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
-import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1236,12 +1235,12 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    const plunkApiKey = Deno.env.get("PLUNK_API_KEY");
     if (!resendApiKey) {
       throw new Error("RESEND_API_KEY is not configured");
     }
 
-    const resend = new Resend(resendApiKey);
+    const plunk = plunkApiKey;
 
     const { campaignId, subject, content, template = 'classic', testEmail, scheduledAt, customTemplateHtml, abEnabled, abVariantA, abVariantB, senderName, audienceId, audienceEmails, previewOnly, previewEmail, previewFirstName, previewFullName }: SendNewsletterRequest = await req.json();
 
@@ -1296,11 +1295,15 @@ const handler = async (req: Request): Promise<Response> => {
       const htmlContent = generateNewsletterHtml(content, subject, template, testEmail, customTemplateHtml);
       const personalizedTestSubject = personalizeText(subject, testEmail);
 
-      await resend.emails.send({
-        from: fromHeader,
-        to: [testEmail],
-        subject: `[TEST] ${personalizedTestSubject}`,
-        html: htmlContent,
+      await fetch('https://api.useplunk.com/v1/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${plunkApiKey}` },
+        body: JSON.stringify({
+          name: fromHeader.replace(/<.*>/, '').trim(),
+          to: [testEmail],
+          subject: `[TEST] ${personalizedTestSubject}`,
+          body: htmlContent
+        })
       });
 
       return new Response(
@@ -1471,11 +1474,15 @@ const handler = async (req: Request): Promise<Response> => {
         const trackedHtml = addTrackingToHtml(baseHtml, activeCampaignId, subscriber.email);
         const personalizedSubject = personalizeText(subject, subscriber.email, names);
 
-        await resend.emails.send({
-          from: fromHeader,
-          to: [subscriber.email],
-          subject: personalizedSubject,
-          html: trackedHtml,
+        await fetch('https://api.useplunk.com/v1/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${plunkApiKey}` },
+          body: JSON.stringify({
+            name: fromHeader.replace(/<.*>/, '').trim(),
+            to: [subscriber.email],
+            subject: personalizedSubject,
+            body: trackedHtml
+          })
         });
         successCount++;
         

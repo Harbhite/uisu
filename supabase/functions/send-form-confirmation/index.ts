@@ -13,9 +13,9 @@ serve(async (req) => {
   try {
     const { formTitle, respondentName, respondentEmail, confirmationMessage } = await req.json();
 
-    const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
-    if (!RESEND_API_KEY) {
-      return new Response(JSON.stringify({ error: 'Missing RESEND_API_KEY' }), { status: 500, headers: corsHeaders });
+    const PLUNK_API_KEY = Deno.env.get('PLUNK_API_KEY');
+    if (!PLUNK_API_KEY) {
+      return new Response(JSON.stringify({ error: 'Missing PLUNK_API_KEY' }), { status: 500, headers: corsHeaders });
     }
 
     if (!respondentEmail) {
@@ -40,14 +40,14 @@ serve(async (req) => {
       </div>
     `;
 
-    const res = await fetch('https://api.resend.com/emails', {
+    const res = await fetch('https://api.useplunk.com/v1/send', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${RESEND_API_KEY}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${PLUNK_API_KEY}` },
       body: JSON.stringify({
-        from: 'UISU Forms <noreply@uisu.space>',
+        name: 'UISU Forms',
         to: [respondentEmail],
         subject: `Submission confirmed: ${formTitle}`,
-        html: emailHtml,
+        body: emailHtml,
       }),
     });
 
