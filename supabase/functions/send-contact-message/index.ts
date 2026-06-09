@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const PLUNK_API_KEY = Deno.env.get("PLUNK_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -41,18 +41,18 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Failed to save message");
     }
 
-    // Send notification email to admin using Resend API
-    const emailResponse = await fetch("https://api.resend.com/emails", {
+    // Send notification email to admin using Plunk API
+    const emailResponse = await fetch("https://api.useplunk.com/v1/send", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
+        Authorization: `Bearer ${PLUNK_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "UISU Archive <noreply@uisu.space>",
+        name: 'UISU Archive',
         to: ["contact@uisu.space"],
         subject: `New Contact Message from ${name}`,
-        html: `
+        body: `
           <h2>New Contact Form Submission</h2>
           <p><strong>Name:</strong> ${name}</p>
           <p><strong>Email:</strong> ${email}</p>
