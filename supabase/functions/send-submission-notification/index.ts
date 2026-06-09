@@ -1,7 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import Plunk from "npm:@plunk/node@3.0.3";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const PLUNK_API_KEY = Deno.env.get("PLUNK_API_KEY");
+const plunk = new Plunk(PLUNK_API_KEY || '');
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
@@ -249,20 +251,15 @@ const handler = async (req: Request): Promise<Response> => {
       `;
     }
 
-    const res = await fetch("https://api.useplunk.com/v1/send", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${PLUNK_API_KEY}`,
-      },
-      body: JSON.stringify({
+    const plunk = new Plunk(PLUNK_API_KEY || '');
+    const resData = await plunk.emails.send({
         name: 'UISU Career Hub',
         from: 'onboarding@resend.dev',
         to: email,
         subject: subject,
         body: html,
-      }),
-    });
+      });
+    const res = { ok: true, json: async () => resData };
 
     const emailResponse = await res.json();
 

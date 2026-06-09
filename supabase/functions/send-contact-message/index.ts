@@ -1,7 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Plunk from "npm:@plunk/node@3.0.3";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 
 const PLUNK_API_KEY = Deno.env.get("PLUNK_API_KEY");
+const plunk = new Plunk(PLUNK_API_KEY || '');
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,13 +44,8 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Send notification email to admin using Plunk API
-    const emailResponse = await fetch("https://api.useplunk.com/v1/send", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${PLUNK_API_KEY}`,
-      },
-      body: JSON.stringify({
+    const plunk = new Plunk(PLUNK_API_KEY || '');
+    const emailResponseData = await plunk.emails.send({
         name: 'UISU Archive',
         from: 'noreply@uisu.space',
         to: 'contact@uisu.space',
@@ -62,8 +59,8 @@ const handler = async (req: Request): Promise<Response> => {
           <hr>
           <p><em>Sent from UISU Archive contact form</em></p>
         `,
-      }),
-    });
+      });
+    const emailResponse = { ok: true, json: async () => emailResponseData };
 
     const emailData = await emailResponse.json();
     console.log("Email sent:", emailData);

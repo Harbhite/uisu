@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Plunk from "npm:@plunk/node@3.0.3";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 
 const corsHeaders = {
@@ -1295,17 +1296,13 @@ const handler = async (req: Request): Promise<Response> => {
       const htmlContent = generateNewsletterHtml(content, subject, template, testEmail, customTemplateHtml);
       const personalizedTestSubject = personalizeText(subject, testEmail);
 
-      await fetch('https://api.useplunk.com/v1/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${plunkApiKey}` },
-        body: JSON.stringify({
+      await plunk.emails.send({
           name: (fromHeader.match(/^(.*?)\s*</) || [])[1] || undefined,
           from: (fromHeader.match(/<(.+)>/) || [])[1] || fromHeader,
           to: testEmail,
           subject: `[TEST] ${personalizedTestSubject}`,
           body: htmlContent
-        })
-      });
+        });
 
       return new Response(
         JSON.stringify({
@@ -1475,17 +1472,13 @@ const handler = async (req: Request): Promise<Response> => {
         const trackedHtml = addTrackingToHtml(baseHtml, activeCampaignId, subscriber.email);
         const personalizedSubject = personalizeText(subject, subscriber.email, names);
 
-        await fetch('https://api.useplunk.com/v1/send', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${plunkApiKey}` },
-          body: JSON.stringify({
+        await plunk.emails.send({
             name: (fromHeader.match(/^(.*?)\s*</) || [])[1] || undefined,
           from: (fromHeader.match(/<(.+)>/) || [])[1] || fromHeader,
             to: subscriber.email,
             subject: personalizedSubject,
             body: trackedHtml
-          })
-        });
+          });
         successCount++;
         
         // Track variant assignment

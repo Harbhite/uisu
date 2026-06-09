@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import Plunk from "npm:@plunk/node@3.0.3";
 
 const PLUNK_API_KEY = Deno.env.get("PLUNK_API_KEY");
+const plunk = new Plunk(PLUNK_API_KEY || '');
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -145,20 +147,15 @@ const handler = async (req: Request): Promise<Response> => {
       `;
     }
 
-    const res = await fetch("https://api.useplunk.com/v1/send", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${PLUNK_API_KEY}`,
-      },
-      body: JSON.stringify({
+    const plunk = new Plunk(PLUNK_API_KEY || '');
+    const resData = await plunk.emails.send({
         name: 'UISU Archive',
         from: 'onboarding@resend.dev', // Note: Need to verify if this domain is allowed in Plunk
         to: email,
         subject: subject,
         body: html,
-      }),
-    });
+      });
+    const res = { ok: true, json: async () => resData };
 
     const emailResponse = await res.json();
 
