@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Plunk from "npm:@plunk/node@3.0.3";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 
 const corsHeaders = {
@@ -23,10 +22,13 @@ const getUnsubscribeUrl = (email: string) =>
   `https://uisu.lovable.app/unsubscribe?email=${encodeURIComponent(email)}`;
 
 // Send welcome/confirmation email to the new subscriber
-const sendWelcomeEmail = async (plunk: any, email: string) => {
+const sendWelcomeEmail = async (plunkApiKey: string, email: string) => {
   try {
-    await plunk.emails.send({
-        name: 'UISU Archive',
+    await fetch('https://api.useplunk.com/v1/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${plunkApiKey}` },
+      body: JSON.stringify({
+        name: 'UISU Archive '.trim(),
         from: 'newsletter@uisu.space',
         to: email,
         subject: "Welcome to the Archive — UISU Newsletter",
@@ -180,7 +182,8 @@ const sendWelcomeEmail = async (plunk: any, email: string) => {
         </body>
         </html>
       `
-      });
+      })
+    });
     console.log("Welcome email sent successfully to:", email);
   } catch (error) {
     console.error("Error sending welcome email:", error);
@@ -188,12 +191,15 @@ const sendWelcomeEmail = async (plunk: any, email: string) => {
 };
 
 // Send admin notification about new subscriber
-const sendAdminNotification = async (plunk: any, subscriberEmail: string, source: string) => {
+const sendAdminNotification = async (plunkApiKey: string, subscriberEmail: string, source: string) => {
   try {
     const timestamp = new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos' });
     
-    await plunk.emails.send({
-        name: 'UISU Archive',
+    await fetch('https://api.useplunk.com/v1/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${plunkApiKey}` },
+      body: JSON.stringify({
+        name: 'UISU Archive '.trim(),
         from: 'newsletter@uisu.space',
         to: ADMIN_EMAIL,
         subject: `📬 New Newsletter Subscriber: ${subscriberEmail}`,
@@ -290,7 +296,8 @@ const sendAdminNotification = async (plunk: any, subscriberEmail: string, source
         </body>
         </html>
       `
-      });
+      })
+    });
     console.log("Admin notification sent for new subscriber:", subscriberEmail);
   } catch (error) {
     console.error("Error sending admin notification:", error);
@@ -319,8 +326,8 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const plunkApiKey = Deno.env.get("PLUNK_API_KEY");
-    const plunk = plunkApiKey ? new Plunk(plunkApiKey) : null;
+    const resendApiKey = Deno.env.get("PLUNK_API_KEY");
+    const plunk = resendApiKey ? resendApiKey : null;
 
     // Check if email already exists
     const { data: existing } = await supabase

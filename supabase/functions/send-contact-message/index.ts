@@ -1,9 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Plunk from "npm:@plunk/node@3.0.3";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 
 const PLUNK_API_KEY = Deno.env.get("PLUNK_API_KEY");
-const plunk = new Plunk(PLUNK_API_KEY || '');
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -43,12 +41,18 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Failed to save message");
     }
 
-    // Send notification email to admin using Plunk API
-    const plunk = new Plunk(PLUNK_API_KEY || '');
-    const emailResponseData = await plunk.emails.send({
-        name: 'UISU Archive',
+    // Send notification email to admin using Resend API
+    const emailResponse = await fetch("https://api.useplunk.com/v1/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${PLUNK_API_KEY}`,
+      },
+      body: JSON.stringify({
+        name: 'UISU Archive '.trim(),
+        name: 'noreply@uisu.space',
         from: 'noreply@uisu.space',
-        to: 'contact@uisu.space',
+        to: "contact@uisu.space",
         subject: `New Contact Message from ${name}`,
         body: `
           <h2>New Contact Form Submission</h2>
@@ -59,16 +63,11 @@ const handler = async (req: Request): Promise<Response> => {
           <hr>
           <p><em>Sent from UISU Archive contact form</em></p>
         `,
-      });
-    const emailResponse = { ok: true, json: async () => emailResponseData };
+      }),
+    });
 
     const emailData = await emailResponse.json();
     console.log("Email sent:", emailData);
-
-    if (!emailResponse.ok) {
-      console.error("Plunk API error:", emailData);
-      throw new Error(emailData.message || "Failed to send email");
-    }
 
     return new Response(
       JSON.stringify({ success: true, message: "Message sent successfully" }),

@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Plunk from "npm:@plunk/node@3.0.3";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 
 const corsHeaders = {
@@ -1236,12 +1235,12 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const plunkApiKey = Deno.env.get("PLUNK_API_KEY");
-    if (!plunkApiKey) {
+    const resendApiKey = Deno.env.get("PLUNK_API_KEY");
+    if (!resendApiKey) {
       throw new Error("PLUNK_API_KEY is not configured");
     }
 
-    const plunk = plunkApiKey;
+    const plunkApiKey = resendApiKey;
 
     const { campaignId, subject, content, template = 'classic', testEmail, scheduledAt, customTemplateHtml, abEnabled, abVariantA, abVariantB, senderName, audienceId, audienceEmails, previewOnly, previewEmail, previewFirstName, previewFullName }: SendNewsletterRequest = await req.json();
 
@@ -1296,7 +1295,7 @@ const handler = async (req: Request): Promise<Response> => {
       const htmlContent = generateNewsletterHtml(content, subject, template, testEmail, customTemplateHtml);
       const personalizedTestSubject = personalizeText(subject, testEmail);
 
-      const testRes = await fetch('https://api.useplunk.com/v1/send', {
+      await fetch('https://api.useplunk.com/v1/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${plunkApiKey}` },
         body: JSON.stringify({
@@ -1305,13 +1304,8 @@ const handler = async (req: Request): Promise<Response> => {
           to: testEmail,
           subject: `[TEST] ${personalizedTestSubject}`,
           body: htmlContent
-        });
-
-      if (!testRes.ok) {
-        const testErr = await testRes.json();
-        console.error("[send-newsletter] Test email failed:", testErr);
-        throw new Error(testErr.message || "Failed to send test email");
-      }
+        })
+      });
 
       return new Response(
         JSON.stringify({
@@ -1481,7 +1475,7 @@ const handler = async (req: Request): Promise<Response> => {
         const trackedHtml = addTrackingToHtml(baseHtml, activeCampaignId, subscriber.email);
         const personalizedSubject = personalizeText(subject, subscriber.email, names);
 
-        const campaignRes = await fetch('https://api.useplunk.com/v1/send', {
+        await fetch('https://api.useplunk.com/v1/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${plunkApiKey}` },
           body: JSON.stringify({
@@ -1492,12 +1486,6 @@ const handler = async (req: Request): Promise<Response> => {
             body: trackedHtml
           })
         });
-
-        if (!campaignRes.ok) {
-          const campaignErr = await campaignRes.json();
-          console.error(`[send-newsletter] Failed to send to ${subscriber.email}:`, campaignErr);
-          // Continue to next recipient instead of failing the whole batch
-        }
         successCount++;
         
         // Track variant assignment

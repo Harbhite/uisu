@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import Plunk from "npm:@plunk/node@3.0.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,7 +14,6 @@ serve(async (req) => {
     const { formTitle, respondentName, respondentEmail, confirmationMessage } = await req.json();
 
     const PLUNK_API_KEY = Deno.env.get('PLUNK_API_KEY');
-const plunk = new Plunk(PLUNK_API_KEY || '');
     if (!PLUNK_API_KEY) {
       return new Response(JSON.stringify({ error: 'Missing PLUNK_API_KEY' }), { status: 500, headers: corsHeaders });
     }
@@ -42,21 +40,20 @@ const plunk = new Plunk(PLUNK_API_KEY || '');
       </div>
     `;
 
-    const plunk = new Plunk(PLUNK_API_KEY || '');
-    const resData = await plunk.emails.send({
+    const res = await fetch('https://api.useplunk.com/v1/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${PLUNK_API_KEY}` },
+      body: JSON.stringify({
         name: 'UISU Forms',
+        from: 'noreply@uisu.space',
         from: 'noreply@uisu.space',
         to: respondentEmail,
         subject: `Submission confirmed: ${formTitle}`,
         body: emailHtml,
-      });
-    const res = { ok: true, json: async () => resData };
+      }),
+    });
 
     const result = await res.json();
-    if (!res.ok) {
-      console.error("Plunk API error:", result);
-      throw new Error(result.message || "Failed to send email");
-    }
     return new Response(JSON.stringify(result), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error) {
     return new Response(JSON.stringify({ error: (error as Error).message }), { status: 500, headers: corsHeaders });
