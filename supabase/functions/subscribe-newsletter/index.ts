@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
-import { Resend } from "https://esm.sh/resend@2.0.0";
+import { Plunk } from "https://esm.sh/@plunk/node@3.0.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,13 +23,14 @@ const getUnsubscribeUrl = (email: string) =>
   `https://uisu.lovable.app/unsubscribe?email=${encodeURIComponent(email)}`;
 
 // Send welcome/confirmation email to the new subscriber
-const sendWelcomeEmail = async (resend: Resend, email: string) => {
+const sendWelcomeEmail = async (plunk: Plunk, email: string) => {
   try {
-    await resend.emails.send({
-      from: "UISU Archive <newsletter@uisu.space>",
+    await plunk.emails.send({
+      name: "UISU Archive",
+      from: "newsletter@uisu.space",
       to: [email],
       subject: "Welcome to the Archive — UISU Newsletter",
-      html: `
+      body: `
         <!DOCTYPE html>
         <html>
         <head>
@@ -187,15 +188,16 @@ const sendWelcomeEmail = async (resend: Resend, email: string) => {
 };
 
 // Send admin notification about new subscriber
-const sendAdminNotification = async (resend: Resend, subscriberEmail: string, source: string) => {
+const sendAdminNotification = async (plunk: Plunk, subscriberEmail: string, source: string) => {
   try {
     const timestamp = new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos' });
     
-    await resend.emails.send({
-      from: "UISU Archive <newsletter@uisu.space>",
+    await plunk.emails.send({
+      name: "UISU Archive",
+      from: "newsletter@uisu.space",
       to: [ADMIN_EMAIL],
       subject: `📬 New Newsletter Subscriber: ${subscriberEmail}`,
-      html: `
+      body: `
         <!DOCTYPE html>
         <html>
         <head>
@@ -317,8 +319,8 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    const resend = resendApiKey ? new Resend(resendApiKey) : null;
+    const plunkApiKey = Deno.env.get("PLUNK_API_KEY");
+    const plunk = plunkApiKey ? new Plunk(plunkApiKey) : null;
 
     // Check if email already exists
     const { data: existing } = await supabase
@@ -344,10 +346,10 @@ const handler = async (req: Request): Promise<Response> => {
           .eq("id", existing.id);
         
         // Send welcome back email and notify admin
-        if (resend) {
+        if (plunk) {
           await Promise.all([
-            sendWelcomeEmail(resend, email.toLowerCase()),
-            sendAdminNotification(resend, email.toLowerCase(), `${source} (reactivated)`),
+            sendWelcomeEmail(plunk, email.toLowerCase()),
+            sendAdminNotification(plunk, email.toLowerCase(), `${source} (reactivated)`),
           ]);
         }
         
@@ -372,10 +374,10 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Send welcome email and admin notification
-    if (resend) {
+    if (plunk) {
       await Promise.all([
-        sendWelcomeEmail(resend, email.toLowerCase()),
-        sendAdminNotification(resend, email.toLowerCase(), source),
+        sendWelcomeEmail(plunk, email.toLowerCase()),
+        sendAdminNotification(plunk, email.toLowerCase(), source),
       ]);
     }
 

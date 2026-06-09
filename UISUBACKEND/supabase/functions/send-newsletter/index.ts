@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
-import { Resend } from "https://esm.sh/resend@2.0.0";
+import { Plunk } from "https://esm.sh/@plunk/node@3.0.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1117,12 +1117,12 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    const plunkApiKey = Deno.env.get("PLUNK_API_KEY");
     if (!resendApiKey) {
       throw new Error("RESEND_API_KEY is not configured");
     }
 
-    const resend = new Resend(resendApiKey);
+    const plunk = new Plunk(plunkApiKey);
 
     const { campaignId, subject, content, template = 'classic', testEmail, scheduledAt, abEnabled, abVariantA, abVariantB }: SendNewsletterRequest = await req.json();
 

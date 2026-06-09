@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const PLUNK_API_KEY = Deno.env.get("PLUNK_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -145,17 +145,18 @@ const handler = async (req: Request): Promise<Response> => {
       `;
     }
 
-    const res = await fetch("https://api.resend.com/emails", {
+    const res = await fetch("https://api.useplunk.com/v1/send", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
+        Authorization: `Bearer ${PLUNK_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "UISU Archive <onboarding@resend.dev>",
+        name: "UISU Archive",
+        from: "noreply@uisu.space",
         to: [email],
         subject: subject,
-        html: html,
+        body: html,
       }),
     });
 
