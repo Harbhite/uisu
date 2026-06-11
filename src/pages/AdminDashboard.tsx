@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { useAdminDashboardPersistence, type AdminDashboardState } from "@/hooks/useAdminDashboardPersistence";
 import { z } from "zod";
 import AuditLogDetailsModal from "@/components/AuditLogDetailsModal";
 import InviteStaffModal from "@/components/InviteStaffModal";
@@ -167,13 +168,21 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, isAdmin, isStaff, role: userRole, loading: authLoading } = useAdminCheck();
-  const [activeTab, setActiveTab] = useState<TabType>(() => {
+  // Initialize state with localStorage restoration
+  const persistedState = (() => {
     try {
-      const saved = localStorage.getItem('admin_active_tab');
-      if (saved && ["events","announcements","documents","clubs","administrations","admins","audit","publications","submissions","newsletter","complaints","analytics","feedback"].includes(saved)) {
-        return saved as TabType;
+      const saved = localStorage.getItem('admin_dashboard_state');
+      if (saved) {
+        return JSON.parse(saved) as Partial<AdminDashboardState>;
       }
     } catch {}
+    return {};
+  })();
+
+  const [activeTab, setActiveTab] = useState<TabType>(() => {
+    if (persistedState.activeTab && ["events","announcements","documents","clubs","administrations","admins","audit","publications","submissions","newsletter","complaints","analytics","feedback"].includes(persistedState.activeTab as string)) {
+      return persistedState.activeTab as TabType;
+    }
     return "events";
   });
   const [loading, setLoading] = useState(true);
@@ -194,30 +203,30 @@ const AdminDashboard = () => {
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [newUserRole, setNewUserRole] = useState<"admin" | "moderator">("moderator");
   
-  // Newsletter compose state
-  const [composeSubject, setComposeSubject] = useState("");
-  const [composeContent, setComposeContent] = useState("");
+  // Newsletter compose state (with persistence)
+  const [composeSubject, setComposeSubject] = useState(persistedState.composeSubject ?? "");
+  const [composeContent, setComposeContent] = useState(persistedState.composeContent ?? "");
   const [sendingNewsletter, setSendingNewsletter] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [testEmail, setTestEmail] = useState("");
-  const [selectedTemplate, setSelectedTemplate] = useState<string>("classic");
+  const [selectedTemplate, setSelectedTemplate] = useState<string>(persistedState.selectedTemplate ?? "classic");
   const [customTemplates, setCustomTemplates] = useState<NewsletterTemplateRow[]>([]);
   const [showTemplatesManager, setShowTemplatesManager] = useState(false);
-  const [scheduleDate, setScheduleDate] = useState("");
-  const [scheduleTime, setScheduleTime] = useState("");
+  const [scheduleDate, setScheduleDate] = useState(persistedState.scheduleDate ?? "");
+  const [scheduleTime, setScheduleTime] = useState(persistedState.scheduleTime ?? "");
   const [isScheduling, setIsScheduling] = useState(false);
   const [sendingTest, setSendingTest] = useState(false);
   
-  // A/B Testing state
-  const [abEnabled, setAbEnabled] = useState(false);
-  const [abVariantA, setAbVariantA] = useState("classic");
-  const [abVariantB, setAbVariantB] = useState("minimal");
+  // A/B Testing state (with persistence)
+  const [abEnabled, setAbEnabled] = useState(persistedState.abEnabled ?? false);
+  const [abVariantA, setAbVariantA] = useState(persistedState.abVariantA ?? "classic");
+  const [abVariantB, setAbVariantB] = useState(persistedState.abVariantB ?? "minimal");
 
-  // Sender name + audience targeting
-  const [senderName, setSenderName] = useState("UISU Archive");
-  const [audienceMode, setAudienceMode] = useState<"all" | "saved" | "adhoc">("all");
-  const [selectedAudienceId, setSelectedAudienceId] = useState<string>("");
-  const [adhocEmailsText, setAdhocEmailsText] = useState("");
+  // Sender name + audience targeting (with persistence)
+  const [senderName, setSenderName] = useState(persistedState.senderName ?? "UISU Archive");
+  const [audienceMode, setAudienceMode] = useState<"all" | "saved" | "adhoc">(persistedState.audienceMode ?? "all");
+  const [selectedAudienceId, setSelectedAudienceId] = useState<string>(persistedState.selectedAudienceId ?? "");
+  const [adhocEmailsText, setAdhocEmailsText] = useState(persistedState.adhocEmailsText ?? "");
   const [audiences, setAudiences] = useState<NewsletterAudienceRow[]>([]);
   const [showAudiencesManager, setShowAudiencesManager] = useState(false);
   // Recipient-preview state
@@ -228,12 +237,12 @@ const AdminDashboard = () => {
   const [recipientPreviewLoading, setRecipientPreviewLoading] = useState(false);
   const [showRecipientPreview, setShowRecipientPreview] = useState(false);
   const [historyCampaign, setHistoryCampaign] = useState<{ id: string; subject: string } | null>(null);
-  // Audit log filters
-  const [auditSearchQuery, setAuditSearchQuery] = useState("");
-  const [auditActionFilter, setAuditActionFilter] = useState<string>("all");
-  const [auditStartDate, setAuditStartDate] = useState<string>("");
-  const [auditEndDate, setAuditEndDate] = useState<string>("");
-  const [auditTableFilter, setAuditTableFilter] = useState<string>("all");
+  // Audit log filters (with persistence)
+  const [auditSearchQuery, setAuditSearchQuery] = useState(persistedState.auditSearchQuery ?? "");
+  const [auditActionFilter, setAuditActionFilter] = useState<string>(persistedState.auditActionFilter ?? "all");
+  const [auditStartDate, setAuditStartDate] = useState<string>(persistedState.auditStartDate ?? "");
+  const [auditEndDate, setAuditEndDate] = useState<string>(persistedState.auditEndDate ?? "");
+  const [auditTableFilter, setAuditTableFilter] = useState<string>(persistedState.auditTableFilter ?? "all");
   
   // Modal states
   const [showModal, setShowModal] = useState(false);
@@ -242,14 +251,14 @@ const AdminDashboard = () => {
   const [showAuditDetailModal, setShowAuditDetailModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   
-  // Form states
-  const [formData, setFormData] = useState<any>({});
+  // Form states (with persistence)
+  const [formData, setFormData] = useState<any>(persistedState.formData ?? {});
   const [uploadingFile, setUploadingFile] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
   const [selectedHeaderFile, setSelectedHeaderFile] = useState<File | null>(null);
-  const [teamMembers, setTeamMembers] = useState<{role: string; name: string; alias?: string}[]>([]);
-  const [activitiesInput, setActivitiesInput] = useState("");
+  const [teamMembers, setTeamMembers] = useState<{role: string; name: string; alias?: string}[]>(persistedState.teamMembers ?? []);
+  const [activitiesInput, setActivitiesInput] = useState(persistedState.activitiesInput ?? "");
 
   // Redirect non-staff
   useEffect(() => {
@@ -285,9 +294,36 @@ const AdminDashboard = () => {
     };
   }, [user?.id, isStaff, authLoading, navigate, toast]);
 
+  // Persist dashboard state to localStorage
+  const currentState: Partial<AdminDashboardState> = {
+    activeTab,
+    composeSubject,
+    composeContent,
+    selectedTemplate,
+    scheduleDate,
+    scheduleTime,
+    abEnabled,
+    abVariantA,
+    abVariantB,
+    senderName,
+    audienceMode,
+    selectedAudienceId,
+    adhocEmailsText,
+    auditSearchQuery,
+    auditActionFilter,
+    auditStartDate,
+    auditEndDate,
+    auditTableFilter,
+    formData,
+    teamMembers,
+    activitiesInput,
+  };
+
+  const { saveState } = useAdminDashboardPersistence(currentState, true);
+
   useEffect(() => {
-    localStorage.setItem('admin_active_tab', activeTab);
-  }, [activeTab]);
+    saveState();
+  }, [currentState, saveState]);
 
   useEffect(() => {
     if (user && isStaff) {
@@ -295,6 +331,21 @@ const AdminDashboard = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isStaff, activeTab]);
+
+  // Clear newsletter draft when newsletter is sent successfully
+  const clearNewsletterDraft = useCallback(() => {
+    setComposeSubject("");
+    setComposeContent("");
+    setScheduleDate("");
+    setScheduleTime("");
+  }, []);
+
+  // Clear form draft when modal is closed
+  const clearFormDraft = useCallback(() => {
+    setFormData({});
+    setTeamMembers([]);
+    setActivitiesInput("");
+  }, []);
 
   // Audit logging helper
   const logAuditAction = async (action: string, tableName: string, recordId: string | null, oldData: any, newData: any) => {
@@ -793,6 +844,7 @@ const AdminDashboard = () => {
         description: `${activeTab.slice(0, -1)} ${editingItem ? "updated" : "created"} successfully.`,
       });
       
+      clearFormDraft();
       setShowModal(false);
       fetchData();
     } catch (error: any) {
@@ -1327,10 +1379,7 @@ const AdminDashboard = () => {
           description: `Will be sent on ${scheduledDateTime.toLocaleString()}`,
         });
 
-        setComposeSubject("");
-        setComposeContent("");
-        setScheduleDate("");
-        setScheduleTime("");
+        clearNewsletterDraft();
         fetchData();
       } catch (error: any) {
         console.error("Newsletter schedule error:", error);
@@ -1387,8 +1436,7 @@ const AdminDashboard = () => {
         description: result.message || `Sent to ${result.stats?.successful || recipientCount} recipient(s).`,
       });
 
-      setComposeSubject("");
-      setComposeContent("");
+      clearNewsletterDraft();
       fetchData();
     } catch (error: any) {
       console.error("Newsletter send error:", error);
