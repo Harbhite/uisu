@@ -18,6 +18,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { SEO } from '@/components/SEO';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
+import { useBlockchainVote } from '@/hooks/useBlockchainVote';
 import { format, formatDistanceToNow, isPast, differenceInSeconds } from 'date-fns';
 
 interface PollOption {
@@ -87,6 +88,7 @@ const CountdownTimer = ({ endsAt }: { endsAt: string }) => {
 const PollsPage = () => {
   const navigate = useNavigate();
   const { isAdmin, isModerator } = useAdminCheck();
+  const { submitBlockchainVote } = useBlockchainVote();
   const isStaff = isAdmin || isModerator;
   const [polls, setPolls] = useState<Poll[]>([]);
   const [options, setOptions] = useState<Record<string, PollOption[]>>({});
@@ -102,6 +104,7 @@ const PollsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedPoll, setExpandedPoll] = useState<string | null>(null);
   const [changingVote, setChangingVote] = useState<string | null>(null);
+  const [blockchainTx, setBlockchainTx] = useState<Record<string, string>>({});
 
   // Create form
   const [form, setForm] = useState({
@@ -240,12 +243,18 @@ const PollsPage = () => {
       const { error } = await supabase.from('poll_votes').insert(votesToInsert);
       if (error) throw error;
 
+      // Submit to blockchain
+      const blockchainResult = await submitBlockchainVote(pollId, selected[0], userId);
+      if (blockchainResult) {
+        setBlockchainTx(prev => ({ ...prev, [pollId]: blockchainResult.blockHash }));
+      }
+
       // Trigger confetti
       setConfettiPoll(pollId);
       setTimeout(() => setConfettiPoll(null), 2000);
       setChangingVote(null);
 
-      toast.success('Vote submitted!');
+      toast.success('Vote submitted and recorded on blockchain!');
       fetchPolls();
     } catch (err: any) {
       toast.error(err.message || 'Failed to vote');
