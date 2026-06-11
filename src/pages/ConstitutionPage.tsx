@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import { SEO } from '@/components/SEO';
 import { constitutionData, amendmentsData } from '@/lib/data';
-import { Search, Scale, ShieldAlert, History } from 'lucide-react';
+import { Search, Scale, ShieldAlert, History, Download, Share2, Printer, Bookmark } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ConstitutionSidebar from '@/components/constitution/ConstitutionSidebar';
 import ArticleSection from '@/components/constitution/ArticleSection';
@@ -124,11 +124,47 @@ const ConstitutionPage: React.FC = () => {
               The supreme law governing the University of Ibadan Students' Union.
               Enacted to promote welfare, foster excellence, and defend student rights.
             </p>
+
+            {/* Feature Action Bar - NEW FEATURE 1 */}
+            <div className="flex flex-wrap gap-4 mt-8 print:hidden">
+              <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20 gap-2 backdrop-blur-sm">
+                <Download size={16} /> Download PDF
+              </Button>
+              <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20 gap-2 backdrop-blur-sm">
+                <Share2 size={16} /> Share
+              </Button>
+              <Button variant="outline" onClick={() => window.print()} className="bg-white/10 border-white/20 text-white hover:bg-white/20 gap-2 backdrop-blur-sm">
+                <Printer size={16} /> Print
+              </Button>
+              <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20 gap-2 backdrop-blur-sm">
+                <Bookmark size={16} /> View Bookmarks ({bookmarks.length})
+              </Button>
+            </div>
           </div>
         </div>
 
         {/* Content */}
         <div className="px-6 md:px-12 lg:px-20 py-16 max-w-5xl mx-auto transition-all duration-300" style={{ fontSize: `${fontSize}%` }}>
+          {/* Quick Stats Grid - NEW FEATURE 2 */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12 print:hidden">
+            <div className="p-4 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-sm">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Articles</div>
+              <div className="text-2xl font-serif text-ui-blue dark:text-nobel-gold">{constitutionData.length}</div>
+            </div>
+            <div className="p-4 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-sm">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Amendments</div>
+              <div className="text-2xl font-serif text-ui-blue dark:text-nobel-gold">{amendmentsData.length}</div>
+            </div>
+            <div className="p-4 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-sm">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Last Update</div>
+              <div className="text-2xl font-serif text-ui-blue dark:text-nobel-gold">2024</div>
+            </div>
+            <div className="p-4 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-sm">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Status</div>
+              <div className="text-2xl font-serif text-green-600 dark:text-green-400">Active</div>
+            </div>
+          </div>
+
           {/* Mobile Search */}
           <div className="xl:hidden mb-12 print:hidden">
             <div className="relative">
@@ -140,6 +176,23 @@ const ConstitutionPage: React.FC = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 pl-12 pr-4 py-4 text-sm focus:outline-none focus:border-ui-blue focus:ring-1 focus:ring-ui-blue transition-all shadow-sm rounded-md font-medium text-ui-blue dark:text-white"
               />
+            </div>
+          </div>
+
+          {/* Legislative Highlights - NEW FEATURE 3 */}
+          <div className="mb-16 p-8 bg-ui-blue/5 dark:bg-nobel-gold/5 border border-ui-blue/10 dark:border-nobel-gold/10 rounded-2xl print:hidden">
+            <h3 className="font-serif text-xl text-ui-blue dark:text-nobel-gold mb-4 flex items-center gap-2">
+              <Zap size={18} /> Legislative Highlights
+            </h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                <span className="font-bold text-ui-blue dark:text-white block mb-1">Supremacy of the Constitution</span>
+                This constitution is supreme and its provisions shall have binding force on all members of the Students' Union.
+              </div>
+              <div className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                <span className="font-bold text-ui-blue dark:text-white block mb-1">Student Rights & Welfare</span>
+                The primary objective of the Union is to promote the welfare of its members and defend their fundamental rights.
+              </div>
             </div>
           </div>
 
@@ -203,6 +256,18 @@ const ConstitutionPage: React.FC = () => {
             <div className="mt-4 text-[10px] text-slate-400 text-center font-mono uppercase tracking-widest">
               End of Public Registry • Last Updated: March 2024
             </div>
+          </section>
+
+          {/* Feedback & Reporting - NEW FEATURE 4 */}
+          <section className="mt-20 p-8 bg-slate-100 dark:bg-slate-900 rounded-2xl text-center print:hidden">
+            <ShieldAlert className="mx-auto text-ui-blue dark:text-nobel-gold mb-4" size={32} />
+            <h3 className="font-serif text-2xl text-ui-blue dark:text-white mb-2">Notice a Discrepancy?</h3>
+            <p className="text-slate-500 dark:text-slate-400 max-w-xl mx-auto mb-6">
+              If you believe there is an error in this digital version or wish to report a constitutional violation, please contact the Judicial Council.
+            </p>
+            <Button className="bg-ui-blue hover:bg-ui-blue/90 text-white rounded-full px-8">
+              Report Issue
+            </Button>
           </section>
         </div>
       </main>

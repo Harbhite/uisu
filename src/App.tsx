@@ -57,6 +57,10 @@ const StyleGuidePage = lazy(() => import("./pages/StyleGuidePage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 const HistoryPage = lazy(() => import("./pages/HistoryPage"));
 const ConstitutionPage = lazy(() => import("./pages/ConstitutionPage"));
+const Constitution1Page = lazy(() => import("./pages/Constitution1Page"));
+const Constitution2Page = lazy(() => import("./pages/Constitution2Page"));
+const Constitution3Page = lazy(() => import("./pages/Constitution3Page"));
+const Constitution4Page = lazy(() => import("./pages/Constitution4Page"));
 const ProfileCardPage = lazy(() => import("./pages/ProfileCardPage"));
 const TutorialsLayout = lazy(() => import("./components/tutorials/TutorialsLayout"));
 const TutorialsLandingPage = lazy(() => import("./pages/tutorials/TutorialsLandingPage"));
@@ -168,6 +172,10 @@ const AppRoutes = () => {
 
         {/* Constitution Page */}
         <Route path="/constitution" element={<PageWrapper><ConstitutionPage /></PageWrapper>} />
+        <Route path="/constitution1" element={<PageWrapper><Constitution1Page /></PageWrapper>} />
+        <Route path="/constitution2" element={<PageWrapper><Constitution2Page /></PageWrapper>} />
+        <Route path="/constitution3" element={<PageWrapper><Constitution3Page /></PageWrapper>} />
+        <Route path="/constitution4" element={<PageWrapper><Constitution4Page /></PageWrapper>} />
 
         {/* Profile Card Showcase */}
         <Route path="/profile-card" element={<PageWrapper><ProfileCardPage /></PageWrapper>} />
