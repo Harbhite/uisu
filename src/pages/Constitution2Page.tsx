@@ -1,160 +1,317 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, useScroll, useSpring } from 'framer-motion';
 import { SEO } from '@/components/SEO';
-import { constitutionData } from '@/lib/data';
-import { ChevronDown, ChevronUp, Lightbulb, BookMarked } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { constitutionData, amendmentsData } from '@/lib/data';
+import { Search, Scale, BookOpen, ChevronDown, ChevronUp, Bookmark } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Constitution2Page: React.FC = () => {
-  const [expandedArticles, setExpandedArticles] = useState<Set<string>>(new Set([constitutionData[0]?.id]));
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedArticles, setExpandedArticles] = useState<string[]>([]);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('constitution2-dark') === 'true');
+  const [bookmarks, setBookmarks] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('constitution2-bookmarks') || '[]'); } catch { return []; }
+  });
 
-  const toggleArticle = (id: string) => {
-    const newExpanded = new Set(expandedArticles);
-    if (newExpanded.has(id)) {
-      newExpanded.delete(id);
-    } else {
-      newExpanded.add(id);
-    }
-    setExpandedArticles(newExpanded);
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
+
+  useEffect(() => { localStorage.setItem('constitution2-dark', String(darkMode)); }, [darkMode]);
+  useEffect(() => { localStorage.setItem('constitution2-bookmarks', JSON.stringify(bookmarks)); }, [bookmarks]);
+
+  const filteredArticles = constitutionData.filter(article => {
+    const query = searchQuery.toLowerCase();
+    return (
+      article.title.toLowerCase().includes(query) ||
+      article.sections.some(section =>
+        section.content.toLowerCase().includes(query) ||
+        section.subSections?.some(sub => sub.toLowerCase().includes(query))
+      )
+    );
+  });
+
+  const toggleExpanded = (id: string) => {
+    setExpandedArticles(prev =>
+      prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]
+    );
+  };
+
+  const toggleBookmark = (id: string) => {
+    setBookmarks(prev =>
+      prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id]
+    );
   };
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${
-      darkMode ? 'bg-slate-950' : 'bg-slate-50'
+      darkMode ? 'bg-slate-950 dark' : 'bg-slate-50'
     }`}>
       <SEO
-        title="Constitution (Interactive Timeline) | UISU SPACE"
-        description="Interactive timeline view of the University of Ibadan Students' Union Constitution."
+        title="Constitution (Timeline Design) | UISU SPACE"
+        description="The Constitution of UISU - Elegant Timeline-Based Design"
+        image="/og/pages-screenshot/constitution.png"
       />
 
+      {/* Reading Progress Bar */}
+      <motion.div className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-ui-blue via-nobel-gold to-ui-blue z-50 origin-left" style={{ scaleX }} />
+
       {/* Header */}
-      <div className={`pt-32 pb-20 px-6 md:px-12 lg:px-20 relative overflow-hidden ${
-        darkMode ? 'bg-slate-900' : 'bg-gradient-to-r from-ui-blue to-ui-dark'
-      } text-white`}>
-        <div className="absolute inset-0 opacity-5 pointer-events-none">
-          <div className="absolute inset-0" style={{
-            backgroundImage: 'linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%)',
-            backgroundSize: '200% 200%',
-          }} />
-        </div>
+      <div className={`relative pt-24 pb-20 px-6 md:px-12 lg:px-20 ${
+        darkMode ? 'bg-gradient-to-b from-slate-900 to-slate-950' : 'bg-gradient-to-b from-white to-slate-100'
+      }`}>
+        <div className="max-w-4xl mx-auto">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+            <div className="flex items-center gap-4 mb-8">
+              <div className="p-4 bg-ui-blue/10 rounded-2xl">
+                <Scale className="text-ui-blue" size={28} />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Constitutional Timeline</span>
+                <h1 className="font-serif text-5xl md:text-6xl font-bold text-ui-blue dark:text-white">The Constitution</h1>
+              </div>
+            </div>
+            <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl">
+              Navigate through the constitutional framework in a chronological, elegant timeline format. Discover the structure and amendments that govern the Students' Union.
+            </p>
+          </motion.div>
 
-        <div className="max-w-6xl mx-auto relative z-10">
-          <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-nobel-gold/20 rounded-full backdrop-blur-sm">
-            <Lightbulb size={16} className="text-nobel-gold" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-nobel-gold">Interactive Exploration</span>
-          </div>
-
-          <h1 className="font-serif text-6xl md:text-7xl mb-6 leading-tight">
-            Constitutional <span className="text-nobel-gold">Journey</span>
-          </h1>
-
-          <p className="text-lg text-slate-200 max-w-2xl">
-            Navigate through the constitution in a flowing, interconnected timeline. Click any article to explore its sections and provisions.
-          </p>
+          {/* Search Bar */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="mt-10 flex gap-4"
+          >
+            <div className="flex-1 relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input
+                type="text"
+                placeholder="Search articles, sections..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`w-full border pl-12 pr-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-ui-blue transition-all ${
+                  darkMode
+                    ? 'bg-slate-800 border-slate-700 text-white'
+                    : 'bg-white border-slate-200 text-slate-900'
+                }`}
+              />
+            </div>
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className={`px-6 py-3 rounded-xl font-medium text-sm transition-colors ${
+                darkMode
+                  ? 'bg-slate-800 border border-slate-700 hover:bg-slate-700'
+                  : 'bg-white border border-slate-200 hover:bg-slate-100'
+              }`}
+            >
+              {darkMode ? '☀️ Light' : '🌙 Dark'}
+            </button>
+          </motion.div>
         </div>
       </div>
 
-      {/* Timeline Content */}
-      <div className="max-w-4xl mx-auto px-6 md:px-12 py-20">
-        {/* Vertical Timeline */}
-        <div className="relative">
-          {/* Timeline Line */}
-          <div className="absolute left-8 top-0 bottom-0 w-1 bg-gradient-to-b from-ui-blue via-nobel-gold to-ui-blue opacity-30" />
+      {/* Main Timeline Content */}
+      <main className="px-6 md:px-12 lg:px-20 py-20">
+        <div className="max-w-4xl mx-auto">
+          {/* Timeline Header Stats */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="grid grid-cols-3 gap-4 mb-16"
+          >
+            <div className={`p-4 rounded-xl border ${
+              darkMode
+                ? 'bg-slate-800 border-slate-700'
+                : 'bg-white border-slate-200'
+            }`}>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Total Articles</div>
+              <div className="text-3xl font-serif font-bold text-ui-blue dark:text-nobel-gold">{constitutionData.length}</div>
+            </div>
+            <div className={`p-4 rounded-xl border ${
+              darkMode
+                ? 'bg-slate-800 border-slate-700'
+                : 'bg-white border-slate-200'
+            }`}>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Amendments</div>
+              <div className="text-3xl font-serif font-bold text-nobel-gold">{amendmentsData.length}</div>
+            </div>
+            <div className={`p-4 rounded-xl border ${
+              darkMode
+                ? 'bg-slate-800 border-slate-700'
+                : 'bg-white border-slate-200'
+            }`}>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Bookmarks</div>
+              <div className="text-3xl font-serif font-bold text-green-600 dark:text-green-400">{bookmarks.length}</div>
+            </div>
+          </motion.div>
 
-          {/* Timeline Items */}
-          <div className="space-y-6">
-            {constitutionData.map((article, index) => {
-              const isExpanded = expandedArticles.has(article.id);
-              return (
+          {/* Timeline */}
+          <div className="relative">
+            {/* Timeline Line */}
+            <div className="absolute left-8 top-0 bottom-0 w-1 bg-gradient-to-b from-ui-blue via-nobel-gold to-ui-blue"></div>
+
+            {/* Timeline Items */}
+            <div className="space-y-8">
+              {filteredArticles.map((article, idx) => (
                 <motion.div
                   key={article.id}
                   initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: idx * 0.05 }}
                   className="relative pl-24"
                 >
                   {/* Timeline Dot */}
-                  <div className={cn(
-                    'absolute left-0 w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300',
-                    isExpanded
-                      ? 'bg-nobel-gold text-ui-blue shadow-lg shadow-nobel-gold/50'
-                      : darkMode
-                      ? 'bg-slate-800 text-nobel-gold border-2 border-slate-700'
-                      : 'bg-white text-ui-blue border-2 border-slate-200'
-                  )}>
-                    <span className="font-bold text-sm">{index + 1}</span>
+                  <div className="absolute left-0 top-2 w-16 h-16 flex items-center justify-center">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center border-4 transition-all ${
+                      expandedArticles.includes(article.id)
+                        ? 'bg-nobel-gold border-nobel-gold scale-110'
+                        : 'bg-ui-blue border-ui-blue hover:scale-105'
+                    }`}>
+                      <BookOpen size={20} className="text-white" />
+                    </div>
                   </div>
 
-                  {/* Content Card */}
-                  <button
-                    onClick={() => toggleArticle(article.id)}
-                    className={cn(
-                      'w-full text-left p-6 rounded-2xl transition-all duration-300 group',
-                      isExpanded
+                  {/* Timeline Card */}
+                  <div
+                    onClick={() => toggleExpanded(article.id)}
+                    className={`rounded-2xl border-2 transition-all cursor-pointer overflow-hidden ${
+                      expandedArticles.includes(article.id)
                         ? darkMode
-                          ? 'bg-slate-800 border-2 border-nobel-gold shadow-lg'
-                          : 'bg-white border-2 border-nobel-gold shadow-xl'
+                          ? 'bg-slate-800 border-nobel-gold shadow-lg shadow-nobel-gold/20'
+                          : 'bg-white border-nobel-gold shadow-lg shadow-nobel-gold/10'
                         : darkMode
-                        ? 'bg-slate-800 border border-slate-700 hover:border-nobel-gold/50'
-                        : 'bg-white border border-slate-200 hover:border-nobel-gold/50'
-                    )}
+                          ? 'bg-slate-800 border-slate-700 hover:border-nobel-gold/50'
+                          : 'bg-white border-slate-200 hover:border-nobel-gold/50'
+                    }`}
                   >
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Article {article.id.replace('article-', '')}</span>
-                        <h3 className="font-serif text-2xl text-ui-blue dark:text-white mt-1 group-hover:text-nobel-gold transition-colors">
-                          {article.title}
-                        </h3>
+                    {/* Card Header */}
+                    <div className="p-6 bg-gradient-to-r from-ui-blue/5 to-nobel-gold/5 border-b border-slate-200 dark:border-slate-700">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                            Article {article.id.replace('article-', '')}
+                          </span>
+                          <h3 className="font-serif text-2xl font-bold text-ui-blue dark:text-white mt-2">
+                            {article.title}
+                          </h3>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleBookmark(article.id);
+                            }}
+                            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                          >
+                            <Bookmark
+                              size={20}
+                              className={bookmarks.includes(article.id) ? 'fill-nobel-gold text-nobel-gold' : 'text-slate-400'}
+                            />
+                          </button>
+                          <div className="text-slate-400">
+                            {expandedArticles.includes(article.id) ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+                          </div>
+                        </div>
                       </div>
-                      <motion.div
-                        animate={{ rotate: isExpanded ? 180 : 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <ChevronDown className="text-nobel-gold" size={24} />
-                      </motion.div>
                     </div>
 
-                    {/* Expanded Content */}
-                    {isExpanded && (
+                    {/* Expandable Content */}
+                    {expandedArticles.includes(article.id) && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700 space-y-4"
+                        transition={{ duration: 0.3 }}
+                        className="p-6 space-y-4"
                       >
                         {article.sections.map((section, sIdx) => (
-                          <div key={sIdx} className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                            <span className="font-bold text-ui-blue dark:text-nobel-gold block mb-2">Section {sIdx + 1}</span>
-                            <p className="line-clamp-3">{section.content}</p>
+                          <div key={sIdx} className="border-l-4 border-nobel-gold pl-4">
+                            <h4 className="font-bold text-slate-900 dark:text-white mb-2">{section.title}</h4>
+                            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                              {section.content}
+                            </p>
+                            {section.subSections && section.subSections.length > 0 && (
+                              <ul className="mt-3 space-y-1 ml-4">
+                                {section.subSections.map((sub, subIdx) => (
+                                  <li key={subIdx} className="text-xs text-slate-500 dark:text-slate-500 list-disc">
+                                    {sub}
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
                           </div>
                         ))}
                       </motion.div>
                     )}
-                  </button>
+                  </div>
                 </motion.div>
-              );
-            })}
+              ))}
+            </div>
+          </div>
+
+          {/* Empty State */}
+          {filteredArticles.length === 0 && (
+            <div className="py-20 text-center">
+              <BookOpen className="mx-auto text-slate-300 dark:text-slate-600 mb-4" size={48} />
+              <h3 className="text-lg font-serif text-slate-600 dark:text-slate-400 mb-2">No Articles Found</h3>
+              <p className="text-slate-500 dark:text-slate-500 mb-6">Try adjusting your search query.</p>
+              <Button onClick={() => setSearchQuery('')} className="bg-ui-blue hover:bg-ui-blue/90 text-white">
+                Clear Search
+              </Button>
+            </div>
+          )}
+
+          {/* Amendments Timeline Section */}
+          <div className="mt-24 pt-16 border-t border-slate-200 dark:border-slate-700">
+            <h2 className="font-serif text-3xl font-bold text-ui-blue dark:text-white mb-12">Amendment Timeline</h2>
+            <div className="relative">
+              {/* Timeline Line */}
+              <div className="absolute left-8 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-500 to-orange-500"></div>
+
+              {/* Amendment Items */}
+              <div className="space-y-6">
+                {amendmentsData.slice(0, 8).map((amendment, idx) => (
+                  <motion.div
+                    key={amendment.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: idx * 0.05 }}
+                    className="relative pl-24"
+                  >
+                    {/* Timeline Dot */}
+                    <div className="absolute left-2 top-2 w-12 h-12 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-amber-500 border-4 border-white dark:border-slate-950"></div>
+                    </div>
+
+                    {/* Amendment Card */}
+                    <div className={`p-4 rounded-xl border ${
+                      darkMode
+                        ? 'bg-slate-800 border-slate-700'
+                        : 'bg-white border-slate-200'
+                    }`}>
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <span className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">{amendment.date}</span>
+                          <span className="ml-3 text-xs font-mono text-ui-blue dark:text-nobel-gold font-bold">{amendment.id}</span>
+                        </div>
+                        <span className={`px-3 py-1 text-xs font-bold uppercase rounded-lg ${
+                          amendment.status === 'Ratified' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
+                          amendment.status === 'Pending' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' :
+                          'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                        }`}>
+                          {amendment.status}
+                        </span>
+                      </div>
+                      <p className="text-sm text-slate-700 dark:text-slate-300">{amendment.description}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
-
-        {/* Bottom CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className={cn(
-            'mt-20 p-8 rounded-2xl text-center',
-            darkMode ? 'bg-slate-800' : 'bg-slate-100'
-          )}
-        >
-          <BookMarked className="mx-auto text-nobel-gold mb-4" size={32} />
-          <h3 className="font-serif text-2xl text-ui-blue dark:text-white mb-2">Complete Overview</h3>
-          <p className="text-slate-600 dark:text-slate-400">
-            You've explored {expandedArticles.size} of {constitutionData.length} articles. Click to expand and learn more.
-          </p>
-        </motion.div>
-      </div>
+      </main>
     </div>
   );
 };

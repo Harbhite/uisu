@@ -1,108 +1,329 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, useScroll, useSpring } from 'framer-motion';
 import { SEO } from '@/components/SEO';
 import { constitutionData, amendmentsData } from '@/lib/data';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BookOpen, Lightbulb, GitBranch, BarChart3 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Search, Scale, BookOpen, Columns3, Filter, Download, Eye, EyeOff } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Constitution4Page: React.FC = () => {
+  const [searchQuery, setSearchQuery] = useState('');
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('constitution4-dark') === 'true');
-  const [selectedArticle, setSelectedArticle] = useState(constitutionData[0]?.id || '');
+  const [columnCount, setColumnCount] = useState<2 | 3>(2);
+  const [selectedArticles, setSelectedArticles] = useState<string[]>(
+    constitutionData.slice(0, 2).map(a => a.id)
+  );
 
-  const categories = {
-    governance: constitutionData.filter((_, i) => i < 5),
-    rights: constitutionData.filter((_, i) => i >= 5 && i < 10),
-    procedures: constitutionData.filter((_, i) => i >= 10 && i < 15),
-    committees: constitutionData.filter((_, i) => i >= 15),
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
+
+  useEffect(() => { localStorage.setItem('constitution4-dark', String(darkMode)); }, [darkMode]);
+
+  const filteredArticles = constitutionData.filter(article => {
+    const query = searchQuery.toLowerCase();
+    return (
+      article.title.toLowerCase().includes(query) ||
+      article.sections.some(section =>
+        section.content.toLowerCase().includes(query) ||
+        section.subSections?.some(sub => sub.toLowerCase().includes(query))
+      )
+    );
+  });
+
+  const toggleArticleSelection = (id: string) => {
+    setSelectedArticles(prev =>
+      prev.includes(id)
+        ? prev.filter(a => a !== id)
+        : [...prev, id].slice(-columnCount)
+    );
   };
+
+  const displayedArticles = filteredArticles.filter(a => selectedArticles.includes(a.id));
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${
-      darkMode ? 'bg-slate-950' : 'bg-gradient-to-br from-slate-50 to-slate-100'
+      darkMode ? 'bg-slate-950 dark' : 'bg-slate-50'
     }`}>
       <SEO
-        title="Constitution (Tabbed View) | UISU SPACE"
-        description="Organized tabbed view of the University of Ibadan Students' Union Constitution by category."
+        title="Constitution (Multi-Column Design) | UISU SPACE"
+        description="The Constitution of UISU - Multi-Column Comparison View"
+        image="/og/pages-screenshot/constitution.png"
       />
 
+      {/* Reading Progress Bar */}
+      <motion.div className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-teal-500 via-cyan-500 to-teal-500 z-50 origin-left" style={{ scaleX }} />
+
       {/* Header */}
-      <div className={`pt-32 pb-20 px-6 md:px-12 lg:px-20 relative overflow-hidden ${
-        darkMode ? 'bg-slate-900' : 'bg-gradient-to-r from-ui-blue via-ui-dark to-ui-blue'
-      } text-white`}>
-        <div className="absolute inset-0 opacity-10">
-          <svg className="w-full h-full" viewBox="0 0 1200 600">
-            <defs>
-              <pattern id="dots" x="0" y="0" width="50" height="50" patternUnits="userSpaceOnUse">
-                <circle cx="25" cy="25" r="2" fill="white" />
-              </pattern>
-            </defs>
-            <rect width="1200" height="600" fill="url(#dots)" />
-          </svg>
-        </div>
-
-        <div className="max-w-6xl mx-auto relative z-10">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 bg-nobel-gold/20 rounded-full backdrop-blur-sm">
-              <BookOpen size={24} className="text-nobel-gold" />
+      <div className={`relative pt-20 pb-16 px-6 md:px-12 lg:px-20 border-b ${
+        darkMode
+          ? 'bg-gradient-to-b from-slate-900 to-slate-950 border-slate-800'
+          : 'bg-gradient-to-b from-white to-slate-50 border-slate-200'
+      }`}>
+        <div className="max-w-7xl mx-auto">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-3 bg-teal-500/20 rounded-lg">
+                <Columns3 className="text-teal-500" size={24} />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Multi-Column View</span>
+                <h1 className="font-serif text-5xl md:text-6xl font-bold text-slate-900 dark:text-white">The Constitution</h1>
+              </div>
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-nobel-gold">Organized by Category</span>
-          </div>
+            <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-3xl">
+              Compare multiple articles side-by-side in a powerful multi-column layout. Select articles to analyze and compare their provisions.
+            </p>
+          </motion.div>
 
-          <h1 className="font-serif text-6xl md:text-7xl mb-6 leading-tight">
-            Constitution <span className="text-nobel-gold">Explorer</span>
-          </h1>
-
-          <p className="text-lg text-slate-200 max-w-2xl">
-            Navigate the constitution organized by key categories. Compare articles, track amendments, and understand the legal framework.
-          </p>
+          {/* Controls */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="mt-10 flex flex-col md:flex-row gap-4"
+          >
+            <div className="flex-1 relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input
+                type="text"
+                placeholder="Search articles to add to comparison..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`w-full border pl-12 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all ${
+                  darkMode
+                    ? 'bg-slate-800 border-slate-700 text-white'
+                    : 'bg-white border-slate-200 text-slate-900'
+                }`}
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setColumnCount(2)}
+                className={`px-4 py-3 rounded-lg font-medium text-sm transition-colors ${
+                  columnCount === 2
+                    ? 'bg-teal-500 text-white'
+                    : darkMode
+                      ? 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200'
+                }`}
+              >
+                2 Cols
+              </button>
+              <button
+                onClick={() => setColumnCount(3)}
+                className={`px-4 py-3 rounded-lg font-medium text-sm transition-colors ${
+                  columnCount === 3
+                    ? 'bg-teal-500 text-white'
+                    : darkMode
+                      ? 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200'
+                }`}
+              >
+                3 Cols
+              </button>
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className={`px-4 py-3 rounded-lg font-medium text-sm transition-colors ${
+                  darkMode
+                    ? 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200'
+                }`}
+              >
+                {darkMode ? '☀️' : '🌙'}
+              </button>
+            </div>
+          </motion.div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20 py-20">
-        <Tabs defaultValue="governance" className="w-full">
-          <TabsList className={cn(
-            'grid w-full grid-cols-4 mb-12 p-1 rounded-xl',
-            darkMode ? 'bg-slate-800' : 'bg-slate-200'
-          )}>
-            <TabsTrigger value="governance" className="flex items-center gap-2">
-              <BarChart3 size={16} />
-              <span className="hidden sm:inline">Governance</span>
-            </TabsTrigger>
-            <TabsTrigger value="rights" className="flex items-center gap-2">
-              <Lightbulb size={16} />
-              <span className="hidden sm:inline">Rights</span>
-            </TabsTrigger>
-            <TabsTrigger value="procedures" className="flex items-center gap-2">
-              <GitBranch size={16} />
-              <span className="hidden sm:inline">Procedures</span>
-            </TabsTrigger>
-            <TabsTrigger value="committees" className="flex items-center gap-2">
-              <BookOpen size={16} />
-              <span className="hidden sm:inline">Committees</span>
-            </TabsTrigger>
-          </TabsList>
+      <main className="px-6 md:px-12 lg:px-20 py-12">
+        <div className="max-w-7xl mx-auto">
+          {/* Article Selector */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mb-12"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-white">
+                Select Articles to Compare
+              </h2>
+              <span className="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                {selectedArticles.length} / {columnCount} selected
+              </span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {filteredArticles.slice(0, 12).map(article => (
+                <motion.button
+                  key={article.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => toggleArticleSelection(article.id)}
+                  className={`p-3 rounded-lg border-2 text-left transition-all ${
+                    selectedArticles.includes(article.id)
+                      ? 'border-teal-500 bg-teal-500/10'
+                      : darkMode
+                        ? 'border-slate-700 bg-slate-800 hover:border-teal-500/50'
+                        : 'border-slate-200 bg-white hover:border-teal-500/50'
+                  }`}
+                >
+                  <div className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">
+                    Article {article.id.replace('article-', '')}
+                  </div>
+                  <div className="text-sm font-bold text-slate-900 dark:text-white line-clamp-2">
+                    {article.title}
+                  </div>
+                  {selectedArticles.includes(article.id) && (
+                    <div className="mt-2 text-xs font-bold text-teal-600 dark:text-teal-400">
+                      ✓ Selected
+                    </div>
+                  )}
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
 
-          {/* Governance Tab */}
-          <TabsContent value="governance" className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              {categories.governance.map((article) => (
+          {/* Comparison Grid */}
+          {selectedArticles.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className={`grid gap-6 mb-16 ${
+                columnCount === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-3'
+              }`}
+            >
+              {displayedArticles.map((article, colIdx) => (
                 <motion.div
                   key={article.id}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={cn(
-                    'p-6 rounded-xl border-2 cursor-pointer transition-all',
-                    selectedArticle === article.id
-                      ? darkMode
-                        ? 'border-nobel-gold bg-slate-800 shadow-lg shadow-nobel-gold/20'
-                        : 'border-nobel-gold bg-white shadow-lg shadow-nobel-gold/20'
-                      : darkMode
-                      ? 'border-slate-700 bg-slate-800 hover:border-nobel-gold/50'
-                      : 'border-slate-200 bg-white hover:border-nobel-gold/50'
-                  )}
-                  onClick={() => setSelectedArticle(article.id)}
+                  transition={{ duration: 0.4, delay: colIdx * 0.1 }}
+                  className={`rounded-xl border-2 overflow-hidden ${
+                    darkMode
+                      ? 'bg-slate-800 border-slate-700'
+                      : 'bg-white border-slate-200'
+                  }`}
                 >
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
-                    Article {article.id.replace('article-', '')}\n                  </span>\n                  <h3 className=\"font-serif text-lg text-ui-blue dark:text-nobel-gold mt-2\">\n                    {article.title}\n                  </h3>\n                  <p className=\"text-sm text-slate-600 dark:text-slate-400 mt-3 line-clamp-2\">\n                    {article.sections[0]?.content.substring(0, 100)}...\n                  </p>\n                </motion.div>\n              ))}\n            </div>\n          </TabsContent>\n\n          {/* Rights Tab */}\n          <TabsContent value=\"rights\" className=\"space-y-6\">\n            <div className=\"grid md:grid-cols-2 gap-6\">\n              {categories.rights.map((article) => (\n                <motion.div\n                  key={article.id}\n                  initial={{ opacity: 0, y: 10 }}\n                  animate={{ opacity: 1, y: 0 }}\n                  className={cn(\n                    'p-6 rounded-xl border-2 cursor-pointer transition-all',\n                    selectedArticle === article.id\n                      ? darkMode\n                        ? 'border-nobel-gold bg-slate-800 shadow-lg shadow-nobel-gold/20'\n                        : 'border-nobel-gold bg-white shadow-lg shadow-nobel-gold/20'\n                      : darkMode\n                      ? 'border-slate-700 bg-slate-800 hover:border-nobel-gold/50'\n                      : 'border-slate-200 bg-white hover:border-nobel-gold/50'\n                  )}\n                  onClick={() => setSelectedArticle(article.id)}\n                >\n                  <span className=\"text-[9px] font-bold uppercase tracking-widest text-slate-400\">\n                    Article {article.id.replace('article-', '')}\n                  </span>\n                  <h3 className=\"font-serif text-lg text-ui-blue dark:text-nobel-gold mt-2\">\n                    {article.title}\n                  </h3>\n                  <p className=\"text-sm text-slate-600 dark:text-slate-400 mt-3 line-clamp-2\">\n                    {article.sections[0]?.content.substring(0, 100)}...\n                  </p>\n                </motion.div>\n              ))}\n            </div>\n          </TabsContent>\n\n          {/* Procedures Tab */}\n          <TabsContent value=\"procedures\" className=\"space-y-6\">\n            <div className=\"grid md:grid-cols-2 gap-6\">\n              {categories.procedures.map((article) => (\n                <motion.div\n                  key={article.id}\n                  initial={{ opacity: 0, y: 10 }}\n                  animate={{ opacity: 1, y: 0 }}\n                  className={cn(\n                    'p-6 rounded-xl border-2 cursor-pointer transition-all',\n                    selectedArticle === article.id\n                      ? darkMode\n                        ? 'border-nobel-gold bg-slate-800 shadow-lg shadow-nobel-gold/20'\n                        : 'border-nobel-gold bg-white shadow-lg shadow-nobel-gold/20'\n                      : darkMode\n                      ? 'border-slate-700 bg-slate-800 hover:border-nobel-gold/50'\n                      : 'border-slate-200 bg-white hover:border-nobel-gold/50'\n                  )}\n                  onClick={() => setSelectedArticle(article.id)}\n                >\n                  <span className=\"text-[9px] font-bold uppercase tracking-widest text-slate-400\">\n                    Article {article.id.replace('article-', '')}\n                  </span>\n                  <h3 className=\"font-serif text-lg text-ui-blue dark:text-nobel-gold mt-2\">\n                    {article.title}\n                  </h3>\n                  <p className=\"text-sm text-slate-600 dark:text-slate-400 mt-3 line-clamp-2\">\n                    {article.sections[0]?.content.substring(0, 100)}...\n                  </p>\n                </motion.div>\n              ))}\n            </div>\n          </TabsContent>\n\n          {/* Committees Tab */}\n          <TabsContent value=\"committees\" className=\"space-y-6\">\n            <div className=\"grid md:grid-cols-2 gap-6\">\n              {categories.committees.map((article) => (\n                <motion.div\n                  key={article.id}\n                  initial={{ opacity: 0, y: 10 }}\n                  animate={{ opacity: 1, y: 0 }}\n                  className={cn(\n                    'p-6 rounded-xl border-2 cursor-pointer transition-all',\n                    selectedArticle === article.id\n                      ? darkMode\n                        ? 'border-nobel-gold bg-slate-800 shadow-lg shadow-nobel-gold/20'\n                        : 'border-nobel-gold bg-white shadow-lg shadow-nobel-gold/20'\n                      : darkMode\n                      ? 'border-slate-700 bg-slate-800 hover:border-nobel-gold/50'\n                      : 'border-slate-200 bg-white hover:border-nobel-gold/50'\n                  )}\n                  onClick={() => setSelectedArticle(article.id)}\n                >\n                  <span className=\"text-[9px] font-bold uppercase tracking-widest text-slate-400\">\n                    Article {article.id.replace('article-', '')}\n                  </span>\n                  <h3 className=\"font-serif text-lg text-ui-blue dark:text-nobel-gold mt-2\">\n                    {article.title}\n                  </h3>\n                  <p className=\"text-sm text-slate-600 dark:text-slate-400 mt-3 line-clamp-2\">\n                    {article.sections[0]?.content.substring(0, 100)}...\n                  </p>\n                </motion.div>\n              ))}\n            </div>\n          </TabsContent>\n        </Tabs>\n\n        {/* Selected Article Detail */}\n        <AnimatePresence>\n          {selectedArticle && (\n            <motion.div\n              initial={{ opacity: 0, y: 20 }}\n              animate={{ opacity: 1, y: 0 }}\n              exit={{ opacity: 0, y: 20 }}\n              className={cn(\n                'mt-16 p-8 rounded-2xl border-2',\n                darkMode\n                  ? 'bg-slate-800 border-slate-700'\n                  : 'bg-white border-slate-200'\n              )}\n            >\n              {constitutionData.find(a => a.id === selectedArticle) && (\n                <div>\n                  <span className=\"text-[10px] font-bold uppercase tracking-widest text-slate-400\">\n                    Article {selectedArticle.replace('article-', '')}\n                  </span>\n                  <h2 className=\"font-serif text-3xl text-ui-blue dark:text-nobel-gold mt-3 mb-6\">\n                    {constitutionData.find(a => a.id === selectedArticle)?.title}\n                  </h2>\n                  <div className=\"space-y-4\">\n                    {constitutionData.find(a => a.id === selectedArticle)?.sections.map((section, idx) => (\n                      <div key={idx} className=\"text-slate-700 dark:text-slate-300 leading-relaxed\">\n                        <p className=\"font-bold text-ui-blue dark:text-nobel-gold mb-2\">Section {idx + 1}</p>\n                        <p>{section.content}</p>\n                      </div>\n                    ))}\n                  </div>\n                </div>\n              )}\n            </motion.div>\n          )}\n        </AnimatePresence>\n      </div>\n    </div>\n  );\n};\n\nexport default Constitution4Page;\n
+                  {/* Column Header */}
+                  <div className="p-6 bg-gradient-to-r from-teal-500/10 to-cyan-500/10 border-b-2 border-teal-500/20">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                          Article {article.id.replace('article-', '')}
+                        </span>
+                        <h3 className="font-serif text-xl font-bold text-slate-900 dark:text-white mt-2">
+                          {article.title}
+                        </h3>
+                      </div>
+                      <button
+                        onClick={() => toggleArticleSelection(article.id)}
+                        className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                      >
+                        <Eye size={18} className="text-teal-500" />
+                      </button>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {article.sections.length} sections
+                    </p>
+                  </div>
+
+                  {/* Column Content */}
+                  <div className="p-6 space-y-6 max-h-[600px] overflow-y-auto">
+                    {article.sections.map((section, sIdx) => (
+                      <motion.div
+                        key={sIdx}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3, delay: sIdx * 0.05 }}
+                        className="border-l-4 border-teal-500 pl-4"
+                      >
+                        <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-2">
+                          {section.title}
+                        </h4>
+                        <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-4">
+                          {section.content}
+                        </p>
+                        {section.subSections && section.subSections.length > 0 && (
+                          <div className="mt-3 space-y-1">
+                            {section.subSections.slice(0, 3).map((sub, subIdx) => (
+                              <div key={subIdx} className="text-xs text-slate-500 dark:text-slate-500 flex gap-2">
+                                <span className="flex-shrink-0">•</span>
+                                <span className="line-clamp-1">{sub}</span>
+                              </div>
+                            ))}
+                            {section.subSections.length > 3 && (
+                              <p className="text-xs text-teal-600 dark:text-teal-400 font-medium">
+                                +{section.subSections.length - 3} more
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Column Footer */}
+                  <div className="p-4 border-t-2 border-slate-700 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex gap-2">
+                    <button className="flex-1 px-3 py-2 rounded-lg bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 text-xs font-bold uppercase transition-colors">
+                      <Download size={14} className="inline mr-1" /> Export
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+
+          {/* Empty State */}
+          {selectedArticles.length === 0 && (
+            <div className="py-20 text-center">
+              <Columns3 className="mx-auto text-slate-300 dark:text-slate-600 mb-4" size={48} />
+              <h3 className="text-lg font-serif text-slate-600 dark:text-slate-400 mb-2">Select Articles to Compare</h3>
+              <p className="text-slate-500 dark:text-slate-500 mb-6">Choose up to {columnCount} articles from the selector above.</p>
+            </div>
+          )}
+
+          {/* Amendments Overview */}
+          <div className="mt-24 pt-16 border-t border-slate-200 dark:border-slate-700">
+            <h2 className="font-serif text-3xl font-bold text-slate-900 dark:text-white mb-8">Amendment Summary</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {amendmentsData.slice(0, 6).map((amendment) => (
+                <motion.div
+                  key={amendment.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className={`p-4 rounded-lg border ${
+                    darkMode
+                      ? 'bg-slate-800 border-slate-700'
+                      : 'bg-white border-slate-200'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <span className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                      {amendment.date}
+                    </span>
+                    <span className={`px-2 py-1 text-[10px] font-bold uppercase rounded ${
+                      amendment.status === 'Ratified' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
+                      amendment.status === 'Pending' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' :
+                      'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                    }`}>
+                      {amendment.status}
+                    </span>
+                  </div>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white mb-2">{amendment.id}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">
+                    {amendment.description}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default Constitution4Page;

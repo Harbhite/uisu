@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import { SEO } from '@/components/SEO';
 import { constitutionData, amendmentsData } from '@/lib/data';
-import { Search, Scale, ShieldAlert, History, Download, Share2, Printer, Bookmark } from 'lucide-react';
+import { Search, Scale, ShieldAlert, History, Download, Share2, Printer, Bookmark, Zap, Copy, FileText, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ConstitutionSidebar from '@/components/constitution/ConstitutionSidebar';
 import ArticleSection from '@/components/constitution/ArticleSection';
@@ -16,6 +16,10 @@ const ConstitutionPage: React.FC = () => {
   const [bookmarks, setBookmarks] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('constitution-bookmarks') || '[]'); } catch { return []; }
   });
+  const [showComparison, setShowComparison] = useState(false);
+  const [selectedArticles, setSelectedArticles] = useState<string[]>([]);
+  const [showCitationModal, setShowCitationModal] = useState(false);
+  const [citationFormat, setCitationFormat] = useState<'APA' | 'MLA' | 'Chicago'>('APA');
 
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
@@ -66,6 +70,27 @@ const ConstitutionPage: React.FC = () => {
 
   const adjustFontSize = (increment: boolean) => {
     setFontSize(prev => Math.min(Math.max(increment ? prev + 10 : prev - 10, 80), 150));
+  };
+
+  // NEW FEATURE 1: Article Comparison Tool
+  const toggleArticleSelection = (id: string) => {
+    setSelectedArticles(prev => 
+      prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]
+    );
+  };
+
+  // NEW FEATURE 4: Citation Generator
+  const generateCitation = (articleId: string) => {
+    const article = constitutionData.find(a => a.id === articleId);
+    if (!article) return '';
+    
+    const baseUrl = 'https://uisu.space/constitution';
+    const citations = {
+      APA: `UISU. (2024). ${article.title}. In The Union Constitution. Retrieved from ${baseUrl}#${articleId}`,
+      MLA: `"${article.title}." The Union Constitution, UISU, 2024, ${baseUrl}#${articleId}.`,
+      Chicago: `UISU. "${article.title}." The Union Constitution. Accessed 2024. ${baseUrl}#${articleId}.`
+    };
+    return citations[citationFormat];
   };
 
   return (
@@ -125,7 +150,7 @@ const ConstitutionPage: React.FC = () => {
               Enacted to promote welfare, foster excellence, and defend student rights.
             </p>
 
-            {/* Feature Action Bar - NEW FEATURE 1 */}
+            {/* Feature Action Bar */}
             <div className="flex flex-wrap gap-4 mt-8 print:hidden">
               <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20 gap-2 backdrop-blur-sm">
                 <Download size={16} /> Download PDF
@@ -137,7 +162,7 @@ const ConstitutionPage: React.FC = () => {
                 <Printer size={16} /> Print
               </Button>
               <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20 gap-2 backdrop-blur-sm">
-                <Bookmark size={16} /> View Bookmarks ({bookmarks.length})
+                <Bookmark size={16} /> Bookmarks ({bookmarks.length})
               </Button>
             </div>
           </div>
@@ -145,7 +170,7 @@ const ConstitutionPage: React.FC = () => {
 
         {/* Content */}
         <div className="px-6 md:px-12 lg:px-20 py-16 max-w-5xl mx-auto transition-all duration-300" style={{ fontSize: `${fontSize}%` }}>
-          {/* Quick Stats Grid - NEW FEATURE 2 */}
+          {/* Quick Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12 print:hidden">
             <div className="p-4 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-sm">
               <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Articles</div>
@@ -179,7 +204,7 @@ const ConstitutionPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Legislative Highlights - NEW FEATURE 3 */}
+          {/* Legislative Highlights */}
           <div className="mb-16 p-8 bg-ui-blue/5 dark:bg-nobel-gold/5 border border-ui-blue/10 dark:border-nobel-gold/10 rounded-2xl print:hidden">
             <h3 className="font-serif text-xl text-ui-blue dark:text-nobel-gold mb-4 flex items-center gap-2">
               <Zap size={18} /> Legislative Highlights
@@ -193,6 +218,117 @@ const ConstitutionPage: React.FC = () => {
                 <span className="font-bold text-ui-blue dark:text-white block mb-1">Student Rights & Welfare</span>
                 The primary objective of the Union is to promote the welfare of its members and defend their fundamental rights.
               </div>
+            </div>
+          </div>
+
+          {/* NEW FEATURE 1: Article Comparison Tool */}
+          <div className="mb-12 p-6 bg-gradient-to-r from-ui-blue/10 to-nobel-gold/10 border border-ui-blue/20 rounded-xl print:hidden">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-serif text-lg text-ui-blue dark:text-nobel-gold flex items-center gap-2">
+                <TrendingUp size={20} /> Article Comparison Tool
+              </h3>
+              <Button 
+                onClick={() => setShowComparison(!showComparison)}
+                className="text-xs font-bold uppercase"
+                variant={showComparison ? "default" : "outline"}
+              >
+                {showComparison ? 'Hide' : 'Show'} Comparison
+              </Button>
+            </div>
+            {showComparison && (
+              <div className="text-sm text-slate-600 dark:text-slate-400">
+                <p className="mb-3">Select articles to compare their provisions side-by-side.</p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {constitutionData.slice(0, 6).map(article => (
+                    <label key={article.id} className="flex items-center gap-2 p-2 bg-white dark:bg-slate-800 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedArticles.includes(article.id)}
+                        onChange={() => toggleArticleSelection(article.id)}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-xs font-medium">{article.title}</span>
+                    </label>
+                  ))}
+                </div>
+                {selectedArticles.length > 0 && (
+                  <Button className="mt-4 w-full bg-ui-blue hover:bg-ui-blue/90 text-white">
+                    Compare {selectedArticles.length} Article{selectedArticles.length !== 1 ? 's' : ''}
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* NEW FEATURE 2: Amendment Timeline */}
+          <div className="mb-12 p-6 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-xl print:hidden">
+            <h3 className="font-serif text-lg text-amber-900 dark:text-amber-200 flex items-center gap-2 mb-4">
+              <History size={20} /> Amendment Timeline
+            </h3>
+            <div className="space-y-3">
+              {amendmentsData.slice(0, 3).map((amendment, idx) => (
+                <div key={amendment.id} className="flex gap-4 items-start">
+                  <div className="flex flex-col items-center">
+                    <div className="w-3 h-3 rounded-full bg-amber-600 dark:bg-amber-400"></div>
+                    {idx < 2 && <div className="w-0.5 h-8 bg-amber-300 dark:bg-amber-700"></div>}
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-xs font-bold text-amber-900 dark:text-amber-200">{amendment.date}</div>
+                    <div className="text-sm text-amber-800 dark:text-amber-300">{amendment.description}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* NEW FEATURE 3: Related Articles Sidebar */}
+          <div className="mb-12 p-6 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl print:hidden">
+            <h3 className="font-serif text-lg text-ui-blue dark:text-nobel-gold flex items-center gap-2 mb-4">
+              <FileText size={20} /> Related Articles
+            </h3>
+            <div className="space-y-2">
+              {constitutionData.slice(0, 5).map(article => (
+                <button
+                  key={article.id}
+                  onClick={() => scrollToSection(article.id)}
+                  className="w-full text-left p-3 bg-white dark:bg-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-ui-blue dark:hover:text-nobel-gold"
+                >
+                  {article.title}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* NEW FEATURE 4: Citation Generator */}
+          <div className="mb-12 p-6 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 rounded-xl print:hidden">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-serif text-lg text-purple-900 dark:text-purple-200 flex items-center gap-2">
+                <Copy size={20} /> Citation Generator
+              </h3>
+              <div className="flex gap-2">
+                {(['APA', 'MLA', 'Chicago'] as const).map(format => (
+                  <button
+                    key={format}
+                    onClick={() => setCitationFormat(format)}
+                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-colors ${
+                      citationFormat === format 
+                        ? 'bg-purple-600 text-white' 
+                        : 'bg-white dark:bg-slate-700 text-purple-900 dark:text-purple-200 hover:bg-purple-100 dark:hover:bg-slate-600'
+                    }`}
+                  >
+                    {format}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-purple-200 dark:border-purple-700">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">Example citation ({citationFormat}):</p>
+              <p className="text-sm text-slate-700 dark:text-slate-300 font-mono">
+                {generateCitation(constitutionData[0]?.id || '')}
+              </p>
+              <Button className="mt-3 w-full bg-purple-600 hover:bg-purple-700 text-white gap-2">
+                <Copy size={14} /> Copy Citation
+              </Button>
             </div>
           </div>
 
@@ -258,7 +394,7 @@ const ConstitutionPage: React.FC = () => {
             </div>
           </section>
 
-          {/* Feedback & Reporting - NEW FEATURE 4 */}
+          {/* Feedback & Reporting */}
           <section className="mt-20 p-8 bg-slate-100 dark:bg-slate-900 rounded-2xl text-center print:hidden">
             <ShieldAlert className="mx-auto text-ui-blue dark:text-nobel-gold mb-4" size={32} />
             <h3 className="font-serif text-2xl text-ui-blue dark:text-white mb-2">Notice a Discrepancy?</h3>
