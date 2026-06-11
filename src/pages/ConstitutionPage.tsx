@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import { SEO } from '@/components/SEO';
 import { constitutionData, amendmentsData } from '@/lib/data';
-import { Search, Scale, ShieldAlert, History, Download, Share2, Printer, Bookmark, Zap, Copy, FileText, TrendingUp } from 'lucide-react';
+import { Search, Scale, ShieldAlert, History, Zap, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ConstitutionSidebar from '@/components/constitution/ConstitutionSidebar';
 import ArticleSection from '@/components/constitution/ArticleSection';
@@ -16,10 +16,6 @@ const ConstitutionPage: React.FC = () => {
   const [bookmarks, setBookmarks] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('constitution-bookmarks') || '[]'); } catch { return []; }
   });
-  const [showComparison, setShowComparison] = useState(false);
-  const [selectedArticles, setSelectedArticles] = useState<string[]>([]);
-  const [showCitationModal, setShowCitationModal] = useState(false);
-  const [citationFormat, setCitationFormat] = useState<'APA' | 'MLA' | 'Chicago'>('APA');
 
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
@@ -70,27 +66,6 @@ const ConstitutionPage: React.FC = () => {
 
   const adjustFontSize = (increment: boolean) => {
     setFontSize(prev => Math.min(Math.max(increment ? prev + 10 : prev - 10, 80), 150));
-  };
-
-  // NEW FEATURE 1: Article Comparison Tool
-  const toggleArticleSelection = (id: string) => {
-    setSelectedArticles(prev => 
-      prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]
-    );
-  };
-
-  // NEW FEATURE 4: Citation Generator
-  const generateCitation = (articleId: string) => {
-    const article = constitutionData.find(a => a.id === articleId);
-    if (!article) return '';
-    
-    const baseUrl = 'https://uisu.space/constitution';
-    const citations = {
-      APA: `UISU. (2024). ${article.title}. In The Union Constitution. Retrieved from ${baseUrl}#${articleId}`,
-      MLA: `"${article.title}." The Union Constitution, UISU, 2024, ${baseUrl}#${articleId}.`,
-      Chicago: `UISU. "${article.title}." The Union Constitution. Accessed 2024. ${baseUrl}#${articleId}.`
-    };
-    return citations[citationFormat];
   };
 
   return (
@@ -149,22 +124,6 @@ const ConstitutionPage: React.FC = () => {
               The supreme law governing the University of Ibadan Students' Union.
               Enacted to promote welfare, foster excellence, and defend student rights.
             </p>
-
-            {/* Feature Action Bar */}
-            <div className="flex flex-wrap gap-4 mt-8 print:hidden">
-              <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20 gap-2 backdrop-blur-sm">
-                <Download size={16} /> Download PDF
-              </Button>
-              <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20 gap-2 backdrop-blur-sm">
-                <Share2 size={16} /> Share
-              </Button>
-              <Button variant="outline" onClick={() => window.print()} className="bg-white/10 border-white/20 text-white hover:bg-white/20 gap-2 backdrop-blur-sm">
-                <Printer size={16} /> Print
-              </Button>
-              <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20 gap-2 backdrop-blur-sm">
-                <Bookmark size={16} /> Bookmarks ({bookmarks.length})
-              </Button>
-            </div>
           </div>
         </div>
 
@@ -221,49 +180,10 @@ const ConstitutionPage: React.FC = () => {
             </div>
           </div>
 
-          {/* NEW FEATURE 1: Article Comparison Tool */}
-          <div className="mb-12 p-6 bg-gradient-to-r from-ui-blue/10 to-nobel-gold/10 border border-ui-blue/20 rounded-xl print:hidden">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-serif text-lg text-ui-blue dark:text-nobel-gold flex items-center gap-2">
-                <TrendingUp size={20} /> Article Comparison Tool
-              </h3>
-              <Button 
-                onClick={() => setShowComparison(!showComparison)}
-                className="text-xs font-bold uppercase"
-                variant={showComparison ? "default" : "outline"}
-              >
-                {showComparison ? 'Hide' : 'Show'} Comparison
-              </Button>
-            </div>
-            {showComparison && (
-              <div className="text-sm text-slate-600 dark:text-slate-400">
-                <p className="mb-3">Select articles to compare their provisions side-by-side.</p>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {constitutionData.slice(0, 6).map(article => (
-                    <label key={article.id} className="flex items-center gap-2 p-2 bg-white dark:bg-slate-800 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                      <input 
-                        type="checkbox" 
-                        checked={selectedArticles.includes(article.id)}
-                        onChange={() => toggleArticleSelection(article.id)}
-                        className="w-4 h-4"
-                      />
-                      <span className="text-xs font-medium">{article.title}</span>
-                    </label>
-                  ))}
-                </div>
-                {selectedArticles.length > 0 && (
-                  <Button className="mt-4 w-full bg-ui-blue hover:bg-ui-blue/90 text-white">
-                    Compare {selectedArticles.length} Article{selectedArticles.length !== 1 ? 's' : ''}
-                  </Button>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* NEW FEATURE 2: Amendment Timeline */}
-          <div className="mb-12 p-6 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-xl print:hidden">
-            <h3 className="font-serif text-lg text-amber-900 dark:text-amber-200 flex items-center gap-2 mb-4">
-              <History size={20} /> Amendment Timeline
+          {/* Amendment Timeline */}
+          <div className="mb-16 p-8 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl print:hidden">
+            <h3 className="font-serif text-xl text-amber-900 dark:text-amber-200 mb-4 flex items-center gap-2">
+              <History size={18} /> Amendment Timeline
             </h3>
             <div className="space-y-3">
               {amendmentsData.slice(0, 3).map((amendment, idx) => (
@@ -281,10 +201,10 @@ const ConstitutionPage: React.FC = () => {
             </div>
           </div>
 
-          {/* NEW FEATURE 3: Related Articles Sidebar */}
+          {/* Related Articles Sidebar */}
           <div className="mb-12 p-6 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl print:hidden">
             <h3 className="font-serif text-lg text-ui-blue dark:text-nobel-gold flex items-center gap-2 mb-4">
-              <FileText size={20} /> Related Articles
+              Related Articles
             </h3>
             <div className="space-y-2">
               {constitutionData.slice(0, 5).map(article => (
@@ -296,39 +216,6 @@ const ConstitutionPage: React.FC = () => {
                   {article.title}
                 </button>
               ))}
-            </div>
-          </div>
-
-          {/* NEW FEATURE 4: Citation Generator */}
-          <div className="mb-12 p-6 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 rounded-xl print:hidden">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-serif text-lg text-purple-900 dark:text-purple-200 flex items-center gap-2">
-                <Copy size={20} /> Citation Generator
-              </h3>
-              <div className="flex gap-2">
-                {(['APA', 'MLA', 'Chicago'] as const).map(format => (
-                  <button
-                    key={format}
-                    onClick={() => setCitationFormat(format)}
-                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-colors ${
-                      citationFormat === format 
-                        ? 'bg-purple-600 text-white' 
-                        : 'bg-white dark:bg-slate-700 text-purple-900 dark:text-purple-200 hover:bg-purple-100 dark:hover:bg-slate-600'
-                    }`}
-                  >
-                    {format}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-purple-200 dark:border-purple-700">
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">Example citation ({citationFormat}):</p>
-              <p className="text-sm text-slate-700 dark:text-slate-300 font-mono">
-                {generateCitation(constitutionData[0]?.id || '')}
-              </p>
-              <Button className="mt-3 w-full bg-purple-600 hover:bg-purple-700 text-white gap-2">
-                <Copy size={14} /> Copy Citation
-              </Button>
             </div>
           </div>
 

@@ -44,7 +44,7 @@ const Constitution2Page: React.FC = () => {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${
-      darkMode ? 'bg-slate-950 dark' : 'bg-slate-50'
+      darkMode ? 'bg-slate-950 dark' : 'bg-nobel-cream'
     }`}>
       <SEO
         title="Constitution (Timeline Design) | UISU SPACE"
@@ -53,24 +53,24 @@ const Constitution2Page: React.FC = () => {
       />
 
       {/* Reading Progress Bar */}
-      <motion.div className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-ui-blue via-nobel-gold to-ui-blue z-50 origin-left" style={{ scaleX }} />
+      <motion.div className="fixed top-0 left-0 right-0 h-1 bg-nobel-gold z-50 origin-left" style={{ scaleX }} />
 
       {/* Header */}
       <div className={`relative pt-24 pb-20 px-6 md:px-12 lg:px-20 ${
-        darkMode ? 'bg-gradient-to-b from-slate-900 to-slate-950' : 'bg-gradient-to-b from-white to-slate-100'
+        darkMode ? 'bg-ui-dark' : 'bg-ui-blue'
       }`}>
         <div className="max-w-4xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <div className="flex items-center gap-4 mb-8">
-              <div className="p-4 bg-ui-blue/10 rounded-2xl">
-                <Scale className="text-ui-blue" size={28} />
+              <div className="p-4 bg-nobel-gold/20 rounded-lg">
+                <Scale className="text-nobel-gold" size={28} />
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Constitutional Timeline</span>
-                <h1 className="font-serif text-5xl md:text-6xl font-bold text-ui-blue dark:text-white">The Constitution</h1>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Constitutional Timeline</span>
+                <h1 className="font-serif text-5xl md:text-6xl font-bold text-white">The Constitution</h1>
               </div>
             </div>
-            <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl">
+            <p className="text-lg text-slate-200 leading-relaxed max-w-2xl">
               Navigate through the constitutional framework in a chronological, elegant timeline format. Discover the structure and amendments that govern the Students' Union.
             </p>
           </motion.div>
@@ -89,7 +89,7 @@ const Constitution2Page: React.FC = () => {
                 placeholder="Search articles, sections..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`w-full border pl-12 pr-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-ui-blue transition-all ${
+                className={`w-full border pl-12 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-nobel-gold transition-all ${
                   darkMode
                     ? 'bg-slate-800 border-slate-700 text-white'
                     : 'bg-white border-slate-200 text-slate-900'
@@ -98,10 +98,10 @@ const Constitution2Page: React.FC = () => {
             </div>
             <button
               onClick={() => setDarkMode(!darkMode)}
-              className={`px-6 py-3 rounded-xl font-medium text-sm transition-colors ${
+              className={`px-6 py-3 rounded-lg font-medium text-sm transition-colors ${
                 darkMode
-                  ? 'bg-slate-800 border border-slate-700 hover:bg-slate-700'
-                  : 'bg-white border border-slate-200 hover:bg-slate-100'
+                  ? 'bg-slate-800 border border-slate-700 hover:bg-slate-700 text-white'
+                  : 'bg-white border border-slate-200 hover:bg-slate-100 text-slate-900'
               }`}
             >
               {darkMode ? '☀️ Light' : '🌙 Dark'}
@@ -120,7 +120,7 @@ const Constitution2Page: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="grid grid-cols-3 gap-4 mb-16"
           >
-            <div className={`p-4 rounded-xl border ${
+            <div className={`p-4 rounded-lg border ${
               darkMode
                 ? 'bg-slate-800 border-slate-700'
                 : 'bg-white border-slate-200'
@@ -128,7 +128,7 @@ const Constitution2Page: React.FC = () => {
               <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Total Articles</div>
               <div className="text-3xl font-serif font-bold text-ui-blue dark:text-nobel-gold">{constitutionData.length}</div>
             </div>
-            <div className={`p-4 rounded-xl border ${
+            <div className={`p-4 rounded-lg border ${
               darkMode
                 ? 'bg-slate-800 border-slate-700'
                 : 'bg-white border-slate-200'
@@ -136,13 +136,13 @@ const Constitution2Page: React.FC = () => {
               <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Amendments</div>
               <div className="text-3xl font-serif font-bold text-nobel-gold">{amendmentsData.length}</div>
             </div>
-            <div className={`p-4 rounded-xl border ${
+            <div className={`p-4 rounded-lg border ${
               darkMode
                 ? 'bg-slate-800 border-slate-700'
                 : 'bg-white border-slate-200'
             }`}>
               <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Bookmarks</div>
-              <div className="text-3xl font-serif font-bold text-green-600 dark:text-green-400">{bookmarks.length}</div>
+              <div className="text-3xl font-serif font-bold text-nobel-gold">{bookmarks.length}</div>
             </div>
           </motion.div>
 
@@ -175,7 +175,7 @@ const Constitution2Page: React.FC = () => {
                   {/* Timeline Card */}
                   <div
                     onClick={() => toggleExpanded(article.id)}
-                    className={`rounded-2xl border-2 transition-all cursor-pointer overflow-hidden ${
+                    className={`rounded-lg border-2 transition-all cursor-pointer overflow-hidden ${
                       expandedArticles.includes(article.id)
                         ? darkMode
                           ? 'bg-slate-800 border-nobel-gold shadow-lg shadow-nobel-gold/20'
@@ -186,7 +186,11 @@ const Constitution2Page: React.FC = () => {
                     }`}
                   >
                     {/* Card Header */}
-                    <div className="p-6 bg-gradient-to-r from-ui-blue/5 to-nobel-gold/5 border-b border-slate-200 dark:border-slate-700">
+                    <div className={`p-6 border-b ${
+                      darkMode
+                        ? 'bg-slate-700/50 border-slate-700'
+                        : 'bg-slate-50 border-slate-200'
+                    }`}>
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
@@ -267,7 +271,7 @@ const Constitution2Page: React.FC = () => {
             <h2 className="font-serif text-3xl font-bold text-ui-blue dark:text-white mb-12">Amendment Timeline</h2>
             <div className="relative">
               {/* Timeline Line */}
-              <div className="absolute left-8 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-500 to-orange-500"></div>
+              <div className="absolute left-8 top-0 bottom-0 w-1 bg-gradient-to-b from-nobel-gold to-nobel-gold"></div>
 
               {/* Amendment Items */}
               <div className="space-y-6">
@@ -281,11 +285,11 @@ const Constitution2Page: React.FC = () => {
                   >
                     {/* Timeline Dot */}
                     <div className="absolute left-2 top-2 w-12 h-12 flex items-center justify-center">
-                      <div className="w-8 h-8 rounded-full bg-amber-500 border-4 border-white dark:border-slate-950"></div>
+                      <div className="w-8 h-8 rounded-full bg-nobel-gold border-4 border-white dark:border-slate-950"></div>
                     </div>
 
                     {/* Amendment Card */}
-                    <div className={`p-4 rounded-xl border ${
+                    <div className={`p-4 rounded-lg border ${
                       darkMode
                         ? 'bg-slate-800 border-slate-700'
                         : 'bg-white border-slate-200'
@@ -295,7 +299,7 @@ const Constitution2Page: React.FC = () => {
                           <span className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">{amendment.date}</span>
                           <span className="ml-3 text-xs font-mono text-ui-blue dark:text-nobel-gold font-bold">{amendment.id}</span>
                         </div>
-                        <span className={`px-3 py-1 text-xs font-bold uppercase rounded-lg ${
+                        <span className={`px-3 py-1 text-xs font-bold uppercase rounded-sm ${
                           amendment.status === 'Ratified' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
                           amendment.status === 'Pending' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' :
                           'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'

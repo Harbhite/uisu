@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import { SEO } from '@/components/SEO';
 import { constitutionData, amendmentsData } from '@/lib/data';
-import { Search, Scale, BookOpen, Columns3, Filter, Download, Eye, EyeOff } from 'lucide-react';
+import { Search, Scale, BookOpen, Columns3, Download, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Constitution4Page: React.FC = () => {
@@ -41,7 +41,7 @@ const Constitution4Page: React.FC = () => {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${
-      darkMode ? 'bg-slate-950 dark' : 'bg-slate-50'
+      darkMode ? 'bg-slate-950 dark' : 'bg-nobel-cream'
     }`}>
       <SEO
         title="Constitution (Multi-Column Design) | UISU SPACE"
@@ -50,26 +50,26 @@ const Constitution4Page: React.FC = () => {
       />
 
       {/* Reading Progress Bar */}
-      <motion.div className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-teal-500 via-cyan-500 to-teal-500 z-50 origin-left" style={{ scaleX }} />
+      <motion.div className="fixed top-0 left-0 right-0 h-1 bg-nobel-gold z-50 origin-left" style={{ scaleX }} />
 
       {/* Header */}
       <div className={`relative pt-20 pb-16 px-6 md:px-12 lg:px-20 border-b ${
         darkMode
-          ? 'bg-gradient-to-b from-slate-900 to-slate-950 border-slate-800'
-          : 'bg-gradient-to-b from-white to-slate-50 border-slate-200'
+          ? 'bg-ui-dark border-slate-800'
+          : 'bg-ui-blue border-slate-200'
       }`}>
         <div className="max-w-7xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 bg-teal-500/20 rounded-lg">
-                <Columns3 className="text-teal-500" size={24} />
+              <div className="p-3 bg-nobel-gold/20 rounded-lg">
+                <Columns3 className="text-nobel-gold" size={24} />
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Multi-Column View</span>
-                <h1 className="font-serif text-5xl md:text-6xl font-bold text-slate-900 dark:text-white">The Constitution</h1>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Multi-Column View</span>
+                <h1 className="font-serif text-5xl md:text-6xl font-bold text-white">The Constitution</h1>
               </div>
             </div>
-            <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-3xl">
+            <p className="text-lg text-slate-200 leading-relaxed max-w-3xl">
               Compare multiple articles side-by-side in a powerful multi-column layout. Select articles to analyze and compare their provisions.
             </p>
           </motion.div>
@@ -88,7 +88,7 @@ const Constitution4Page: React.FC = () => {
                 placeholder="Search articles to add to comparison..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`w-full border pl-12 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all ${
+                className={`w-full border pl-12 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-nobel-gold transition-all ${
                   darkMode
                     ? 'bg-slate-800 border-slate-700 text-white'
                     : 'bg-white border-slate-200 text-slate-900'
@@ -100,7 +100,7 @@ const Constitution4Page: React.FC = () => {
                 onClick={() => setColumnCount(2)}
                 className={`px-4 py-3 rounded-lg font-medium text-sm transition-colors ${
                   columnCount === 2
-                    ? 'bg-teal-500 text-white'
+                    ? 'bg-nobel-gold text-ui-blue'
                     : darkMode
                       ? 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'
                       : 'bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200'
@@ -112,7 +112,7 @@ const Constitution4Page: React.FC = () => {
                 onClick={() => setColumnCount(3)}
                 className={`px-4 py-3 rounded-lg font-medium text-sm transition-colors ${
                   columnCount === 3
-                    ? 'bg-teal-500 text-white'
+                    ? 'bg-nobel-gold text-ui-blue'
                     : darkMode
                       ? 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'
                       : 'bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200'
@@ -146,7 +146,7 @@ const Constitution4Page: React.FC = () => {
             className="mb-12"
           >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-serif text-2xl font-bold text-slate-900 dark:text-white">
+              <h2 className="font-serif text-2xl font-bold text-ui-blue dark:text-white">
                 Select Articles to Compare
               </h2>
               <span className="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
@@ -162,20 +162,20 @@ const Constitution4Page: React.FC = () => {
                   onClick={() => toggleArticleSelection(article.id)}
                   className={`p-3 rounded-lg border-2 text-left transition-all ${
                     selectedArticles.includes(article.id)
-                      ? 'border-teal-500 bg-teal-500/10'
+                      ? 'border-nobel-gold bg-nobel-gold/10'
                       : darkMode
-                        ? 'border-slate-700 bg-slate-800 hover:border-teal-500/50'
-                        : 'border-slate-200 bg-white hover:border-teal-500/50'
+                        ? 'border-slate-700 bg-slate-800 hover:border-nobel-gold/50'
+                        : 'border-slate-200 bg-white hover:border-nobel-gold/50'
                   }`}
                 >
                   <div className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">
                     Article {article.id.replace('article-', '')}
                   </div>
-                  <div className="text-sm font-bold text-slate-900 dark:text-white line-clamp-2">
+                  <div className="text-sm font-bold text-ui-blue dark:text-white line-clamp-2">
                     {article.title}
                   </div>
                   {selectedArticles.includes(article.id) && (
-                    <div className="mt-2 text-xs font-bold text-teal-600 dark:text-teal-400">
+                    <div className="mt-2 text-xs font-bold text-nobel-gold">
                       ✓ Selected
                     </div>
                   )}
@@ -200,20 +200,24 @@ const Constitution4Page: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: colIdx * 0.1 }}
-                  className={`rounded-xl border-2 overflow-hidden ${
+                  className={`rounded-lg border-2 overflow-hidden ${
                     darkMode
                       ? 'bg-slate-800 border-slate-700'
                       : 'bg-white border-slate-200'
                   }`}
                 >
                   {/* Column Header */}
-                  <div className="p-6 bg-gradient-to-r from-teal-500/10 to-cyan-500/10 border-b-2 border-teal-500/20">
+                  <div className={`p-6 border-b-2 border-nobel-gold/20 ${
+                    darkMode
+                      ? 'bg-slate-700/50'
+                      : 'bg-slate-50'
+                  }`}>
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                           Article {article.id.replace('article-', '')}
                         </span>
-                        <h3 className="font-serif text-xl font-bold text-slate-900 dark:text-white mt-2">
+                        <h3 className="font-serif text-xl font-bold text-ui-blue dark:text-white mt-2">
                           {article.title}
                         </h3>
                       </div>
@@ -221,7 +225,7 @@ const Constitution4Page: React.FC = () => {
                         onClick={() => toggleArticleSelection(article.id)}
                         className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                       >
-                        <Eye size={18} className="text-teal-500" />
+                        <Eye size={18} className="text-nobel-gold" />
                       </button>
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -237,9 +241,9 @@ const Constitution4Page: React.FC = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.3, delay: sIdx * 0.05 }}
-                        className="border-l-4 border-teal-500 pl-4"
+                        className="border-l-4 border-nobel-gold pl-4"
                       >
-                        <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-2">
+                        <h4 className="font-bold text-sm text-ui-blue dark:text-white mb-2">
                           {section.title}
                         </h4>
                         <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-4">
@@ -254,7 +258,7 @@ const Constitution4Page: React.FC = () => {
                               </div>
                             ))}
                             {section.subSections.length > 3 && (
-                              <p className="text-xs text-teal-600 dark:text-teal-400 font-medium">
+                              <p className="text-xs text-nobel-gold font-medium">
                                 +{section.subSections.length - 3} more
                               </p>
                             )}
@@ -265,8 +269,12 @@ const Constitution4Page: React.FC = () => {
                   </div>
 
                   {/* Column Footer */}
-                  <div className="p-4 border-t-2 border-slate-700 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex gap-2">
-                    <button className="flex-1 px-3 py-2 rounded-lg bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 text-xs font-bold uppercase transition-colors">
+                  <div className={`p-4 border-t-2 border-slate-700 flex gap-2 ${
+                    darkMode
+                      ? 'bg-slate-900/50'
+                      : 'bg-slate-50'
+                  }`}>
+                    <button className="flex-1 px-3 py-2 rounded-lg bg-nobel-gold/10 hover:bg-nobel-gold/20 text-nobel-gold text-xs font-bold uppercase transition-colors">
                       <Download size={14} className="inline mr-1" /> Export
                     </button>
                   </div>
@@ -286,7 +294,7 @@ const Constitution4Page: React.FC = () => {
 
           {/* Amendments Overview */}
           <div className="mt-24 pt-16 border-t border-slate-200 dark:border-slate-700">
-            <h2 className="font-serif text-3xl font-bold text-slate-900 dark:text-white mb-8">Amendment Summary</h2>
+            <h2 className="font-serif text-3xl font-bold text-ui-blue dark:text-white mb-8">Amendment Summary</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {amendmentsData.slice(0, 6).map((amendment) => (
                 <motion.div
@@ -312,7 +320,7 @@ const Constitution4Page: React.FC = () => {
                       {amendment.status}
                     </span>
                   </div>
-                  <p className="text-sm font-bold text-slate-900 dark:text-white mb-2">{amendment.id}</p>
+                  <p className="text-sm font-bold text-ui-blue dark:text-white mb-2">{amendment.id}</p>
                   <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">
                     {amendment.description}
                   </p>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import { SEO } from '@/components/SEO';
 import { constitutionData, amendmentsData } from '@/lib/data';
-import { Search, Scale, ChevronRight, BookOpen, Zap, Filter, Star, Eye } from 'lucide-react';
+import { Search, Scale, ChevronRight, BookOpen, Zap, Star, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -45,7 +45,7 @@ const Constitution1Page: React.FC = () => {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${
-      darkMode ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 dark' : 'bg-gradient-to-br from-slate-50 via-white to-slate-50'
+      darkMode ? 'bg-slate-950 dark' : 'bg-nobel-cream'
     }`}>
       <SEO
         title="Constitution (Modern Design) | UISU SPACE"
@@ -53,17 +53,13 @@ const Constitution1Page: React.FC = () => {
         image="/og/pages-screenshot/constitution.png"
       />
 
-      {/* Animated Background */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-nobel-gold/10 rounded-full blur-3xl opacity-20"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-ui-blue/10 rounded-full blur-3xl opacity-20"></div>
-      </div>
-
       {/* Reading Progress Bar */}
-      <motion.div className="fixed top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-nobel-gold to-ui-blue z-50 origin-left" style={{ scaleX }} />
+      <motion.div className="fixed top-0 left-0 right-0 h-1 bg-nobel-gold z-50 origin-left" style={{ scaleX }} />
 
       {/* Header */}
-      <div className="relative pt-20 pb-16 px-6 md:px-12 lg:px-20">
+      <div className={`relative pt-20 pb-16 px-6 md:px-12 lg:px-20 ${
+        darkMode ? 'bg-ui-dark' : 'bg-ui-blue'
+      }`}>
         <div className="max-w-6xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <div className="flex items-center gap-3 mb-6">
@@ -71,11 +67,11 @@ const Constitution1Page: React.FC = () => {
                 <Scale className="text-nobel-gold" size={24} />
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Official Document</span>
-                <h1 className="font-serif text-5xl md:text-6xl font-bold text-ui-blue dark:text-white">The Constitution</h1>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Official Document</span>
+                <h1 className="font-serif text-5xl md:text-6xl font-bold text-white">The Constitution</h1>
               </div>
             </div>
-            <p className="text-lg text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed">
+            <p className="text-lg text-slate-200 max-w-3xl leading-relaxed">
               Explore the supreme law of the University of Ibadan Students' Union through an intuitive, modern interface.
             </p>
           </motion.div>
@@ -94,12 +90,20 @@ const Constitution1Page: React.FC = () => {
                 placeholder="Search articles, sections..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 pl-12 pr-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-nobel-gold transition-all shadow-sm"
+                className={`w-full border pl-12 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-nobel-gold transition-all ${
+                  darkMode
+                    ? 'bg-slate-800 border-slate-700 text-white'
+                    : 'bg-white border-slate-200 text-slate-900'
+                }`}
               />
             </div>
             <button
               onClick={() => setDarkMode(!darkMode)}
-              className="px-6 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors font-medium text-sm"
+              className={`px-6 py-3 rounded-lg font-medium text-sm transition-colors ${
+                darkMode
+                  ? 'bg-slate-800 border border-slate-700 hover:bg-slate-700 text-white'
+                  : 'bg-white border border-slate-200 hover:bg-slate-100 text-slate-900'
+              }`}
             >
               {darkMode ? '☀️ Light' : '🌙 Dark'}
             </button>
@@ -108,7 +112,11 @@ const Constitution1Page: React.FC = () => {
       </div>
 
       {/* Category Filter */}
-      <div className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-700 px-6 md:px-12 lg:px-20 py-4">
+      <div className={`sticky top-0 z-40 backdrop-blur-xl border-b px-6 md:px-12 lg:px-20 py-4 ${
+        darkMode
+          ? 'bg-slate-900/80 border-slate-700'
+          : 'bg-white/80 border-slate-200'
+      }`}>
         <div className="max-w-6xl mx-auto flex gap-2 overflow-x-auto pb-2">
           {categories.map(cat => (
             <button
@@ -118,7 +126,9 @@ const Constitution1Page: React.FC = () => {
                 'px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all',
                 selectedCategory === cat.id
                   ? 'bg-nobel-gold text-ui-blue shadow-lg'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  : darkMode
+                    ? 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               )}
             >
               {cat.label} <span className="ml-2 text-xs opacity-70">({cat.count})</span>
@@ -137,17 +147,29 @@ const Constitution1Page: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16"
           >
-            <div className="p-6 bg-gradient-to-br from-ui-blue/10 to-ui-blue/5 border border-ui-blue/20 rounded-2xl">
-              <div className="text-sm font-bold uppercase tracking-widest text-ui-blue dark:text-nobel-gold mb-2">Total Articles</div>
-              <div className="text-4xl font-serif font-bold text-ui-blue dark:text-white">{constitutionData.length}</div>
+            <div className={`p-6 rounded-xl border ${
+              darkMode
+                ? 'bg-slate-800 border-slate-700'
+                : 'bg-white border-slate-200'
+            }`}>
+              <div className="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Total Articles</div>
+              <div className="text-4xl font-serif font-bold text-ui-blue dark:text-nobel-gold">{constitutionData.length}</div>
             </div>
-            <div className="p-6 bg-gradient-to-br from-nobel-gold/10 to-nobel-gold/5 border border-nobel-gold/20 rounded-2xl">
-              <div className="text-sm font-bold uppercase tracking-widest text-nobel-gold mb-2">Amendments</div>
+            <div className={`p-6 rounded-xl border ${
+              darkMode
+                ? 'bg-slate-800 border-slate-700'
+                : 'bg-white border-slate-200'
+            }`}>
+              <div className="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Amendments</div>
               <div className="text-4xl font-serif font-bold text-nobel-gold">{amendmentsData.length}</div>
             </div>
-            <div className="p-6 bg-gradient-to-br from-green-500/10 to-green-500/5 border border-green-500/20 rounded-2xl">
-              <div className="text-sm font-bold uppercase tracking-widest text-green-600 dark:text-green-400 mb-2">Your Favorites</div>
-              <div className="text-4xl font-serif font-bold text-green-600 dark:text-green-400">{favorites.length}</div>
+            <div className={`p-6 rounded-xl border ${
+              darkMode
+                ? 'bg-slate-800 border-slate-700'
+                : 'bg-white border-slate-200'
+            }`}>
+              <div className="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Your Favorites</div>
+              <div className="text-4xl font-serif font-bold text-nobel-gold">{favorites.length}</div>
             </div>
           </motion.div>
 
@@ -159,10 +181,18 @@ const Constitution1Page: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: idx * 0.05 }}
-                className="group bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden hover:shadow-xl hover:border-nobel-gold/50 transition-all duration-300 cursor-pointer"
+                className={`group rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer border ${
+                  darkMode
+                    ? 'bg-slate-800 border-slate-700 hover:border-nobel-gold/50'
+                    : 'bg-white border-slate-200 hover:border-nobel-gold/50'
+                }`}
               >
                 {/* Card Header */}
-                <div className="p-6 bg-gradient-to-r from-ui-blue/5 to-nobel-gold/5 border-b border-slate-200 dark:border-slate-700">
+                <div className={`p-6 border-b ${
+                  darkMode
+                    ? 'bg-slate-700/50 border-slate-700'
+                    : 'bg-slate-50 border-slate-200'
+                }`}>
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Article {article.id.replace('article-', '')}</div>
@@ -175,7 +205,7 @@ const Constitution1Page: React.FC = () => {
                         e.stopPropagation();
                         toggleFavorite(article.id);
                       }}
-                      className="p-2 rounded-lg hover:bg-white dark:hover:bg-slate-700 transition-colors"
+                      className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                     >
                       <Star
                         size={20}
@@ -225,7 +255,11 @@ const Constitution1Page: React.FC = () => {
                   initial={{ opacity: 0, x: -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-nobel-gold/50 transition-colors"
+                  className={`p-4 rounded-lg border transition-colors ${
+                    darkMode
+                      ? 'bg-slate-800 border-slate-700 hover:border-nobel-gold/50'
+                      : 'bg-white border-slate-200 hover:border-nobel-gold/50'
+                  }`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -235,7 +269,7 @@ const Constitution1Page: React.FC = () => {
                       </div>
                       <p className="text-sm text-slate-700 dark:text-slate-300">{amendment.description}</p>
                     </div>
-                    <span className={`px-3 py-1 text-xs font-bold uppercase rounded-lg whitespace-nowrap ml-4 ${
+                    <span className={`px-3 py-1 text-xs font-bold uppercase rounded-sm whitespace-nowrap ml-4 ${
                       amendment.status === 'Ratified' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
                       amendment.status === 'Pending' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' :
                       'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
