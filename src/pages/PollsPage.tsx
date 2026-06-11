@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Plus, BarChart3, Vote, Clock, CheckCircle2, Loader2, Lock, Users,
   Trash2, EyeOff, Share2, Search, Filter, TrendingUp, Timer, Sparkles,
-  ChevronDown, Copy, X, Award, Flame, Calendar, RotateCcw
+  ChevronDown, Copy, X, Award, Flame, Calendar, RotateCcw, ShieldCheck, Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -321,36 +321,41 @@ const PollsPage = () => {
       <SEO title="Polls & Voting | UISU SPACE" description="Vote on governance decisions, club elections, and community feedback." />
 
       {/* ── Hero Section ── */}
-      <div className="bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4 md:px-6 max-w-5xl py-12 md:py-20">
+      <div className="relative overflow-hidden bg-primary text-primary-foreground rounded-b-[3rem]">
+        {/* Decorative background elements */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl -mr-20 -mt-20 animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/5 rounded-full blur-2xl -ml-10 -mb-10" />
+        
+        <div className="container mx-auto px-4 md:px-6 max-w-5xl py-16 md:py-24 relative z-10">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <button onClick={() => navigate('/')} className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-primary-foreground/60 hover:text-primary-foreground transition-colors mb-8">
-              <div className="p-2 border border-primary-foreground/20 rounded-full group-hover:border-primary-foreground/50"><ArrowLeft size={14} /></div>
+            <button onClick={() => navigate('/')} className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-primary-foreground/60 hover:text-primary-foreground transition-all mb-10">
+              <div className="p-2.5 border border-primary-foreground/20 rounded-full group-hover:border-primary-foreground/50 group-hover:scale-110 transition-transform"><ArrowLeft size={14} /></div>
               Back to Home
             </button>
 
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-              <div>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 bg-accent/20 flex items-center justify-center">
-                    <Vote className="w-4 h-4 text-accent" />
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8">
+              <div className="max-w-2xl">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-accent/20 rounded-2xl flex items-center justify-center rotate-3 hover:rotate-0 transition-transform duration-300">
+                    <Vote className="w-5 h-5 text-accent" />
                   </div>
-                  <span className="text-[10px] font-bold tracking-[0.25em] uppercase text-accent">Community Voice</span>
+                  <Badge variant="outline" className="border-accent/30 text-accent font-bold tracking-widest text-[10px] py-1 px-3 rounded-full">COMMUNITY VOICE</Badge>
                 </div>
-                <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif leading-[0.9] mb-4">
-                  Polls &<br /><span className="italic text-primary-foreground/60">Voting</span>
+                <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif leading-[0.85] mb-6">
+                  Polls &<br /><span className="italic text-primary-foreground/40">Voting</span>
                 </h1>
-                <p className="text-primary-foreground/50 text-sm max-w-md font-light leading-relaxed">
-                  Shape the future of your student union. Every vote counts, every voice matters.
+                <p className="text-primary-foreground/60 text-lg md:text-xl font-light leading-relaxed max-w-lg">
+                  Shape the future of your student union. Every vote is secured by <span className="text-accent font-medium">blockchain technology</span> for total transparency.
                 </p>
               </div>
 
               {isStaff && (
                 <Button
                   onClick={() => setShowCreate(true)}
-                  className="bg-accent text-accent-foreground hover:bg-accent/90 self-start md:self-end"
+                  className="bg-accent text-accent-foreground hover:bg-accent/90 self-start md:self-end h-14 px-8 rounded-2xl shadow-xl shadow-accent/20 group transition-all hover:-translate-y-1"
                 >
-                  <Plus size={16} className="mr-2" /> Create Poll
+                  <Plus size={18} className="mr-2 group-hover:rotate-90 transition-transform duration-300" /> 
+                  <span className="font-bold tracking-tight">Create New Poll</span>
                 </Button>
               )}
             </div>
@@ -359,414 +364,400 @@ const PollsPage = () => {
       </div>
 
       {/* ── Stats Strip ── */}
-      <div className="border-b border-border bg-card rounded-b-2xl">
-        <div className="container mx-auto px-4 md:px-6 max-w-5xl">
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border">
+      <div className="container mx-auto px-4 md:px-6 max-w-5xl -mt-8 relative z-20">
+        <div className="bg-card border border-border rounded-[2rem] shadow-2xl shadow-black/5 p-2 overflow-hidden">
+          <div className="grid grid-cols-2 md:grid-cols-4">
             {[
-              { label: 'Total Polls', value: stats.total, icon: BarChart3 },
-              { label: 'Active Now', value: stats.active, icon: Flame },
-              { label: 'Total Votes', value: stats.totalVotes, icon: TrendingUp },
-              { label: 'You Voted', value: stats.participated, icon: Award },
+              { label: 'Total Polls', value: stats.total, icon: BarChart3, color: 'text-primary' },
+              { label: 'Active Now', value: stats.active, icon: Flame, color: 'text-orange-500' },
+              { label: 'Total Votes', value: stats.totalVotes, icon: TrendingUp, color: 'text-green-500' },
+              { label: 'You Voted', value: stats.participated, icon: Award, color: 'text-accent' },
             ].map((stat, i) => (
               <motion.div
                 key={stat.label}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 * i, duration: 0.4 }}
-                className="py-5 px-4 md:px-6 text-center"
+                className="flex flex-col items-center justify-center py-6 px-4 hover:bg-muted/50 transition-colors cursor-default group"
               >
-                <stat.icon size={14} className="mx-auto text-accent mb-1.5" />
-                <div className="text-2xl font-serif font-bold text-foreground">{stat.value}</div>
-                <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">{stat.label}</div>
+                <div className={`p-2.5 rounded-xl bg-muted group-hover:scale-110 transition-transform duration-300 mb-3 ${stat.color}`}>
+                  <stat.icon size={18} />
+                </div>
+                <span className="text-2xl md:text-3xl font-serif font-bold mb-1">{stat.value}</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">{stat.label}</span>
               </motion.div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* ── Filter & Search Bar ── */}
-      <div className="container mx-auto px-4 md:px-6 max-w-5xl mt-8 mb-6">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search polls..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar">
-            {([
-              { key: 'all', label: 'All' },
-              { key: 'active', label: 'Active' },
-              { key: 'closed', label: 'Closed' },
-              { key: 'voted', label: 'Voted' },
-              { key: 'not_voted', label: 'Not Voted' },
-            ] as { key: FilterType; label: string }[]).map(f => (
+      {/* ── Main Content ── */}
+      <div className="container mx-auto px-4 md:px-6 max-w-5xl mt-16">
+        {/* Filters & Search */}
+        <div className="flex flex-col md:flex-row gap-6 mb-12 items-center justify-between">
+          <div className="flex items-center gap-2 p-1.5 bg-muted/50 rounded-2xl border border-border w-full md:w-auto overflow-x-auto no-scrollbar">
+            {(['all', 'active', 'closed', 'voted', 'not_voted'] as FilterType[]).map((f) => (
               <button
-                key={f.key}
-                onClick={() => setFilter(f.key)}
-                className={`px-4 py-2 text-xs font-bold uppercase tracking-widest whitespace-nowrap border transition-all ${
-                  filter === f.key
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-background text-muted-foreground border-border hover:border-primary/40'
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
+                  filter === f ? 'bg-card text-primary shadow-sm ring-1 ring-border' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                {f.label}
+                {f.replace('_', ' ')}
               </button>
             ))}
           </div>
+
+          <div className="relative w-full md:w-72 group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} />
+            <Input
+              placeholder="Search polls..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-12 h-12 rounded-2xl border-border bg-card focus-visible:ring-accent transition-all"
+            />
+          </div>
         </div>
-      </div>
 
-      {/* ── Polls List ── */}
-      <div className="container mx-auto px-4 md:px-6 max-w-5xl">
-        <AnimatePresence mode="wait">
-          {filteredPolls.length === 0 ? (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              className="text-center py-20 bg-card border border-border"
-            >
-              <div className="w-16 h-16 mx-auto mb-4 bg-muted flex items-center justify-center">
-                <BarChart3 size={32} className="text-muted-foreground" />
-              </div>
-              <h3 className="font-serif text-xl mb-2 text-foreground">No polls found</h3>
-              <p className="text-muted-foreground text-sm font-light">
-                {searchQuery ? 'Try adjusting your search.' : 'Check back later for community polls.'}
-              </p>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="list"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="space-y-4"
-            >
-              {filteredPolls.map((poll, index) => {
-                const pollOptions = options[poll.id] || [];
-                const hasVoted = !!userVotes[poll.id]?.length;
-                const totalVotes = pollOptions.reduce((s, o) => s + o.vote_count, 0);
-                const canSeeResults = poll.status === 'closed' || poll.show_results_before_close || hasVoted;
-                const isExpired = poll.ends_at ? isPast(new Date(poll.ends_at)) : false;
-                const isClosed = poll.status === 'closed' || isExpired;
-                const winner = isClosed ? getWinningOption(poll.id) : null;
-                const isChanging = changingVote === poll.id;
-                const showVoteUI = (!isClosed && !hasVoted) || isChanging;
+        {/* Polls Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <AnimatePresence mode="popLayout">
+            {filteredPolls.map((poll) => {
+              const pollOptions = options[poll.id] || [];
+              const votedOptions = userVotes[poll.id] || [];
+              const hasVoted = votedOptions.length > 0;
+              const isClosed = poll.status === 'closed' || (poll.ends_at && isPast(new Date(poll.ends_at)));
+              const showResults = isClosed || (poll.show_results_before_close && hasVoted);
+              const totalVotes = pollOptions.reduce((s, o) => s + o.vote_count, 0);
+              const isExpanded = expandedPoll === poll.id;
+              const isChanging = changingVote === poll.id;
+              const winningOption = getWinningOption(poll.id);
 
-                return (
-                  <motion.div
-                    key={poll.id}
-                    id={poll.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05, duration: 0.4 }}
-                    className="relative bg-card border border-border overflow-hidden rounded-2xl shadow-sm hover:shadow-md group"
-                  >
-                    {/* Confetti overlay */}
-                    {confettiPoll === poll.id && (
-                      <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">
-                        {Array.from({ length: 30 }).map((_, i) => (
-                          <ConfettiPiece key={i} delay={Math.random() * 0.5} x={Math.random() * 100} />
-                        ))}
+              return (
+                <motion.div
+                  key={poll.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className={`group relative bg-card border border-border rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-black/5 flex flex-col ${
+                    isExpanded ? 'md:col-span-2' : ''
+                  }`}
+                >
+                  {/* Confetti overlay */}
+                  {confettiPoll === poll.id && (
+                    <div className="absolute inset-0 pointer-events-none z-50 overflow-hidden">
+                      {Array.from({ length: 30 }).map((_, i) => (
+                        <ConfettiPiece key={i} delay={i * 0.05} x={Math.random() * 100} />
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="p-8 flex-1">
+                    <div className="flex items-start justify-between mb-6">
+                      <div className="flex flex-wrap gap-2">
+                        {isClosed ? (
+                          <Badge className="bg-muted text-muted-foreground rounded-lg px-2.5 py-0.5 border-none flex items-center gap-1.5 font-bold text-[10px] tracking-wider">
+                            <Lock size={10} /> CLOSED
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-green-500/10 text-green-600 rounded-lg px-2.5 py-0.5 border-none flex items-center gap-1.5 font-bold text-[10px] tracking-wider animate-pulse">
+                            <Clock size={10} /> ACTIVE
+                          </Badge>
+                        )}
+                        {poll.is_anonymous && (
+                          <Badge variant="outline" className="rounded-lg px-2.5 py-0.5 text-[10px] font-bold tracking-wider border-border text-muted-foreground">
+                            <EyeOff size={10} className="mr-1.5" /> ANONYMOUS
+                          </Badge>
+                        )}
+                        {blockchainTx[poll.id] && (
+                          <Badge className="bg-accent/10 text-accent rounded-lg px-2.5 py-0.5 border-none flex items-center gap-1.5 font-bold text-[10px] tracking-wider">
+                            <ShieldCheck size={10} /> VERIFIED
+                          </Badge>
+                        )}
                       </div>
-                    )}
-
-                    {/* Status accent bar */}
-                    <div className={`h-1 w-full ${isClosed ? 'bg-muted-foreground/30' : 'bg-accent'}`} />
-
-                    <div className="p-6 md:p-8">
-                      {/* Header */}
-                      <div className="flex items-start justify-between gap-4 mb-1">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap mb-2">
-                            <Badge
-                              variant={isClosed ? 'secondary' : 'default'}
-                              className={`text-[10px] font-bold tracking-wider uppercase ${!isClosed ? 'bg-accent text-accent-foreground' : ''}`}
-                            >
-                              {isClosed ? 'Closed' : 'Live'}
-                            </Badge>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                              {poll.poll_type.replace('_', ' ')}
-                            </span>
-                            {poll.is_anonymous && (
-                              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
-                                <EyeOff size={10} /> Anonymous
-                              </span>
-                            )}
-                          </div>
-                          <h2 className="text-xl md:text-2xl font-serif text-foreground leading-tight">{poll.title}</h2>
-                        </div>
-
-                        <button
-                          onClick={() => sharePoll(poll)}
-                          className="p-2 text-muted-foreground hover:text-primary transition-colors shrink-0"
-                          title="Copy link"
-                        >
+                      
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => sharePoll(poll)} className="h-9 w-9 rounded-xl hover:bg-muted text-muted-foreground hover:text-primary transition-colors">
                           <Share2 size={16} />
-                        </button>
-                      </div>
-
-                      {poll.description && (
-                        <p className="text-sm text-muted-foreground font-light mb-4 leading-relaxed">{poll.description}</p>
-                      )}
-
-                      {/* Meta row */}
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground mb-6 flex-wrap">
-                        <span className="flex items-center gap-1.5">
-                          <Users size={12} className="text-accent" />
-                          <span className="font-bold text-foreground">{totalVotes}</span> votes
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                          <Calendar size={12} />
-                          {format(new Date(poll.created_at), 'MMM d, yyyy')}
-                        </span>
-                        {poll.ends_at && !isClosed && <CountdownTimer endsAt={poll.ends_at} />}
-                        {isClosed && poll.ends_at && (
-                          <span className="text-xs">Ended {formatDistanceToNow(new Date(poll.ends_at))} ago</span>
-                        )}
-                      </div>
-
-                      {/* Winner announcement for closed polls */}
-                      {isClosed && winner && totalVotes > 0 && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="mb-6 p-4 border border-accent/30 rounded-xl bg-accent/5"
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <Award size={16} className="text-accent" />
-                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Winner</span>
-                          </div>
-                          <span className="font-serif text-lg text-foreground">{winner.label}</span>
-                          <span className="text-muted-foreground text-sm ml-2">
-                            — {totalVotes > 0 ? Math.round((winner.vote_count / totalVotes) * 100) : 0}%
-                          </span>
-                        </motion.div>
-                      )}
-
-                      {/* Options */}
-                      <div className="space-y-2">
-                        {pollOptions.map((opt, optIndex) => {
-                          const isSelected = selectedOptions[poll.id]?.includes(opt.id) || (!isChanging && userVotes[poll.id]?.includes(opt.id));
-                          const percentage = totalVotes > 0 ? Math.round((opt.vote_count / totalVotes) * 100) : 0;
-                          const isWinner = isClosed && winner?.id === opt.id;
-
-                          return (
-                            <motion.div
-                              key={opt.id}
-                              initial={{ opacity: 0, x: -10 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: optIndex * 0.05 }}
-                            >
-                              {showVoteUI ? (
-                                <button
-                                  onClick={() => toggleOption(poll.id, opt.id, poll.poll_type, poll.max_choices)}
-                                  className={`w-full text-left p-4 border-2 transition-all relative overflow-hidden rounded-xl ${
-                                    isSelected
-                                      ? 'border-primary bg-primary/5'
-                                      : 'border-border hover:border-primary/30 bg-card'
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-3 relative z-10">
-                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                                      isSelected ? 'border-primary bg-primary' : 'border-muted-foreground/40'
-                                    }`}>
-                                      {isSelected && <CheckCircle2 size={12} className="text-primary-foreground" />}
-                                    </div>
-                                    <span className="font-medium text-sm text-foreground">{opt.label}</span>
-                                  </div>
-                                  {/* Live result overlay during voting if show_results_before_close */}
-                                  {poll.show_results_before_close && totalVotes > 0 && (
-                                    <div
-                                      className="absolute inset-y-0 left-0 bg-accent/10 transition-all duration-500"
-                                      style={{ width: `${percentage}%` }}
-                                    />
-                                  )}
-                                </button>
-                              ) : (
-                                <div className={`p-4 border relative overflow-hidden rounded-xl ${isWinner ? 'border-accent bg-accent/5' : 'border-border bg-card'}`}>
-                                  {/* Result bar */}
-                                  {canSeeResults && (
-                                    <motion.div
-                                      className={`absolute inset-y-0 left-0 ${isWinner ? 'bg-accent/15' : 'bg-primary/5'}`}
-                                      initial={{ width: 0 }}
-                                      animate={{ width: `${percentage}%` }}
-                                      transition={{ duration: 0.8, delay: optIndex * 0.1, ease: 'easeOut' }}
-                                    />
-                                  )}
-                                  <div className="flex justify-between items-center relative z-10">
-                                    <div className="flex items-center gap-2">
-                                      {userVotes[poll.id]?.includes(opt.id) && (
-                                        <CheckCircle2 size={14} className="text-primary" />
-                                      )}
-                                      {isWinner && <Sparkles size={14} className="text-accent" />}
-                                      <span className={`font-medium text-sm ${isWinner ? 'text-foreground font-bold' : 'text-foreground'}`}>
-                                        {opt.label}
-                                      </span>
-                                    </div>
-                                    {canSeeResults && (
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-xs text-muted-foreground">{opt.vote_count}</span>
-                                        <span className={`text-sm font-bold font-serif ${isWinner ? 'text-accent' : 'text-foreground'}`}>
-                                          {percentage}%
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                            </motion.div>
-                          );
-                        })}
-                      </div>
-
-                      {/* Actions */}
-                      <div className="mt-5 flex flex-wrap gap-2 items-center">
-                        {showVoteUI && userId && (
-                          <Button
-                            onClick={() => handleVote(poll.id)}
-                            disabled={!selectedOptions[poll.id]?.length || voting === poll.id}
-                            className="bg-primary text-primary-foreground"
-                          >
-                            {voting === poll.id ? (
-                              <><Loader2 size={16} className="animate-spin mr-2" /> Submitting...</>
-                            ) : (
-                              <><Vote size={16} className="mr-2" /> {isChanging ? 'Update Vote' : 'Submit Vote'}</>
-                            )}
-                          </Button>
-                        )}
-
-                        {isChanging && (
-                          <Button variant="ghost" size="sm" onClick={() => setChangingVote(null)}>
-                            <X size={14} className="mr-1" /> Cancel
-                          </Button>
-                        )}
-
-                        {hasVoted && !isClosed && !isChanging && (
-                          <Button variant="outline" size="sm" onClick={() => startChangeVote(poll.id)}>
-                            <RotateCcw size={14} className="mr-1" /> Change Vote
-                          </Button>
-                        )}
-
-                        {!userId && !isClosed && (
-                          <p className="text-sm text-muted-foreground">
-                            <Lock size={14} className="inline mr-1" /> Sign in to vote
-                          </p>
-                        )}
-
-                        {/* Staff actions */}
+                        </Button>
                         {isStaff && (
-                          <div className="ml-auto flex gap-2">
-                            {!isClosed && (
-                              <Button variant="outline" size="sm" onClick={() => closePoll(poll.id)} className="text-xs">
-                                <Lock size={12} className="mr-1" /> Close
-                              </Button>
-                            )}
-                            <Button variant="destructive" size="sm" onClick={() => deletePoll(poll.id)} className="text-xs">
-                              <Trash2 size={12} className="mr-1" /> Delete
-                            </Button>
-                          </div>
+                          <Button variant="ghost" size="icon" onClick={() => deletePoll(poll.id)} className="h-9 w-9 rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
+                            <Trash2 size={16} />
+                          </Button>
                         )}
                       </div>
                     </div>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
-          )}
-        </AnimatePresence>
+
+                    <h3 className="text-2xl md:text-3xl font-serif font-bold leading-tight mb-4 group-hover:text-primary transition-colors">{poll.title}</h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed mb-8 font-light line-clamp-2 group-hover:line-clamp-none transition-all duration-300">
+                      {poll.description || "No description provided for this poll."}
+                    </p>
+
+                    {/* Voting/Results area */}
+                    <div className="space-y-4 mb-8">
+                      {pollOptions.map((option) => {
+                        const isSelected = (selectedOptions[poll.id] || []).includes(option.id);
+                        const isUserVote = votedOptions.includes(option.id);
+                        const percentage = totalVotes > 0 ? Math.round((option.vote_count / totalVotes) * 100) : 0;
+                        const isWinner = isClosed && winningOption?.id === option.id;
+
+                        return (
+                          <div key={option.id} className="relative group/opt">
+                            {showResults ? (
+                              <div className="space-y-2">
+                                <div className="flex justify-between items-end px-1">
+                                  <span className="text-sm font-bold flex items-center gap-2">
+                                    {option.label}
+                                    {isUserVote && <Badge className="bg-primary/10 text-primary border-none text-[8px] px-1.5 py-0 h-4 rounded-md">YOUR VOTE</Badge>}
+                                    {isWinner && <Award size={14} className="text-accent animate-bounce" />}
+                                  </span>
+                                  <span className="text-xs font-serif italic text-muted-foreground">{percentage}%</span>
+                                </div>
+                                <div className="h-3 w-full bg-muted rounded-full overflow-hidden border border-border/50">
+                                  <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${percentage}%` }}
+                                    transition={{ duration: 1, ease: 'easeOut' }}
+                                    className={`h-full rounded-full ${isWinner ? 'bg-accent shadow-[0_0_15px_rgba(197,160,89,0.3)]' : 'bg-primary/40'}`}
+                                  />
+                                </div>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => !isClosed && (hasVoted ? isChanging : true) && toggleOption(poll.id, option.id, poll.poll_type, poll.max_choices)}
+                                disabled={isClosed || (hasVoted && !isChanging)}
+                                className={`w-full text-left p-5 rounded-2xl border-2 transition-all duration-300 relative overflow-hidden flex items-center gap-4 ${
+                                  isSelected 
+                                    ? 'border-accent bg-accent/5 shadow-lg shadow-accent/5' 
+                                    : 'border-border bg-muted/30 hover:border-accent/30 hover:bg-card'
+                                } ${(hasVoted && !isChanging) ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                              >
+                                <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+                                  isSelected ? 'border-accent bg-accent text-accent-foreground scale-110' : 'border-border'
+                                }`}>
+                                  {isSelected && <CheckCircle2 size={14} strokeWidth={3} />}
+                                </div>
+                                <div className="flex-1">
+                                  <p className="font-bold text-sm">{option.label}</p>
+                                  {option.description && <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{option.description}</p>}
+                                </div>
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Blockchain Verification Footer */}
+                    {blockchainTx[poll.id] && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-8 p-4 rounded-2xl bg-accent/5 border border-accent/20 flex items-center gap-4"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center shrink-0">
+                          <ShieldCheck className="text-accent" size={20} />
+                        </div>
+                        <div className="overflow-hidden">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-accent mb-0.5">Blockchain Verified</p>
+                          <p className="text-[10px] font-mono text-muted-foreground truncate">Tx: {blockchainTx[poll.id]}</p>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center justify-between mt-auto pt-6 border-t border-border/50">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <Users size={14} />
+                          <span className="text-xs font-bold">{totalVotes} <span className="font-light">votes</span></span>
+                        </div>
+                        {poll.ends_at && !isClosed && <CountdownTimer endsAt={poll.ends_at} />}
+                      </div>
+
+                      {!isClosed && (
+                        <div className="flex gap-2">
+                          {hasVoted && !isChanging ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => startChangeVote(poll.id)}
+                              className="rounded-xl h-10 px-4 border-border text-xs font-bold uppercase tracking-wider hover:bg-muted"
+                            >
+                              <RotateCcw size={14} className="mr-2" /> Change Vote
+                            </Button>
+                          ) : (
+                            <Button
+                              onClick={() => handleVote(poll.id)}
+                              disabled={voting === poll.id || !selectedOptions[poll.id]?.length}
+                              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl h-10 px-6 text-xs font-bold uppercase tracking-widest shadow-lg shadow-primary/10 transition-all hover:-translate-y-0.5 active:translate-y-0"
+                            >
+                              {voting === poll.id ? (
+                                <Loader2 size={14} className="animate-spin" />
+                              ) : (
+                                <span className="flex items-center gap-2"><Zap size={14} fill="currentColor" /> Submit Vote</span>
+                              )}
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Decorative corner element */}
+                  <div className="absolute -top-12 -right-12 w-24 h-24 bg-accent/5 rounded-full blur-2xl group-hover:bg-accent/10 transition-colors duration-500" />
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
+
+        {filteredPolls.length === 0 && !loading && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center justify-center py-32 text-center"
+          >
+            <div className="w-24 h-24 bg-muted rounded-[2.5rem] flex items-center justify-center mb-8 rotate-12">
+              <Search className="w-10 h-10 text-muted-foreground" />
+            </div>
+            <h3 className="text-3xl font-serif font-bold mb-3">No polls found</h3>
+            <p className="text-muted-foreground font-light max-w-sm mx-auto">
+              We couldn't find any polls matching your current filters. Try adjusting your search or filter settings.
+            </p>
+            <Button variant="link" onClick={() => { setFilter('all'); setSearchQuery(''); }} className="mt-6 text-accent font-bold uppercase tracking-widest text-xs">
+              Clear all filters
+            </Button>
+          </motion.div>
+        )}
       </div>
 
       {/* ── Create Poll Dialog ── */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="font-serif text-2xl">Create a Poll</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 mt-4">
-            <div>
-              <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-1.5 block">Question / Title *</Label>
-              <Input placeholder="What should we decide on?" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} />
-            </div>
-            <div>
-              <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-1.5 block">Description</Label>
-              <Textarea placeholder="Add context for voters..." value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={2} />
+        <DialogContent className="max-w-2xl p-0 overflow-hidden border-none rounded-[3rem] bg-card shadow-2xl">
+          <div className="bg-primary p-10 text-primary-foreground relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-accent/10 rounded-full blur-3xl -mr-32 -mt-32" />
+            <DialogHeader className="relative z-10">
+              <DialogTitle className="text-4xl font-serif leading-tight">Create a<br /><span className="italic text-primary-foreground/40">New Poll</span></DialogTitle>
+              <p className="text-primary-foreground/50 font-light mt-4 max-w-sm">Gather community feedback or host elections with secure blockchain recording.</p>
+            </DialogHeader>
+          </div>
+
+          <div className="p-10 space-y-8 max-h-[60vh] overflow-y-auto no-scrollbar">
+            <div className="space-y-4">
+              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-1">Poll Details</Label>
+              <Input
+                placeholder="Poll Title"
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                className="h-14 rounded-2xl border-border bg-muted/30 focus-visible:ring-accent text-lg font-medium"
+              />
+              <Textarea
+                placeholder="Detailed Description (optional)"
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                className="rounded-2xl border-border bg-muted/30 focus-visible:ring-accent min-h-[100px] py-4"
+              />
             </div>
 
-            <div>
-              <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-1.5 block">Voting Method</Label>
-              <Select value={form.poll_type} onValueChange={v => setForm(p => ({ ...p, poll_type: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="single_choice">Single Choice — Pick one</SelectItem>
-                  <SelectItem value="approval">Approval — Pick multiple</SelectItem>
-                  <SelectItem value="ranked_choice">Ranked Choice — Order by preference</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {form.poll_type === 'approval' && (
-              <div>
-                <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-1.5 block">Max Selections</Label>
-                <Input type="number" min={1} max={10} value={form.max_choices} onChange={e => setForm(p => ({ ...p, max_choices: parseInt(e.target.value) || 1 }))} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-1">Poll Type</Label>
+                <Select value={form.poll_type} onValueChange={(v) => setForm({ ...form, poll_type: v })}>
+                  <SelectTrigger className="h-12 rounded-xl border-border bg-muted/30">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-border">
+                    <SelectItem value="single_choice">Single Choice</SelectItem>
+                    <SelectItem value="approval">Approval (Multi-choice)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            )}
+              <div className="space-y-4">
+                <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-1">End Date</Label>
+                <Input
+                  type="datetime-local"
+                  value={form.ends_at}
+                  onChange={(e) => setForm({ ...form, ends_at: e.target.value })}
+                  className="h-12 rounded-xl border-border bg-muted/30"
+                />
+              </div>
+            </div>
 
-            {/* Options */}
-            <div>
-              <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-2 block">Options *</Label>
-              <div className="space-y-2">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between ml-1">
+                <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Options</Label>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setNewOptions([...newOptions, ''])}
+                  className="h-8 text-accent hover:text-accent hover:bg-accent/10 rounded-lg font-bold text-[10px] tracking-widest uppercase"
+                >
+                  <Plus size={12} className="mr-1.5" /> Add Option
+                </Button>
+              </div>
+              <div className="space-y-3">
                 {newOptions.map((opt, i) => (
-                  <div key={i} className="flex gap-2 items-center">
-                    <span className="text-xs font-bold text-muted-foreground w-5 text-center shrink-0">{i + 1}</span>
-                    <Input
-                      placeholder={`Option ${i + 1}`}
-                      value={opt}
-                      onChange={e => {
-                        const updated = [...newOptions];
-                        updated[i] = e.target.value;
-                        setNewOptions(updated);
-                      }}
-                    />
-                    {newOptions.length > 2 && (
-                      <Button variant="ghost" size="icon" className="shrink-0 h-10 w-10" onClick={() => setNewOptions(prev => prev.filter((_, j) => j !== i))}>
-                        <X size={14} />
-                      </Button>
-                    )}
+                  <div key={i} className="flex gap-3 group/opt">
+                    <div className="flex-1 relative">
+                      <Input
+                        placeholder={`Option ${i + 1}`}
+                        value={opt}
+                        onChange={(e) => {
+                          const updated = [...newOptions];
+                          updated[i] = e.target.value;
+                          setNewOptions(updated);
+                        }}
+                        className="h-12 rounded-xl border-border bg-muted/30 focus-visible:ring-accent pr-10"
+                      />
+                      {newOptions.length > 2 && (
+                        <button 
+                          onClick={() => setNewOptions(newOptions.filter((_, idx) => idx !== i))}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-destructive transition-colors"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
-                {newOptions.length < 10 && (
-                  <Button variant="outline" size="sm" onClick={() => setNewOptions(prev => [...prev, ''])} className="w-full border-dashed">
-                    <Plus size={14} className="mr-1" /> Add Option
-                  </Button>
-                )}
               </div>
             </div>
 
-            {/* Settings */}
-            <div className="border border-border p-4 space-y-4 rounded-xl">
-              <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground block">Settings</span>
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-light">Anonymous voting</Label>
-                <Switch checked={form.is_anonymous} onCheckedChange={v => setForm(p => ({ ...p, is_anonymous: v }))} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border">
+                <div className="space-y-0.5">
+                  <Label className="text-xs font-bold">Anonymous Voting</Label>
+                  <p className="text-[10px] text-muted-foreground">Hide voter identities</p>
+                </div>
+                <Switch
+                  checked={form.is_anonymous}
+                  onCheckedChange={(v) => setForm({ ...form, is_anonymous: v })}
+                />
               </div>
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-light">Show live results</Label>
-                <Switch checked={form.show_results_before_close} onCheckedChange={v => setForm(p => ({ ...p, show_results_before_close: v }))} />
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border">
+                <div className="space-y-0.5">
+                  <Label className="text-xs font-bold">Real-time Results</Label>
+                  <p className="text-[10px] text-muted-foreground">Show results before close</p>
+                </div>
+                <Switch
+                  checked={form.show_results_before_close}
+                  onCheckedChange={(v) => setForm({ ...form, show_results_before_close: v })}
+                />
               </div>
             </div>
+          </div>
 
-            <div>
-              <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-1.5 block">End Date (optional)</Label>
-              <Input type="datetime-local" value={form.ends_at} onChange={e => setForm(p => ({ ...p, ends_at: e.target.value }))} />
-            </div>
-
-            <Button onClick={handleCreate} disabled={creating} className="w-full">
-              {creating ? <><Loader2 size={16} className="animate-spin mr-2" /> Creating...</> : <><Sparkles size={16} className="mr-2" /> Publish Poll</>}
+          <div className="p-10 bg-muted/30 border-t border-border flex justify-end gap-4">
+            <Button variant="ghost" onClick={() => setShowCreate(false)} className="rounded-xl h-12 px-6 font-bold uppercase tracking-widest text-xs">Cancel</Button>
+            <Button
+              onClick={handleCreate}
+              disabled={creating}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl h-12 px-10 font-bold uppercase tracking-widest text-xs shadow-xl shadow-primary/10"
+            >
+              {creating ? <Loader2 size={16} className="animate-spin" /> : 'Launch Poll'}
             </Button>
           </div>
         </DialogContent>
