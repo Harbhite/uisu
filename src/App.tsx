@@ -30,7 +30,7 @@ const InksPiecePage = lazy(() => import("./pages/InksPiecePage"));
 const InkEditorPage = lazy(() => import("./pages/InkEditorPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const HallDetailPage = lazy(() => import("./pages/halls/HallDetailPage"));
-const HallsPage = lazy(() => import("./pages/HallsPage"));
+const HORPage = lazy(() => import("./pages/HORPage"));
 const ResourcesPage = lazy(() => import("./pages/ResourcesPage"));
 const AcademicBankPage = lazy(() => import("./pages/resources/AcademicBankPage"));
 const CareerHubPage = lazy(() => import("./pages/resources/CareerHubPage"));
@@ -132,7 +132,7 @@ const AppRoutes = () => {
         <Route path="/admin/inks-vault/new" element={<PageWrapper><InkEditorPage /></PageWrapper>} />
         <Route path="/admin/inks-vault/edit/:id" element={<PageWrapper><InkEditorPage /></PageWrapper>} />
         <Route path="/profile/:id" element={<PageWrapper><ProfilePage /></PageWrapper>} />
-        <Route path="/halls" element={<PageWrapper><HallsPage /></PageWrapper>} />
+        <Route path="/halls" element={<PageWrapper><HORPage /></PageWrapper>} />
         <Route path="/governance/hall/:id" element={<PageWrapper><HallDetailPage /></PageWrapper>} />
 
         {/* Resources Routes */}
