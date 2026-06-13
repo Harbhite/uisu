@@ -5,22 +5,27 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-none text-sm font-bold uppercase tracking-widest ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold text-sm uppercase tracking-wide ring-offset-background transition-all duration-300 ease-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm",
-        outline: "border border-slate-300 bg-background hover:bg-accent hover:text-accent-foreground shadow-sm",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+        default: "bg-ui-blue text-white hover:bg-ui-dark shadow-premium hover:shadow-premium-lg hover:-translate-y-0.5 active:translate-y-0",
+        destructive: "bg-red-600 text-white hover:bg-red-700 shadow-premium hover:shadow-premium-lg hover:-translate-y-0.5 active:translate-y-0",
+        outline: "border-2 border-ui-blue text-ui-blue bg-transparent hover:bg-ui-blue hover:text-white shadow-sm hover:shadow-premium transition-all",
+        secondary: "bg-slate-200 text-slate-900 hover:bg-slate-300 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0",
+        ghost: "text-ui-blue hover:bg-ui-blue/10 hover:text-ui-dark",
+        link: "text-ui-blue underline-offset-4 hover:underline",
+        gold: "bg-nobel-gold text-ui-blue font-bold hover:bg-nobel-light shadow-premium-gold hover:shadow-premium-lg hover:-translate-y-0.5 active:translate-y-0",
+        premium: "bg-gradient-to-r from-ui-blue to-ui-dark text-white hover:shadow-premium-lg hover:-translate-y-0.5 active:translate-y-0 shadow-premium",
+        "glass": "bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:border-white/30 shadow-lg",
       },
       size: {
-        default: "h-12 px-8 py-3",
-        sm: "h-10 px-4 text-xs",
-        lg: "h-14 px-10 text-base",
-        icon: "h-12 w-12",
+        default: "h-12 px-8 py-3 rounded-lg",
+        sm: "h-10 px-4 py-2 text-xs rounded-md",
+        lg: "h-14 px-10 py-3 text-base rounded-lg",
+        xl: "h-16 px-12 py-4 text-lg rounded-lg",
+        icon: "h-12 w-12 rounded-lg",
+        "icon-sm": "h-10 w-10 rounded-md",
       },
     },
     defaultVariants: {
@@ -34,12 +39,32 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
+  isLoading?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, isLoading = false, disabled, children, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
-    return <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />;
+    return (
+      <Comp 
+        className={cn(buttonVariants({ variant, size, className }))} 
+        ref={ref} 
+        disabled={disabled || isLoading}
+        {...props}
+      >
+        {isLoading ? (
+          <>
+            <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Loading...
+          </>
+        ) : (
+          children
+        )}
+      </Comp>
+    );
   },
 );
 Button.displayName = "Button";
