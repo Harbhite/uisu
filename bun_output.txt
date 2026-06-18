@@ -1,11 +1,12 @@
-$ vite
+$ vite --host "0.0.0.0" --port "3000"
 
-  VITE v5.4.21  ready in 439 ms
+  VITE v5.4.21  ready in 303 ms
 
-  ➜  Local:   http://localhost:8080/
-  ➜  Network: http://192.168.0.2:8080/
+  ➜  Local:   http://localhost:3000/
+  ➜  Network: http://192.168.0.2:3000/
+Browserslist: browsers data (caniuse-lite) is 11 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
 
 warn - The class `duration-[120ms]` is ambiguous and matches multiple utilities.
 warn - If this is content and not a class, replace it with `duration-&lsqb;120ms&rsqb;` to silence this warning.
-5:37:27 PM [vite] hmr update /src/components/Navbar.tsx, /src/index.css
-5:37:27 PM [vite] hmr update /src/components/Navbar.tsx, /src/index.css
