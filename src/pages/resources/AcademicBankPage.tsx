@@ -912,7 +912,7 @@ const AcademicBankPage = () => {
             <span>Back to Resources</span>
           </button>
 
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+          <div className="flex flex-col gap-6 sm:gap-8">
             <div>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -929,7 +929,7 @@ const AcademicBankPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="text-4xl md:text-5xl font-serif mb-4"
+                className="text-3xl sm:text-4xl md:text-5xl font-serif mb-4"
               >
                 Academic Bank
               </motion.h1>
@@ -938,7 +938,7 @@ const AcademicBankPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="text-white/70 max-w-xl text-lg"
+                className="text-white/70 max-w-xl text-base sm:text-lg"
               >
                 Access lecture notes, past questions, and academic materials from all 13 faculties of University of Ibadan.
               </motion.p>
@@ -950,10 +950,10 @@ const AcademicBankPage = () => {
 
       {/* Search & Controls Bar */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-40">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
+          <div className="flex flex-col gap-3 sm:gap-4">
             {/* Search */}
-            <div className="relative flex-1 md:max-w-md w-full">
+            <div className="relative w-full">
               <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-none px-4 py-3 focus-within:border-ui-blue focus-within:bg-white transition-all">
                 <Search size={18} className="text-slate-400" />
                 <input
@@ -1021,34 +1021,34 @@ const AcademicBankPage = () => {
               </AnimatePresence>
             </div>
 
-            <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="flex items-center gap-2 w-full overflow-x-auto pb-2 sm:pb-0">
               {/* Admin Controls */}
               {isStaff && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 rounded-none border-slate-300"
-                  onClick={() => setShowStats(!showStats)}
-                >
-                  <BarChart3 size={16} />
-                  <span className="hidden sm:inline">Stats</span>
-                </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1 sm:gap-2 rounded-none border-slate-300 shrink-0"
+                onClick={() => setShowStats(!showStats)}
+              >
+                <BarChart3 size={16} />
+                <span className="hidden md:inline text-xs sm:text-sm">Stats</span>
+              </Button>
               )}
               {isAdmin && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 rounded-none border-slate-300"
-                  onClick={() => setShowActivityLog(true)}
-                >
-                  <History size={16} />
-                  <span className="hidden sm:inline">Activity</span>
-                </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1 sm:gap-2 rounded-none border-slate-300 shrink-0"
+                onClick={() => setShowActivityLog(true)}
+              >
+                <History size={16} />
+                <span className="hidden md:inline text-xs sm:text-sm">Activity</span>
+              </Button>
               )}
 
               {/* Sort Controls */}
               <Select value={sortBy} onValueChange={(v: 'name' | 'date' | 'downloads') => setSortBy(v)}>
-                <SelectTrigger className="w-[130px] h-9 bg-white rounded-none border-slate-300">
+                <SelectTrigger className="w-[100px] sm:w-[130px] h-9 bg-white rounded-none border-slate-300 shrink-0 text-xs sm:text-sm">
                   <ArrowUpDown size={14} className="mr-1.5" />
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
@@ -1061,14 +1061,14 @@ const AcademicBankPage = () => {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 px-2 rounded-none border-slate-300"
+                className="h-9 px-2 rounded-none border-slate-300 shrink-0"
                 onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
               >
                 {sortOrder === 'asc' ? '↑' : '↓'}
               </Button>
 
               {/* View Mode Toggle */}
-              <div className="flex items-center gap-0 border border-slate-300">
+              <div className="flex items-center gap-0 border border-slate-300 shrink-0">
                 <Button
                   variant={viewMode === 'grid' ? 'default' : 'ghost'}
                   size="icon"
@@ -1092,7 +1092,7 @@ const AcademicBankPage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-6 py-8">
+        <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Stats Panel */}
         <AnimatePresence>
           {showStats && (
@@ -1100,9 +1100,9 @@ const AcademicBankPage = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="mb-8 overflow-hidden"
+              className="mb-6 sm:mb-8 overflow-hidden"
             >
-              <div className="bg-white border border-slate-200 p-6">
+              <div className="bg-white border border-slate-200 p-4 sm:p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <TrendingUp size={20} className="text-nobel-gold" />
                   <h3 className="font-serif text-xl text-ui-blue">Most Downloaded Files</h3>
@@ -1110,7 +1110,7 @@ const AcademicBankPage = () => {
                 {topDownloaded.length === 0 ? (
                   <p className="text-sm text-slate-400">No download data yet</p>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
                     {topDownloaded.map((file, index) => (
                       <div key={file.id} className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-100 hover:border-nobel-gold/30 transition-colors">
                         <span className="text-2xl font-serif text-nobel-gold">#{index + 1}</span>
@@ -1130,14 +1130,14 @@ const AcademicBankPage = () => {
         {/* File Browser */}
         <div className="bg-white border border-slate-200 overflow-hidden">
           {/* Breadcrumbs & Actions */}
-          <div className="border-b border-slate-100 p-4 flex items-center justify-between bg-slate-50/50">
-            <div className="flex items-center text-sm text-slate-600 overflow-x-auto">
+          <div className="border-b border-slate-100 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 bg-slate-50/50">
+            <div className="flex items-center text-xs sm:text-sm text-slate-600 overflow-x-auto scrollbar-hide w-full sm:w-auto">
               {breadcrumbPath.map((crumb, index) => (
                 <React.Fragment key={crumb.id ?? 'root'}>
-                  {index > 0 && <ChevronRight size={16} className="mx-1 text-slate-400 shrink-0" />}
+                  {index > 0 && <ChevronRight size={14} className="mx-1 text-slate-400 shrink-0" />}
                   <button
                     onClick={() => index === 0 ? setCurrentPath([]) : handleNavigateUp(index - 1)}
-                    className={`hover:text-ui-blue px-2 py-1 transition-colors whitespace-nowrap ${index === breadcrumbPath.length - 1 ? 'font-semibold text-ui-blue' : ''}`}
+                    className={`hover:text-ui-blue px-1 sm:px-2 py-1 transition-colors whitespace-nowrap text-xs sm:text-sm ${index === breadcrumbPath.length - 1 ? 'font-semibold text-ui-blue' : ''}`}
                   >
                     {crumb.name}
                   </button>
@@ -1146,11 +1146,11 @@ const AcademicBankPage = () => {
             </div>
 
             {isStaff && (
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-1 sm:gap-2 shrink-0 w-full sm:w-auto">
                 <Button
                   size="sm"
                   variant="outline"
-                  className="gap-2 rounded-none border-slate-300"
+                  className="gap-1 sm:gap-2 rounded-none border-slate-300 flex-1 sm:flex-none text-xs sm:text-sm"
                   onClick={() => {
                     setEditingFolder(null);
                     setNewFolderName('');
@@ -1158,15 +1158,15 @@ const AcademicBankPage = () => {
                   }}
                 >
                   <FolderPlus size={16} />
-                  <span className="hidden sm:inline">New Folder</span>
+                  <span className="hidden md:inline">New Folder</span>
                 </Button>
                 <Button
                   size="sm"
-                  className="gap-2 rounded-none bg-ui-blue hover:bg-ui-dark"
+                  className="gap-1 sm:gap-2 rounded-none bg-ui-blue hover:bg-ui-dark flex-1 sm:flex-none text-xs sm:text-sm"
                   onClick={() => setShowUploadModal(true)}
                 >
                   <Upload size={16} />
-                  <span className="hidden sm:inline">Upload</span>
+                  <span className="hidden md:inline">Upload</span>
                 </Button>
                 <input
                   ref={fileInputRef}
@@ -1216,10 +1216,10 @@ const AcademicBankPage = () => {
             {/* Drag Overlay */}
             {isDragging && (
               <div className="absolute inset-0 bg-ui-blue/10 border-2 border-dashed border-ui-blue flex items-center justify-center z-10 pointer-events-none">
-                <div className="text-center">
-                  <Upload size={48} className="mx-auto text-ui-blue mb-3" />
-                  <p className="text-ui-blue font-serif text-xl">Drop files here to upload</p>
-                  <p className="text-ui-blue/60 text-sm mt-1">Up to 25 files at once</p>
+                <div className="text-center px-4">
+                  <Upload size={40} className="mx-auto text-ui-blue mb-2" />
+                  <p className="text-ui-blue font-serif text-lg sm:text-xl">Drop files here to upload</p>
+                  <p className="text-ui-blue/60 text-xs sm:text-sm mt-1">Up to 25 files at once</p>
                 </div>
               </div>
             )}
@@ -1256,7 +1256,7 @@ const AcademicBankPage = () => {
                 )}
               </div>
             ) : (
-              <div className={viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4' : 'space-y-2'}>
+              <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4' : 'space-y-2'}>
                 {items.map((item) => (
                   <motion.div
                     key={item.id}
@@ -1317,7 +1317,7 @@ const AcademicBankPage = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className={`flex items-center gap-1 ${viewMode === 'grid' ? 'absolute top-2 right-2' : ''} opacity-0 group-hover:opacity-100 transition-opacity`}>
+                    <div className={`flex items-center gap-1 ${viewMode === 'grid' ? 'absolute top-2 right-2' : ''} opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity`}>
                       {item.resource_type !== 'folder' && canPreview(item) && (
                         <Button size="icon" variant="ghost" className="h-7 w-7 rounded-none" onClick={() => handlePreview(item)}>
                           <Eye size={14} />
