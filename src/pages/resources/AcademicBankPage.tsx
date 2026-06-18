@@ -64,6 +64,15 @@ const AcademicBankPage = () => {
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'downloads'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   
+  // localStorage keys
+  const STORAGE_KEYS = {
+    viewMode: 'academicbank_viewmode',
+    sortBy: 'academicbank_sortby',
+    sortOrder: 'academicbank_sortorder',
+    currentPath: 'academicbank_currentpath',
+    uploadHistory: 'academicbank_uploadhistory'
+  };
+  
   // Preview sidebar state
   const [previewFile, setPreviewFile] = useState<AcademicResource | null>(null);
   const [showPreviewSidebar, setShowPreviewSidebar] = useState(false);
@@ -91,6 +100,55 @@ const AcademicBankPage = () => {
   const dropZoneRef = useRef<HTMLDivElement>(null);
 
   const currentFolderId = currentPath.length > 0 ? currentPath[currentPath.length - 1] : null;
+
+  // Initialize state from localStorage
+  useEffect(() => {
+    try {
+      const savedViewMode = localStorage.getItem(STORAGE_KEYS.viewMode);
+      const savedSortBy = localStorage.getItem(STORAGE_KEYS.sortBy);
+      const savedSortOrder = localStorage.getItem(STORAGE_KEYS.sortOrder);
+      const savedCurrentPath = localStorage.getItem(STORAGE_KEYS.currentPath);
+      
+      if (savedViewMode === 'grid' || savedViewMode === 'list') {
+        setViewMode(savedViewMode);
+      }
+      if (savedSortBy === 'name' || savedSortBy === 'date' || savedSortBy === 'downloads') {
+        setSortBy(savedSortBy);
+      }
+      if (savedSortOrder === 'asc' || savedSortOrder === 'desc') {
+        setSortOrder(savedSortOrder);
+      }
+      if (savedCurrentPath) {
+        try {
+          setCurrentPath(JSON.parse(savedCurrentPath));
+        } catch (e) {
+          console.warn('Failed to parse saved path');
+        }
+      }
+    } catch (error) {
+      console.warn('Error loading from localStorage:', error);
+    }
+  }, []);
+
+  // Persist viewMode to localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.viewMode, viewMode);
+  }, [viewMode]);
+
+  // Persist sortBy to localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.sortBy, sortBy);
+  }, [sortBy]);
+
+  // Persist sortOrder to localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.sortOrder, sortOrder);
+  }, [sortOrder]);
+
+  // Persist currentPath to localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.currentPath, JSON.stringify(currentPath));
+  }, [currentPath]);
 
   // Fetch all resources
   useEffect(() => {
@@ -541,34 +599,54 @@ const AcademicBankPage = () => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    // We need to pre-process folders to create structure first,
-    // BUT since queue is async, we should probably create folders first then add files to queue
-    // OR we can make the queue processor smarter.
-    // For simplicity, we'll create folders synchronously (blocking) then queue files.
-    // This maintains the user expectation that "upload started"
-
     const fileList = Array.from(files);
+    
+    // Validate that we have files from a folder upload (should have webkitRelativePath)
+    const hasFolderStructure = fileList.some(f => f.webkitRelativePath && f.webkitRelativePath.includes('/'));
+    
+    if (!hasFolderStructure && fileList.length === 1) {
+      // Single file selected, treat as regular file upload
+      addToQueue(fileList, currentFolderId);
+      if (folderInputRef.current) folderInputRef.current.value = '';
+      return;
+    }
+
     const folderMap = new Map<string, string>(); // path -> id
     const createdResources: AcademicResource[] = [];
     const relativePaths: Record<string, string> = {};
     const filesToUpload: { file: File, parentId: string | null }[] = [];
+    const uploadHistory: { folderName: string; fileCount: number; timestamp: number }[] = [];
 
     // Show a toast that we are preparing folder structure
-    toast.info('Preparing folder structure...');
+    toast.info(`Processing ${fileList.length} file(s) from folder structure...`);
 
     try {
+      // Extract unique folder names from the upload
+      const rootFolderName = fileList[0]?.webkitRelativePath?.split('/')[0] || 'Uploaded Folder';
+      let fileCount = 0;
+
       for (const file of fileList) {
+        // Skip empty files and system files
+        if (file.size === 0 || file.name.startsWith('.')) {
+          continue;
+        }
+
         const fullRelativePath = (file.webkitRelativePath || file.name).replace(/\\/g, '/');
-        const pathParts = fullRelativePath.split('/');
+        const pathParts = fullRelativePath.split('/').filter(p => p && !p.startsWith('.'));
+        
+        if (pathParts.length === 0) continue;
+        
         const fileName = pathParts.pop() || file.name;
         relativePaths[file.name] = fullRelativePath;
+        fileCount++;
 
         let parentId = currentFolderId;
         let currentPathStr = '';
 
-        // Create folder hierarchy in DB
+        // Create folder hierarchy in DB, ensuring all subfolders are created
         for (const folderName of pathParts) {
-          if (!folderName) continue;
+          if (!folderName || folderName.startsWith('.')) continue;
+          
           currentPathStr += '/' + folderName;
 
           if (!folderMap.has(currentPathStr)) {
@@ -603,6 +681,12 @@ const AcademicBankPage = () => {
         filesToUpload.push({ file, parentId });
       }
 
+      if (fileCount === 0) {
+        toast.error('No valid files found in the selected folder');
+        if (folderInputRef.current) folderInputRef.current.value = '';
+        return;
+      }
+
       setResources(prev => [...prev, ...createdResources]);
 
       // Add to queue
@@ -618,11 +702,27 @@ const AcademicBankPage = () => {
 
       setUploadQueue(prev => [...prev, ...newItems]);
       setIsQueueVisible(true);
-      toast.success('Folder structure created. Starting uploads...');
+      
+      // Record upload history in localStorage
+      uploadHistory.push({
+        folderName: rootFolderName,
+        fileCount: fileCount,
+        timestamp: Date.now()
+      });
+      
+      try {
+        const existingHistory = JSON.parse(localStorage.getItem(STORAGE_KEYS.uploadHistory) || '[]');
+        const updatedHistory = [uploadHistory[0], ...existingHistory].slice(0, 20); // Keep last 20
+        localStorage.setItem(STORAGE_KEYS.uploadHistory, JSON.stringify(updatedHistory));
+      } catch (e) {
+        console.warn('Failed to save upload history');
+      }
+
+      toast.success(`Folder structure created with ${createdResources.length} subfolder(s). Starting uploads of ${fileCount} file(s)...`);
 
     } catch (error) {
       console.error('Folder prep error', error);
-      toast.error('Failed to prepare folder structure');
+      toast.error('Failed to prepare folder structure. Please try again.');
     } finally {
       if (folderInputRef.current) folderInputRef.current.value = '';
     }
@@ -659,21 +759,44 @@ const AcademicBankPage = () => {
 
     const dataTransferItems = e.dataTransfer.items;
     const files: File[] = [];
+    let hasFolder = false;
 
     // Collect all files from the drop
     for (let i = 0; i < dataTransferItems.length; i++) {
       const item = dataTransferItems[i];
       if (item.kind === 'file') {
         const file = item.getAsFile();
-        if (file) files.push(file);
+        if (file) {
+          files.push(file);
+          // Check if this is from a folder (webkitRelativePath indicates folder structure)
+          if (file.webkitRelativePath && file.webkitRelativePath.includes('/')) {
+            hasFolder = true;
+          }
+        }
       }
     }
 
     if (files.length === 0) return;
 
-    // Add files to upload queue
-    addToQueue(files, currentFolderId);
-    toast.success(`${files.length} file(s) added to upload queue`);
+    // If folder structure detected, handle as folder upload
+    if (hasFolder) {
+      // Simulate folder input event
+      const dataTransfer = new DataTransfer();
+      files.forEach(f => dataTransfer.items.add(f));
+      const input = folderInputRef.current;
+      if (input) {
+        Object.defineProperty(input, 'files', {
+          value: dataTransfer.files,
+          writable: false,
+        });
+        const event = new Event('change', { bubbles: true });
+        input.dispatchEvent(event);
+      }
+    } else {
+      // Regular file upload
+      addToQueue(files, currentFolderId);
+      toast.success(`${files.length} file(s) added to upload queue`);
+    }
   }, [isStaff, currentFolderId]);
 
   const handleDownload = async (resource: AcademicResource) => {
