@@ -1153,19 +1153,19 @@ const AcademicBankPage = () => {
                     Clear History
                   </Button>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
+                <div className="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-1 sm:gap-2 md:gap-3 lg:gap-4">
                   {recentlyViewed.map((file) => (
                     <div 
                       key={file.id} 
-                      className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-100 hover:border-ui-blue/30 cursor-pointer transition-colors group"
+                      className="flex flex-col items-center gap-2 p-2 sm:p-3 bg-slate-50 border border-slate-100 hover:border-ui-blue/30 cursor-pointer transition-colors group"
                       onClick={() => canPreview(file) ? handlePreview(file) : handleDownload(file)}
                     >
-                      <div className="p-2 bg-white border border-slate-100 group-hover:border-ui-blue/20">
-                        <FileText size={18} className="text-nobel-gold" />
+                      <div className="p-1.5 sm:p-2 bg-white border border-slate-100 group-hover:border-ui-blue/20">
+                        <FileText size={14} className="sm:w-4 sm:h-4 text-nobel-gold" />
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-slate-700 truncate group-hover:text-ui-blue">{file.name}</p>
-                        <p className="text-[10px] text-slate-400 uppercase tracking-wider">{file.resource_type}</p>
+                      <div className="min-w-0 flex-1 text-center">
+                        <p className="text-[9px] sm:text-xs font-medium text-slate-700 truncate group-hover:text-ui-blue line-clamp-2">{file.name}</p>
+                        <p className="text-[7px] sm:text-[8px] text-slate-400 uppercase tracking-wider">{file.resource_type}</p>
                       </div>
                     </div>
                   ))}
@@ -1338,7 +1338,7 @@ const AcademicBankPage = () => {
                 )}
               </div>
             ) : (
-              <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4' : 'space-y-2'}>
+              <div className={viewMode === 'grid' ? 'grid grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-1 sm:gap-2 md:gap-3 lg:gap-4' : 'space-y-2'}>
                 {items.map((item) => (
                   <motion.div
                     key={item.id}
@@ -1348,7 +1348,7 @@ const AcademicBankPage = () => {
                     className={`
                       group cursor-pointer border transition-all relative
                       ${viewMode === 'grid' 
-                        ? 'p-4 flex flex-col bg-white border-slate-100 hover:border-ui-blue hover:shadow-md' 
+                        ? 'p-2 sm:p-3 flex flex-col bg-white border-slate-100 hover:border-ui-blue hover:shadow-md' 
                         : 'p-4 flex items-center gap-4 bg-white border-slate-100 hover:border-ui-blue hover:bg-slate-50'}
                     `}
                   >
@@ -1364,20 +1364,20 @@ const AcademicBankPage = () => {
                         }
                       }}
                     >
-                      <div className={`${viewMode === 'grid' ? 'mb-4 flex justify-center' : ''}`}>
+                      <div className={`${viewMode === 'grid' ? 'mb-2 sm:mb-3 flex justify-center' : ''}`}>
                         {item.resource_type === 'folder' ? (
-                          <div className={`${viewMode === 'grid' ? 'w-16 h-16' : 'w-10 h-10'} bg-ui-blue/10 flex items-center justify-center`}>
-                            <Folder className={`${viewMode === 'grid' ? 'w-8 h-8' : 'w-5 h-5'} text-ui-blue`} />
+                          <div className={`${viewMode === 'grid' ? 'w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12' : 'w-10 h-10'} bg-ui-blue/10 flex items-center justify-center`}>
+                            <Folder className={`${viewMode === 'grid' ? 'w-4 sm:w-5 md:w-6' : 'w-5 h-5'} text-ui-blue`} />
                           </div>
                         ) : (
-                          <div className={`${viewMode === 'grid' ? 'w-16 h-16' : 'w-10 h-10'} bg-nobel-gold/10 flex items-center justify-center`}>
-                            <FileText className={`${viewMode === 'grid' ? 'w-8 h-8' : 'w-5 h-5'} text-nobel-gold`} />
+                          <div className={`${viewMode === 'grid' ? 'w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12' : 'w-10 h-10'} bg-nobel-gold/10 flex items-center justify-center`}>
+                            <FileText className={`${viewMode === 'grid' ? 'w-4 sm:w-5 md:w-6' : 'w-5 h-5'} text-nobel-gold`} />
                           </div>
                         )}
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <h4 className={`font-medium text-slate-700 truncate group-hover:text-ui-blue ${viewMode === 'grid' ? 'text-sm text-center' : 'text-sm'}`}>
+                        <h4 className={`font-medium text-slate-700 truncate group-hover:text-ui-blue ${viewMode === 'grid' ? 'text-[10px] sm:text-xs md:text-sm text-center line-clamp-2' : 'text-sm'}`}>
                           {item.name}
                         </h4>
                         {viewMode === 'list' && (
@@ -1393,28 +1393,28 @@ const AcademicBankPage = () => {
                           </div>
                         )}
                         {viewMode === 'grid' && item.resource_type !== 'folder' && (
-                          <p className="text-xs text-slate-400 text-center mt-1">{item.file_size || ''}</p>
+                          <p className="text-[8px] sm:text-[9px] md:text-xs text-slate-400 text-center mt-1">{item.file_size || ''}</p>
                         )}
                       </div>
                     </div>
 
                     {/* Actions */}
-                    <div className={`flex items-center gap-1 ${viewMode === 'grid' ? 'absolute top-2 right-2' : ''} opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity`}>
+                    <div className={`flex items-center gap-0.5 ${viewMode === 'grid' ? 'absolute top-1 right-1' : ''} opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity`}>
                       {item.resource_type !== 'folder' && canPreview(item) && (
-                        <Button size="icon" variant="ghost" className="h-7 w-7 rounded-none" onClick={() => handlePreview(item)}>
-                          <Eye size={14} />
+                        <Button size="icon" variant="ghost" className="h-5 w-5 sm:h-7 sm:w-7 rounded-none p-0" onClick={() => handlePreview(item)}>
+                          <Eye size={12} className="sm:w-3.5 sm:h-3.5" />
                         </Button>
                       )}
                       {item.resource_type !== 'folder' && (
-                        <Button size="icon" variant="ghost" className="h-7 w-7 rounded-none" onClick={() => handleDownload(item)}>
-                          <Download size={14} />
+                        <Button size="icon" variant="ghost" className="h-5 w-5 sm:h-7 sm:w-7 rounded-none p-0" onClick={() => handleDownload(item)}>
+                          <Download size={12} className="sm:w-3.5 sm:h-3.5" />
                         </Button>
                       )}
                       {item.resource_type === 'folder' && (
                         <Button 
                           size="icon" 
                           variant="ghost" 
-                          className="h-7 w-7 rounded-none text-ui-blue hover:text-ui-dark"
+                          className="h-5 w-5 sm:h-7 sm:w-7 rounded-none text-ui-blue hover:text-ui-dark p-0"
                           onClick={(e) => {
                             e.stopPropagation();
                             const shareUrl = `${window.location.origin}/resources/academic-bank?folder=${item.id}`;
@@ -1423,14 +1423,14 @@ const AcademicBankPage = () => {
                           }}
                           title="Share folder link"
                         >
-                          <Link2 size={14} />
+                          <Link2 size={12} className="sm:w-3.5 sm:h-3.5" />
                         </Button>
                       )}
                       {isStaff && item.resource_type === 'folder' && (
                         <Button 
                           size="icon" 
                           variant="ghost" 
-                          className="h-7 w-7 rounded-none"
+                          className="h-5 w-5 sm:h-7 sm:w-7 rounded-none p-0"
                           onClick={(e) => {
                             e.stopPropagation();
                             setEditingFolder(item);
@@ -1438,20 +1438,20 @@ const AcademicBankPage = () => {
                             setShowFolderModal(true);
                           }}
                         >
-                          <Edit2 size={14} />
+                          <Edit2 size={12} className="sm:w-3.5 sm:h-3.5" />
                         </Button>
                       )}
                       {isStaff && (
                         <Button 
                           size="icon" 
                           variant="ghost" 
-                          className="h-7 w-7 rounded-none text-red-500 hover:text-red-600"
+                          className="h-5 w-5 sm:h-7 sm:w-7 rounded-none text-red-500 hover:text-red-600 p-0"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDeleteResource(item);
                           }}
                         >
-                          <Trash2 size={14} />
+                          <Trash2 size={12} className="sm:w-3.5 sm:h-3.5" />
                         </Button>
                       )}
                     </div>
