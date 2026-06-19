@@ -61,6 +61,7 @@ const AcademicBankPage = () => {
   const [isGlobalSearch, setIsGlobalSearch] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showStats, setShowStats] = useState(false);
+  const [recentlyViewed, setRecentlyViewed] = useState<AcademicResource[]>([]);
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'downloads'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   
@@ -70,7 +71,9 @@ const AcademicBankPage = () => {
     sortBy: 'academicbank_sortby',
     sortOrder: 'academicbank_sortorder',
     currentPath: 'academicbank_currentpath',
-    uploadHistory: 'academicbank_uploadhistory'
+    uploadHistory: 'academicbank_uploadhistory',
+    recentlyViewed: 'academicbank_recentlyviewed',
+    showStats: 'academicbank_showstats'
   };
   
   // Preview sidebar state
@@ -125,6 +128,20 @@ const AcademicBankPage = () => {
           console.warn('Failed to parse saved path');
         }
       }
+
+      const savedRecentlyViewed = localStorage.getItem(STORAGE_KEYS.recentlyViewed);
+      if (savedRecentlyViewed) {
+        try {
+          setRecentlyViewed(JSON.parse(savedRecentlyViewed));
+        } catch (e) {
+          console.warn('Failed to parse recently viewed');
+        }
+      }
+
+      const savedShowStats = localStorage.getItem(STORAGE_KEYS.showStats);
+      if (savedShowStats !== null) {
+        setShowStats(savedShowStats === 'true');
+      }
     } catch (error) {
       console.warn('Error loading from localStorage:', error);
     }
@@ -149,6 +166,16 @@ const AcademicBankPage = () => {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.currentPath, JSON.stringify(currentPath));
   }, [currentPath]);
+
+  // Persist showStats to localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.showStats, showStats.toString());
+  }, [showStats]);
+
+  // Persist recentlyViewed to localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.recentlyViewed, JSON.stringify(recentlyViewed));
+  }, [recentlyViewed]);
 
   // Fetch all resources
   useEffect(() => {
@@ -799,8 +826,16 @@ const AcademicBankPage = () => {
     }
   }, [isStaff, currentFolderId]);
 
+  const addToRecentlyViewed = (resource: AcademicResource) => {
+    setRecentlyViewed(prev => {
+      const filtered = prev.filter(r => r.id !== resource.id);
+      return [resource, ...filtered].slice(0, 10); // Keep last 10
+    });
+  };
+
   const handleDownload = async (resource: AcademicResource) => {
     if (resource.file_url) {
+      addToRecentlyViewed(resource);
       // Track download
       await supabase
         .from('academic_resources')
@@ -818,6 +853,7 @@ const AcademicBankPage = () => {
 
   const handlePreview = (resource: AcademicResource) => {
     if (resource.file_url) {
+      addToRecentlyViewed(resource);
       setPreviewFile(resource);
       setShowPreviewSidebar(true);
     }
@@ -1093,6 +1129,52 @@ const AcademicBankPage = () => {
 
       {/* Main Content */}
         <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* Recently Viewed Panel */}
+        <AnimatePresence>
+          {recentlyViewed.length > 0 && !isGlobalSearch && currentPath.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-6 sm:mb-8 overflow-hidden"
+            >
+              <div className="bg-white border border-slate-200 p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                  <div className="flex items-center gap-2">
+                    <Clock size={20} className="text-nobel-gold" />
+                    <h3 className="font-serif text-xl text-ui-blue">Recently Viewed</h3>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-xs text-slate-400 hover:text-red-500"
+                    onClick={() => setRecentlyViewed([])}
+                  >
+                    Clear History
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
+                  {recentlyViewed.map((file) => (
+                    <div 
+                      key={file.id} 
+                      className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-100 hover:border-ui-blue/30 cursor-pointer transition-colors group"
+                      onClick={() => canPreview(file) ? handlePreview(file) : handleDownload(file)}
+                    >
+                      <div className="p-2 bg-white border border-slate-100 group-hover:border-ui-blue/20">
+                        <FileText size={18} className="text-nobel-gold" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-slate-700 truncate group-hover:text-ui-blue">{file.name}</p>
+                        <p className="text-[10px] text-slate-400 uppercase tracking-wider">{file.resource_type}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Stats Panel */}
         <AnimatePresence>
           {showStats && (
