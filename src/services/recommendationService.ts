@@ -217,7 +217,7 @@ export const getCoDownloadedResources = async (
       return acc;
     }, {} as Record<string, number>);
 
-    const topResourceIds = Object.entries(resourceCounts)
+    const topResourceIds = (Object.entries(resourceCounts) as [string, number][])
       .sort(([, a], [, b]) => b - a)
       .slice(0, limit)
       .map(([id]) => id);
