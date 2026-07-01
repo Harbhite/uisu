@@ -173,7 +173,7 @@ const PastQuestionsPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 pt-28 pb-16">
-      <SEO title="Past Questions Bank - Resources" description="Browse past exam questions with AI-generated solutions." />
+      <SEO title="University of Ibadan Past Questions — UI Past Questions & AI Solutions" description="Browse University of Ibadan past exam questions across faculties, departments and courses — with AI-generated solutions, explanations and study notes for UI students." url="/resources/past-questions" />
       <div className="container mx-auto px-4 sm:px-6 lg:px-12 max-w-5xl">
         {/* Back */}
         <motion.button initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
