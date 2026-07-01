@@ -3,7 +3,9 @@
  * Handles advanced filtering and search operations
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _sb } from '@/integrations/supabase/client';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const supabase: any = _sb;
 import { FilterCriteria, AcademicResourceExtended } from '@/types/academicbank';
 
 /**

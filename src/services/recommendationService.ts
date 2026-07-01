@@ -3,7 +3,9 @@
  * Handles smart resource recommendations based on user interactions and metadata
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _sb } from '@/integrations/supabase/client';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const supabase: any = _sb;
 import { ResourceRecommendation, ResourceInteraction, AcademicResourceExtended } from '@/types/academicbank';
 
 /**
@@ -215,7 +217,7 @@ export const getCoDownloadedResources = async (
       return acc;
     }, {} as Record<string, number>);
 
-    const topResourceIds = Object.entries(resourceCounts)
+    const topResourceIds = (Object.entries(resourceCounts) as [string, number][])
       .sort(([, a], [, b]) => b - a)
       .slice(0, limit)
       .map(([id]) => id);
