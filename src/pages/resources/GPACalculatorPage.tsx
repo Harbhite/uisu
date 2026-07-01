@@ -292,8 +292,9 @@ const GPACalculatorPage = () => {
   return (
     <div className="min-h-screen bg-slate-50 pt-28 pb-16">
       <SEO 
-        title="GPA Calculator - Resources" 
-        description="Calculate your semester and cumulative GPA with our easy-to-use tool. Supports both 4.0 and 5.0 grading scales." 
+        title="University of Ibadan CGPA Calculator — GPA Calculator for UI Students" 
+        description="Free CGPA & GPA calculator for University of Ibadan students. Supports UI's 7.0, 5.0 and 4.0 grading scales — calculate semester GPA, cumulative CGPA and predict your class of degree." 
+        url="/resources/gpa-calculator"
       />
 
       <div className="container mx-auto px-6 lg:px-12 max-w-5xl">
