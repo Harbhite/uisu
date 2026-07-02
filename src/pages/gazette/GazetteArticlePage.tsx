@@ -266,6 +266,7 @@ const GazetteArticlePage = () => {
         </div>
       </section>
     </motion.article>
+    </>
   );
 };
 
