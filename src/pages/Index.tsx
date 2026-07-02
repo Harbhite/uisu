@@ -412,11 +412,11 @@ const Index = () => {
       <header className="relative min-h-screen flex flex-col items-center justify-center pt-32 pb-20 overflow-hidden bg-white">
         <div className="absolute inset-0 opacity-20 pointer-events-none noise-overlay mix-blend-multiply"></div>
         <div className="container mx-auto px-6 text-center relative z-10">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mb-6">
-            <motion.h1 initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="text-7xl md:text-9xl font-bold tracking-tighter text-ui-blue">UNION</motion.h1>
-            <motion.div animate={{ rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }} className="text-6xl md:text-8xl text-nobel-gold"><Star size={80} fill="currentColor" /></motion.div>
-            <motion.h1 initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="text-7xl md:text-9xl font-serif italic text-ui-blue">Legacy</motion.h1>
-          </div>
+          <h1 className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mb-6">
+            <motion.span initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="text-7xl md:text-9xl font-bold tracking-tighter text-ui-blue">UNION</motion.span>
+            <motion.span aria-hidden="true" animate={{ rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }} className="text-6xl md:text-8xl text-nobel-gold inline-flex"><Star size={80} fill="currentColor" /></motion.span>
+            <motion.span initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="text-7xl md:text-9xl font-serif italic text-ui-blue">Legacy</motion.span>
+          </h1>
           <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="text-xl md:text-2xl text-slate-600 max-w-2xl mx-auto mb-16 leading-relaxed">
             Platform packed with <span className="bg-slate-100 px-2 rounded-none text-ui-blue font-medium">History</span> & <span className="bg-slate-100 px-2 rounded-none text-ui-blue font-medium">Intellectualism</span>. Preserving the Aluta spirit since 1948.
           </motion.p>

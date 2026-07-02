@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { SocialShare } from '@/components/SocialShare';
+import { SEO } from '@/components/SEO';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -149,6 +150,21 @@ const GazetteArticlePage = () => {
   };
 
   return (
+    <>
+      <SEO
+        title={article.title}
+        description={article.summary || `${article.title} — UISU Gazette article by ${article.author_name || 'UISU Editorial'}.`}
+        image={article.cover_image || undefined}
+        url={`/gazette/article/${article.slug || slug}`}
+        type="article"
+        author={article.author_name}
+        publishedTime={article.published_at}
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Gazette', url: '/gazette' },
+          { name: article.title, url: `/gazette/article/${article.slug || slug}` },
+        ]}
+      />
     <motion.article
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -250,6 +266,7 @@ const GazetteArticlePage = () => {
         </div>
       </section>
     </motion.article>
+    </>
   );
 };
 
