@@ -1,0 +1,52 @@
+# UISU SPACE
+
+> The digital hub of the University of Ibadan Students' Union — past questions, CGPA & cut-off mark calculators, AI study tools, lost & found, clubs and marketplace for UI students.
+
+UISU SPACE preserves 75+ years of University of Ibadan student union history and offers day-to-day tools for current UI students: an academic resource bank, AI-powered study companions, community boards, event calendars, and gazette journalism.
+
+## Pages
+
+- [Home](/): Overview of UISU SPACE for University of Ibadan students.
+- [Governance](/governance): Structure of the UI Students' Union (Executive, SRC, Judicial).
+- [Current Leaders](/current-leaders): Serving UISU executives and legislators.
+- [Past Leaders](/past-leaders): Hall of Fame — past UISU presidents since 1948.
+- [History](/history): The story of UISU, the first student union in Nigeria.
+- [Constitution](/constitution): Official UISU constitution.
+- [Elections](/elections): UISU election calendar and blockchain voting.
+- [Communities](/communities): Clubs and societies at the University of Ibadan.
+- [Events](/events): Campus events calendar.
+- [Announcements](/announcements): Official union news and updates.
+- [Halls of Residence](/halls): The nine UI halls and their student governments.
+- [Campus Map](/campus-map): Interactive map of the University of Ibadan.
+- [Documents Library](/documents): Archived UISU documents and records.
+- [Inks Vault](/inks-vault): Student literary works and poetry.
+- [Gazette](/gazette): UISU student journalism and long-form articles.
+- [Lost & Found](/lost-found): Report and recover lost items on campus.
+- [Confessions](/confessions): Anonymous student confessions board.
+- [Polls](/polls): Community polls.
+- [Complaints](/complaints): Public feedback channel.
+
+## Resources
+
+- [Resources Hub](/resources): All student tools in one place.
+- [Past Questions](/resources/past-questions): University of Ibadan past questions bank with AI solutions.
+- [CGPA Calculator](/resources/gpa-calculator): University of Ibadan CGPA calculator.
+- [AI Study Buddy](/resources/study-buddy): AI study companion for UI students.
+- [AI Quiz](/resources/ai-quiz): Generate quizzes from your notes.
+- [Flashcards](/resources/flashcards): AI-generated flashcards.
+- [Quizlets](/resources/quizlets): Shareable quiz sets.
+- [Student Mart](/resources/student-mart): Campus marketplace and classifieds.
+- [Academic Planner](/resources/academic-planner): Plan your semester.
+- [Academic Calendar](/resources/academic-calendar): UI academic calendar.
+- [Budget Tracker](/resources/budget-tracker): Track student finances.
+
+## Learning
+
+- [Tutorials](/tutorials): Peer-led tutorials and study material.
+
+## Optional
+
+- [Newsletter](/newsletter): Subscribe to UISU updates.
+- [Privacy Policy](/privacy-policy): How we handle your data.
+- [Terms of Service](/terms-of-service): Terms for using UISU SPACE.
+- [Sitemap](/sitemap): Browsable list of all pages.
