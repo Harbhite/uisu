@@ -1,16 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Plus, FileText, Users, ExternalLink, Copy, Trash2, BarChart3, Search,
-  ClipboardList, UserPlus, FlaskConical, GraduationCap, LayoutTemplate, ShieldAlert, CopyPlus
+  ClipboardList, UserPlus, FlaskConical, GraduationCap, LayoutTemplate, CopyPlus,
+  Sparkles, TrendingUp, CheckCircle2, LogIn
 } from "lucide-react";
 import { format } from "date-fns";
 import { SEO } from "@/components/SEO";
@@ -41,9 +42,7 @@ interface FormTemplate {
 
 const TEMPLATES: FormTemplate[] = [
   {
-    name: "Event Registration",
-    description: "Collect attendee info for an upcoming event",
-    type: "registration",
+    name: "Event Registration", description: "Collect attendee info for an upcoming event", type: "registration",
     fields: [
       { field_type: "short_text", label: "Full Name", is_required: true, options: [], placeholder: "Enter your full name" },
       { field_type: "email", label: "Email Address", is_required: true, options: [], placeholder: "you@example.com" },
@@ -54,9 +53,7 @@ const TEMPLATES: FormTemplate[] = [
     ],
   },
   {
-    name: "Waitlist Signup",
-    description: "Simple waitlist for a launch or program",
-    type: "waitlist",
+    name: "Waitlist Signup", description: "Simple waitlist for a launch or program", type: "waitlist",
     fields: [
       { field_type: "short_text", label: "Full Name", is_required: true, options: [], placeholder: "Your name" },
       { field_type: "email", label: "Email", is_required: true, options: [], placeholder: "your@email.com" },
@@ -64,32 +61,24 @@ const TEMPLATES: FormTemplate[] = [
     ],
   },
   {
-    name: "Feedback Survey",
-    description: "Get structured feedback with ratings and comments",
-    type: "survey",
+    name: "Feedback Survey", description: "Get structured feedback with ratings and comments", type: "survey",
     fields: [
       { field_type: "rating", label: "Overall Experience", is_required: true, options: [] },
       { field_type: "multiple_choice", label: "How did you hear about us?", is_required: false, options: ["Social Media", "Friend", "Flyer", "Website", "Other"] },
       { field_type: "rating", label: "How likely are you to recommend us?", is_required: false, options: [], description: "1 = Not likely, 5 = Very likely" },
       { field_type: "long_text", label: "What could we improve?", is_required: false, options: [], placeholder: "Share your thoughts..." },
-      { field_type: "long_text", label: "Any other comments?", is_required: false, options: [], placeholder: "Optional feedback..." },
     ],
   },
   {
-    name: "Quiz / Online Test",
-    description: "Multiple choice quiz or assessment",
-    type: "test",
+    name: "Quiz / Online Test", description: "Multiple choice quiz or assessment", type: "test",
     fields: [
       { field_type: "short_text", label: "Student Name", is_required: true, options: [], placeholder: "Your name" },
       { field_type: "short_text", label: "Matric Number", is_required: true, options: [], placeholder: "e.g. 2023/12345" },
-      { field_type: "multiple_choice", label: "Question 1: What is the capital of Nigeria?", is_required: true, options: ["Lagos", "Abuja", "Port Harcourt", "Ibadan"] },
-      { field_type: "multiple_choice", label: "Question 2: Which year was UNILAG founded?", is_required: true, options: ["1960", "1962", "1965", "1970"] },
+      { field_type: "multiple_choice", label: "Q1: What is the capital of Nigeria?", is_required: true, options: ["Lagos", "Abuja", "Port Harcourt", "Ibadan"] },
     ],
   },
   {
-    name: "Contact Form",
-    description: "Simple contact/inquiry form",
-    type: "form",
+    name: "Contact Form", description: "Simple contact/inquiry form", type: "form",
     fields: [
       { field_type: "short_text", label: "Name", is_required: true, options: [], placeholder: "Your name" },
       { field_type: "email", label: "Email", is_required: true, options: [], placeholder: "your@email.com" },
@@ -108,19 +97,23 @@ const FormsPage = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [showTemplates, setShowTemplates] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, isStaff, loading: roleLoading } = useAdminCheck();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!roleLoading && isStaff) fetchForms();
-    if (!roleLoading && !isStaff) setLoading(false);
-  }, [roleLoading, isStaff]);
+    if (authLoading) return;
+    if (!user) { setLoading(false); return; }
+    fetchForms();
+  }, [authLoading, user]);
 
   const fetchForms = async () => {
+    if (!user) return;
+    setLoading(true);
     const { data, error } = await supabase
       .from("forms")
       .select("*")
+      .eq("created_by", user.id)
       .order("created_at", { ascending: false });
     if (!error && data) setForms(data);
     setLoading(false);
@@ -131,23 +124,12 @@ const FormsPage = () => {
     const { data, error } = await supabase
       .from("forms")
       .insert({ title: template.name, description: template.description, created_by: user.id, form_type: template.type })
-      .select()
-      .single();
-    if (error || !data) {
-      toast({ title: "Error creating form", variant: "destructive" });
-      return;
-    }
-    // Insert template fields
+      .select().single();
+    if (error || !data) { toast({ title: "Error creating form", variant: "destructive" }); return; }
     const fieldsToInsert = template.fields.map((f, i) => ({
-      form_id: data.id,
-      field_type: f.field_type,
-      label: f.label,
-      is_required: f.is_required,
-      sort_order: i,
-      options: f.options,
-      placeholder: f.placeholder || null,
-      description: f.description || null,
-      validation: {},
+      form_id: data.id, field_type: f.field_type, label: f.label, is_required: f.is_required,
+      sort_order: i, options: f.options, placeholder: f.placeholder || null,
+      description: f.description || null, validation: {},
     }));
     await supabase.from("form_fields").insert(fieldsToInsert);
     setShowTemplates(false);
@@ -160,12 +142,8 @@ const FormsPage = () => {
     const { data, error } = await supabase
       .from("forms")
       .insert({ title: `Untitled ${typeInfo.label}`, created_by: user.id, form_type: type })
-      .select()
-      .single();
-    if (error || !data) {
-      toast({ title: "Error creating form", variant: "destructive" });
-      return;
-    }
+      .select().single();
+    if (error || !data) { toast({ title: "Error creating form", variant: "destructive" }); return; }
     setShowTemplates(false);
     navigate(`/forms/edit/${data.id}`);
   };
@@ -190,30 +168,17 @@ const FormsPage = () => {
     const { data: newForm, error } = await supabase
       .from("forms")
       .insert({
-        title: `${original.title} (Copy)`,
-        description: original.description,
-        created_by: user.id,
-        form_type: original.form_type || "form",
-        settings: original.settings,
-        accent_color: original.accent_color,
-      })
-      .select()
-      .single();
+        title: `${original.title} (Copy)`, description: original.description,
+        created_by: user.id, form_type: original.form_type || "form",
+        settings: original.settings, accent_color: original.accent_color,
+      }).select().single();
     if (error || !newForm) { toast({ title: "Error duplicating form", variant: "destructive" }); return; }
-    // Duplicate fields
     const { data: originalFields } = await supabase.from("form_fields").select("*").eq("form_id", formId).order("sort_order");
     if (originalFields && originalFields.length > 0) {
       const newFields = originalFields.map(f => ({
-        form_id: newForm.id,
-        field_type: f.field_type,
-        label: f.label,
-        description: f.description,
-        placeholder: f.placeholder,
-        is_required: f.is_required,
-        sort_order: f.sort_order,
-        options: f.options,
-        validation: f.validation,
-        conditions: (f as any).conditions,
+        form_id: newForm.id, field_type: f.field_type, label: f.label, description: f.description,
+        placeholder: f.placeholder, is_required: f.is_required, sort_order: f.sort_order,
+        options: f.options, validation: f.validation, conditions: (f as any).conditions,
       }));
       await supabase.from("form_fields").insert(newFields as any);
     }
@@ -232,16 +197,28 @@ const FormsPage = () => {
     return matchesSearch && matchesTab;
   });
 
-  // Staff gate
-  if (!roleLoading && !isStaff) {
+  const stats = useMemo(() => ({
+    total: forms.length,
+    published: forms.filter(f => f.status === "published").length,
+    responses: forms.reduce((sum, f) => sum + (f.response_count || 0), 0),
+  }), [forms]);
+
+  // Signed-out gate
+  if (!authLoading && !user) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} user={user} handleLogout={handleLogout} />
-        <main className="container mx-auto px-4 pt-28 pb-16 text-center">
-          <ShieldAlert className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
-          <h1 className="text-2xl font-bold text-foreground mb-2">Staff Only</h1>
-          <p className="text-muted-foreground mb-6">Only staff members can create and manage forms.</p>
-          <Button onClick={() => navigate("/auth")} variant="outline">Sign In</Button>
+        <main className="container mx-auto px-4 pt-28 pb-16 text-center animate-fade-in">
+          <div className="max-w-md mx-auto">
+            <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center mb-6 shadow-lg animate-scale-in">
+              <FileText className="w-10 h-10 text-primary-foreground" />
+            </div>
+            <h1 className="text-3xl font-serif font-bold text-foreground mb-2">Sign in to build forms</h1>
+            <p className="text-muted-foreground mb-6">Create surveys, waitlists, quizzes and registrations — track every response in real time.</p>
+            <Button onClick={() => navigate("/auth")} size="lg" className="bg-primary text-primary-foreground hover-scale">
+              <LogIn className="w-4 h-4 mr-2" /> Sign in to continue
+            </Button>
+          </div>
         </main>
         <Footer />
       </div>
@@ -250,35 +227,71 @@ const FormsPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEO title="Forms — UISU Archive" description="Create and manage forms, surveys, waitlists and registrations." />
+      <SEO title="Forms — UISU SPACE" description="Create and manage forms, surveys, waitlists and registrations. Track responses with analytics." />
       <Navbar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} user={user} handleLogout={handleLogout} />
 
-      <main className="container mx-auto px-4 pt-28 pb-16">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-serif font-bold text-foreground">Forms</h1>
-            <p className="text-muted-foreground mt-1">Create surveys, waitlists, registrations & more.</p>
+      {/* Hero */}
+      <section className="relative overflow-hidden border-b border-border bg-gradient-to-br from-primary/5 via-background to-accent/5">
+        <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+        <div className="container mx-auto px-4 pt-28 pb-10 relative">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 animate-fade-in">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-3 animate-scale-in">
+                <Sparkles className="w-3.5 h-3.5" /> Your Forms Workspace
+              </div>
+              <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground tracking-tight">
+                Build. Share. <span className="text-accent">Measure.</span>
+              </h1>
+              <p className="text-muted-foreground mt-2 max-w-lg">
+                A Google-Forms-style workspace for surveys, waitlists, registrations & quizzes — with live analytics.
+              </p>
+            </div>
+            <Button
+              onClick={() => setShowTemplates(true)}
+              size="lg"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover-scale group"
+            >
+              <Plus className="w-4 h-4 mr-2 transition-transform group-hover:rotate-90" /> New Form
+            </Button>
           </div>
-          <Button onClick={() => setShowTemplates(true)} className="bg-primary text-primary-foreground hover:bg-primary/90">
-            <Plus className="w-4 h-4 mr-2" /> New Form
-          </Button>
-        </div>
 
+          {/* Stat cards */}
+          <div className="grid grid-cols-3 gap-3 md:gap-4 mt-8">
+            {[
+              { label: "Total forms", value: stats.total, icon: FileText, tint: "from-primary/15 to-primary/5", iconColor: "text-primary" },
+              { label: "Published", value: stats.published, icon: CheckCircle2, tint: "from-green-500/15 to-green-500/5", iconColor: "text-green-600" },
+              { label: "Responses", value: stats.responses, icon: TrendingUp, tint: "from-accent/20 to-accent/5", iconColor: "text-accent" },
+            ].map((s, i) => (
+              <div
+                key={s.label}
+                className={`relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br ${s.tint} p-4 md:p-5 animate-fade-in hover-scale transition-all`}
+                style={{ animationDelay: `${i * 80}ms` }}
+              >
+                <s.icon className={`w-5 h-5 ${s.iconColor} mb-2`} />
+                <div className="text-2xl md:text-3xl font-serif font-bold text-foreground">{s.value}</div>
+                <div className="text-xs md:text-sm text-muted-foreground">{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <main className="container mx-auto px-4 py-10">
         {/* Type Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList className="flex-wrap h-auto gap-1">
-            <TabsTrigger value="all">All</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-5">
+          <TabsList className="flex-wrap h-auto gap-1 bg-muted/50">
+            <TabsTrigger value="all" className="transition-all data-[state=active]:shadow-sm">All</TabsTrigger>
             {FORM_TYPES.map(t => (
-              <TabsTrigger key={t.value} value={t.value} className="gap-1">
+              <TabsTrigger key={t.value} value={t.value} className="gap-1 transition-all data-[state=active]:shadow-sm">
                 <t.icon className="w-3.5 h-3.5" /> {t.label}
               </TabsTrigger>
             ))}
           </TabsList>
         </Tabs>
 
-        <div className="relative mb-6 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Search forms..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+        <div className="relative mb-6 max-w-md group">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+          <Input placeholder="Search your forms..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
         </div>
 
         {loading ? (
@@ -291,41 +304,47 @@ const FormsPage = () => {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-20">
-            <FileText className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+          <div className="text-center py-20 animate-fade-in">
+            <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-4 animate-scale-in">
+              <FileText className="w-10 h-10 text-primary/70" />
+            </div>
             <h2 className="text-xl font-semibold text-foreground mb-2">
-              {search || activeTab !== "all" ? "No forms found" : "No forms yet"}
+              {search || activeTab !== "all" ? "No forms match your filters" : "Your first form awaits"}
             </h2>
-            <p className="text-muted-foreground mb-6">
-              {search ? "Try a different search term." : "Create your first form to start collecting responses."}
+            <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+              {search ? "Try a different search term." : "Start from a template or a blank canvas — takes under a minute."}
             </p>
             {!search && (
-              <Button onClick={() => setShowTemplates(true)} className="bg-primary text-primary-foreground">
-                <Plus className="w-4 h-4 mr-2" /> Create Form
+              <Button onClick={() => setShowTemplates(true)} className="bg-primary text-primary-foreground hover-scale">
+                <Plus className="w-4 h-4 mr-2" /> Create your first form
               </Button>
             )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filtered.map(form => {
+            {filtered.map((form, idx) => {
               const typeInfo = getTypeInfo(form.form_type || "form");
               const TypeIcon = typeInfo.icon;
               return (
-                <Card key={form.id} className="border-border hover:shadow-md transition-shadow">
+                <Card
+                  key={form.id}
+                  className="group border-border hover:shadow-xl hover:border-primary/30 transition-all duration-300 hover:-translate-y-0.5 animate-fade-in overflow-hidden"
+                  style={{ animationDelay: `${Math.min(idx * 50, 400)}ms` }}
+                >
+                  <div className={`h-1 w-full bg-gradient-to-r from-primary via-accent to-primary opacity-0 group-hover:opacity-100 transition-opacity`} />
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0">
-                        <TypeIcon className={`w-4 h-4 flex-shrink-0 ${typeInfo.color}`} />
+                        <div className={`p-2 rounded-lg bg-muted transition-transform group-hover:scale-110 group-hover:rotate-3`}>
+                          <TypeIcon className={`w-4 h-4 ${typeInfo.color}`} />
+                        </div>
                         <CardTitle className="text-lg font-semibold text-foreground line-clamp-1">
                           {form.title}
                         </CardTitle>
                       </div>
-                      <div className="flex gap-1.5 flex-shrink-0">
-                        <Badge variant="outline" className="text-xs">{typeInfo.label}</Badge>
-                        <Badge variant={form.status === "published" ? "default" : "secondary"}>
-                          {form.status}
-                        </Badge>
-                      </div>
+                      <Badge variant={form.status === "published" ? "default" : "secondary"} className="flex-shrink-0">
+                        {form.status}
+                      </Badge>
                     </div>
                   </CardHeader>
                   <CardContent className="pb-2">
@@ -333,37 +352,38 @@ const FormsPage = () => {
                       <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{form.description}</p>
                     )}
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Users className="w-3.5 h-3.5" /> {form.response_count || 0} responses
+                      <span className="flex items-center gap-1 font-medium">
+                        <Users className="w-3.5 h-3.5" /> {form.response_count || 0}
                       </span>
-                      <span>{format(new Date(form.created_at), "MMM d, yyyy")}</span>
+                      <Badge variant="outline" className="text-xs">{typeInfo.label}</Badge>
+                      <span className="text-xs ml-auto">{format(new Date(form.created_at), "MMM d")}</span>
                     </div>
                   </CardContent>
                   <CardFooter className="pt-2 flex gap-2 flex-wrap">
-                    <Button variant="outline" size="sm" asChild>
+                    <Button variant="outline" size="sm" asChild className="hover-scale">
                       <Link to={`/forms/edit/${form.id}`}><FileText className="w-3.5 h-3.5 mr-1" /> Edit</Link>
                     </Button>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link to={`/forms/responses/${form.id}`}><BarChart3 className="w-3.5 h-3.5 mr-1" /> Responses</Link>
+                    <Button variant="outline" size="sm" asChild className="hover-scale">
+                      <Link to={`/forms/responses/${form.id}`}><BarChart3 className="w-3.5 h-3.5 mr-1" /> Metrics</Link>
                     </Button>
                     {form.status === "published" && form.share_token && (
                       <>
-                        <Button variant="outline" size="sm" onClick={() => copyShareLink(form.share_token)}>
-                          <Copy className="w-3.5 h-3.5 mr-1" /> Copy Link
+                        <Button variant="outline" size="sm" onClick={() => copyShareLink(form.share_token)} className="hover-scale">
+                          <Copy className="w-3.5 h-3.5 mr-1" /> Copy
                         </Button>
-                        <Button variant="outline" size="sm" asChild>
+                        <Button variant="outline" size="sm" asChild className="hover-scale">
                           <Link to={`/forms/s/${form.share_token}`} target="_blank">
-                            <ExternalLink className="w-3.5 h-3.5 mr-1" /> Preview
+                            <ExternalLink className="w-3.5 h-3.5" />
                           </Link>
                         </Button>
                       </>
                     )}
-                    <Button variant="outline" size="sm" onClick={() => duplicateForm(form.id)} title="Duplicate">
-                      <CopyPlus className="w-3.5 h-3.5 mr-1" /> Duplicate
+                    <Button variant="outline" size="sm" onClick={() => duplicateForm(form.id)} title="Duplicate" className="hover-scale">
+                      <CopyPlus className="w-3.5 h-3.5" />
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10 ml-auto">
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       </AlertDialogTrigger>
@@ -396,15 +416,15 @@ const FormsPage = () => {
             <DialogDescription>Start from a template or create a blank form.</DialogDescription>
           </DialogHeader>
 
-          {/* Blank form options */}
           <div className="mb-6">
             <h3 className="text-sm font-medium text-muted-foreground mb-3">Start blank</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {FORM_TYPES.map(t => (
+              {FORM_TYPES.map((t, i) => (
                 <Button
                   key={t.value}
                   variant="outline"
-                  className="flex flex-col items-center gap-2 h-auto py-4 text-xs"
+                  className="flex flex-col items-center gap-2 h-auto py-4 text-xs hover-scale hover:border-primary/40 animate-fade-in"
+                  style={{ animationDelay: `${i * 40}ms` }}
                   onClick={() => createBlankForm(t.value)}
                 >
                   <t.icon className={`w-5 h-5 ${t.color}`} />
@@ -414,7 +434,6 @@ const FormsPage = () => {
             </div>
           </div>
 
-          {/* Templates */}
           <div>
             <h3 className="text-sm font-medium text-muted-foreground mb-3">Templates</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -424,7 +443,8 @@ const FormsPage = () => {
                 return (
                   <Card
                     key={i}
-                    className="cursor-pointer hover:shadow-md transition-shadow border-border"
+                    className="cursor-pointer hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-300 border-border animate-fade-in"
+                    style={{ animationDelay: `${i * 50}ms` }}
                     onClick={() => createFormFromTemplate(tpl)}
                   >
                     <CardHeader className="pb-2">
