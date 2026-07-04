@@ -210,8 +210,8 @@ const FormsPage = () => {
         <Navbar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} user={user} handleLogout={handleLogout} />
         <main className="container mx-auto px-4 pt-28 pb-16 text-center animate-fade-in">
           <div className="max-w-md mx-auto">
-            <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center mb-6 shadow-lg animate-scale-in">
-              <FileText className="w-10 h-10 text-primary-foreground" />
+            <div className="w-20 h-20 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-6 animate-scale-in">
+              <FileText className="w-10 h-10 text-primary" />
             </div>
             <h1 className="text-3xl font-serif font-bold text-foreground mb-2">Sign in to build forms</h1>
             <p className="text-muted-foreground mb-6">Create surveys, waitlists, quizzes and registrations — track every response in real time.</p>
@@ -230,45 +230,44 @@ const FormsPage = () => {
       <SEO title="Forms — UISU SPACE" description="Create and manage forms, surveys, waitlists and registrations. Track responses with analytics." />
       <Navbar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} user={user} handleLogout={handleLogout} />
 
-      {/* Hero */}
-      <section className="relative overflow-hidden border-b border-border bg-gradient-to-br from-primary/5 via-background to-accent/5">
-        <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)', backgroundSize: '24px 24px' }} />
-        <div className="container mx-auto px-4 pt-28 pb-10 relative">
+      {/* Hero — minimal */}
+      <section className="border-b border-border/60 bg-background">
+        <div className="container mx-auto px-4 pt-28 pb-10">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 animate-fade-in">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-3 animate-scale-in">
-                <Sparkles className="w-3.5 h-3.5" /> Your Forms Workspace
+              <div className="inline-flex items-center gap-1.5 text-primary text-xs font-medium mb-3 animate-scale-in">
+                <Sparkles className="w-3.5 h-3.5" /> Your forms workspace
               </div>
               <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground tracking-tight">
-                Build. Share. <span className="text-accent">Measure.</span>
+                Build. Share. <span className="text-primary">Measure.</span>
               </h1>
-              <p className="text-muted-foreground mt-2 max-w-lg">
-                A Google-Forms-style workspace for surveys, waitlists, registrations & quizzes — with live analytics.
+              <p className="text-muted-foreground mt-2 max-w-lg text-sm md:text-base">
+                Surveys, waitlists, registrations & quizzes — with live analytics.
               </p>
             </div>
             <Button
               onClick={() => setShowTemplates(true)}
               size="lg"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover-scale group"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 hover-scale group"
             >
               <Plus className="w-4 h-4 mr-2 transition-transform group-hover:rotate-90" /> New Form
             </Button>
           </div>
 
-          {/* Stat cards */}
+          {/* Stat cards — minimal */}
           <div className="grid grid-cols-3 gap-3 md:gap-4 mt-8">
             {[
-              { label: "Total forms", value: stats.total, icon: FileText, tint: "from-primary/15 to-primary/5", iconColor: "text-primary" },
-              { label: "Published", value: stats.published, icon: CheckCircle2, tint: "from-green-500/15 to-green-500/5", iconColor: "text-green-600" },
-              { label: "Responses", value: stats.responses, icon: TrendingUp, tint: "from-accent/20 to-accent/5", iconColor: "text-accent" },
+              { label: "Total forms", value: stats.total, icon: FileText },
+              { label: "Published", value: stats.published, icon: CheckCircle2 },
+              { label: "Responses", value: stats.responses, icon: TrendingUp },
             ].map((s, i) => (
               <div
                 key={s.label}
-                className={`relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br ${s.tint} p-4 md:p-5 animate-fade-in hover-scale transition-all`}
+                className="rounded-xl bg-muted/40 p-4 md:p-5 animate-fade-in hover:bg-muted/60 transition-colors"
                 style={{ animationDelay: `${i * 80}ms` }}
               >
-                <s.icon className={`w-5 h-5 ${s.iconColor} mb-2`} />
-                <div className="text-2xl md:text-3xl font-serif font-bold text-foreground">{s.value}</div>
+                <s.icon className="w-4 h-4 text-muted-foreground mb-2" />
+                <div className="text-2xl md:text-3xl font-serif font-bold text-foreground tabular-nums">{s.value}</div>
                 <div className="text-xs md:text-sm text-muted-foreground">{s.label}</div>
               </div>
             ))}
@@ -305,8 +304,8 @@ const FormsPage = () => {
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20 animate-fade-in">
-            <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-4 animate-scale-in">
-              <FileText className="w-10 h-10 text-primary/70" />
+            <div className="w-20 h-20 mx-auto rounded-2xl bg-muted flex items-center justify-center mb-4 animate-scale-in">
+              <FileText className="w-10 h-10 text-muted-foreground" />
             </div>
             <h2 className="text-xl font-semibold text-foreground mb-2">
               {search || activeTab !== "all" ? "No forms match your filters" : "Your first form awaits"}
@@ -328,10 +327,10 @@ const FormsPage = () => {
               return (
                 <Card
                   key={form.id}
-                  className="group border-border hover:shadow-xl hover:border-primary/30 transition-all duration-300 hover:-translate-y-0.5 animate-fade-in overflow-hidden"
+                  className="group border-border/60 hover:border-primary/40 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 animate-fade-in overflow-hidden"
                   style={{ animationDelay: `${Math.min(idx * 50, 400)}ms` }}
                 >
-                  <div className={`h-1 w-full bg-gradient-to-r from-primary via-accent to-primary opacity-0 group-hover:opacity-100 transition-opacity`} />
+                  <div className="h-0.5 w-full bg-primary/0 group-hover:bg-primary/60 transition-colors" />
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0">
