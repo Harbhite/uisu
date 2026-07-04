@@ -210,8 +210,8 @@ const FormsPage = () => {
         <Navbar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} user={user} handleLogout={handleLogout} />
         <main className="container mx-auto px-4 pt-28 pb-16 text-center animate-fade-in">
           <div className="max-w-md mx-auto">
-            <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center mb-6 shadow-lg animate-scale-in">
-              <FileText className="w-10 h-10 text-primary-foreground" />
+            <div className="w-20 h-20 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-6 animate-scale-in">
+              <FileText className="w-10 h-10 text-primary" />
             </div>
             <h1 className="text-3xl font-serif font-bold text-foreground mb-2">Sign in to build forms</h1>
             <p className="text-muted-foreground mb-6">Create surveys, waitlists, quizzes and registrations — track every response in real time.</p>
