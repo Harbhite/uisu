@@ -327,10 +327,10 @@ const FormsPage = () => {
               return (
                 <Card
                   key={form.id}
-                  className="group border-border hover:shadow-xl hover:border-primary/30 transition-all duration-300 hover:-translate-y-0.5 animate-fade-in overflow-hidden"
+                  className="group border-border/60 hover:border-primary/40 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 animate-fade-in"
                   style={{ animationDelay: `${Math.min(idx * 50, 400)}ms` }}
                 >
-                  <div className={`h-1 w-full bg-gradient-to-r from-primary via-accent to-primary opacity-0 group-hover:opacity-100 transition-opacity`} />
+                  <div className="h-0.5 w-full bg-primary/0 group-hover:bg-primary/60 transition-colors" />
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0">
