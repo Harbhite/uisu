@@ -1338,126 +1338,145 @@ const AcademicBankPage = () => {
                 )}
               </div>
             ) : (
-              <div className={viewMode === 'grid' ? 'grid grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-1 sm:gap-2 md:gap-3 lg:gap-4' : 'space-y-2'}>
-                {items.map((item) => (
-                  <motion.div
-                    key={item.id}
-                    layout
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`
-                      group cursor-pointer border transition-all relative
-                      ${viewMode === 'grid' 
-                        ? 'p-2 sm:p-3 flex flex-col bg-white border-slate-100 hover:border-ui-blue hover:shadow-md' 
-                        : 'p-4 flex items-center gap-4 bg-white border-slate-100 hover:border-ui-blue hover:bg-slate-50'}
-                    `}
-                  >
-                    <div 
-                      className={`flex-1 min-w-0 ${viewMode === 'grid' ? '' : 'flex items-center gap-4'}`}
-                      onClick={() => {
-                        if (item.resource_type === 'folder') {
-                          handleNavigate(item.id);
-                        } else if (canPreview(item)) {
-                          handlePreview(item);
-                        } else {
-                          handleDownload(item);
-                        }
-                      }}
-                    >
-                      <div className={`${viewMode === 'grid' ? 'mb-2 sm:mb-3 flex justify-center' : ''}`}>
-                        {item.resource_type === 'folder' ? (
-                          <div className={`${viewMode === 'grid' ? 'w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12' : 'w-10 h-10'} bg-ui-blue/10 flex items-center justify-center`}>
-                            <Folder className={`${viewMode === 'grid' ? 'w-4 sm:w-5 md:w-6' : 'w-5 h-5'} text-ui-blue`} />
-                          </div>
-                        ) : (
-                          <div className={`${viewMode === 'grid' ? 'w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12' : 'w-10 h-10'} bg-nobel-gold/10 flex items-center justify-center`}>
-                            <FileText className={`${viewMode === 'grid' ? 'w-4 sm:w-5 md:w-6' : 'w-5 h-5'} text-nobel-gold`} />
-                          </div>
-                        )}
-                      </div>
+              (() => {
+                const folders = items.filter(i => i.resource_type === 'folder');
+                const files = items.filter(i => i.resource_type !== 'folder');
 
-                      <div className="flex-1 min-w-0">
-                        <h4 className={`font-medium text-slate-700 truncate group-hover:text-ui-blue ${viewMode === 'grid' ? 'text-[10px] sm:text-xs md:text-sm text-center line-clamp-2' : 'text-sm'}`}>
-                          {item.name}
-                        </h4>
-                        {viewMode === 'list' && (
-                          <div className="flex items-center gap-6 text-xs text-slate-400 mt-1">
-                            <span>{item.created_at ? new Date(item.created_at).toLocaleDateString() : ''}</span>
-                            <span>{item.owner}</span>
-                            {item.file_size && <span>{item.file_size}</span>}
-                            {item.download_count !== undefined && item.download_count > 0 && (
-                              <span className="flex items-center gap-1">
-                                <Download size={10} /> {item.download_count}
-                              </span>
+                const renderActions = (item: AcademicResource, positionClass = '') => (
+                  <div className={`flex items-center gap-0.5 ${positionClass} opacity-0 group-hover:opacity-100 transition-opacity`}>
+                    {item.resource_type !== 'folder' && canPreview(item) && (
+                      <Button size="icon" variant="ghost" className="h-6 w-6 sm:h-7 sm:w-7 rounded-md p-0" onClick={(e) => { e.stopPropagation(); handlePreview(item); }}>
+                        <Eye size={12} className="sm:w-3.5 sm:h-3.5" />
+                      </Button>
+                    )}
+                    {item.resource_type !== 'folder' && (
+                      <Button size="icon" variant="ghost" className="h-6 w-6 sm:h-7 sm:w-7 rounded-md p-0" onClick={(e) => { e.stopPropagation(); handleDownload(item); }}>
+                        <Download size={12} className="sm:w-3.5 sm:h-3.5" />
+                      </Button>
+                    )}
+                    {item.resource_type === 'folder' && (
+                      <Button size="icon" variant="ghost" className="h-6 w-6 sm:h-7 sm:w-7 rounded-md text-ui-blue hover:text-ui-dark p-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const shareUrl = `${window.location.origin}/resources/academic-bank?folder=${item.id}`;
+                          navigator.clipboard.writeText(shareUrl);
+                          toast.success('Folder link copied to clipboard!');
+                        }}
+                      >
+                        <Link2 size={12} className="sm:w-3.5 sm:h-3.5" />
+                      </Button>
+                    )}
+                    {isStaff && item.resource_type === 'folder' && (
+                      <Button size="icon" variant="ghost" className="h-6 w-6 sm:h-7 sm:w-7 rounded-md p-0"
+                        onClick={(e) => { e.stopPropagation(); setEditingFolder(item); setNewFolderName(item.name); setShowFolderModal(true); }}
+                      >
+                        <Edit2 size={12} className="sm:w-3.5 sm:h-3.5" />
+                      </Button>
+                    )}
+                    {isStaff && (
+                      <Button size="icon" variant="ghost" className="h-6 w-6 sm:h-7 sm:w-7 rounded-md text-red-500 hover:text-red-600 p-0"
+                        onClick={(e) => { e.stopPropagation(); handleDeleteResource(item); }}
+                      >
+                        <Trash2 size={12} className="sm:w-3.5 sm:h-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                );
+
+                if (viewMode === 'list') {
+                  return (
+                    <div className="space-y-2">
+                      {items.map((item) => (
+                        <motion.div key={item.id} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                          className="group cursor-pointer border border-slate-100 hover:border-ui-blue hover:bg-slate-50 transition-all relative p-4 flex items-center gap-4 bg-white"
+                        >
+                          <div className="flex-1 min-w-0 flex items-center gap-4"
+                            onClick={() => {
+                              if (item.resource_type === 'folder') handleNavigate(item.id);
+                              else if (canPreview(item)) handlePreview(item);
+                              else handleDownload(item);
+                            }}
+                          >
+                            {item.resource_type === 'folder' ? (
+                              <div className="w-10 h-10 bg-ui-blue/10 flex items-center justify-center"><Folder className="w-5 h-5 text-ui-blue" /></div>
+                            ) : (
+                              <div className="w-10 h-10 bg-nobel-gold/10 flex items-center justify-center"><FileText className="w-5 h-5 text-nobel-gold" /></div>
                             )}
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-slate-700 truncate group-hover:text-ui-blue text-sm">{item.name}</h4>
+                              <div className="flex items-center gap-6 text-xs text-slate-400 mt-1">
+                                <span>{item.created_at ? new Date(item.created_at).toLocaleDateString() : ''}</span>
+                                <span>{item.owner}</span>
+                                {item.file_size && <span>{item.file_size}</span>}
+                                {item.download_count !== undefined && item.download_count > 0 && (
+                                  <span className="flex items-center gap-1"><Download size={10} /> {item.download_count}</span>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                        )}
-                        {viewMode === 'grid' && item.resource_type !== 'folder' && (
-                          <p className="text-[8px] sm:text-[9px] md:text-xs text-slate-400 text-center mt-1">{item.file_size || ''}</p>
-                        )}
-                      </div>
+                          {renderActions(item)}
+                        </motion.div>
+                      ))}
                     </div>
+                  );
+                }
 
-                    {/* Actions */}
-                    <div className={`flex items-center gap-0.5 ${viewMode === 'grid' ? 'absolute top-1 right-1' : ''} opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity`}>
-                      {item.resource_type !== 'folder' && canPreview(item) && (
-                        <Button size="icon" variant="ghost" className="h-5 w-5 sm:h-7 sm:w-7 rounded-none p-0" onClick={() => handlePreview(item)}>
-                          <Eye size={12} className="sm:w-3.5 sm:h-3.5" />
-                        </Button>
-                      )}
-                      {item.resource_type !== 'folder' && (
-                        <Button size="icon" variant="ghost" className="h-5 w-5 sm:h-7 sm:w-7 rounded-none p-0" onClick={() => handleDownload(item)}>
-                          <Download size={12} className="sm:w-3.5 sm:h-3.5" />
-                        </Button>
-                      )}
-                      {item.resource_type === 'folder' && (
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
-                          className="h-5 w-5 sm:h-7 sm:w-7 rounded-none text-ui-blue hover:text-ui-dark p-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const shareUrl = `${window.location.origin}/resources/academic-bank?folder=${item.id}`;
-                            navigator.clipboard.writeText(shareUrl);
-                            toast.success('Folder link copied to clipboard!');
-                          }}
-                          title="Share folder link"
-                        >
-                          <Link2 size={12} className="sm:w-3.5 sm:h-3.5" />
-                        </Button>
-                      )}
-                      {isStaff && item.resource_type === 'folder' && (
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
-                          className="h-5 w-5 sm:h-7 sm:w-7 rounded-none p-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingFolder(item);
-                            setNewFolderName(item.name);
-                            setShowFolderModal(true);
-                          }}
-                        >
-                          <Edit2 size={12} className="sm:w-3.5 sm:h-3.5" />
-                        </Button>
-                      )}
-                      {isStaff && (
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
-                          className="h-5 w-5 sm:h-7 sm:w-7 rounded-none text-red-500 hover:text-red-600 p-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteResource(item);
-                          }}
-                        >
-                          <Trash2 size={12} className="sm:w-3.5 sm:h-3.5" />
-                        </Button>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+                return (
+                  <div className="space-y-8">
+                    {folders.length > 0 && (
+                      <div>
+                        <h3 className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">Folders</h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+                          {folders.map((item) => (
+                            <motion.div key={item.id} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                              className="group relative cursor-pointer rounded-lg p-3 sm:p-4 flex flex-col items-center bg-white hover:bg-slate-50 transition-all"
+                              onClick={() => handleNavigate(item.id)}
+                            >
+                              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-ui-blue/10 flex items-center justify-center transition-transform group-hover:scale-105">
+                                <Folder className="w-6 h-6 sm:w-7 sm:h-7 text-ui-blue" />
+                              </div>
+                              {/* Name — appears only on hover */}
+                              <div className="absolute inset-x-1 bottom-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                <div className="bg-slate-900/90 text-white text-[10px] sm:text-xs px-2 py-1 rounded text-center line-clamp-2">
+                                  {item.name}
+                                </div>
+                              </div>
+                              {renderActions(item, 'absolute top-1 right-1')}
+                            </motion.div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {files.length > 0 && (
+                      <div>
+                        {folders.length > 0 && (
+                          <h3 className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">Files</h3>
+                        )}
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3 md:gap-4">
+                          {files.map((item) => (
+                            <motion.div key={item.id} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                              className="group relative cursor-pointer rounded-lg p-2 sm:p-3 flex flex-col bg-white hover:bg-slate-50 transition-all"
+                              onClick={() => canPreview(item) ? handlePreview(item) : handleDownload(item)}
+                            >
+                              <div className="mb-2 sm:mb-3 flex justify-center">
+                                <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-nobel-gold/10 flex items-center justify-center rounded-md">
+                                  <FileText className="w-4 sm:w-5 md:w-6 text-nobel-gold" />
+                                </div>
+                              </div>
+                              <div className="min-w-0">
+                                <h4 className="font-medium text-slate-700 truncate group-hover:text-ui-blue text-[10px] sm:text-xs md:text-sm text-center line-clamp-2">{item.name}</h4>
+                                <p className="text-[8px] sm:text-[9px] md:text-xs text-slate-400 text-center mt-1">{item.file_size || ''}</p>
+                              </div>
+                              {renderActions(item, 'absolute top-1 right-1')}
+                            </motion.div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()
             )}
           </div>
         </div>
