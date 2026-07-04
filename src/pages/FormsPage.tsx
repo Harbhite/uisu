@@ -327,7 +327,7 @@ const FormsPage = () => {
               return (
                 <Card
                   key={form.id}
-                  className="group border-border/60 hover:border-primary/40 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 animate-fade-in"
+                  className="group border-border/60 hover:border-primary/40 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 animate-fade-in overflow-hidden"
                   style={{ animationDelay: `${Math.min(idx * 50, 400)}ms` }}
                 >
                   <div className="h-0.5 w-full bg-primary/0 group-hover:bg-primary/60 transition-colors" />
