@@ -304,8 +304,8 @@ const FormsPage = () => {
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20 animate-fade-in">
-            <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-4 animate-scale-in">
-              <FileText className="w-10 h-10 text-primary/70" />
+            <div className="w-20 h-20 mx-auto rounded-2xl bg-muted flex items-center justify-center mb-4 animate-scale-in">
+              <FileText className="w-10 h-10 text-muted-foreground" />
             </div>
             <h2 className="text-xl font-semibold text-foreground mb-2">
               {search || activeTab !== "all" ? "No forms match your filters" : "Your first form awaits"}
