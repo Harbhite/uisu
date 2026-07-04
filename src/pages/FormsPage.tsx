@@ -230,45 +230,44 @@ const FormsPage = () => {
       <SEO title="Forms — UISU SPACE" description="Create and manage forms, surveys, waitlists and registrations. Track responses with analytics." />
       <Navbar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} user={user} handleLogout={handleLogout} />
 
-      {/* Hero */}
-      <section className="relative overflow-hidden border-b border-border bg-gradient-to-br from-primary/5 via-background to-accent/5">
-        <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)', backgroundSize: '24px 24px' }} />
-        <div className="container mx-auto px-4 pt-28 pb-10 relative">
+      {/* Hero — minimal */}
+      <section className="border-b border-border/60 bg-background">
+        <div className="container mx-auto px-4 pt-28 pb-10">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 animate-fade-in">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-3 animate-scale-in">
-                <Sparkles className="w-3.5 h-3.5" /> Your Forms Workspace
+              <div className="inline-flex items-center gap-1.5 text-primary text-xs font-medium mb-3 animate-scale-in">
+                <Sparkles className="w-3.5 h-3.5" /> Your forms workspace
               </div>
               <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground tracking-tight">
-                Build. Share. <span className="text-accent">Measure.</span>
+                Build. Share. <span className="text-primary">Measure.</span>
               </h1>
-              <p className="text-muted-foreground mt-2 max-w-lg">
-                A Google-Forms-style workspace for surveys, waitlists, registrations & quizzes — with live analytics.
+              <p className="text-muted-foreground mt-2 max-w-lg text-sm md:text-base">
+                Surveys, waitlists, registrations & quizzes — with live analytics.
               </p>
             </div>
             <Button
               onClick={() => setShowTemplates(true)}
               size="lg"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover-scale group"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 hover-scale group"
             >
               <Plus className="w-4 h-4 mr-2 transition-transform group-hover:rotate-90" /> New Form
             </Button>
           </div>
 
-          {/* Stat cards */}
+          {/* Stat cards — minimal */}
           <div className="grid grid-cols-3 gap-3 md:gap-4 mt-8">
             {[
-              { label: "Total forms", value: stats.total, icon: FileText, tint: "from-primary/15 to-primary/5", iconColor: "text-primary" },
-              { label: "Published", value: stats.published, icon: CheckCircle2, tint: "from-green-500/15 to-green-500/5", iconColor: "text-green-600" },
-              { label: "Responses", value: stats.responses, icon: TrendingUp, tint: "from-accent/20 to-accent/5", iconColor: "text-accent" },
+              { label: "Total forms", value: stats.total, icon: FileText },
+              { label: "Published", value: stats.published, icon: CheckCircle2 },
+              { label: "Responses", value: stats.responses, icon: TrendingUp },
             ].map((s, i) => (
               <div
                 key={s.label}
-                className={`relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br ${s.tint} p-4 md:p-5 animate-fade-in hover-scale transition-all`}
+                className="rounded-xl bg-muted/40 p-4 md:p-5 animate-fade-in hover:bg-muted/60 transition-colors"
                 style={{ animationDelay: `${i * 80}ms` }}
               >
-                <s.icon className={`w-5 h-5 ${s.iconColor} mb-2`} />
-                <div className="text-2xl md:text-3xl font-serif font-bold text-foreground">{s.value}</div>
+                <s.icon className="w-4 h-4 text-muted-foreground mb-2" />
+                <div className="text-2xl md:text-3xl font-serif font-bold text-foreground tabular-nums">{s.value}</div>
                 <div className="text-xs md:text-sm text-muted-foreground">{s.label}</div>
               </div>
             ))}
