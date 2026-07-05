@@ -1426,21 +1426,18 @@ const AcademicBankPage = () => {
                     {folders.length > 0 && (
                       <div>
                         <h3 className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">Folders</h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+                        <div className="grid grid-cols-3 gap-3 sm:gap-4">
                           {folders.map((item) => (
                             <motion.div key={item.id} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                              className="group relative cursor-pointer rounded-lg p-3 sm:p-4 flex flex-col items-center bg-white hover:bg-slate-50 transition-all"
+                              className="group relative cursor-pointer rounded-lg p-3 sm:p-4 flex flex-col items-center gap-2 bg-white hover:bg-slate-50 transition-all"
                               onClick={() => handleNavigate(item.id)}
                             >
                               <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-ui-blue/10 flex items-center justify-center transition-transform group-hover:scale-105">
                                 <Folder className="w-6 h-6 sm:w-7 sm:h-7 text-ui-blue" />
                               </div>
-                              {/* Name — appears only on hover */}
-                              <div className="absolute inset-x-1 bottom-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                <div className="bg-slate-900/90 text-white text-[10px] sm:text-xs px-2 py-1 rounded text-center line-clamp-2">
-                                  {item.name}
-                                </div>
-                              </div>
+                              <h4 className="text-[11px] sm:text-xs font-medium text-slate-700 group-hover:text-ui-blue text-center line-clamp-2 leading-tight">
+                                {item.name}
+                              </h4>
                               {renderActions(item, 'absolute top-1 right-1')}
                             </motion.div>
                           ))}
