@@ -230,47 +230,53 @@ const FormsPage = () => {
       <SEO title="Forms — UISU SPACE" description="Create and manage forms, surveys, waitlists and registrations. Track responses with analytics." />
       <Navbar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} user={user} handleLogout={handleLogout} />
 
-      {/* Hero — minimal */}
+      {/* Hero — optimized */}
       <section className="border-b border-border/60 bg-background">
-        <div className="container mx-auto px-4 pt-28 pb-10">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 animate-fade-in">
-            <div>
-              <div className="inline-flex items-center gap-1.5 text-primary text-xs font-medium mb-3 animate-scale-in">
+        <div className="container mx-auto px-4 pt-20 pb-6">
+          {/* Header with title and button */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 animate-fade-in mb-5">
+            <div className="flex-1">
+              <div className="inline-flex items-center gap-1.5 text-primary text-xs font-medium mb-2 animate-scale-in">
                 <Sparkles className="w-3.5 h-3.5" /> Your forms workspace
               </div>
-              <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground tracking-tight">
+              <h1 className="text-3xl md:text-4xl font-serif font-bold text-foreground tracking-tight">
                 Build. Share. <span className="text-primary">Measure.</span>
               </h1>
-              <p className="text-muted-foreground mt-2 max-w-lg text-sm md:text-base">
-                Surveys, waitlists, registrations & quizzes — with live analytics.
-              </p>
             </div>
             <Button
               onClick={() => setShowTemplates(true)}
-              size="lg"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 hover-scale group"
+              size="sm"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 hover-scale group w-full md:w-auto"
             >
               <Plus className="w-4 h-4 mr-2 transition-transform group-hover:rotate-90" /> New Form
             </Button>
           </div>
 
-          {/* Stat cards — minimal */}
-          <div className="grid grid-cols-3 gap-3 md:gap-4 mt-8">
-            {[
-              { label: "Total forms", value: stats.total, icon: FileText },
-              { label: "Published", value: stats.published, icon: CheckCircle2 },
-              { label: "Responses", value: stats.responses, icon: TrendingUp },
-            ].map((s, i) => (
-              <div
-                key={s.label}
-                className="rounded-xl bg-muted/40 p-4 md:p-5 animate-fade-in hover:bg-muted/60 transition-colors"
-                style={{ animationDelay: `${i * 80}ms` }}
-              >
-                <s.icon className="w-4 h-4 text-muted-foreground mb-2" />
-                <div className="text-2xl md:text-3xl font-serif font-bold text-foreground tabular-nums">{s.value}</div>
-                <div className="text-xs md:text-sm text-muted-foreground">{s.label}</div>
-              </div>
-            ))}
+          {/* Description and stats in one row */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <p className="text-muted-foreground text-sm flex-1">
+              Surveys, waitlists, registrations & quizzes — with live analytics.
+            </p>
+            
+            {/* Stat cards — compact inline */}
+            <div className="flex gap-2 md:gap-3">
+              {[
+                { label: "Total forms", value: stats.total, icon: FileText },
+                { label: "Published", value: stats.published, icon: CheckCircle2 },
+                { label: "Responses", value: stats.responses, icon: TrendingUp },
+              ].map((s, i) => (
+                <div
+                  key={s.label}
+                  className="rounded-lg bg-muted/50 px-3 py-2 md:px-4 md:py-3 animate-fade-in hover:bg-muted/70 transition-colors flex flex-col items-center justify-center min-w-max"
+                  style={{ animationDelay: `${i * 80}ms` }}
+                  title={s.label}
+                >
+                  <s.icon className="w-3.5 h-3.5 text-muted-foreground mb-1" />
+                  <div className="text-lg md:text-xl font-serif font-bold text-foreground tabular-nums">{s.value}</div>
+                  <div className="text-xs text-muted-foreground whitespace-nowrap">{s.label}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
