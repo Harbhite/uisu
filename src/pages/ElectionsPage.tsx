@@ -138,17 +138,44 @@ const ElectionsPage = () => {
 
   const handleCreateElection = async () => {
     if (!newTitle.trim()) { toast.error('Title required'); return; }
+    if (newOnChain && (!newStartsAt || !newEndsAt)) {
+      toast.error('On-chain elections need start & end times'); return;
+    }
     setSavingElection(true);
-    const { error } = await supabase.from('elections').insert({
+    const { data: created, error } = await supabase.from('elections').insert({
       title: newTitle.trim(),
       description: newDesc.trim() || null,
       starts_at: newStartsAt || null,
       ends_at: newEndsAt || null,
       created_by: user?.id,
-    });
-    if (error) toast.error('Failed to create'); else { toast.success('Election created'); fetchData(); }
+      on_chain: newOnChain,
+    }).select().maybeSingle();
+    if (error || !created) {
+      toast.error('Failed to create');
+      setSavingElection(false); return;
+    }
+    toast.success('Election created' + (newOnChain ? ' — add candidates then deploy on-chain' : ''));
+    fetchData();
     setSavingElection(false); setShowCreateElection(false);
-    setNewTitle(''); setNewDesc(''); setNewStartsAt(''); setNewEndsAt('');
+    setNewTitle(''); setNewDesc(''); setNewStartsAt(''); setNewEndsAt(''); setNewOnChain(false);
+  };
+
+  const handleDeployElectionOnChain = async (electionId: string) => {
+    setDeployingId(electionId);
+    try {
+      const { data, error } = await supabase.functions.invoke('chain-deploy-election', {
+        body: { electionId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success('Election deployed on-chain');
+      setLastTx({ hash: data.txHash, block: data.blockNumber });
+      fetchData();
+    } catch (e: any) {
+      toast.error(e.message || 'Deploy failed');
+    } finally {
+      setDeployingId(null);
+    }
   };
 
   const handleAddCandidate = async () => {
@@ -169,7 +196,33 @@ const ElectionsPage = () => {
     if (!user?.id) { toast.error('Sign in to vote'); return; }
     const alreadyVoted = (userVotes[electionId] || []).some(v => v.position === position);
     if (alreadyVoted) { toast.error('You already voted for this position'); return; }
+    const election = elections.find(e => e.id === electionId);
     setSubmittingVote(true);
+
+    // On-chain election → route through edge function
+    if (election?.on_chain) {
+      if (!election.chain_tx_hash) {
+        toast.error('Election not yet deployed on-chain');
+        setSubmittingVote(false); return;
+      }
+      try {
+        const { data, error } = await supabase.functions.invoke('chain-cast-vote', {
+          body: { electionId, candidateId },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        setLastTx({ hash: data.txHash, block: data.blockNumber });
+        toast.success('Vote recorded on Polygon Amoy');
+        fetchData();
+      } catch (e: any) {
+        toast.error(e.message || 'On-chain vote failed');
+      } finally {
+        setSubmittingVote(false);
+      }
+      return;
+    }
+
+    // Off-chain path (unchanged)
     const { error } = await supabase.from('election_votes').insert({
       election_id: electionId, candidate_id: candidateId, user_id: user.id, position,
     });
