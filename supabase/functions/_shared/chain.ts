@@ -32,15 +32,19 @@ export function getRelayer() {
   return new ethers.Wallet(pk, getProvider());
 }
 
-export function getContractAddress(): string {
-  const a = Deno.env.get("ELECTIONS_CONTRACT_ADDRESS");
-  if (!a) throw new Error("ELECTIONS_CONTRACT_ADDRESS not set — deploy the contract first");
-  return a;
+export async function getContractAddress(): Promise<string> {
+  // Prefer DB (persisted after deploy). Fall back to env var if set.
+  const fromEnv = Deno.env.get("ELECTIONS_CONTRACT_ADDRESS");
+  if (fromEnv) return fromEnv;
+  const fromDb = await getContractAddressFromDb();
+  if (!fromDb) throw new Error("Elections contract not yet deployed. Admin: run chain-deploy-contract first.");
+  return fromDb;
 }
 
-export function getContract(withSigner = false) {
+export async function getContract(withSigner = false) {
   const signerOrProvider = withSigner ? getRelayer() : getProvider();
-  return new ethers.Contract(getContractAddress(), (artifact as any).abi, signerOrProvider);
+  const address = await getContractAddress();
+  return new ethers.Contract(address, (artifact as any).abi, signerOrProvider);
 }
 
 export function getFactory() {
