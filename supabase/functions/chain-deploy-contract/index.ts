@@ -36,7 +36,9 @@ Deno.serve(async (req) => {
       }, 400);
     }
 
-    const existing = Deno.env.get("ELECTIONS_CONTRACT_ADDRESS");
+    const existingEnv = Deno.env.get("ELECTIONS_CONTRACT_ADDRESS");
+    const existingDb = await getContractAddressFromDb();
+    const existing = existingEnv || existingDb;
     if (existing) {
       return json({ address: existing, alreadyDeployed: true, explorer: `${EXPLORER}/address/${existing}` });
     }
@@ -47,11 +49,13 @@ Deno.serve(async (req) => {
     await contract.waitForDeployment();
     const address = await contract.getAddress();
 
+    await saveContractAddress(address);
+
     return json({
       address,
       txHash: tx?.hash,
       explorer: `${EXPLORER}/address/${address}`,
-      note: "Save this address as the ELECTIONS_CONTRACT_ADDRESS secret to enable voting.",
+      note: "Contract deployed and address saved. Elections module is ready.",
     });
   } catch (e) {
     console.error("deploy error", e);
