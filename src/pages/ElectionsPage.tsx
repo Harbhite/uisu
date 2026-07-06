@@ -6,8 +6,9 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Plus, Vote, Users, Loader2, Award, Clock,
-  User, Trash2, Calendar
+  User, Trash2, Calendar, Link as LinkIcon, ShieldCheck, ExternalLink
 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
