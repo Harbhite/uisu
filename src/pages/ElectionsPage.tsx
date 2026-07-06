@@ -314,6 +314,75 @@ const ElectionsPage = () => {
               )}
             </div>
 
+            {selectedElection.on_chain && (
+              <div className="bg-gradient-to-br from-purple-500/5 to-primary/5 border border-purple-500/20 rounded-2xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-full bg-purple-500/15 flex items-center justify-center flex-shrink-0">
+                    <ShieldCheck size={16} className="text-purple-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-foreground">Verified on Polygon Amoy Testnet</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      Every vote is written to an immutable smart contract. Tallies are computed on-chain and independently auditable.
+                    </p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {selectedElection.chain_tx_hash ? (
+                        <a
+                          href={`${AMOY_EXPLORER}/tx/${selectedElection.chain_tx_hash}`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="text-[10px] font-mono text-purple-600 hover:underline flex items-center gap-1 bg-purple-500/10 rounded-full px-2 py-1"
+                        >
+                          <LinkIcon size={9} /> Election tx
+                          <ExternalLink size={9} />
+                        </a>
+                      ) : isAdmin ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="rounded-full text-[10px] h-7 border-purple-500/30 text-purple-600"
+                          disabled={deployingId === selectedElection.id}
+                          onClick={() => handleDeployElectionOnChain(selectedElection.id)}
+                        >
+                          {deployingId === selectedElection.id
+                            ? <><Loader2 size={10} className="animate-spin mr-1" /> Deploying…</>
+                            : <>Deploy on-chain now</>}
+                        </Button>
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground">Awaiting on-chain deployment by admin.</span>
+                      )}
+                      {selectedElection.chain_block_number && (
+                        <span className="text-[10px] text-muted-foreground bg-muted/50 rounded-full px-2 py-1">
+                          Block #{selectedElection.chain_block_number}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {lastTx && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+                className="bg-green-500/10 border border-green-500/30 rounded-2xl p-3 flex items-center gap-3"
+              >
+                <ShieldCheck size={16} className="text-green-600 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-semibold text-green-700">Vote confirmed on-chain</p>
+                  <a
+                    href={`${AMOY_EXPLORER}/tx/${lastTx.hash}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="text-[10px] font-mono text-green-700 hover:underline truncate block"
+                  >
+                    {lastTx.hash}
+                  </a>
+                </div>
+                <button onClick={() => setLastTx(null)} className="text-green-700 text-xs">×</button>
+              </motion.div>
+            )}
+
+
+
             {positions.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-muted/50 flex items-center justify-center">
