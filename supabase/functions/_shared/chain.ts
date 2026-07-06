@@ -1,6 +1,22 @@
 // Shared helpers for Polygon Amoy chain access
 import { ethers } from "npm:ethers@6.13.4";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import artifact from "./contracts/Elections.json" with { type: "json" };
+
+export const ELECTIONS_KEY = "elections_contract_address";
+
+export function adminClient() {
+  return createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+}
+
+export async function getContractAddressFromDb(): Promise<string | null> {
+  const { data } = await adminClient().from("chain_config").select("value").eq("key", ELECTIONS_KEY).maybeSingle();
+  return data?.value ?? null;
+}
+
+export async function saveContractAddress(address: string) {
+  await adminClient().from("chain_config").upsert({ key: ELECTIONS_KEY, value: address, updated_at: new Date().toISOString() });
+}
 
 export const CHAIN_ID = 80002; // Polygon Amoy
 export const EXPLORER = "https://amoy.polygonscan.com";
