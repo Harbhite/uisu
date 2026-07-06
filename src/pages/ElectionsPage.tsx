@@ -257,9 +257,23 @@ const ElectionsPage = () => {
               </div>
             </div>
             {isAdmin && (
-              <Button size="sm" onClick={() => setShowCreateElection(true)} className="rounded-full bg-accent text-accent-foreground hover:bg-accent/90">
-                <Plus size={14} className="mr-1" /> New Election
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleSetupContract}
+                  disabled={settingUpContract}
+                  className="rounded-full border-primary-foreground/30 text-primary-foreground bg-transparent hover:bg-primary-foreground/10"
+                  title="Deploy the on-chain voting contract (one-time)"
+                >
+                  {settingUpContract
+                    ? <><Loader2 size={12} className="animate-spin mr-1" /> Setup…</>
+                    : <><ShieldCheck size={12} className="mr-1" /> Chain setup</>}
+                </Button>
+                <Button size="sm" onClick={() => setShowCreateElection(true)} className="rounded-full bg-accent text-accent-foreground hover:bg-accent/90">
+                  <Plus size={14} className="mr-1" /> New Election
+                </Button>
+              </div>
             )}
           </div>
           <div className="flex flex-wrap gap-2">
