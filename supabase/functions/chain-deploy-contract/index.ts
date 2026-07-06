@@ -1,7 +1,7 @@
 // Deploys the Elections contract to Polygon Amoy (admin-only, one-time).
 // Once deployed, the address must be saved as ELECTIONS_CONTRACT_ADDRESS secret.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { corsHeaders, getFactory, getProvider, EXPLORER } from "../_shared/chain.ts";
+import { corsHeaders, getFactory, getProvider, EXPLORER, getContractAddressFromDb, saveContractAddress } from "../_shared/chain.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
