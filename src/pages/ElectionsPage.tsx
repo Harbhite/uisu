@@ -286,8 +286,13 @@ const ElectionsPage = () => {
             </button>
             <div className="flex items-start justify-between">
               <div>
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <StatusBadge status={getElectionStatus(selectedElection)} />
+                  {selectedElection.on_chain && (
+                    <Badge variant="outline" className="rounded-full text-[9px] bg-purple-500/10 text-purple-600 border-purple-500/20 gap-1">
+                      <ShieldCheck size={10} /> On-chain · Polygon Amoy
+                    </Badge>
+                  )}
                   {selectedElection.ends_at && (
                     <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                       <Clock size={10} /> Ends {format(new Date(selectedElection.ends_at), 'MMM d, yyyy')}
