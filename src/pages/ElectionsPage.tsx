@@ -90,6 +90,22 @@ const ElectionsPage = () => {
   const [newOnChain, setNewOnChain] = useState(false);
   const [deployingId, setDeployingId] = useState<string | null>(null);
   const [lastTx, setLastTx] = useState<{ hash: string; block?: number } | null>(null);
+  const [settingUpContract, setSettingUpContract] = useState(false);
+
+  const handleSetupContract = async () => {
+    setSettingUpContract(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('chain-deploy-contract', { body: {} });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.alreadyDeployed) toast.success(`Contract already live: ${data.address.slice(0,10)}…`);
+      else toast.success(`Contract deployed: ${data.address.slice(0,10)}…`);
+    } catch (e: any) {
+      toast.error(e.message || 'Setup failed');
+    } finally {
+      setSettingUpContract(false);
+    }
+  };
 
   const [showAddCandidate, setShowAddCandidate] = useState(false);
   const [candName, setCandName] = useState('');
