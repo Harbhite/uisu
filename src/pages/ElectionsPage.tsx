@@ -87,6 +87,9 @@ const ElectionsPage = () => {
   const [newStartsAt, setNewStartsAt] = useState('');
   const [newEndsAt, setNewEndsAt] = useState('');
   const [savingElection, setSavingElection] = useState(false);
+  const [newOnChain, setNewOnChain] = useState(false);
+  const [deployingId, setDeployingId] = useState<string | null>(null);
+  const [lastTx, setLastTx] = useState<{ hash: string; block?: number } | null>(null);
 
   const [showAddCandidate, setShowAddCandidate] = useState(false);
   const [candName, setCandName] = useState('');
