@@ -1,6 +1,6 @@
 // Reads on-chain tally for an election. Public.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { corsHeaders, getContract, EXPLORER } from "../_shared/chain.ts";
+import { corsHeaders, getContract, EXPLORER, getContractAddressFromDb } from "../_shared/chain.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
