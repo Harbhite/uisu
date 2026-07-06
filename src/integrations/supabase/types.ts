@@ -795,28 +795,40 @@ export type Database = {
       }
       election_votes: {
         Row: {
+          block_number: number | null
           candidate_id: string
+          chain_id: number | null
           created_at: string | null
           election_id: string
           id: string
           position: string
+          tx_hash: string | null
           user_id: string
+          voter_hash: string | null
         }
         Insert: {
+          block_number?: number | null
           candidate_id: string
+          chain_id?: number | null
           created_at?: string | null
           election_id: string
           id?: string
           position: string
+          tx_hash?: string | null
           user_id: string
+          voter_hash?: string | null
         }
         Update: {
+          block_number?: number | null
           candidate_id?: string
+          chain_id?: number | null
           created_at?: string | null
           election_id?: string
           id?: string
           position?: string
+          tx_hash?: string | null
           user_id?: string
+          voter_hash?: string | null
         }
         Relationships: [
           {
@@ -837,33 +849,51 @@ export type Database = {
       }
       elections: {
         Row: {
+          chain_block_number: number | null
+          chain_deployed_at: string | null
+          chain_election_key: string | null
+          chain_id: number | null
+          chain_tx_hash: string | null
           created_at: string | null
           created_by: string | null
           description: string | null
           ends_at: string | null
           id: string
+          on_chain: boolean
           starts_at: string | null
           status: string
           title: string
           updated_at: string | null
         }
         Insert: {
+          chain_block_number?: number | null
+          chain_deployed_at?: string | null
+          chain_election_key?: string | null
+          chain_id?: number | null
+          chain_tx_hash?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           ends_at?: string | null
           id?: string
+          on_chain?: boolean
           starts_at?: string | null
           status?: string
           title: string
           updated_at?: string | null
         }
         Update: {
+          chain_block_number?: number | null
+          chain_deployed_at?: string | null
+          chain_election_key?: string | null
+          chain_id?: number | null
+          chain_tx_hash?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           ends_at?: string | null
           id?: string
+          on_chain?: boolean
           starts_at?: string | null
           status?: string
           title?: string
