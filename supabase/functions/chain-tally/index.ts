@@ -23,10 +23,11 @@ Deno.serve(async (req) => {
       votes: Number(tallies[i] ?? 0n),
     }));
 
+    const addr = Deno.env.get("ELECTIONS_CONTRACT_ADDRESS") || await getContractAddressFromDb();
     return json({
       electionId,
-      contractAddress: Deno.env.get("ELECTIONS_CONTRACT_ADDRESS"),
-      explorer: `${EXPLORER}/address/${Deno.env.get("ELECTIONS_CONTRACT_ADDRESS")}`,
+      contractAddress: addr,
+      explorer: addr ? `${EXPLORER}/address/${addr}` : null,
       total: results.reduce((s, r) => s + r.votes, 0),
       results,
     });
