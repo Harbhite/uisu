@@ -534,6 +534,16 @@ const ElectionsPage = () => {
               <div><Label className="text-xs">Starts At</Label><Input type="datetime-local" value={newStartsAt} onChange={e => setNewStartsAt(e.target.value)} className="rounded-xl" /></div>
               <div><Label className="text-xs">Ends At</Label><Input type="datetime-local" value={newEndsAt} onChange={e => setNewEndsAt(e.target.value)} className="rounded-xl" /></div>
             </div>
+            <div className="flex items-center justify-between gap-3 bg-gradient-to-br from-purple-500/5 to-primary/5 border border-purple-500/20 rounded-2xl p-3">
+              <div className="flex items-start gap-2 flex-1">
+                <ShieldCheck size={16} className="text-purple-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold">On-chain election</p>
+                  <p className="text-[10px] text-muted-foreground">Votes settled on Polygon Amoy testnet. Requires start & end times.</p>
+                </div>
+              </div>
+              <Switch checked={newOnChain} onCheckedChange={setNewOnChain} />
+            </div>
             <Button onClick={handleCreateElection} disabled={savingElection} className="w-full rounded-full bg-primary text-primary-foreground">
               {savingElection && <Loader2 size={14} className="animate-spin mr-2" />} Create Election
             </Button>
