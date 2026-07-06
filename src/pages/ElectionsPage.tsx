@@ -6,8 +6,9 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Plus, Vote, Users, Loader2, Award, Clock,
-  User, Trash2, Calendar
+  User, Trash2, Calendar, Link as LinkIcon, ShieldCheck, ExternalLink
 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -27,7 +28,14 @@ interface Election {
   starts_at: string | null;
   ends_at: string | null;
   created_at: string;
+  on_chain?: boolean;
+  chain_tx_hash?: string | null;
+  chain_block_number?: number | null;
+  chain_id?: number | null;
+  chain_deployed_at?: string | null;
 }
+
+const AMOY_EXPLORER = 'https://amoy.polygonscan.com';
 
 interface Candidate {
   id: string;
@@ -79,6 +87,25 @@ const ElectionsPage = () => {
   const [newStartsAt, setNewStartsAt] = useState('');
   const [newEndsAt, setNewEndsAt] = useState('');
   const [savingElection, setSavingElection] = useState(false);
+  const [newOnChain, setNewOnChain] = useState(false);
+  const [deployingId, setDeployingId] = useState<string | null>(null);
+  const [lastTx, setLastTx] = useState<{ hash: string; block?: number } | null>(null);
+  const [settingUpContract, setSettingUpContract] = useState(false);
+
+  const handleSetupContract = async () => {
+    setSettingUpContract(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('chain-deploy-contract', { body: {} });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.alreadyDeployed) toast.success(`Contract already live: ${data.address.slice(0,10)}…`);
+      else toast.success(`Contract deployed: ${data.address.slice(0,10)}…`);
+    } catch (e: any) {
+      toast.error(e.message || 'Setup failed');
+    } finally {
+      setSettingUpContract(false);
+    }
+  };
 
   const [showAddCandidate, setShowAddCandidate] = useState(false);
   const [candName, setCandName] = useState('');
@@ -127,17 +154,44 @@ const ElectionsPage = () => {
 
   const handleCreateElection = async () => {
     if (!newTitle.trim()) { toast.error('Title required'); return; }
+    if (newOnChain && (!newStartsAt || !newEndsAt)) {
+      toast.error('On-chain elections need start & end times'); return;
+    }
     setSavingElection(true);
-    const { error } = await supabase.from('elections').insert({
+    const { data: created, error } = await supabase.from('elections').insert({
       title: newTitle.trim(),
       description: newDesc.trim() || null,
       starts_at: newStartsAt || null,
       ends_at: newEndsAt || null,
       created_by: user?.id,
-    });
-    if (error) toast.error('Failed to create'); else { toast.success('Election created'); fetchData(); }
+      on_chain: newOnChain,
+    }).select().maybeSingle();
+    if (error || !created) {
+      toast.error('Failed to create');
+      setSavingElection(false); return;
+    }
+    toast.success('Election created' + (newOnChain ? ' — add candidates then deploy on-chain' : ''));
+    fetchData();
     setSavingElection(false); setShowCreateElection(false);
-    setNewTitle(''); setNewDesc(''); setNewStartsAt(''); setNewEndsAt('');
+    setNewTitle(''); setNewDesc(''); setNewStartsAt(''); setNewEndsAt(''); setNewOnChain(false);
+  };
+
+  const handleDeployElectionOnChain = async (electionId: string) => {
+    setDeployingId(electionId);
+    try {
+      const { data, error } = await supabase.functions.invoke('chain-deploy-election', {
+        body: { electionId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success('Election deployed on-chain');
+      setLastTx({ hash: data.txHash, block: data.blockNumber });
+      fetchData();
+    } catch (e: any) {
+      toast.error(e.message || 'Deploy failed');
+    } finally {
+      setDeployingId(null);
+    }
   };
 
   const handleAddCandidate = async () => {
@@ -158,7 +212,33 @@ const ElectionsPage = () => {
     if (!user?.id) { toast.error('Sign in to vote'); return; }
     const alreadyVoted = (userVotes[electionId] || []).some(v => v.position === position);
     if (alreadyVoted) { toast.error('You already voted for this position'); return; }
+    const election = elections.find(e => e.id === electionId);
     setSubmittingVote(true);
+
+    // On-chain election → route through edge function
+    if (election?.on_chain) {
+      if (!election.chain_tx_hash) {
+        toast.error('Election not yet deployed on-chain');
+        setSubmittingVote(false); return;
+      }
+      try {
+        const { data, error } = await supabase.functions.invoke('chain-cast-vote', {
+          body: { electionId, candidateId },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        setLastTx({ hash: data.txHash, block: data.blockNumber });
+        toast.success('Vote recorded on Polygon Amoy');
+        fetchData();
+      } catch (e: any) {
+        toast.error(e.message || 'On-chain vote failed');
+      } finally {
+        setSubmittingVote(false);
+      }
+      return;
+    }
+
+    // Off-chain path (unchanged)
     const { error } = await supabase.from('election_votes').insert({
       election_id: electionId, candidate_id: candidateId, user_id: user.id, position,
     });
@@ -193,9 +273,23 @@ const ElectionsPage = () => {
               </div>
             </div>
             {isAdmin && (
-              <Button size="sm" onClick={() => setShowCreateElection(true)} className="rounded-full bg-accent text-accent-foreground hover:bg-accent/90">
-                <Plus size={14} className="mr-1" /> New Election
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleSetupContract}
+                  disabled={settingUpContract}
+                  className="rounded-full border-primary-foreground/30 text-primary-foreground bg-transparent hover:bg-primary-foreground/10"
+                  title="Deploy the on-chain voting contract (one-time)"
+                >
+                  {settingUpContract
+                    ? <><Loader2 size={12} className="animate-spin mr-1" /> Setup…</>
+                    : <><ShieldCheck size={12} className="mr-1" /> Chain setup</>}
+                </Button>
+                <Button size="sm" onClick={() => setShowCreateElection(true)} className="rounded-full bg-accent text-accent-foreground hover:bg-accent/90">
+                  <Plus size={14} className="mr-1" /> New Election
+                </Button>
+              </div>
             )}
           </div>
           <div className="flex flex-wrap gap-2">
@@ -222,8 +316,13 @@ const ElectionsPage = () => {
             </button>
             <div className="flex items-start justify-between">
               <div>
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <StatusBadge status={getElectionStatus(selectedElection)} />
+                  {selectedElection.on_chain && (
+                    <Badge variant="outline" className="rounded-full text-[9px] bg-purple-500/10 text-purple-600 border-purple-500/20 gap-1">
+                      <ShieldCheck size={10} /> On-chain · Polygon Amoy
+                    </Badge>
+                  )}
                   {selectedElection.ends_at && (
                     <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                       <Clock size={10} /> Ends {format(new Date(selectedElection.ends_at), 'MMM d, yyyy')}
@@ -244,6 +343,75 @@ const ElectionsPage = () => {
                 </div>
               )}
             </div>
+
+            {selectedElection.on_chain && (
+              <div className="bg-gradient-to-br from-purple-500/5 to-primary/5 border border-purple-500/20 rounded-2xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-full bg-purple-500/15 flex items-center justify-center flex-shrink-0">
+                    <ShieldCheck size={16} className="text-purple-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-foreground">Verified on Polygon Amoy Testnet</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      Every vote is written to an immutable smart contract. Tallies are computed on-chain and independently auditable.
+                    </p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {selectedElection.chain_tx_hash ? (
+                        <a
+                          href={`${AMOY_EXPLORER}/tx/${selectedElection.chain_tx_hash}`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="text-[10px] font-mono text-purple-600 hover:underline flex items-center gap-1 bg-purple-500/10 rounded-full px-2 py-1"
+                        >
+                          <LinkIcon size={9} /> Election tx
+                          <ExternalLink size={9} />
+                        </a>
+                      ) : isAdmin ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="rounded-full text-[10px] h-7 border-purple-500/30 text-purple-600"
+                          disabled={deployingId === selectedElection.id}
+                          onClick={() => handleDeployElectionOnChain(selectedElection.id)}
+                        >
+                          {deployingId === selectedElection.id
+                            ? <><Loader2 size={10} className="animate-spin mr-1" /> Deploying…</>
+                            : <>Deploy on-chain now</>}
+                        </Button>
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground">Awaiting on-chain deployment by admin.</span>
+                      )}
+                      {selectedElection.chain_block_number && (
+                        <span className="text-[10px] text-muted-foreground bg-muted/50 rounded-full px-2 py-1">
+                          Block #{selectedElection.chain_block_number}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {lastTx && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+                className="bg-green-500/10 border border-green-500/30 rounded-2xl p-3 flex items-center gap-3"
+              >
+                <ShieldCheck size={16} className="text-green-600 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-semibold text-green-700">Vote confirmed on-chain</p>
+                  <a
+                    href={`${AMOY_EXPLORER}/tx/${lastTx.hash}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="text-[10px] font-mono text-green-700 hover:underline truncate block"
+                  >
+                    {lastTx.hash}
+                  </a>
+                </div>
+                <button onClick={() => setLastTx(null)} className="text-green-700 text-xs">×</button>
+              </motion.div>
+            )}
+
+
 
             {positions.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
@@ -361,8 +529,13 @@ const ElectionsPage = () => {
                   >
                     <div className="flex items-start justify-between">
                       <div>
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <StatusBadge status={status} />
+                          {e.on_chain && (
+                            <Badge variant="outline" className="rounded-full text-[9px] bg-purple-500/10 text-purple-600 border-purple-500/20 gap-1">
+                              <ShieldCheck size={9} /> on-chain
+                            </Badge>
+                          )}
                         </div>
                         <h3 className="font-serif font-bold text-foreground">{e.title}</h3>
                         {e.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{e.description}</p>}
@@ -390,6 +563,16 @@ const ElectionsPage = () => {
             <div className="grid grid-cols-2 gap-3">
               <div><Label className="text-xs">Starts At</Label><Input type="datetime-local" value={newStartsAt} onChange={e => setNewStartsAt(e.target.value)} className="rounded-xl" /></div>
               <div><Label className="text-xs">Ends At</Label><Input type="datetime-local" value={newEndsAt} onChange={e => setNewEndsAt(e.target.value)} className="rounded-xl" /></div>
+            </div>
+            <div className="flex items-center justify-between gap-3 bg-gradient-to-br from-purple-500/5 to-primary/5 border border-purple-500/20 rounded-2xl p-3">
+              <div className="flex items-start gap-2 flex-1">
+                <ShieldCheck size={16} className="text-purple-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold">On-chain election</p>
+                  <p className="text-[10px] text-muted-foreground">Votes settled on Polygon Amoy testnet. Requires start & end times.</p>
+                </div>
+              </div>
+              <Switch checked={newOnChain} onCheckedChange={setNewOnChain} />
             </div>
             <Button onClick={handleCreateElection} disabled={savingElection} className="w-full rounded-full bg-primary text-primary-foreground">
               {savingElection && <Loader2 size={14} className="animate-spin mr-2" />} Create Election
