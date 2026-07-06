@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     const { data: candidates } = await admin
       .from("election_candidates").select("id, name, position, photo_url").eq("election_id", electionId).order("created_at");
 
-    const contract = getContract(false);
+    const contract = await getContract(false);
     const tallies: bigint[] = await contract.getResults(election.chain_election_key);
     const results = (candidates || []).map((c, i) => ({
       ...c,

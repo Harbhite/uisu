@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
     if (prior) return json({ error: "Already voted for this position" }, 400);
 
     // 4. Submit on-chain
-    const contract = getContract(true);
+    const contract = await getContract(true);
     const idHash = election.chain_election_key;
     const vHash = voterHash(userId, electionId);
 

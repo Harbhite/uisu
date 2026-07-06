@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
     if (!candidates || candidates.length === 0) return json({ error: "No candidates" }, 400);
     if (candidates.length > 64) return json({ error: "Max 64 candidates" }, 400);
 
-    const contract = getContract(true);
+    const contract = await getContract(true);
     const idHash = idToBytes32(electionId);
     const startsAt = Math.floor(new Date(election.starts_at).getTime() / 1000);
     const endsAt = Math.floor(new Date(election.ends_at).getTime() / 1000);
