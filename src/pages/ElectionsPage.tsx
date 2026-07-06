@@ -28,7 +28,14 @@ interface Election {
   starts_at: string | null;
   ends_at: string | null;
   created_at: string;
+  on_chain?: boolean;
+  chain_tx_hash?: string | null;
+  chain_block_number?: number | null;
+  chain_id?: number | null;
+  chain_deployed_at?: string | null;
 }
+
+const AMOY_EXPLORER = 'https://amoy.polygonscan.com';
 
 interface Candidate {
   id: string;
