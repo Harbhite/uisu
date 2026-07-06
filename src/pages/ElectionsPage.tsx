@@ -499,8 +499,13 @@ const ElectionsPage = () => {
                   >
                     <div className="flex items-start justify-between">
                       <div>
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <StatusBadge status={status} />
+                          {e.on_chain && (
+                            <Badge variant="outline" className="rounded-full text-[9px] bg-purple-500/10 text-purple-600 border-purple-500/20 gap-1">
+                              <ShieldCheck size={9} /> on-chain
+                            </Badge>
+                          )}
                         </div>
                         <h3 className="font-serif font-bold text-foreground">{e.title}</h3>
                         {e.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{e.description}</p>}
