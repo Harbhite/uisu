@@ -89,6 +89,7 @@ const AcademicPlannerPage2 = lazy(() => import("./pages/AcademicPlannerPage"));
 const ConfessionsPage = lazy(() => import("./pages/ConfessionsPage"));
 const ElectionsPage = lazy(() => import("./pages/ElectionsPage"));
 const SharedStudyOutputPage = lazy(() => import("./pages/SharedStudyOutputPage"));
+const QuicklinksPage = lazy(() => import("./pages/QuicklinksPage"));
 
 // Gazette
 const GazetteLayout = lazy(() => import("./components/gazette/GazetteLayout"));
@@ -210,6 +211,8 @@ const AppRoutes = () => {
         <Route path="/planner" element={<PageWrapper><AcademicPlannerPage2 /></PageWrapper>} />
         <Route path="/confessions" element={<PageWrapper><ConfessionsPage /></PageWrapper>} />
         <Route path="/elections" element={<PageWrapper><ElectionsPage /></PageWrapper>} />
+        <Route path="/quicklinks" element={<PageWrapper><QuicklinksPage /></PageWrapper>} />
+        <Route path="/resources/quicklinks" element={<PageWrapper><QuicklinksPage /></PageWrapper>} />
         {/* Public shared StudyBuddy output viewer */}
         <Route path="/study/shared/:token" element={<SharedStudyOutputPage />} />
         {/* Tutorials Ecosystem (Standalone Subdomain feel) */}

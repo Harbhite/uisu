@@ -2774,6 +2774,51 @@ export type Database = {
         }
         Relationships: []
       }
+      quicklinks: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string
+          icon: string | null
+          id: string
+          is_featured: boolean
+          is_published: boolean
+          sort_order: number
+          title: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          icon?: string | null
+          id?: string
+          is_featured?: boolean
+          is_published?: boolean
+          sort_order?: number
+          title: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          icon?: string | null
+          id?: string
+          is_featured?: boolean
+          is_published?: boolean
+          sort_order?: number
+          title?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       quiz_attempts: {
         Row: {
           accuracy: number
