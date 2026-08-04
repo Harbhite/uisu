@@ -89,6 +89,7 @@ const AcademicPlannerPage2 = lazy(() => import("./pages/AcademicPlannerPage"));
 const ConfessionsPage = lazy(() => import("./pages/ConfessionsPage"));
 const ElectionsPage = lazy(() => import("./pages/ElectionsPage"));
 const SharedStudyOutputPage = lazy(() => import("./pages/SharedStudyOutputPage"));
+const QuicklinksPage = lazy(() => import("./pages/QuicklinksPage"));
 
 // Gazette
 const GazetteLayout = lazy(() => import("./components/gazette/GazetteLayout"));
