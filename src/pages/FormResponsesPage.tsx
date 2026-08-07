@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Download, Trash2, BarChart3, List, Users, Calendar } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ArrowLeft, Download, Trash2, BarChart3, List, Users, Calendar, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { SEO } from "@/components/SEO";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
@@ -22,6 +23,23 @@ const FormResponsesPage = () => {
   const [fields, setFields] = useState<any[]>([]);
   const [responses, setResponses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const activeResponse = activeIndex !== null ? responses[activeIndex] : null;
+
+  const renderValue = (val: any) => {
+    if (val === undefined || val === null || val === "") return "—";
+    if (Array.isArray(val)) return val.length ? val.join(", ") : "—";
+    if (typeof val === "object") return JSON.stringify(val);
+    const str = val.toString();
+    if (/^https?:\/\//.test(str)) {
+      return (
+        <a href={str} target="_blank" rel="noopener noreferrer" className="text-primary underline break-all">
+          {str}
+        </a>
+      );
+    }
+    return str;
+  };
 
   useEffect(() => {
     fetchData();
@@ -200,12 +218,16 @@ const FormResponsesPage = () => {
                       {fields.map(f => (
                         <TableHead key={f.id} className="min-w-[150px]">{f.label}</TableHead>
                       ))}
-                      <TableHead className="w-16" />
+                      <TableHead className="w-24" />
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {responses.map(r => (
-                      <TableRow key={r.id}>
+                    {responses.map((r, idx) => (
+                      <TableRow
+                        key={r.id}
+                        className="cursor-pointer"
+                        onClick={() => setActiveIndex(idx)}
+                      >
                         <TableCell className="text-sm text-muted-foreground">
                           {format(new Date(r.submitted_at), "MMM d, HH:mm")}
                         </TableCell>
@@ -219,10 +241,15 @@ const FormResponsesPage = () => {
                             </TableCell>
                           );
                         })}
-                        <TableCell>
-                          <Button variant="ghost" size="sm" onClick={() => deleteResponse(r.id)} className="text-destructive">
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="sm" onClick={() => setActiveIndex(idx)} aria-label="View response">
+                              <Eye className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => deleteResponse(r.id)} className="text-destructive">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -314,6 +341,78 @@ const FormResponsesPage = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={activeIndex !== null} onOpenChange={(open) => !open && setActiveIndex(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              Response {activeIndex !== null ? activeIndex + 1 : ""} of {responses.length}
+            </DialogTitle>
+          </DialogHeader>
+
+          {activeResponse && (
+            <div className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                <div>
+                  <p className="text-muted-foreground text-xs uppercase tracking-wide">Submitted</p>
+                  <p className="text-foreground">{format(new Date(activeResponse.submitted_at), "MMM d, yyyy • HH:mm")}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs uppercase tracking-wide">Name</p>
+                  <p className="text-foreground">{activeResponse.respondent_name || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs uppercase tracking-wide">Email</p>
+                  <p className="text-foreground break-all">{activeResponse.respondent_email || "—"}</p>
+                </div>
+              </div>
+
+              <div className="border border-border rounded-lg divide-y divide-border">
+                {fields.map((f) => (
+                  <div key={f.id} className="p-3">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">{f.label}</p>
+                    <div className="text-sm text-foreground whitespace-pre-wrap break-words">
+                      {renderValue(activeResponse.data?.[f.id])}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={activeIndex === 0}
+                    onClick={() => setActiveIndex((i) => (i !== null ? i - 1 : i))}
+                  >
+                    <ChevronLeft className="w-4 h-4 mr-1" /> Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={activeIndex !== null && activeIndex >= responses.length - 1}
+                    onClick={() => setActiveIndex((i) => (i !== null ? i + 1 : i))}
+                  >
+                    Next <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive"
+                  onClick={() => {
+                    deleteResponse(activeResponse.id);
+                    setActiveIndex(null);
+                  }}
+                >
+                  <Trash2 className="w-4 h-4 mr-1" /> Delete
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
