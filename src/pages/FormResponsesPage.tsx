@@ -218,12 +218,16 @@ const FormResponsesPage = () => {
                       {fields.map(f => (
                         <TableHead key={f.id} className="min-w-[150px]">{f.label}</TableHead>
                       ))}
-                      <TableHead className="w-16" />
+                      <TableHead className="w-24" />
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {responses.map(r => (
-                      <TableRow key={r.id}>
+                    {responses.map((r, idx) => (
+                      <TableRow
+                        key={r.id}
+                        className="cursor-pointer"
+                        onClick={() => setActiveIndex(idx)}
+                      >
                         <TableCell className="text-sm text-muted-foreground">
                           {format(new Date(r.submitted_at), "MMM d, HH:mm")}
                         </TableCell>
@@ -237,10 +241,15 @@ const FormResponsesPage = () => {
                             </TableCell>
                           );
                         })}
-                        <TableCell>
-                          <Button variant="ghost" size="sm" onClick={() => deleteResponse(r.id)} className="text-destructive">
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="sm" onClick={() => setActiveIndex(idx)} aria-label="View response">
+                              <Eye className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => deleteResponse(r.id)} className="text-destructive">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
