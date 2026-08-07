@@ -23,6 +23,23 @@ const FormResponsesPage = () => {
   const [fields, setFields] = useState<any[]>([]);
   const [responses, setResponses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const activeResponse = activeIndex !== null ? responses[activeIndex] : null;
+
+  const renderValue = (val: any) => {
+    if (val === undefined || val === null || val === "") return "—";
+    if (Array.isArray(val)) return val.length ? val.join(", ") : "—";
+    if (typeof val === "object") return JSON.stringify(val);
+    const str = val.toString();
+    if (/^https?:\/\//.test(str)) {
+      return (
+        <a href={str} target="_blank" rel="noopener noreferrer" className="text-primary underline break-all">
+          {str}
+        </a>
+      );
+    }
+    return str;
+  };
 
   useEffect(() => {
     fetchData();
