@@ -341,6 +341,78 @@ const FormResponsesPage = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={activeIndex !== null} onOpenChange={(open) => !open && setActiveIndex(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              Response {activeIndex !== null ? activeIndex + 1 : ""} of {responses.length}
+            </DialogTitle>
+          </DialogHeader>
+
+          {activeResponse && (
+            <div className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                <div>
+                  <p className="text-muted-foreground text-xs uppercase tracking-wide">Submitted</p>
+                  <p className="text-foreground">{format(new Date(activeResponse.submitted_at), "MMM d, yyyy • HH:mm")}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs uppercase tracking-wide">Name</p>
+                  <p className="text-foreground">{activeResponse.respondent_name || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs uppercase tracking-wide">Email</p>
+                  <p className="text-foreground break-all">{activeResponse.respondent_email || "—"}</p>
+                </div>
+              </div>
+
+              <div className="border border-border rounded-lg divide-y divide-border">
+                {fields.map((f) => (
+                  <div key={f.id} className="p-3">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">{f.label}</p>
+                    <div className="text-sm text-foreground whitespace-pre-wrap break-words">
+                      {renderValue(activeResponse.data?.[f.id])}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={activeIndex === 0}
+                    onClick={() => setActiveIndex((i) => (i !== null ? i - 1 : i))}
+                  >
+                    <ChevronLeft className="w-4 h-4 mr-1" /> Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={activeIndex !== null && activeIndex >= responses.length - 1}
+                    onClick={() => setActiveIndex((i) => (i !== null ? i + 1 : i))}
+                  >
+                    Next <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive"
+                  onClick={() => {
+                    deleteResponse(activeResponse.id);
+                    setActiveIndex(null);
+                  }}
+                >
+                  <Trash2 className="w-4 h-4 mr-1" /> Delete
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
