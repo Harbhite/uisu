@@ -1,0 +1,14 @@
+name = "uisu-prerender"
+main = "src/worker.js"
+compatibility_date = "2026-01-01"
+
+# Runs in front of every request to the custom domain.
+routes = [
+  { pattern = "uisu.space/*", zone_name = "uisu.space" },
+  { pattern = "www.uisu.space/*", zone_name = "uisu.space" },
+]
+
+# Public anon key (safe to expose). Set with:
+#   wrangler secret put SUPABASE_ANON_KEY
+[vars]
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpkeG1td3FqdmtlZGRkY2d1Y3l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2ODU3OTcsImV4cCI6MjA4MjI2MTc5N30.JBDruJd6uffPGt19PhVC_R1Yt3c8B3GWIe0OUi-sW-U"
