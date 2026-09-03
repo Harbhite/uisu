@@ -306,7 +306,7 @@ const HallDetailPage = () => {
       <SEO
         title={`${hall.name} - UISU SPACE`}
         description={hall.description || ''}
-        image="/og/pages-screenshot/hall-detail.png"
+        image="/og/pages-screenshot/halls.png"
       />
 
       {/* Hero Section */}
