@@ -1,0 +1,73 @@
+project_id = "zdxmmwqjvkedddcgucyz"
+
+[functions.send-staff-notification]
+verify_jwt = false
+
+[functions.send-submission-notification]
+verify_jwt = false
+
+[functions.send-newsletter]
+verify_jwt = false
+
+[functions.subscribe-newsletter]
+verify_jwt = false
+
+[functions.track-email]
+verify_jwt = false
+
+[functions.prerender]
+verify_jwt = false
+
+[functions.send-form-confirmation]
+verify_jwt = false
+
+[functions.notify-form-submission]
+verify_jwt = false
+
+[functions.study-buddy]
+verify_jwt = false
+
+[functions.ai-quiz]
+verify_jwt = false
+
+[functions.flashcard-gen]
+verify_jwt = false
+
+[functions.newsletter-template-ai]
+verify_jwt = false
+
+[functions.essay-check]
+verify_jwt = false
+
+[functions.lost-found-match]
+verify_jwt = false
+
+[functions.study-aide]
+verify_jwt = false
+
+[functions.lf-vision-extract]
+verify_jwt = false
+
+[functions.lf-analyze-post]
+verify_jwt = false
+
+[functions.lf-process-found]
+verify_jwt = false
+
+[functions.lf-verify-claim]
+verify_jwt = false
+
+[functions.lf-photo-similarity]
+verify_jwt = false
+
+[functions.lf-route-reasoning]
+verify_jwt = false
+
+[functions.lf-rewrite-post]
+verify_jwt = false
+
+[functions.lf-daily-digest]
+verify_jwt = false
+
+[functions.lf-voice-structure]
+verify_jwt = false
