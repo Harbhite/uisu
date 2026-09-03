@@ -287,7 +287,7 @@ const InksVaultPage = () => {
       <SEO
         title="Inks Vault"
         description="Explore articles, essays, poetry, and reports from the University of Ibadan Students' Union. A collection of student voices and intellectual discourse."
-        image="/og/og-inks-vault.png"
+        image="/og/pages-screenshot/inks-vault.png"
         breadcrumbs={[
           { name: 'Home', url: '/' },
           { name: 'Inks Vault', url: '/inks-vault' },

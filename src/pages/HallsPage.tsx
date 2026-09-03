@@ -59,7 +59,7 @@ const HallsPage = () => {
       <SEO
         title="The Republics - Halls of Residence"
         description="Explore the Halls of Residence of the University of Ibadan. The autonomous republics within the union."
-        image="/og/og-campus-map.png"
+        image="/og/pages-screenshot/halls.png"
         breadcrumbs={[
           { name: 'Home', url: '/' },
           { name: 'Halls of Residence', url: '/halls' },
