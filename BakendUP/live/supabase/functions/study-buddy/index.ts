@@ -1,0 +1,211 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+const LOVABLE_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const GEMINI_GATEWAY = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+const QWEN_GATEWAY = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions";
+const GEMINI_MODEL = "gemini-2.5-flash";
+const QWEN_MODEL = "qwen-plus";
+const MAX_INPUT_CHARS = 800_000;
+const TRUNCATION_NOTICE = "\n\n[... Remaining material omitted to fit AI processing limits.]";
+
+// Tries: Lovable AI -> Gemini direct -> Qwen
+async function callWithFallback(body: Record<string, unknown>, _isStream: boolean) {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+  const QWEN_API_KEY = Deno.env.get("QWEN_API_KEY");
+
+  if (LOVABLE_API_KEY) {
+    const response = await fetch(LOVABLE_GATEWAY, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (response.ok) return { response, provider: "lovable" };
+    if (response.status !== 429 && response.status !== 402) return { response, provider: "lovable" };
+    console.log(`Lovable AI returned ${response.status}, falling back to Gemini direct...`);
+    await response.text();
+  }
+
+  if (GEMINI_API_KEY) {
+    const geminiBody = { ...body, model: GEMINI_MODEL };
+    const response = await fetch(GEMINI_GATEWAY, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${GEMINI_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify(geminiBody),
+    });
+    if (response.ok) return { response, provider: "gemini" };
+    console.log(`Gemini direct returned ${response.status}, falling back to Qwen...`);
+    await response.text();
+  }
+
+  if (!QWEN_API_KEY) throw new Error("All AI providers (Lovable, Gemini, Qwen) are unavailable");
+
+  const qwenBody = { ...body, model: QWEN_MODEL };
+  const response = await fetch(QWEN_GATEWAY, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${QWEN_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify(qwenBody),
+  });
+
+  return { response, provider: "qwen" };
+}
+
+function truncateContent(content: string) {
+  if (content.length <= MAX_INPUT_CHARS) return { content, truncated: false };
+  return { content: `${content.slice(0, MAX_INPUT_CHARS)}${TRUNCATION_NOTICE}`, truncated: true };
+}
+
+const depthInstructions: Record<string, string> = {
+  beginner: "\n\nTARGET AUDIENCE: Beginner-level student. Use simple, accessible language. Explain every concept from scratch with plenty of real-world analogies. Avoid jargon or define it immediately.",
+  intermediate: "",
+  advanced: "\n\nTARGET AUDIENCE: Advanced student or researcher. Use precise academic/technical language. Go deep into nuances, edge cases, and cross-disciplinary connections.",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const { mode, topic, material, generateImage, depth, chatHistory, imageData } = await req.json();
+
+    const depthSuffix = depthInstructions[depth] || "";
+
+    const modePrompts: Record<string, string> = {
+      explainer: `You are StudyBuddy Explainer — an elite academic tutor at the University of Ibadan. Break down the concept or material provided into clear, digestible parts using:
+- Real-world analogies and metaphors
+- Step-by-step logical breakdowns
+- Mermaid diagrams for flowcharts, processes, and relationships (use \`\`\`mermaid code blocks)
+- Mathematical notation when solving maths/engineering problems
+- Tables for comparisons (use markdown tables)
+- Clear section headers with markdown
+
+IMPORTANT: When illustrating processes, hierarchies, relationships, or flows, ALWAYS include a Mermaid diagram.
+IMPORTANT: If an image is provided, analyze it thoroughly — identify diagrams, handwriting, text, formulas, charts, or any visual elements and incorporate them into your explanation.
+
+You handle ALL fields: Law, Medicine, Engineering, Arts, Sciences, Social Sciences, etc.
+Be thorough, creative, and intellectually rigorous.${depthSuffix}`,
+
+      planner: `You are StudyBuddy Planner — a strategic academic advisor. Create a detailed 7-day study schedule for the topic/material provided. Include:
+- Day-by-day breakdown with specific time blocks
+- Key topics to cover each day
+- Review sessions and practice problems
+- Tips for retention and active recall
+- A Mermaid timeline or gantt chart showing the study plan visually
+If an image is provided, analyze it to understand the scope of study material.${depthSuffix}`,
+
+      synthesizer: `You are StudyBuddy Synthesizer — an expert summarizer. Create a hierarchical brief of the provided material:
+- **Executive Summary** (2-3 sentences)
+- **Key Concepts** (bulleted, with brief explanations)
+- **Critical Details** (numbered, prioritized)
+- **Connections & Relationships** (include a Mermaid mindmap or graph)
+- **Quick-Reference Glossary** (key terms defined)
+If an image is provided, extract and incorporate all visible information.
+Be concise but comprehensive.${depthSuffix}`,
+
+      debater: `You are StudyBuddy Debater — a Socratic debate partner. Given a topic, present a structured academic debate:
+- **Proposition** (Arguments FOR) — at least 4 strong points with evidence
+- **Opposition** (Arguments AGAINST) — at least 4 strong counterpoints with evidence  
+- **Key Rebuttals** — how each side responds to the other
+- **Nuances & Gray Areas** — complexities that resist simple answers
+- **Your Verdict** — a balanced, scholarly conclusion weighing both sides
+Be intellectually rigorous. Use real-world examples, case law, scientific evidence, or historical precedents.${depthSuffix}`
+    };
+
+    const systemPrompt = modePrompts[mode] || modePrompts.explainer;
+
+    if (generateImage) {
+      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+      if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured for image generation");
+
+      const imageResponse = await fetch(LOVABLE_GATEWAY, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash-image",
+          messages: [
+            { role: "user", content: `Create a clear, educational diagram or illustration for the following academic concept. Make it clean, labeled, and suitable for studying: ${topic || material?.substring(0, 500)}` }
+          ],
+          modalities: ["image", "text"],
+        }),
+      });
+
+      if (!imageResponse.ok) {
+        const errText = await imageResponse.text();
+        console.error("Image generation error:", imageResponse.status, errText);
+        return new Response(JSON.stringify({ error: "Image generation failed" }), {
+          status: imageResponse.status === 429 ? 429 : imageResponse.status === 402 ? 402 : 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const imageDataResp = await imageResponse.json();
+      return new Response(JSON.stringify(imageDataResp), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const rawUserContent = topic
+      ? `Topic/Concept: ${topic}${material ? `\n\nAdditional Material:\n${material}` : ""}`
+      : material || "No material provided";
+
+    const { content: userContent } = truncateContent(rawUserContent);
+
+    // Build messages with chat history for conversation memory
+    const messages: Array<{ role: string; content: string | Array<{type: string; text?: string; image_url?: {url: string}}> }> = [
+      { role: "system", content: systemPrompt },
+    ];
+
+    // Include previous conversation history if provided
+    if (chatHistory && Array.isArray(chatHistory)) {
+      for (const msg of chatHistory.slice(-10)) {
+        if (msg.role && msg.content) {
+          messages.push({ role: msg.role, content: msg.content.substring(0, 50_000) });
+        }
+      }
+    }
+
+    // Build user message with optional vision input
+    if (imageData && typeof imageData === 'string' && imageData.startsWith('data:image/')) {
+      messages.push({
+        role: "user",
+        content: [
+          { type: "text", text: userContent },
+          { type: "image_url", image_url: { url: imageData } },
+        ],
+      });
+    } else {
+      messages.push({ role: "user", content: userContent });
+    }
+
+    const requestBody = {
+      model: "google/gemini-3-flash-preview",
+      messages,
+      stream: true,
+    };
+
+    const { response, provider } = await callWithFallback(requestBody, true);
+
+    if (!response.ok) {
+      const t = await response.text();
+      console.error(`${provider} AI error:`, response.status, t);
+      return new Response(JSON.stringify({ error: "AI processing failed. Please try again later." }), {
+        status: response.status === 429 ? 429 : response.status === 402 ? 402 : 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(response.body, {
+      headers: { ...corsHeaders, "Content-Type": "text/event-stream", "X-AI-Provider": provider },
+    });
+  } catch (e) {
+    console.error("study-buddy error:", e);
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
