@@ -134,6 +134,7 @@ const QuicklinksPage: React.FC = () => {
       <SEO
         title="Quicklinks — Essential University of Ibadan Links for Students"
         description="A curated directory of 40+ useful University of Ibadan links: student portal, LMS, Kenneth Dike Library, faculties, bursary, NYSC, JAMB, scholarships and more."
+        image="/og/pages-screenshot/quicklinks.png"
         breadcrumbs={[
           { name: 'Home', url: '/' },
           { name: 'Quicklinks', url: '/quicklinks' },
