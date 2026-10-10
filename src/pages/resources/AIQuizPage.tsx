@@ -27,6 +27,7 @@ import jsPDF from 'jspdf';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { toast } from 'sonner';
 import { DepthLevel } from '@/lib/file-utils';
 import { readMultipleFiles, mergeFileContents, type FileProgress } from '@/lib/multi-file-utils';
@@ -596,6 +597,7 @@ interface ResultViewProps {
   topicName: string;
   onReviewMistakes: () => void;
   onSaveToQuizlets: () => void;
+  canSaveToQuizlets?: boolean;
   onSendToFlashcards: () => void;
 }
 
@@ -609,6 +611,7 @@ const ResultView: React.FC<ResultViewProps> = ({
   topicName,
   onReviewMistakes,
   onSaveToQuizlets,
+  canSaveToQuizlets,
   onSendToFlashcards,
 }) => {
   const safeName = (topicName.split('\n')[0] || 'quiz').replace(/[^a-zA-Z0-9\s-]/g, '').trim().replace(/\s+/g, '-').substring(0, 60) || 'quiz';
@@ -686,10 +689,10 @@ const ResultView: React.FC<ResultViewProps> = ({
             className="w-full py-3 border border-border text-muted-foreground font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:border-accent hover:text-accent transition-all rounded-lg">
             <CreditCard size={14} /> Send to Flashcards
           </button>
-          <button onClick={onSaveToQuizlets}
+          {canSaveToQuizlets && <button onClick={onSaveToQuizlets}
             className="w-full py-3 border border-accent text-accent font-bold uppercase text-[10px] tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-accent hover:text-accent-foreground transition-all rounded-lg">
             <BookOpen size={14} /> Save to Quizlets
-          </button>
+          </button>}
 
           <button
             onClick={() => navigate('/resources')}
@@ -932,6 +935,7 @@ const AIQuizPage = () => {
 
   const saveToQuizlets = async () => {
     if (!user) { toast.error('Please sign in to save quizlets'); navigate('/auth'); return; }
+    if (!isStaff) { toast.error('Only admins and moderators can publish to Quizlets'); return; }
     if (!questions || questions.length === 0) {
       toast.error('No questions to save');
       return;
@@ -1028,6 +1032,7 @@ const AIQuizPage = () => {
               navigate={navigate}
               topicName={inputText}
               onSaveToQuizlets={saveToQuizlets}
+              canSaveToQuizlets={isStaff}
               onSendToFlashcards={sendToFlashcards}
               onReviewMistakes={() => {
                 // Filter to only incorrectly answered questions
