@@ -120,6 +120,14 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
                     </NavigationMenuContent>
                   </NavigationMenuItem>
 
+                  <NavigationMenuItem>
+                    <Link to="/archives">
+                      <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "bg-transparent text-white/85 hover:text-nobel-gold hover:bg-white/10 focus:bg-white/10 focus:text-white cursor-pointer px-2.5 py-1.5 text-xs lg:text-sm font-semibold tracking-wide rounded-lg transition-all duration-200")}>
+                        Archives
+                      </NavigationMenuLink>
+                    </Link>
+                  </NavigationMenuItem>
+
                 </NavigationMenuList>
             </NavigationMenu>
           </div>
@@ -163,9 +171,6 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
                         <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
                           <ListItem href="/inks-vault" title="Inks Vault">
                             Creative writing, essays, and reports.
-                          </ListItem>
-                          <ListItem href="/archives" title="Archives">
-                            Articles, galleries, timelines, and digital exhibits.
                           </ListItem>
                           <ListItem href="/announcements" title="Announcements">
                             Official news and updates.
