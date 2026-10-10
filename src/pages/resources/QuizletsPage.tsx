@@ -79,9 +79,10 @@ const QuizletsHero: React.FC<{ compact?: boolean; rightContent?: React.ReactNode
               <BookOpen size={18} className="text-accent" />
             </div>
             <div>
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
                 <span className="h-px w-5 bg-accent" />
                 <span className="text-[8px] font-bold uppercase tracking-[0.4em] text-accent">{subtitle}</span>
+                <MadeByTag placement="inline" />
               </div>
               <h1 className="font-serif text-2xl md:text-3xl leading-none tracking-tight">
                 {title}<span className="text-accent">.</span>
@@ -90,7 +91,6 @@ const QuizletsHero: React.FC<{ compact?: boolean; rightContent?: React.ReactNode
           </div>
           {rightContent}
         </div>
-        <MadeByTag placement="header" />
       </div>
     </div>
   );
