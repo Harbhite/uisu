@@ -798,7 +798,7 @@ const AIQuizPage = () => {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const rawFiles = Array.from(e.target.files).filter(f => {
-        if (f.size > 10 * 1024 * 1024) { toast.error(`${f.name} too large. Max 10MB.`); return false; }
+        if (f.size > 100 * 1024 * 1024) { toast.error(`${f.name} too large. Max 100MB.`); return false; }
         return true;
       });
       // Compress any image files before keeping them
