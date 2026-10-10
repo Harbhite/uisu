@@ -444,8 +444,8 @@ const StudyBuddyPage = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error('File too large. Max 10MB.');
+      if (file.size > 100 * 1024 * 1024) {
+        toast.error('File too large. Max 100MB.');
         return;
       }
       setSelectedFile(file);
