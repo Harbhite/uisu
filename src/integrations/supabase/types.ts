@@ -2908,6 +2908,7 @@ export type Database = {
           question_count: number
           questions: Json
           rigidity: string
+          time_limit_minutes: number | null
           title: string
           updated_at: string
         }
@@ -2922,6 +2923,7 @@ export type Database = {
           question_count?: number
           questions?: Json
           rigidity?: string
+          time_limit_minutes?: number | null
           title: string
           updated_at?: string
         }
@@ -2936,6 +2938,7 @@ export type Database = {
           question_count?: number
           questions?: Json
           rigidity?: string
+          time_limit_minutes?: number | null
           title?: string
           updated_at?: string
         }
