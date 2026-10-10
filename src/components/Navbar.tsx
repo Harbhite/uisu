@@ -219,7 +219,7 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
             <span className="font-serif font-bold text-base tracking-tight text-white">UISU</span>
           </Link>
 
-          {/* Right: Search, Sign In & Menu Button */}
+          {/* Right: Search & Menu Button */}
           <div className="flex items-center gap-1.5">
             {/* Mobile Search Button */}
             <button
@@ -229,16 +229,6 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
             >
               <Search size={16} />
             </button>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={user ? handleLogout : () => navigate('/auth')}
-              aria-label={user ? 'Sign out' : 'Sign in'}
-              className="flex items-center gap-1.5 bg-nobel-gold text-ui-blue px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest hover:bg-white hover:text-ui-blue transition-all duration-200 shadow-md"
-            >
-              {user ? <><LogOut size={13} /> Sign Out</> : 'Sign In'}
-            </motion.button>
 
             <motion.button
               whileHover={{ scale: 1.02 }}

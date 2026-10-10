@@ -1,14 +1,19 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
-import { X } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { LogIn, LogOut, X } from "lucide-react";
+import { User } from "@supabase/supabase-js";
 
 interface MenuProps {
   isMenuOpen: boolean;
   setIsMenuOpen: (isOpen: boolean) => void;
   navLinks: { name: string; href: string }[];
+  user: User | null;
+  handleLogout: () => void | Promise<void>;
 }
 
-export const Menu = ({ isMenuOpen, setIsMenuOpen, navLinks }: MenuProps) => {
+export const Menu = ({ isMenuOpen, setIsMenuOpen, navLinks, user, handleLogout }: MenuProps) => {
+  const navigate = useNavigate();
+
   return (
     <AnimatePresence>
       {isMenuOpen && (
@@ -48,6 +53,24 @@ export const Menu = ({ isMenuOpen, setIsMenuOpen, navLinks }: MenuProps) => {
                         </Link>
                     </motion.div>
                 ))}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 + navLinks.length * 0.05 }}
+                  className="pt-4"
+                >
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setIsMenuOpen(false);
+                      if (user) await handleLogout();
+                      else navigate('/auth');
+                    }}
+                    className="inline-flex items-center gap-2 rounded-lg bg-nobel-gold px-4 py-2 text-sm font-bold uppercase tracking-widest text-ui-blue shadow-md transition-colors hover:bg-white"
+                  >
+                    {user ? <><LogOut size={16} /> Sign Out</> : <><LogIn size={16} /> Sign In</>}
+                  </button>
+                </motion.div>
              </div>
 
              {/* Footer Contact Info (mimicking reference) */}

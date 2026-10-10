@@ -406,6 +406,8 @@ const Index = () => {
         isMenuOpen={isMenuOpen}
         setIsMenuOpen={setIsMenuOpen}
         navLinks={navLinks}
+        user={user}
+        handleLogout={handleLogout}
       />
 
       {/* Hero Section */}
