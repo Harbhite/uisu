@@ -983,7 +983,7 @@ const AIQuizPage = () => {
     <div className="min-h-screen bg-background">
       <SEO title="AI Quiz - Test Your Knowledge" description="Upload study materials and get 25 tailor-made quiz questions powered by AI." />
 
-      <AIToolsHeader title="AI Quiz" subtitle="AI-Powered Assessment" icon={BrainCircuit} />
+      <AIToolsHeader title="AI Quiz" subtitle="MADE BY HABIBI WITH LOVE ❤️" icon={BrainCircuit} />
 
       <div className="container mx-auto px-4 max-w-6xl py-10">
         <AnimatePresence mode="wait">
