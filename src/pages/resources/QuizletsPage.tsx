@@ -90,6 +90,7 @@ const QuizletsHero: React.FC<{ compact?: boolean; rightContent?: React.ReactNode
           </div>
           {rightContent}
         </div>
+        <MadeByTag placement="header" />
       </div>
     </div>
   );
@@ -960,7 +961,6 @@ const QuizletsPage = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      <MadeByTag />
     </div>
   );
 };
