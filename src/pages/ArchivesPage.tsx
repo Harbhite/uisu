@@ -28,15 +28,15 @@ const kindIcons: Record<ArchiveKind, LucideIcon> = {
 };
 
 const paletteByKind: Record<ArchiveKind, string> = {
-  Article: 'from-[#e9e1d2] to-[#f5f1e8] text-[#17324e]',
-  'Document guide': 'from-[#e3e8eb] to-[#f4f5f4] text-[#17324e]',
-  'Digital museum': 'from-[#d8e1e1] to-[#f1f3ef] text-[#17324e]',
-  'Image gallery': 'from-[#e9dfd0] to-[#f7f2e9] text-[#17324e]',
-  Timeline: 'from-[#e7dec7] to-[#f4f0e4] text-[#17324e]',
-  'Portrait gallery': 'from-[#e8e3d8] to-[#f5f2ec] text-[#17324e]',
-  'Oral history': 'from-[#d9e0dc] to-[#f1f2ec] text-[#17324e]',
-  'Sound archive': 'from-[#d8dfe8] to-[#f1f3f6] text-[#17324e]',
-  'Map collection': 'from-[#e2e7d9] to-[#f2f3e9] text-[#17324e]',
+  Article: 'from-[#F9F8F4] to-[#F2EFE9] text-[#003366]',
+  'Document guide': 'from-[#FFFFFF] to-[#F1F5F9] text-[#003366]',
+  'Digital museum': 'from-[#F9F8F4] to-[#E9D8B6] text-[#002244]',
+  'Image gallery': 'from-[#F2EFE9] to-[#F9F8F4] text-[#003366]',
+  Timeline: 'from-[#E9D8B6] to-[#F9F8F4] text-[#003366]',
+  'Portrait gallery': 'from-[#FFFFFF] to-[#F2EFE9] text-[#003366]',
+  'Oral history': 'from-[#F9F8F4] to-[#F1F5F9] text-[#003366]',
+  'Sound archive': 'from-[#F1F5F9] to-[#F9F8F4] text-[#003366]',
+  'Map collection': 'from-[#F2EFE9] to-[#FFFFFF] text-[#003366]',
 };
 
 const ArchiveNav = () => (
@@ -57,7 +57,7 @@ const ArchiveNav = () => (
         <Link to="/inks-vault" className="hover:text-primary">Inks Vault</Link>
         <Link to="/constitution" className="hover:text-primary">Constitution</Link>
       </div>
-      <Link to="/documents" className="inline-flex shrink-0 items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-[10px] font-bold text-white transition-colors hover:bg-primary">
+      <Link to="/documents" className="inline-flex shrink-0 items-center gap-2 rounded-none border border-primary bg-primary px-4 py-2 text-[10px] font-bold text-white transition-colors hover:border-accent hover:bg-accent hover:text-primary">
         Reading room <ArrowUpRight size={13} />
       </Link>
     </div>
@@ -81,7 +81,7 @@ const RecordArtwork = ({ record, compact = false }: { record: ArchiveRecord; com
   const Icon = kindIcons[record.kind];
   return (
     <div className={`relative isolate flex aspect-[1.45/1] flex-col justify-between overflow-hidden bg-gradient-to-br ${paletteByKind[record.kind]} ${compact ? 'p-4 md:p-5' : 'min-h-[290px] p-7 md:min-h-[390px] md:p-10'}`}>
-      <div className="pointer-events-none absolute inset-0 -z-10 opacity-[0.16]" style={{ backgroundImage: 'linear-gradient(rgba(23,50,78,.2) 1px, transparent 1px), linear-gradient(90deg, rgba(23,50,78,.2) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+      <div className="pointer-events-none absolute inset-0 -z-10 opacity-[0.16]" style={{ backgroundImage: 'linear-gradient(rgba(0,51,102,.18) 1px, transparent 1px), linear-gradient(90deg, rgba(0,51,102,.18) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
       <div className="pointer-events-none absolute -right-10 -top-12 -z-10 h-48 w-48 rounded-full border border-current/20" />
       <div className="pointer-events-none absolute -right-2 -top-4 -z-10 h-32 w-32 rounded-full border border-current/20" />
       <div className="flex items-start justify-between gap-4">
@@ -105,39 +105,38 @@ const RecordVisual = ({ record, compact = false }: { record: ArchiveRecord; comp
       <img
         src={record.image.src}
         alt={record.image.alt}
-        className={`w-full object-cover ${compact ? 'aspect-[1.45/1]' : 'aspect-[1.45/1] min-h-[290px] md:min-h-[390px]'}`}
+        className={`w-full object-cover ${compact ? 'aspect-[1.45/1]' : 'aspect-[0.96/1] min-h-[320px] md:min-h-[500px]'}`}
       />
-      <figcaption className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 bg-white px-3 py-2 text-[9px] leading-relaxed text-slate-500 md:px-4">
-        <a href={record.image.sourceUrl} target="_blank" rel="noreferrer" className="underline decoration-slate-300 underline-offset-2 hover:text-primary">
-          Photo: {record.image.credit}
-        </a>
-        <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-mono uppercase tracking-wider hover:text-primary">
-          CC BY-SA 4.0 <ArrowUpRight size={10} />
-        </a>
-      </figcaption>
     </figure>
   );
 };
 
-const ArchiveCard = ({ record, index }: { record: ArchiveRecord; index: number }) => {
+const ImageCredit = ({ image }: { image: NonNullable<ArchiveRecord['image']> }) => (
+  <p className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 font-mono text-[8px] uppercase tracking-[0.08em] text-slate-500">
+    <a href={image.sourceUrl} target="_blank" rel="noreferrer" className="underline decoration-slate-300 underline-offset-2 hover:text-primary">Photo: {image.credit}</a>
+    <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer" className="hover:text-primary">CC BY-SA 4.0 ↗</a>
+  </p>
+);
+
+const ArchiveCard = ({ record }: { record: ArchiveRecord }) => {
   const Icon = kindIcons[record.kind];
   return (
-    <article className={`group min-w-0 ${index === 0 ? 'md:col-span-2' : ''}`}>
-      <Link to={`/archives/${record.slug}`} className="block overflow-hidden border border-slate-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_18px_50px_rgba(15,23,42,0.09)]">
+    <article className="group min-w-0">
+      <Link to={`/archives/${record.slug}`} className="block overflow-hidden border-b border-slate-200 pb-5 transition-all duration-300 hover:border-primary">
         <RecordVisual record={record} compact />
-        <div className="px-4 pb-5 pt-4 md:px-5 md:pb-6">
+        <div className="pt-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <span className="inline-flex items-center gap-1.5 font-mono text-[8px] font-bold uppercase tracking-[0.15em] text-primary"><Icon size={12} /> {record.kind}</span>
             <span className="font-mono text-[8px] uppercase tracking-[0.14em] text-slate-400">{record.period}</span>
           </div>
           <div className="flex items-start justify-between gap-3">
-            <h3 className="font-serif text-xl leading-snug text-slate-950 transition-colors group-hover:text-primary md:text-2xl">{record.title}</h3>
-            <ArrowUpRight size={17} className="mt-1 shrink-0 text-slate-400 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent" />
+            <h3 className="font-serif text-2xl leading-snug text-primary transition-colors group-hover:text-[#A6864B] md:text-3xl">{record.title}</h3>
+            <ArrowUpRight size={17} className="mt-1 shrink-0 text-accent transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
           </div>
           <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-slate-600">{record.summary}</p>
-          {record.image && <p className="mt-3 border-t border-slate-100 pt-2 text-[8px] text-slate-400">Photo credit: {record.image.credit}</p>}
         </div>
       </Link>
+      {record.image && <ImageCredit image={record.image} />}
     </article>
   );
 };
@@ -150,7 +149,7 @@ export const ArchivesPage = () => {
     const searchText = `${record.title} ${record.summary} ${record.kind} ${record.period}`.toLowerCase();
     return matchesKind && searchText.includes(query.trim().toLowerCase());
   }), [activeKind, query]);
-  const featuredRecord = archiveRecords[1];
+  const featuredRecords = [archiveRecords[1], archiveRecords[2]];
   const formatCount = new Set(archiveRecords.map((record) => record.kind)).size;
 
   return (
@@ -164,51 +163,58 @@ export const ArchivesPage = () => {
       />
       <ArchiveNav />
       <main>
-        <section className="mx-auto max-w-7xl px-5 pb-12 pt-16 md:px-10 md:pb-16 md:pt-24">
-          <div className="grid gap-8 md:grid-cols-12 md:gap-6">
-            <div className="md:col-span-3">
+        <section className="mx-auto max-w-[1600px] px-5 pb-14 pt-16 md:px-10 md:pb-16 md:pt-24">
+          <div className="grid items-end gap-8 md:grid-cols-12 md:gap-6">
+            <div className="md:col-span-8">
               <p className="font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-slate-500">01 / The living archive</p>
-              <p className="mt-3 max-w-[220px] text-xs leading-relaxed text-slate-500">Records, places and voices from the student experience.</p>
+              <h1 className="mt-6 font-serif text-[clamp(3.4rem,11.5vw,11rem)] font-bold uppercase leading-[0.78] tracking-[-0.065em] text-primary">UISU<br />Archives</h1>
             </div>
-            <div className="md:col-span-9">
-              <h1 className="max-w-5xl font-serif text-[clamp(3.5rem,9vw,7.5rem)] leading-[0.89] tracking-[-0.055em] text-slate-950">Memory, <span className="italic text-primary">kept</span><br className="hidden md:block" /> in motion.</h1>
-              <div className="mt-8 grid gap-6 border-t border-slate-300 pt-5 sm:grid-cols-2 sm:items-end">
-                <p className="max-w-lg text-sm leading-relaxed text-slate-600">A growing digital reading room for the University of Ibadan Students’ Union: articles, image galleries, timelines, document guides and museum-style exhibits.</p>
-                <div className="flex flex-wrap gap-x-6 gap-y-3 sm:justify-end">
-                  <div><span className="block font-serif text-2xl text-slate-950">{archiveRecords.length}</span><span className="font-mono text-[8px] uppercase tracking-[0.16em] text-slate-500">Exhibits</span></div>
-                  <div><span className="block font-serif text-2xl text-slate-950">{formatCount}</span><span className="font-mono text-[8px] uppercase tracking-[0.16em] text-slate-500">Formats</span></div>
-                  <div><span className="block font-serif text-2xl text-slate-950">4</span><span className="font-mono text-[8px] uppercase tracking-[0.16em] text-slate-500">Era guides</span></div>
-                </div>
+            <div className="md:col-span-4 md:pb-1">
+              <div className="border-l-4 border-accent pl-5 md:pl-6">
+                <p className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-primary">University of Ibadan Students’ Union</p>
+                <p className="mt-3 text-sm leading-relaxed text-slate-600">A living record of student life, ideas and institutions — brought together through articles, image collections, document guides and digital exhibits.</p>
+              </div>
+              <div className="mt-6 grid grid-cols-3 border-t border-slate-300 pt-3">
+                <div><span className="block font-serif text-2xl text-primary">{archiveRecords.length}</span><span className="font-mono text-[8px] uppercase tracking-[0.14em] text-slate-500">Exhibits</span></div>
+                <div><span className="block font-serif text-2xl text-primary">{formatCount}</span><span className="font-mono text-[8px] uppercase tracking-[0.14em] text-slate-500">Formats</span></div>
+                <div><span className="block font-serif text-2xl text-primary">4</span><span className="font-mono text-[8px] uppercase tracking-[0.14em] text-slate-500">Era guides</span></div>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-5 pb-16 md:px-10 md:pb-24">
-          <div className="grid overflow-hidden border border-slate-200 bg-white md:grid-cols-12">
-            <div className="flex flex-col justify-between bg-primary p-6 text-white md:col-span-4 md:p-9">
-              <div>
-                <span className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-accent">Featured exhibit / 01</span>
-                <h2 className="mt-8 font-serif text-3xl leading-tight md:text-4xl">{featuredRecord.title}</h2>
-                <p className="mt-4 text-xs leading-relaxed text-white/75">{featuredRecord.summary}</p>
-              </div>
-              <Link to={`/archives/${featuredRecord.slug}`} className="mt-8 inline-flex w-fit items-center gap-2 border-b border-accent pb-2 text-[10px] font-bold uppercase tracking-[0.15em] text-accent hover:text-white">
-                Enter the exhibit <ArrowRight size={14} />
-              </Link>
-            </div>
-            <div className="md:col-span-8">
-              <RecordVisual record={featuredRecord} />
-            </div>
+        <section className="mx-auto max-w-[1600px] px-5 pb-16 md:px-10 md:pb-24">
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-3 border-b border-slate-300 pb-3">
+            <p className="font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-slate-500">02 / Collected views</p>
+            <p className="font-mono text-[8px] uppercase tracking-[0.16em] text-slate-400">Campus, architecture & memory</p>
           </div>
-          <p className="mt-2 text-right font-mono text-[8px] uppercase tracking-[0.12em] text-slate-400">{featuredRecord.image?.credit} · <a href={featuredRecord.image?.sourceUrl} target="_blank" rel="noreferrer" className="underline">source & license</a></p>
+          <div className="grid grid-cols-1 gap-x-4 gap-y-10 md:grid-cols-2 md:gap-x-5 md:gap-y-12">
+            {featuredRecords.map((record, index) => (
+              <article key={record.slug} className="group min-w-0">
+                <Link to={`/archives/${record.slug}`} className="block overflow-hidden bg-[#F2EFE9]">
+                  <RecordVisual record={record} />
+                </Link>
+                <div className="mt-3 flex items-center justify-between gap-3 font-mono text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                  <span>Selected exhibit / {String(index + 1).padStart(2, '0')}</span>
+                  <span>{record.kind} · {record.period}</span>
+                </div>
+                <div className="mt-2 flex items-start justify-between gap-3">
+                  <h2 className="font-serif text-2xl leading-tight text-primary md:text-3xl"><Link to={`/archives/${record.slug}`} className="hover:text-[#A6864B]">{record.title}</Link></h2>
+                  <Link to={`/archives/${record.slug}`} aria-label={`Open ${record.title}`} className="border border-primary p-2 text-primary transition-colors hover:border-accent hover:bg-accent"><ArrowUpRight size={15} /></Link>
+                </div>
+                <p className="mt-2 max-w-2xl text-xs leading-relaxed text-slate-600">{record.summary}</p>
+                {record.image && <ImageCredit image={record.image} />}
+              </article>
+            ))}
+          </div>
         </section>
 
         <section id="collection" className="border-y border-slate-200 bg-white py-14 md:py-20">
-          <div className="mx-auto max-w-7xl px-5 md:px-10">
+          <div className="mx-auto max-w-[1600px] px-5 md:px-10">
             <div className="grid gap-6 md:grid-cols-12 md:items-end">
               <div className="md:col-span-5">
-                <p className="font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-slate-500">02 / Browse the collection</p>
-                <h2 className="mt-3 font-serif text-4xl tracking-tight md:text-5xl">Find your way in.</h2>
+                <p className="font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-slate-500">03 / Browse the collection</p>
+                <h2 className="mt-3 font-serif text-4xl tracking-tight text-primary md:text-5xl">Browse the archive.</h2>
               </div>
               <div className="md:col-span-7 md:flex md:justify-end">
                 <label className="flex w-full max-w-md items-center gap-3 border-b border-slate-300 py-3 focus-within:border-primary">
@@ -226,7 +232,7 @@ export const ArchivesPage = () => {
                 const count = kind === 'All records' ? archiveRecords.length : archiveRecords.filter((record) => record.kind === kind).length;
                 if (!count) return null;
                 return (
-                  <button key={kind} type="button" aria-pressed={isActive} onClick={() => setActiveKind(kind)} className={`shrink-0 rounded-full border px-3 py-2 font-mono text-[9px] uppercase tracking-[0.12em] transition-colors ${isActive ? 'border-primary bg-primary text-white' : 'border-slate-200 bg-white text-slate-600 hover:border-primary/40 hover:text-primary'}`}>
+                  <button key={kind} type="button" aria-pressed={isActive} onClick={() => setActiveKind(kind)} className={`shrink-0 rounded-none border px-3 py-2 font-mono text-[9px] uppercase tracking-[0.12em] transition-colors ${isActive ? 'border-primary bg-primary text-white' : 'border-slate-300 bg-white text-slate-600 hover:border-primary hover:text-primary'}`}>
                     {kind} <span className={isActive ? 'ml-1 text-accent' : 'ml-1 text-slate-400'}>{String(count).padStart(2, '0')}</span>
                   </button>
                 );
@@ -239,11 +245,11 @@ export const ArchivesPage = () => {
             </div>
 
             {visibleRecords.length > 0 ? (
-              <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {visibleRecords.map((record, index) => <ArchiveCard key={record.slug} record={record} index={index} />)}
+              <div className="mt-5 grid grid-cols-1 gap-x-5 gap-y-10 sm:grid-cols-2 md:gap-x-7 md:gap-y-14">
+                {visibleRecords.map((record) => <ArchiveCard key={record.slug} record={record} />)}
               </div>
             ) : (
-              <div className="mt-5 border border-dashed border-slate-300 bg-[#f9f8f4] px-5 py-16 text-center">
+              <div className="mt-5 border border-dashed border-slate-300 bg-[#F9F8F4] px-5 py-16 text-center">
                 <Search size={24} className="mx-auto text-slate-400" />
                 <p className="mt-4 font-serif text-2xl">No records found</p>
                 <p className="mt-2 text-sm text-slate-500">Try another word or choose a different format.</p>
@@ -253,9 +259,9 @@ export const ArchivesPage = () => {
           </div>
         </section>
 
-        <section className="mx-auto grid max-w-7xl gap-5 px-5 py-14 md:grid-cols-12 md:px-10 md:py-20">
+        <section className="mx-auto grid max-w-[1600px] gap-5 px-5 py-14 md:grid-cols-12 md:px-10 md:py-20">
           <div className="md:col-span-4">
-            <p className="font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-slate-500">03 / Add to the record</p>
+            <p className="font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-slate-500">04 / Add to the record</p>
             <h2 className="mt-3 font-serif text-3xl leading-tight">Have a story or source to share?</h2>
           </div>
           <div className="flex flex-col justify-between gap-5 border-t border-slate-300 pt-5 md:col-span-8 md:flex-row md:items-end">
