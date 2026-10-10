@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { toast } from 'sonner';
 import { SEO } from '@/components/SEO';
+import MadeByTag from '@/components/MadeByTag';
 import SocialShare from '@/components/SocialShare';
 
 interface Question {
@@ -959,6 +960,7 @@ const QuizletsPage = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      <MadeByTag />
     </div>
   );
 };

@@ -28,6 +28,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
+import MadeByTag from '@/components/MadeByTag';
 import { toast } from 'sonner';
 import { DepthLevel } from '@/lib/file-utils';
 import { readMultipleFiles, mergeFileContents, type FileProgress } from '@/lib/multi-file-utils';
@@ -1049,6 +1050,7 @@ const AIQuizPage = () => {
             />
           )}
         </AnimatePresence>
+        <MadeByTag />
       </div>
     </div>
   );
