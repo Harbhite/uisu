@@ -164,6 +164,9 @@ export const Navbar = ({ isMenuOpen, setIsMenuOpen, user, handleLogout }: Navbar
                           <ListItem href="/inks-vault" title="Inks Vault">
                             Creative writing, essays, and reports.
                           </ListItem>
+                          <ListItem href="/archives" title="Archives">
+                            Articles, galleries, timelines, and digital exhibits.
+                          </ListItem>
                           <ListItem href="/announcements" title="Announcements">
                             Official news and updates.
                           </ListItem>

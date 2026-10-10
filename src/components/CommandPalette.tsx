@@ -13,7 +13,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Users, FileText, Calendar, BookOpen, Building2, Map, Megaphone,
   GraduationCap, Shield, Search, Home, History, Vote, MessageSquare,
-  Wallet, BookMarked, Settings,
+  Wallet, BookMarked, Settings, Archive,
 } from "lucide-react";
 
 interface CommandRoute {
@@ -29,6 +29,7 @@ const routes: CommandRoute[] = [
   { label: "Search", path: "/search", icon: Search, keywords: ["search", "find"], group: "Navigation" },
   { label: "Current Leaders", path: "/current-leaders", icon: Users, keywords: ["leaders", "executives", "president", "sug"], group: "The Union" },
   { label: "Past Leaders", path: "/past-leaders", icon: History, keywords: ["past", "former", "archive", "history"], group: "The Union" },
+  { label: "Archives", path: "/archives", icon: Archive, keywords: ["archives", "exhibits", "gallery", "museum", "history", "records"], group: "Editorial" },
   { label: "Governance", path: "/governance", icon: Shield, keywords: ["governance", "structure", "constitution"], group: "The Union" },
   { label: "Constitution", path: "/constitution", icon: BookMarked, keywords: ["constitution", "law", "rules"], group: "The Union" },
   { label: "Documents", path: "/documents", icon: FileText, keywords: ["documents", "records", "files", "pdf"], group: "The Union" },

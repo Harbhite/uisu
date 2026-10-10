@@ -69,6 +69,7 @@ const sections: SitemapSection[] = [
       { label: "Gazette Issues", path: "/gazette/issues", description: "Published editions" },
       { label: "Editorial Board", path: "/gazette/editorial-board", description: "Meet the editors" },
       { label: "Inks Vault", path: "/inks-vault", description: "Articles, poetry & creative writing" },
+      { label: "Archives", path: "/archives", description: "Articles, galleries & digital exhibits" },
       { label: "Document Library", path: "/documents", description: "Official documents" },
       { label: "Campus Map", path: "/campus-map", description: "Interactive campus map" },
     ],

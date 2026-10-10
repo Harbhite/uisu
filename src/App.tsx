@@ -19,6 +19,8 @@ const PastLeadersPage = lazy(() => import("./pages/PastLeadersPage"));
 const CurrentLeadersPage = lazy(() => import("./pages/CurrentLeadersPage"));
 const LeaderDetailPage = lazy(() => import("./pages/LeaderDetailPage"));
 const DocumentsPage = lazy(() => import("./pages/DocumentsPage"));
+const ArchivesPage = lazy(() => import("./pages/ArchivesPage"));
+const ArchiveExhibitPage = lazy(() => import("./pages/ArchivesPage").then((module) => ({ default: module.ArchiveExhibitPage })));
 const CampusMapPage = lazy(() => import("./pages/CampusMapPage"));
 const CommunitiesPage = lazy(() => import("./pages/CommunitiesPage"));
 const EventsPage = lazy(() => import("./pages/EventsPage"));
@@ -122,6 +124,8 @@ const AppRoutes = () => {
         <Route path="/current-leaders" element={<PageWrapper><CurrentLeadersPage /></PageWrapper>} />
         <Route path="/current-leaders/:id" element={<PageWrapper><LeaderDetailPage /></PageWrapper>} />
         <Route path="/documents" element={<PageWrapper><DocumentsPage /></PageWrapper>} />
+        <Route path="/archives" element={<PageWrapper><ArchivesPage /></PageWrapper>} />
+        <Route path="/archives/:slug" element={<PageWrapper><ArchiveExhibitPage /></PageWrapper>} />
         <Route path="/campus-map" element={<PageWrapper><CampusMapPage /></PageWrapper>} />
         <Route path="/communities" element={<PageWrapper><CommunitiesPage /></PageWrapper>} />
         <Route path="/events" element={<PageWrapper><EventsPage /></PageWrapper>} />

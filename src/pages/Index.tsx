@@ -341,6 +341,7 @@ const Index = () => {
     { name: "Leaders", href: "/current-leaders" },
     { name: "Past leaders", href: "/past-leaders" },
     { name: "Documents", href: "/documents" },
+    { name: "Archives", href: "/archives" },
     { name: "Inks vault", href: "/inks-vault" },
     { name: "Campus map", href: "/campus-map" },
     { name: "Halls of residence", href: "/halls" },
