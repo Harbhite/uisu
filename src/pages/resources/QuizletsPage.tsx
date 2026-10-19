@@ -326,6 +326,7 @@ const QuizletsPage = () => {
     setUserAnswers([]);
     setCurrentIdx(0);
     setTimeElapsed(0);
+    setShowAllAttempts(false);
     setStep('quiz');
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = window.setInterval(() => setTimeElapsed(p => p + 1), 1000);
