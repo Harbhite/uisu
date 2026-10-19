@@ -662,9 +662,23 @@ const QuizletsPage = () => {
 
               {/* Leaderboard */}
               <div className="bg-card border border-border rounded-lg p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <Trophy size={14} className="text-accent" />
-                  <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Top Scorers</h4>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Trophy size={14} className="text-accent" />
+                    <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">{showAllAttempts ? 'All Attempts' : 'Top Scorers'}</h4>
+                  </div>
+                  {isStaff && (
+                    <button
+                      onClick={() => {
+                        const next = !showAllAttempts;
+                        setShowAllAttempts(next);
+                        if (activeQuizlet) fetchLeaderboard(activeQuizlet.id, next ? 500 : 10);
+                      }}
+                      className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60 hover:text-accent transition-colors"
+                    >
+                      {showAllAttempts ? 'Top 10' : 'View all'}
+                    </button>
+                  )}
                 </div>
                 {leaderboard.length === 0 ? (
                   <p className="text-xs text-muted-foreground">No attempts yet — be the first!</p>
@@ -846,6 +860,15 @@ const QuizletsPage = () => {
                   </button>
                   {isStaff && (
                     <button
+                      onClick={(e) => openAttemptsViewer(q, e)}
+                      className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 hover:text-accent transition-colors"
+                      title="View all attempts"
+                    >
+                      <ListChecks size={10} /> Attempts
+                    </button>
+                  )}
+                  {isStaff && (
+                    <button
                       onClick={(e) => openEdit(q, e)}
                       className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 hover:text-accent transition-colors"
                       title="Edit quizlet"
@@ -980,6 +1003,36 @@ const QuizletsPage = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Staff: full attempts viewer */}
+      <Dialog open={!!attemptsQuizlet} onOpenChange={(open) => { if (!open) setAttemptsQuizlet(null); }}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl text-primary">
+              All Attempts — {attemptsQuizlet?.title}
+            </DialogTitle>
+          </DialogHeader>
+          {loadingAttempts ? (
+            <p className="text-xs text-muted-foreground py-6 text-center">Loading attempts…</p>
+          ) : allAttempts.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-6 text-center">No attempts yet.</p>
+          ) : (
+            <ol className="space-y-2 mt-2">
+              {allAttempts.map((entry, idx) => (
+                <li key={entry.id} className="flex items-center justify-between gap-2 text-xs py-1.5 px-2 rounded border border-border/50">
+                  <span className="flex items-center gap-2 min-w-0">
+                    <span className="shrink-0 w-6 text-center text-muted-foreground">{idx + 1}.</span>
+                    <span className="truncate text-foreground">{entry.user_display_name || 'Anonymous'}</span>
+                  </span>
+                  <span className="shrink-0 text-muted-foreground tabular-nums">
+                    {entry.score}/{entry.total_questions} · {entry.accuracy.toFixed(0)}% · {formatTime(entry.time_taken_seconds)} · {new Date(entry.created_at).toLocaleDateString()}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
