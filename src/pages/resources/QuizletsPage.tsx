@@ -4,8 +4,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   BookOpen, Clock, Users, ChevronRight, ChevronLeft,
   CheckCircle2, XCircle, Trophy, Sparkles, Search, BrainCircuit,
-  RefreshCcw, Link as LinkIcon, Copy, Pencil, Trash2, Flame, Medal,
+  RefreshCcw, Link as LinkIcon, Copy, Pencil, Trash2, Flame, Medal, ListChecks,
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
@@ -137,17 +138,35 @@ const QuizletsPage = () => {
     created_at: string;
   }
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [showAllAttempts, setShowAllAttempts] = useState(false);
+  const [attemptsQuizlet, setAttemptsQuizlet] = useState<Quizlet | null>(null);
+  const [allAttempts, setAllAttempts] = useState<LeaderboardEntry[]>([]);
+  const [loadingAttempts, setLoadingAttempts] = useState(false);
   const [streak, setStreak] = useState<{ current_streak: number; longest_streak: number } | null>(null);
 
-  const fetchLeaderboard = async (quizletId: string) => {
+  const fetchLeaderboard = async (quizletId: string, limit = 10) => {
     const { data } = await supabase
       .from('quiz_attempts')
       .select('id,user_display_name,accuracy,time_taken_seconds,score,total_questions,created_at')
       .eq('quizlet_id', quizletId)
       .order('accuracy', { ascending: false })
       .order('time_taken_seconds', { ascending: true })
-      .limit(10);
+      .limit(limit);
     setLeaderboard((data as LeaderboardEntry[]) || []);
+  };
+
+  const openAttemptsViewer = async (q: Quizlet, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setAttemptsQuizlet(q);
+    setLoadingAttempts(true);
+    const { data } = await supabase
+      .from('quiz_attempts')
+      .select('id,user_display_name,accuracy,time_taken_seconds,score,total_questions,created_at')
+      .eq('quizlet_id', q.id)
+      .order('created_at', { ascending: false })
+      .limit(500);
+    setAllAttempts((data as LeaderboardEntry[]) || []);
+    setLoadingAttempts(false);
   };
 
   const fetchStreak = async () => {
