@@ -937,7 +937,6 @@ const AIQuizPage = () => {
 
   const saveToQuizlets = async () => {
     if (!user) { toast.error('Please sign in to save quizlets'); navigate('/auth'); return; }
-    if (!isStaff) { toast.error('Only admins and moderators can publish to Quizlets'); return; }
     if (!questions || questions.length === 0) {
       toast.error('No questions to save');
       return;
@@ -1034,7 +1033,7 @@ const AIQuizPage = () => {
               navigate={navigate}
               topicName={inputText}
               onSaveToQuizlets={saveToQuizlets}
-              canSaveToQuizlets={isStaff}
+              canSaveToQuizlets={!!user}
               onSendToFlashcards={sendToFlashcards}
               onReviewMistakes={() => {
                 // Filter to only incorrectly answered questions
