@@ -8,6 +8,13 @@
       "when": 1791616868937,
       "tag": "0000_quizlet_timer_staff_publish",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792386122971,
+      "tag": "0001_quizlets_user_create_staff_view_attempts",
+      "breakpoints": true
     }
   ]
 }
