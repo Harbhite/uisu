@@ -686,21 +686,54 @@ const QuizletsPage = () => {
                 ) : (
                   <ol className="space-y-2">
                     {leaderboard.map((entry, idx) => {
-                      const isMe = user && entry.user_display_name && (
-                        // Highlight current user's most recent entry by matching name and recency
-                        false
-                      );
-                      const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
+                      const podium = idx < 3;
+                      const rankStyles = [
+                        'bg-gradient-to-br from-amber-300 to-yellow-500 text-yellow-950 shadow-premium-gold',
+                        'bg-gradient-to-br from-slate-200 to-slate-400 text-slate-800',
+                        'bg-gradient-to-br from-amber-600 to-amber-800 text-amber-50',
+                      ];
+                      const acc = Math.round(entry.accuracy);
                       return (
-                        <li key={entry.id} className={`flex items-center justify-between gap-2 text-xs py-1.5 px-2 rounded ${isMe ? 'bg-accent/10' : ''}`}>
-                          <span className="flex items-center gap-2 min-w-0">
-                            <span className="shrink-0 w-6 text-center">{medal}</span>
-                            <span className="truncate text-foreground">{entry.user_display_name || 'Anonymous'}</span>
-                          </span>
-                          <span className="shrink-0 text-muted-foreground tabular-nums">
-                            {entry.accuracy.toFixed(0)}% · {formatTime(entry.time_taken_seconds)}
-                          </span>
-                        </li>
+                        <motion.li
+                          key={entry.id}
+                          initial={{ opacity: 0, x: -12 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: idx * 0.05, duration: 0.3 }}
+                          className={`relative overflow-hidden rounded-xl border p-2.5 transition-smooth hover:-translate-y-0.5 hover:shadow-premium ${
+                            podium ? 'border-accent/40 bg-accent/5' : 'border-border bg-card'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${
+                              podium ? rankStyles[idx] : 'bg-muted text-muted-foreground'
+                            }`}>
+                              {idx + 1}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="truncate text-xs font-semibold text-foreground">
+                                  {entry.user_display_name || 'Anonymous'}
+                                  {idx === 0 && <span className="ml-1.5 text-[8px] font-bold uppercase tracking-widest text-accent">Champion</span>}
+                                </span>
+                                <span className={`shrink-0 text-xs font-black tabular-nums ${acc >= 80 ? 'text-emerald-600' : acc >= 50 ? 'text-accent' : 'text-muted-foreground'}`}>
+                                  {acc}%
+                                </span>
+                              </div>
+                              <div className="mt-1.5 h-1.5 rounded-full bg-muted overflow-hidden">
+                                <motion.div
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${acc}%` }}
+                                  transition={{ delay: 0.2 + idx * 0.05, duration: 0.6, ease: 'easeOut' }}
+                                  className={`h-full rounded-full ${acc >= 80 ? 'bg-gradient-to-r from-emerald-400 to-emerald-600' : acc >= 50 ? 'bg-gradient-to-r from-accent to-nobel-dark' : 'bg-slate-400'}`}
+                                />
+                              </div>
+                              <div className="mt-1 flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/70">
+                                <span className="flex items-center gap-0.5"><Zap size={8} /> {entry.score}/{entry.total_questions} pts</span>
+                                <span className="flex items-center gap-0.5"><Clock size={8} /> {formatTime(entry.time_taken_seconds)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.li>
                       );
                     })}
                   </ol>
