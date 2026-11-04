@@ -128,9 +128,9 @@ const ConstitutionPage: React.FC = () => {
         </div>
 
         {/* Content */}
-        <div className="px-4 sm:px-6 md:px-12 lg:px-20 py-10 sm:py-16 max-w-5xl mx-auto transition-all duration-300 min-w-0" style={{ fontSize: `${fontSize}%` }}>
+        <div className="flex flex-col px-4 sm:px-6 md:px-12 lg:px-20 py-10 sm:py-16 max-w-5xl mx-auto transition-all duration-300 min-w-0" style={{ fontSize: `${fontSize}%` }}>
           {/* Quick Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-10 sm:mb-12 print:hidden">
+          <div className="order-1 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-10 sm:mb-12 print:hidden">
             <div className="p-3 sm:p-4 min-w-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-sm">
               <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Articles</div>
               <div className="text-2xl font-serif text-ui-blue dark:text-nobel-gold">{constitutionData.length}</div>
@@ -150,7 +150,7 @@ const ConstitutionPage: React.FC = () => {
           </div>
 
           {/* Mobile Search */}
-          <div className="xl:hidden mb-12 print:hidden">
+          <div className="order-2 xl:hidden mb-12 print:hidden">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input
@@ -164,7 +164,7 @@ const ConstitutionPage: React.FC = () => {
           </div>
 
           {/* Legislative Highlights */}
-          <div className="mb-12 sm:mb-16 p-5 sm:p-8 bg-ui-blue/5 dark:bg-nobel-gold/5 border border-ui-blue/10 dark:border-nobel-gold/10 rounded-2xl print:hidden">
+          <div className="order-5 sm:order-3 mb-12 sm:mb-16 p-5 sm:p-8 bg-ui-blue/5 dark:bg-nobel-gold/5 border border-ui-blue/10 dark:border-nobel-gold/10 rounded-2xl print:hidden">
             <h3 className="font-serif text-xl text-ui-blue dark:text-nobel-gold mb-4 flex items-center gap-2">
               <Zap size={18} /> Legislative Highlights
             </h3>
@@ -181,7 +181,7 @@ const ConstitutionPage: React.FC = () => {
           </div>
 
           {/* Amendment Timeline */}
-          <div className="mb-12 sm:mb-16 p-5 sm:p-8 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl print:hidden">
+          <div className="order-6 sm:order-4 mb-12 sm:mb-16 p-5 sm:p-8 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl print:hidden">
             <h3 className="font-serif text-xl text-amber-900 dark:text-amber-200 mb-4 flex items-center gap-2">
               <History size={18} /> Amendment Timeline
             </h3>
@@ -202,7 +202,7 @@ const ConstitutionPage: React.FC = () => {
           </div>
 
           {/* Related Articles Sidebar */}
-          <div className="mb-10 sm:mb-12 p-4 sm:p-6 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl print:hidden">
+          <div className="order-3 sm:order-5 mb-10 sm:mb-12 p-4 sm:p-6 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl print:hidden">
             <h3 className="font-serif text-lg text-ui-blue dark:text-nobel-gold flex items-center gap-2 mb-4">
               Related Articles
             </h3>
@@ -219,7 +219,7 @@ const ConstitutionPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="space-y-12 sm:space-y-16 min-w-0">
+          <div className="order-4 sm:order-6 space-y-12 sm:space-y-16 min-w-0">
             {filteredArticles.length > 0 ? (
               filteredArticles.map((article) => (
                 <ArticleSection
@@ -243,7 +243,7 @@ const ConstitutionPage: React.FC = () => {
           </div>
 
           {/* Amendments Ledger */}
-          <section className="mt-20 sm:mt-32 pt-10 sm:pt-16 border-t border-slate-200 dark:border-slate-700 print:mt-10 print:pt-10">
+          <section className="order-7 mt-20 sm:mt-32 pt-10 sm:pt-16 border-t border-slate-200 dark:border-slate-700 print:mt-10 print:pt-10">
             <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
               <History className="text-nobel-gold shrink-0" size={24} />
               <h2 className="font-serif text-2xl sm:text-3xl text-ui-blue dark:text-white">Amendments Ledger</h2>
@@ -282,7 +282,7 @@ const ConstitutionPage: React.FC = () => {
           </section>
 
           {/* Feedback & Reporting */}
-          <section className="mt-16 sm:mt-20 p-5 sm:p-8 bg-slate-100 dark:bg-slate-900 rounded-2xl text-center print:hidden">
+          <section className="order-8 mt-16 sm:mt-20 p-5 sm:p-8 bg-slate-100 dark:bg-slate-900 rounded-2xl text-center print:hidden">
             <ShieldAlert className="mx-auto text-ui-blue dark:text-nobel-gold mb-4" size={32} />
             <h3 className="font-serif text-2xl text-ui-blue dark:text-white mb-2">Notice a Discrepancy?</h3>
             <p className="text-slate-500 dark:text-slate-400 max-w-xl mx-auto mb-6">
