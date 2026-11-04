@@ -107,20 +107,20 @@ const ConstitutionPage: React.FC = () => {
       {/* Main Content */}
       <main className="xl:pl-72 w-full transition-all duration-300">
         {/* Header */}
-        <div className="bg-ui-blue text-white pt-32 pb-20 px-6 md:px-12 lg:px-20 relative overflow-hidden print:pt-10 print:pb-10 print:text-black print:bg-white">
+        <div className="bg-ui-blue text-white pt-28 sm:pt-32 pb-14 sm:pb-20 px-4 sm:px-6 md:px-12 lg:px-20 relative overflow-hidden print:pt-10 print:pb-10 print:text-black print:bg-white">
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay print:hidden" />
-          <div className="absolute top-0 right-0 p-20 opacity-10 pointer-events-none print:hidden">
-            <Scale size={300} strokeWidth={0.5} />
+          <div className="absolute top-0 right-0 p-4 sm:p-20 opacity-10 pointer-events-none print:hidden">
+            <Scale className="w-36 h-36 sm:w-[300px] sm:h-[300px]" strokeWidth={0.5} />
           </div>
           <div className="max-w-4xl mx-auto relative z-10">
-            <div className="flex items-center gap-3 mb-6 print:hidden">
-              <span className="px-3 py-1 bg-nobel-gold text-ui-blue text-[10px] font-bold uppercase tracking-widest rounded-sm">Official Document</span>
-              <span className="px-3 py-1 border border-white/20 text-white/60 text-[10px] font-bold uppercase tracking-widest rounded-sm">Public Record</span>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-5 sm:mb-6 print:hidden">
+              <span className="px-2.5 py-1 bg-nobel-gold text-ui-blue text-[9px] sm:text-[10px] font-bold uppercase tracking-widest rounded-sm">Official Document</span>
+              <span className="px-2.5 py-1 border border-white/20 text-white/60 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest rounded-sm">Public Record</span>
             </div>
-            <h1 className="font-serif text-5xl md:text-7xl font-medium mb-6 leading-none">
+            <h1 className="font-serif text-4xl sm:text-5xl md:text-7xl font-medium mb-5 sm:mb-6 leading-[1.05] break-words">
               The Union <br /> <span className="italic text-nobel-gold print:text-black">Constitution</span>
             </h1>
-            <p className="text-lg md:text-xl text-slate-300 max-w-2xl font-light leading-relaxed print:text-slate-600">
+            <p className="text-base sm:text-lg md:text-xl text-slate-300 max-w-2xl font-light leading-relaxed print:text-slate-600">
               The supreme law governing the University of Ibadan Students' Union.
               Enacted to promote welfare, foster excellence, and defend student rights.
             </p>
@@ -128,22 +128,22 @@ const ConstitutionPage: React.FC = () => {
         </div>
 
         {/* Content */}
-        <div className="px-6 md:px-12 lg:px-20 py-16 max-w-5xl mx-auto transition-all duration-300" style={{ fontSize: `${fontSize}%` }}>
+        <div className="px-4 sm:px-6 md:px-12 lg:px-20 py-10 sm:py-16 max-w-5xl mx-auto transition-all duration-300 min-w-0" style={{ fontSize: `${fontSize}%` }}>
           {/* Quick Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12 print:hidden">
-            <div className="p-4 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-sm">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-10 sm:mb-12 print:hidden">
+            <div className="p-3 sm:p-4 min-w-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-sm">
               <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Articles</div>
               <div className="text-2xl font-serif text-ui-blue dark:text-nobel-gold">{constitutionData.length}</div>
             </div>
-            <div className="p-4 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-sm">
+            <div className="p-3 sm:p-4 min-w-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-sm">
               <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Amendments</div>
               <div className="text-2xl font-serif text-ui-blue dark:text-nobel-gold">{amendmentsData.length}</div>
             </div>
-            <div className="p-4 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-sm">
+            <div className="p-3 sm:p-4 min-w-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-sm">
               <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Last Update</div>
               <div className="text-2xl font-serif text-ui-blue dark:text-nobel-gold">2024</div>
             </div>
-            <div className="p-4 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-sm">
+            <div className="p-3 sm:p-4 min-w-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-sm">
               <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Status</div>
               <div className="text-2xl font-serif text-green-600 dark:text-green-400">Active</div>
             </div>
@@ -164,7 +164,7 @@ const ConstitutionPage: React.FC = () => {
           </div>
 
           {/* Legislative Highlights */}
-          <div className="mb-16 p-8 bg-ui-blue/5 dark:bg-nobel-gold/5 border border-ui-blue/10 dark:border-nobel-gold/10 rounded-2xl print:hidden">
+          <div className="mb-12 sm:mb-16 p-5 sm:p-8 bg-ui-blue/5 dark:bg-nobel-gold/5 border border-ui-blue/10 dark:border-nobel-gold/10 rounded-2xl print:hidden">
             <h3 className="font-serif text-xl text-ui-blue dark:text-nobel-gold mb-4 flex items-center gap-2">
               <Zap size={18} /> Legislative Highlights
             </h3>
@@ -181,7 +181,7 @@ const ConstitutionPage: React.FC = () => {
           </div>
 
           {/* Amendment Timeline */}
-          <div className="mb-16 p-8 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl print:hidden">
+          <div className="mb-12 sm:mb-16 p-5 sm:p-8 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl print:hidden">
             <h3 className="font-serif text-xl text-amber-900 dark:text-amber-200 mb-4 flex items-center gap-2">
               <History size={18} /> Amendment Timeline
             </h3>
@@ -202,7 +202,7 @@ const ConstitutionPage: React.FC = () => {
           </div>
 
           {/* Related Articles Sidebar */}
-          <div className="mb-12 p-6 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl print:hidden">
+          <div className="mb-10 sm:mb-12 p-4 sm:p-6 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl print:hidden">
             <h3 className="font-serif text-lg text-ui-blue dark:text-nobel-gold flex items-center gap-2 mb-4">
               Related Articles
             </h3>
@@ -219,7 +219,7 @@ const ConstitutionPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="space-y-16">
+          <div className="space-y-12 sm:space-y-16 min-w-0">
             {filteredArticles.length > 0 ? (
               filteredArticles.map((article) => (
                 <ArticleSection
@@ -243,28 +243,28 @@ const ConstitutionPage: React.FC = () => {
           </div>
 
           {/* Amendments Ledger */}
-          <section className="mt-32 pt-16 border-t border-slate-200 dark:border-slate-700 print:mt-10 print:pt-10">
-            <div className="flex items-center gap-4 mb-8">
-              <History className="text-nobel-gold" size={28} />
-              <h2 className="font-serif text-3xl text-ui-blue dark:text-white">Amendments Ledger</h2>
+          <section className="mt-20 sm:mt-32 pt-10 sm:pt-16 border-t border-slate-200 dark:border-slate-700 print:mt-10 print:pt-10">
+            <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+              <History className="text-nobel-gold shrink-0" size={24} />
+              <h2 className="font-serif text-2xl sm:text-3xl text-ui-blue dark:text-white">Amendments Ledger</h2>
             </div>
 
             <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden rounded-sm print:border-black">
-              <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 print:bg-slate-200 print:text-black">
+              <div className="hidden sm:grid grid-cols-12 gap-4 px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 print:bg-slate-200 print:text-black">
                 <div className="col-span-2">Date</div>
                 <div className="col-span-2">Ref ID</div>
                 <div className="col-span-6">Description</div>
-                <div className="col-span-2 text-right">Status</div>
+                <div className="sm:col-span-2 sm:text-right">Status</div>
               </div>
               {amendmentsData.map((amendment) => (
-                <div key={amendment.id} className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors items-center text-sm print:border-slate-300">
-                  <div className="col-span-2 font-mono text-xs text-slate-500 dark:text-slate-400">{amendment.date}</div>
-                  <div className="col-span-2 font-mono text-xs text-ui-blue dark:text-nobel-gold font-bold">{amendment.id}</div>
-                  <div className="col-span-6 text-slate-700 dark:text-slate-300">
+                <div key={amendment.id} className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-4 px-4 sm:px-6 py-4 border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors items-start sm:items-center text-sm print:border-slate-300">
+                  <div className="sm:col-span-2 font-mono text-xs text-slate-500 dark:text-slate-400"><span className="sm:hidden font-sans font-bold uppercase tracking-wider text-[9px] mr-2">Date</span>{amendment.date}</div>
+                  <div className="sm:col-span-2 font-mono text-xs text-ui-blue dark:text-nobel-gold font-bold"><span className="sm:hidden font-sans text-slate-400 font-bold uppercase tracking-wider text-[9px] mr-2">Ref</span>{amendment.id}</div>
+                  <div className="sm:col-span-6 text-slate-700 dark:text-slate-300 min-w-0">
                     <div className="font-bold text-xs mb-1 text-slate-900 dark:text-white">{amendment.articleRef}</div>
                     <p className="line-clamp-2 text-xs text-slate-500 dark:text-slate-400">{amendment.description}</p>
                   </div>
-                  <div className="col-span-2 text-right">
+                  <div className="sm:col-span-2 sm:text-right">
                     <span className={`inline-flex px-2 py-1 text-[8px] font-bold uppercase tracking-widest border rounded-sm
                       ${amendment.status === 'Ratified' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800' : ''}
                       ${amendment.status === 'Pending' ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800' : ''}
@@ -282,7 +282,7 @@ const ConstitutionPage: React.FC = () => {
           </section>
 
           {/* Feedback & Reporting */}
-          <section className="mt-20 p-8 bg-slate-100 dark:bg-slate-900 rounded-2xl text-center print:hidden">
+          <section className="mt-16 sm:mt-20 p-5 sm:p-8 bg-slate-100 dark:bg-slate-900 rounded-2xl text-center print:hidden">
             <ShieldAlert className="mx-auto text-ui-blue dark:text-nobel-gold mb-4" size={32} />
             <h3 className="font-serif text-2xl text-ui-blue dark:text-white mb-2">Notice a Discrepancy?</h3>
             <p className="text-slate-500 dark:text-slate-400 max-w-xl mx-auto mb-6">

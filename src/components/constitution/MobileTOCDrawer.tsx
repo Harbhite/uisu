@@ -21,14 +21,14 @@ const MobileTOCDrawer: React.FC<MobileTOCDrawerProps> = ({ articles, activeSecti
   const bookmarkedArticles = articles.filter(a => bookmarks.includes(a.id));
 
   return (
-    <div className="xl:hidden fixed bottom-6 right-6 z-40 print:hidden">
+    <div className="xl:hidden fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 sm:right-6 z-40 print:hidden">
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
-          <button className="w-14 h-14 rounded-full bg-ui-blue text-white shadow-xl flex items-center justify-center hover:scale-105 transition-transform active:scale-95">
+          <button className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-ui-blue text-white shadow-xl flex items-center justify-center hover:scale-105 transition-transform active:scale-95">
             <List size={24} />
           </button>
         </SheetTrigger>
-        <SheetContent side="bottom" className="max-h-[70vh] rounded-t-2xl dark:bg-slate-900 dark:border-slate-700">
+        <SheetContent side="bottom" className="max-h-[80vh] max-h-[80svh] rounded-t-2xl dark:bg-slate-900 dark:border-slate-700">
           <SheetHeader>
             <SheetTitle className="font-serif text-ui-blue dark:text-nobel-gold">Table of Contents</SheetTitle>
           </SheetHeader>
@@ -52,7 +52,7 @@ const MobileTOCDrawer: React.FC<MobileTOCDrawerProps> = ({ articles, activeSecti
             </div>
           )}
 
-          <nav className="space-y-1 overflow-y-auto max-h-[50vh] mt-2">
+          <nav className="space-y-1 overflow-y-auto max-h-[55vh] mt-2 pb-[env(safe-area-inset-bottom)]">
             {articles.map(article => (
               <button
                 key={article.id}
