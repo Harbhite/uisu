@@ -470,6 +470,13 @@ export const resourceCategories: ResourceCategory[] = [
     path: '/resources/study-aide'
   },
   {
+    id: 'tinywiki',
+    title: 'TinyWiki',
+    description: 'Turn any topic or study material into a structured wiki with a glossary, key points and an AI study assistant.',
+    color: 'bg-sky-600',
+    path: '/resources/tinywiki'
+  },
+  {
     id: 'quizlets',
     title: 'AI Quizlets',
     description: 'Interactive AI-generated quizlets to test your knowledge and prepare for exams.',

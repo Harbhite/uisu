@@ -52,6 +52,7 @@ const FlashcardPage = lazy(() => import("./pages/resources/FlashcardPage"));
 const QuizletsPage = lazy(() => import("./pages/resources/QuizletsPage"));
 const EssayCheckPage = lazy(() => import("./pages/resources/EssayCheckPage"));
 const StudyAidePage = lazy(() => import("./pages/resources/StudyAidePage"));
+const TinyWikiPage = lazy(() => import("./pages/resources/TinyWikiPage"));
 const TimetableBuilderPage = lazy(() => import("./pages/resources/TimetableBuilderPage"));
 const GPATrackerPage = lazy(() => import("./pages/resources/GPATrackerPage"));
 const PastQuestionsPage = lazy(() => import("./pages/resources/PastQuestionsPage"));
@@ -161,6 +162,7 @@ const AppRoutes = () => {
         <Route path="/resources/quizlets/:id" element={<PageWrapper><QuizletsPage /></PageWrapper>} />
         <Route path="/resources/essay-check" element={<PageWrapper><EssayCheckPage /></PageWrapper>} />
         <Route path="/resources/study-aide" element={<PageWrapper><StudyAidePage /></PageWrapper>} />
+        <Route path="/resources/tinywiki" element={<PageWrapper><TinyWikiPage /></PageWrapper>} />
         <Route path="/resources/timetable" element={<PageWrapper><TimetableBuilderPage /></PageWrapper>} />
         <Route path="/resources/gpa-tracker" element={<PageWrapper><GPATrackerPage /></PageWrapper>} />
         <Route path="/resources/past-questions" element={<PageWrapper><PastQuestionsPage /></PageWrapper>} />

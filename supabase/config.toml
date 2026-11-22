@@ -71,3 +71,6 @@ verify_jwt = false
 
 [functions.lf-voice-structure]
 verify_jwt = false
+
+[functions.tinywiki]
+verify_jwt = false

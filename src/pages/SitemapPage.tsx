@@ -103,6 +103,7 @@ const sections: SitemapSection[] = [
     links: [
       { label: "StudyBuddy", path: "/resources/study-buddy", description: "AI study assistant" },
       { label: "Study Aide", path: "/resources/study-aide", description: "Smart study helper" },
+      { label: "TinyWiki", path: "/resources/tinywiki", description: "AI wiki generator" },
       { label: "AI Quiz", path: "/resources/ai-quiz", description: "Generate quizzes from materials" },
       { label: "Quizlets", path: "/resources/quizlets", description: "Interactive quizzes" },
       { label: "Flashcards", path: "/resources/flashcards", description: "AI-generated flashcards" },
