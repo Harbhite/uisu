@@ -52,14 +52,12 @@ export const EventRSVP: React.FC<EventRSVPProps> = ({
         }
       }
 
-      // Get count of "going" RSVPs
-      const { count } = await supabase
-        .from('event_rsvps')
-        .select('*', { count: 'exact', head: true })
-        .eq('event_id', eventId)
-        .eq('status', 'going');
-      
-      if (count !== null) {
+      // Show a public aggregate without exposing attendee or ticket details.
+      const { data: count, error: countError } = await supabase.rpc('get_event_going_count', {
+        p_event_id: eventId,
+      });
+
+      if (!countError && count !== null) {
         setGoingCount(count);
       }
     };

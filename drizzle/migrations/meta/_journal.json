@@ -15,6 +15,13 @@
       "when": 1792386122971,
       "tag": "0001_quizlets_user_create_staff_view_attempts",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795433848966,
+      "tag": "0002_tighten_selected_rls_and_storage_policies",
+      "breakpoints": true
     }
   ]
 }

@@ -145,13 +145,22 @@ const QuizletsPage = () => {
   const [streak, setStreak] = useState<{ current_streak: number; longest_streak: number } | null>(null);
 
   const fetchLeaderboard = async (quizletId: string, limit = 10) => {
-    const { data } = await supabase
-      .from('quiz_attempts')
-      .select('id,user_display_name,accuracy,time_taken_seconds,score,total_questions,created_at')
-      .eq('quizlet_id', quizletId)
-      .order('accuracy', { ascending: false })
-      .order('time_taken_seconds', { ascending: true })
-      .limit(limit);
+    if (isStaff && limit > 10) {
+      const { data } = await supabase
+        .from('quiz_attempts')
+        .select('id,user_display_name,accuracy,time_taken_seconds,score,total_questions,created_at')
+        .eq('quizlet_id', quizletId)
+        .order('accuracy', { ascending: false })
+        .order('time_taken_seconds', { ascending: true })
+        .limit(limit);
+      setLeaderboard((data as LeaderboardEntry[]) || []);
+      return;
+    }
+
+    const { data } = await supabase.rpc('get_public_quiz_leaderboard', {
+      p_quizlet_id: quizletId,
+      p_limit: Math.min(limit, 10),
+    });
     setLeaderboard((data as LeaderboardEntry[]) || []);
   };
 

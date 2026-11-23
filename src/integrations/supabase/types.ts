@@ -3574,6 +3574,19 @@ export type Database = {
     }
     Functions: {
       bump_shared_session_view: { Args: { _token: string }; Returns: undefined }
+      get_event_going_count: { Args: { p_event_id: string }; Returns: number }
+      get_public_quiz_leaderboard: {
+        Args: { p_limit?: number; p_quizlet_id: string }
+        Returns: {
+          accuracy: number
+          created_at: string
+          id: string
+          score: number
+          time_taken_seconds: number
+          total_questions: number
+          user_display_name: string
+        }[]
+      }
       get_user_role: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
