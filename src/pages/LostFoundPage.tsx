@@ -20,7 +20,7 @@ const CATEGORIES = ['Electronics', 'Books', 'Clothing', 'ID/Cards', 'Keys', 'Bag
 
 interface LostFoundItem {
   id: string;
-  user_id: string;
+  user_id: string | null;
   title: string;
   description: string | null;
   category: string;
@@ -34,6 +34,7 @@ interface LostFoundItem {
   ai_summary?: string | null;
   ai_attributes?: any;
   ai_rewritten_description?: string | null;
+  contact_hidden?: boolean;
 }
 
 interface AIMatch {
@@ -112,18 +113,19 @@ const LostFoundPage = () => {
 
   useEffect(() => {
     fetchItems();
-    supabase.auth.getUser().then(({ data }) => setCurrentUser(data.user?.id || null));
+    supabase.auth.getUser().then(({ data }) => {
+      const userId = data.user?.id || null;
+      setCurrentUser(userId);
+      if (userId) fetchItems();
+    });
   }, []);
 
   useEffect(() => { setRouteReasoning(null); }, [showDetailModal?.id]);
 
   const fetchItems = async () => {
     const { data, error } = await supabase
-      .from('lost_found_items')
-      .select('*')
-      .eq('status', 'active')
-      .order('created_at', { ascending: false });
-    if (!error && data) setItems(data);
+      .rpc('get_public_lost_found_items');
+    if (!error && data) setItems(data as LostFoundItem[]);
     setLoading(false);
   };
 
@@ -403,16 +405,11 @@ const LostFoundPage = () => {
     setRouteReasoning(null);
     try {
       const oppositeType = item.item_type === 'found' ? 'lost' : 'found';
-      const { data: candidates } = await supabase
-        .from('lost_found_items')
-        .select('location, created_at, title')
-        .eq('status', 'active')
-        .eq('item_type', oppositeType)
-        .eq('category', item.category)
-        .not('location', 'is', null)
-        .order('created_at', { ascending: false })
-        .limit(1);
-      const counterpart = candidates?.[0];
+      const counterpart = items.find(candidate =>
+        candidate.item_type === oppositeType &&
+        candidate.category === item.category &&
+        Boolean(candidate.location)
+      );
       if (!counterpart) { setRouteReasoning('No opposite-type post yet to reason against.'); return; }
       const lostLoc = item.item_type === 'lost' ? item.location : counterpart.location;
       const foundLoc = item.item_type === 'found' ? item.location : counterpart.location;
@@ -949,19 +946,17 @@ const LostFoundPage = () => {
                     <span>{showDetailModal.location}</span>
                   </p>
                 )}
-                {showDetailModal.contact_info && (
-                  showDetailModal.item_type === 'found' && currentUser !== showDetailModal.user_id ? (
+                {showDetailModal.contact_hidden ? (
                     <p className="flex items-center gap-3 text-slate-400 italic text-xs">
                       <Phone size={16} className="text-slate-300" />
                       <span>Contact hidden — submit a verified claim to reveal</span>
                     </p>
-                  ) : (
+                ) : showDetailModal.contact_info ? (
                     <p className="flex items-center gap-3 text-slate-600">
                       <Phone size={16} className="text-nobel-gold" />
                       <span className="font-medium text-ui-blue">{showDetailModal.contact_info}</span>
                     </p>
-                  )
-                )}
+                ) : null}
                 <p className="flex items-center gap-3 text-slate-400">
                   <Clock size={16} />
                   <span>Posted {formatDistanceToNow(new Date(showDetailModal.created_at), { addSuffix: true })}</span>
@@ -988,7 +983,7 @@ const LostFoundPage = () => {
                 )}
               </div>
 
-              {currentUser === showDetailModal.user_id ? (
+              {currentUser !== null && currentUser === showDetailModal.user_id ? (
                 <div className="flex gap-2 pt-6 border-t border-slate-100">
                   <Button variant="outline" size="sm" onClick={() => handleResolve(showDetailModal.id)} className="gap-2 rounded-2xl border-border text-xs uppercase tracking-widest font-bold flex-1">
                     <CheckCircle2 size={14} /> Mark Resolved

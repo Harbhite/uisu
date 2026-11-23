@@ -24,7 +24,7 @@ serve(async (req) => {
 
     const { data: foundItems, error: dbError } = await sb
       .from("lost_found_items")
-      .select("id, title, description, category, location, photos, contact_info, created_at")
+      .select("id, title, description, category, location, photos, created_at")
       .eq("status", "active")
       .eq("item_type", "found")
       .order("created_at", { ascending: false })

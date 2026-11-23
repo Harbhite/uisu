@@ -22,6 +22,20 @@
       "when": 1795433848966,
       "tag": "0002_tighten_selected_rls_and_storage_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795434244836,
+      "tag": "0003_protect_found_item_contact_details",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795434377182,
+      "tag": "0004_mask_private_lost_found_metadata",
+      "breakpoints": true
     }
   ]
 }

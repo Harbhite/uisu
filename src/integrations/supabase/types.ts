@@ -3575,6 +3575,28 @@ export type Database = {
     Functions: {
       bump_shared_session_view: { Args: { _token: string }; Returns: undefined }
       get_event_going_count: { Args: { p_event_id: string }; Returns: number }
+      get_public_lost_found_items: {
+        Args: never
+        Returns: {
+          ai_attributes: Json
+          ai_rewritten_description: string
+          ai_summary: string
+          ai_tags: string[]
+          category: string
+          contact_hidden: boolean
+          contact_info: string
+          created_at: string
+          description: string
+          id: string
+          item_type: string
+          location: string
+          photos: string[]
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       get_public_quiz_leaderboard: {
         Args: { p_limit?: number; p_quizlet_id: string }
         Returns: {
