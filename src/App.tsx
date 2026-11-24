@@ -11,6 +11,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 import { lazy, Suspense } from "react";
 import { LoadingSpinner } from "./components/ui/LoadingSpinner";
+import { RouteSeoFallback } from "./components/RouteSeoFallback";
 
 // Lazy load pages for better performance
 const GovernancePage = lazy(() => import("./pages/GovernancePage"));
@@ -257,6 +258,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <ErrorBoundary>
+        <RouteSeoFallback />
         <Suspense fallback={<LoadingFallback />}>
           <CommandPalette />
           <AppRoutes />

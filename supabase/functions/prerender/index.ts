@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { composePageTitle, composePageDescription, DEFAULT_SITE_DETAILS, getTwitterHandle, normalizePagePath, normalizeSocialProfiles, resolvePageMetadata, routeMetadata } from "../_shared/siteSeo.ts";
 
 // Version for debugging deployments
 const VERSION = "v1.0.1";
@@ -13,11 +14,7 @@ const DEFAULT_IMAGE = `${SITE_URL}/og-home.png`;
 type SocialProfile = { platform: string; url: string };
 type SiteSettings = { siteName: string; siteDescription: string; socialLinks: SocialProfile[] };
 
-const DEFAULT_SITE_SETTINGS: SiteSettings = {
-  siteName: SITE_NAME,
-  siteDescription: "The official digital space of the University of Ibadan Students’ Union — connecting students, preserving history, and empowering the community.",
-  socialLinks: [{ platform: "X", url: "https://twitter.com/uisu_archive" }],
-};
+const DEFAULT_SITE_SETTINGS: SiteSettings = DEFAULT_SITE_DETAILS;
 
 // Initialize Supabase client
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -55,7 +52,7 @@ async function fetchSiteSettings(): Promise<SiteSettings> {
       siteDescription: typeof data.site_description === "string" && data.site_description.trim()
         ? data.site_description.trim()
         : DEFAULT_SITE_SETTINGS.siteDescription,
-      socialLinks,
+      socialLinks: normalizeSocialProfiles(socialLinks),
     };
   } catch {
     return DEFAULT_SITE_SETTINGS;
@@ -65,109 +62,14 @@ async function fetchSiteSettings(): Promise<SiteSettings> {
 function applySiteSettings(
   metadata: { title: string; description: string; image: string; type: string },
   settings: SiteSettings,
+  path: string,
 ) {
-  const title = metadata.title === SITE_NAME
-    ? settings.siteName
-    : metadata.title.replaceAll(SITE_NAME, settings.siteName);
-  const pageDescription = metadata.description.trim();
-  const siteDescription = settings.siteDescription.trim();
-  const description = pageDescription === siteDescription
-    ? siteDescription
-    : `${pageDescription} — ${siteDescription}`;
-
   return {
     ...metadata,
-    title,
-    description: description.length > 320 ? `${description.slice(0, 317)}...` : description,
+    title: composePageTitle(metadata.title, settings.siteName),
+    description: composePageDescription(metadata.description, settings.siteDescription, path === "/"),
   };
 }
-
-// Route-specific OG data
-const routeMetadata: Record<string, { title: string; description: string; image?: string; type?: string }> = {
-  "/": {
-    title: "UISU SPACE",
-    description: DEFAULT_DESCRIPTION,
-    image: `${SITE_URL}/og-home.png`,
-  },
-  "/governance": {
-    title: "Governance",
-    description: "Explore the governance structure of the University of Ibadan Students' Union - committees, leadership, and democratic processes.",
-    image: `${SITE_URL}/og/og-governance.png`,
-  },
-  "/current-leaders": {
-    title: "Current Leaders",
-    description: "Meet the current executive and legislative leaders of the University of Ibadan Students' Union.",
-    image: `${SITE_URL}/og/og-leaders.png`,
-  },
-  "/past-leaders": {
-    title: "Past Leaders",
-    description: "Honoring the legacy of past leaders who shaped the University of Ibadan Students' Union.",
-    image: `${SITE_URL}/og/og-past-leaders.png`,
-  },
-  "/communities": {
-    title: "Communities",
-    description: "Discover clubs, societies, and organizations within the University of Ibadan campus community.",
-    image: `${SITE_URL}/og/og-communities.png`,
-  },
-  "/events": {
-    title: "Events",
-    description: "Stay updated with upcoming events, meetings, and activities at the University of Ibadan.",
-    image: `${SITE_URL}/og/og-events.png`,
-  },
-  "/announcements": {
-    title: "Announcements",
-    description: "Latest announcements and updates from the University of Ibadan Students' Union.",
-    image: `${SITE_URL}/og/og-announcements.png`,
-  },
-  "/documents": {
-    title: "Document Library",
-    description: "Access official documents, constitution, and records of the University of Ibadan Students' Union.",
-    image: `${SITE_URL}/og/og-documents.png`,
-  },
-  "/campus-map": {
-    title: "Campus Map",
-    description: "Interactive map of the University of Ibadan campus - find buildings, landmarks, and facilities.",
-    image: `${SITE_URL}/og/og-campus-map.png`,
-  },
-  "/inks-vault": {
-    title: "Inks Vault",
-    description: "A collection of creative works, poetry, and literary pieces from University of Ibadan students.",
-    image: `${SITE_URL}/og/og-inks-vault.png`,
-  },
-  "/auth": {
-    title: "Sign In",
-    description: "Sign in to your UISU SPACE account to access exclusive features and content.",
-    image: `${SITE_URL}/og/og-auth.png`,
-  },
-  "/history": {
-    title: "Our History",
-    description: "Discover the rich history of the University of Ibadan Students' Union since 1948.",
-  },
-  "/constitution": {
-    title: "Constitution",
-    description: "The official constitution of the University of Ibadan Students' Union.",
-  },
-  "/resources": {
-    title: "Student Resources",
-    description: "Essential resources for University of Ibadan students - academic tools, career services, and more.",
-  },
-  "/tutorials": {
-    title: "Tutorials",
-    description: "Learn from peer tutors at the University of Ibadan - courses, guides, and educational content.",
-  },
-  "/halls": {
-    title: "Halls of Residence",
-    description: "Explore the halls of residence at the University of Ibadan - history, culture, and community.",
-  },
-  "/search": {
-    title: "Search",
-    description: "Search across UISU SPACE - find leaders, documents, events, and more.",
-  },
-  "/newsletter": {
-    title: "Newsletter",
-    description: "Subscribe to the UISU SPACE newsletter for updates on campus life and union activities.",
-  },
-};
 
 // Crawler user agents to detect
 const crawlerPatterns = [
@@ -277,7 +179,7 @@ async function getMetadataForPath(path: string): Promise<{ title: string; descri
     return {
       title: meta.title === SITE_NAME ? meta.title : `${meta.title} | ${SITE_NAME}`,
       description: meta.description,
-      image: meta.image || DEFAULT_IMAGE,
+      image: meta.image ? new URL(meta.image, SITE_URL).href : DEFAULT_IMAGE,
       type: meta.type || "website",
     };
   }
@@ -374,39 +276,12 @@ async function getMetadataForPath(path: string): Promise<{ title: string; descri
     };
   }
 
-  if (path.startsWith("/profile/")) {
-    return {
-      title: `User Profile | ${SITE_NAME}`,
-      description: "View a student profile on UISU SPACE.",
-      image: DEFAULT_IMAGE,
-      type: "profile",
-    };
-  }
-
-  if (path.startsWith("/tutorials/")) {
-    return {
-      title: `Tutorial | ${SITE_NAME}`,
-      description: "Learn from peer tutors at the University of Ibadan.",
-      image: DEFAULT_IMAGE,
-      type: "article",
-    };
-  }
-
-  if (path.startsWith("/resources/")) {
-    return {
-      title: `Student Resource | ${SITE_NAME}`,
-      description: "Access helpful resources for University of Ibadan students.",
-      image: DEFAULT_IMAGE,
-      type: "website",
-    };
-  }
-
-  // Default fallback
+  const fallback = resolvePageMetadata(path);
   return {
-    title: SITE_NAME,
-    description: DEFAULT_DESCRIPTION,
-    image: DEFAULT_IMAGE,
-    type: "website",
+    title: fallback.title,
+    description: fallback.description,
+    image: fallback.image ? new URL(fallback.image, SITE_URL).href : DEFAULT_IMAGE,
+    type: fallback.type || "website",
   };
 }
 
@@ -438,8 +313,7 @@ function generateHtml(
     description: settings.siteDescription,
     sameAs: settings.socialLinks.map((link) => link.url),
   }).replace(/</g, "\\u003c");
-  const twitterLink = settings.socialLinks.find((link) => /^(x|twitter)$/i.test(link.platform));
-  const twitterHandle = twitterLink ? new URL(twitterLink.url).pathname.split("/").filter(Boolean)[0] : "uisu_archive";
+  const twitterHandle = getTwitterHandle(settings.socialLinks);
   const socialMeta = settings.socialLinks
     .map((link) => `<meta property="og:see_also" content="${escapeHtml(link.url)}">`)
     .join("\n  ");
@@ -471,7 +345,7 @@ function generateHtml(
   <meta name="twitter:title" content="${safeTitle}">
   <meta name="twitter:description" content="${safeDescription}">
   <meta name="twitter:image" content="${safeImage}">
-  <meta name="twitter:site" content="@${escapeHtml(twitterHandle)}">
+  ${twitterHandle ? `<meta name="twitter:site" content="@${escapeHtml(twitterHandle)}">` : ""}
   <script type="application/ld+json">${organizationSchema}</script>
   
   <!-- Canonical -->
@@ -513,7 +387,7 @@ serve(async (req: Request) => {
 
   try {
     const url = new URL(req.url);
-    const path = url.searchParams.get("path") || "/";
+    const path = normalizePagePath(url.searchParams.get("path") || "/");
     const userAgent = req.headers.get("user-agent") || "";
     
     console.log(`[${VERSION}] Processing path: ${path}, UA: ${userAgent.substring(0, 50)}...`);
@@ -526,7 +400,7 @@ serve(async (req: Request) => {
       getMetadataForPath(path),
       fetchSiteSettings(),
     ]);
-    const sharedMetadata = applySiteSettings(metadata, siteSettings);
+    const sharedMetadata = applySiteSettings(metadata, siteSettings, path);
     
     // Generate HTML response
     const html = generateHtml(path, sharedMetadata, siteSettings);

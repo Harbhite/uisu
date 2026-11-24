@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type PropsWithChildren } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import { DEFAULT_SITE_DETAILS, normalizeSocialProfiles } from "../../supabase/functions/_shared/siteSeo";
 
 export interface SiteSeoSocialLink {
   platform: string;
@@ -13,11 +14,7 @@ export interface SiteSeoSettings {
   socialLinks: SiteSeoSocialLink[];
 }
 
-export const DEFAULT_SITE_SEO_SETTINGS: SiteSeoSettings = {
-  siteName: "UISU SPACE",
-  siteDescription: "The official digital space of the University of Ibadan Students’ Union — connecting students, preserving history, and empowering the community.",
-  socialLinks: [{ platform: "X", url: "https://twitter.com/uisu_archive" }],
-};
+export const DEFAULT_SITE_SEO_SETTINGS: SiteSeoSettings = DEFAULT_SITE_DETAILS;
 
 interface SiteSeoContextValue {
   settings: SiteSeoSettings;
@@ -44,7 +41,7 @@ const normalizeSettings = (row: {
   return {
     siteName: row.site_name?.trim() || DEFAULT_SITE_SEO_SETTINGS.siteName,
     siteDescription: row.site_description?.trim() || DEFAULT_SITE_SEO_SETTINGS.siteDescription,
-    socialLinks: links,
+    socialLinks: normalizeSocialProfiles(links),
   };
 };
 

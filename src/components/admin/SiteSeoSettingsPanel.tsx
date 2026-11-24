@@ -149,7 +149,7 @@ export const SiteSeoSettingsPanel = () => {
               <p className="border-l-2 border-border py-2 pl-4 text-sm text-muted-foreground">No social profiles added.</p>
             )}
             {socialLinks.map((link, index) => (
-              <div key={`${index}-${link.platform}`} className="grid gap-3 sm:grid-cols-[minmax(140px,0.7fr)_minmax(0,1.7fr)_auto]">
+              <div key={index} className="grid gap-3 sm:grid-cols-[minmax(140px,0.7fr)_minmax(0,1.7fr)_auto]">
                 <Input
                   aria-label={`Social platform ${index + 1}`}
                   value={link.platform}

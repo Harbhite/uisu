@@ -1,5 +1,7 @@
 import { Helmet } from 'react-helmet-async';
-import { DEFAULT_SITE_SEO_SETTINGS, useSiteSeoSettings, type SiteSeoSocialLink } from '@/contexts/SiteSeoContext';
+import { useLocation } from 'react-router-dom';
+import { DEFAULT_SITE_SEO_SETTINGS, useSiteSeoSettings } from '@/contexts/SiteSeoContext';
+import { composePageTitle, composePageDescription, getTwitterHandle, normalizeSocialProfiles, normalizePagePath, resolvePageMetadata } from '../../supabase/functions/_shared/siteSeo';
 
 interface BreadcrumbItem {
   name: string;
@@ -26,15 +28,6 @@ interface SEOProps {
 const SITE_URL = 'https://uisu.space';
 const DEFAULT_IMAGE = `${SITE_URL}/uisu-logo.png`;
 
-const normalizeSocialLinks = (links: SiteSeoSocialLink[]) => links.flatMap((link) => {
-  try {
-    const parsed = new URL(link.url);
-    return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? [{ ...link, url: parsed.href }] : [];
-  } catch {
-    return [];
-  }
-});
-
 const toSafeJsonLd = (value: unknown) => JSON.stringify(value).replace(/</g, '\\u003c');
 
 export const SEO = ({
@@ -49,30 +42,22 @@ export const SEO = ({
   faq
 }: SEOProps) => {
   const { settings } = useSiteSeoSettings();
+  const { pathname } = useLocation();
   const siteName = settings.siteName.trim() || DEFAULT_SITE_SEO_SETTINGS.siteName;
   const siteDescription = settings.siteDescription.trim() || DEFAULT_SITE_SEO_SETTINGS.siteDescription;
-  const socialLinks = normalizeSocialLinks(settings.socialLinks);
-  const fullTitle = title === DEFAULT_SITE_SEO_SETTINGS.siteName || title === siteName
-    ? siteName
-    : `${title} | ${siteName}`;
+  const socialLinks = normalizeSocialProfiles(settings.socialLinks);
+  const fullTitle = composePageTitle(title, siteName);
+  const selectedImage = image || resolvePageMetadata(pathname).image;
 
-  const imageUrl = image
-    ? (image.startsWith('http') ? image : `${SITE_URL}${image.startsWith('/') ? '' : '/'}${image}`)
+  const imageUrl = selectedImage
+    ? (selectedImage.startsWith('http') ? selectedImage : `${SITE_URL}${selectedImage.startsWith('/') ? '' : '/'}${selectedImage}`)
     : DEFAULT_IMAGE;
 
   const pageUrl = url
     ? (url.startsWith('http') ? url : `${SITE_URL}${url.startsWith('/') ? '' : '/'}${url}`)
-    : (typeof window !== 'undefined' ? `${SITE_URL}${window.location.pathname}` : SITE_URL);
-
-  const pageDescription = description.trim() || siteDescription;
-  const descriptionLimit = 320;
-  const availablePageLength = Math.max(0, descriptionLimit - siteDescription.length - 3);
-  const combinedDescription = pageDescription === siteDescription
-    ? siteDescription
-    : `${pageDescription.slice(0, availablePageLength).trimEnd()} — ${siteDescription}`;
-  const truncatedDesc = combinedDescription.length > descriptionLimit
-    ? `${combinedDescription.slice(0, descriptionLimit - 3)}...`
-    : combinedDescription;
+    : `${SITE_URL}${pathname}`;
+  const isHomePage = normalizePagePath(url || pathname) === '/';
+  const truncatedDesc = composePageDescription(description, siteDescription, isHomePage);
 
   const organizationSchema = {
     "@context": "https://schema.org",
@@ -159,15 +144,15 @@ export const SEO = ({
     }))
   } : null;
 
-  const twitterLink = socialLinks.find((link) => /^(x|twitter)$/i.test(link.platform));
-  const twitterHandle = twitterLink ? new URL(twitterLink.url).pathname.split('/').filter(Boolean)[0] : null;
-  const isHomePage = url === '/' || url === SITE_URL || !url;
+  const twitterHandle = getTwitterHandle(socialLinks);
 
   return (
     <Helmet>
       <title>{fullTitle}</title>
       <meta name="description" content={truncatedDesc} />
       <meta name="application-name" content={siteName} />
+      <meta name="author" content={author || siteName} />
+      <link rel="canonical" href={pageUrl} />
 
       <meta property="og:type" content={type} />
       <meta property="og:title" content={fullTitle} />
@@ -187,11 +172,9 @@ export const SEO = ({
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={truncatedDesc} />
       <meta name="twitter:image" content={imageUrl} />
-      {twitterHandle && <meta name="twitter:site" content={`@${twitterHandle}`} />}
+      <meta name="twitter:site" content={twitterHandle ? `@${twitterHandle}` : ''} />
 
-      {isHomePage && (
-        <script type="application/ld+json">{toSafeJsonLd(organizationSchema)}</script>
-      )}
+      <script type="application/ld+json">{toSafeJsonLd(organizationSchema)}</script>
       {isHomePage && (
         <script type="application/ld+json">{toSafeJsonLd(websiteSchema)}</script>
       )}
