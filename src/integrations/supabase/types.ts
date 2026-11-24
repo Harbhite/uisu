@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.1"
-  }
   public: {
     Tables: {
       academic_calendar: {
@@ -3063,6 +3058,30 @@ export type Database = {
           provider?: string
           title?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      site_seo_settings: {
+        Row: {
+          id: boolean
+          site_description: string
+          site_name: string
+          social_links: Json
+          updated_at: string
+        }
+        Insert: {
+          id?: boolean
+          site_description?: string
+          site_name?: string
+          social_links?: Json
+          updated_at?: string
+        }
+        Update: {
+          id?: boolean
+          site_description?: string
+          site_name?: string
+          social_links?: Json
+          updated_at?: string
         }
         Relationships: []
       }

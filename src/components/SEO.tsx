@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async';
+import { DEFAULT_SITE_SEO_SETTINGS, useSiteSeoSettings, type SiteSeoSocialLink } from '@/contexts/SiteSeoContext';
 
 interface BreadcrumbItem {
   name: string;
@@ -25,48 +26,16 @@ interface SEOProps {
 const SITE_URL = 'https://uisu.space';
 const DEFAULT_IMAGE = `${SITE_URL}/uisu-logo.png`;
 
-// Organization structured data
-const organizationSchema = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "University of Ibadan Students' Union",
-  "alternateName": "UISU",
-  "url": SITE_URL,
-  "logo": `${SITE_URL}/uisu-logo.png`,
-  "description": "The official digital space of the University of Ibadan Students' Union - connecting students, preserving history, and empowering the community.",
-  "foundingDate": "1948",
-  "address": {
-    "@type": "PostalAddress",
-    "addressLocality": "Ibadan",
-    "addressRegion": "Oyo State",
-    "addressCountry": "Nigeria"
-  },
-  "sameAs": [
-    "https://twitter.com/uisu_archive"
-  ]
-};
-
-// Website structured data
-const websiteSchema = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": "UISU SPACE",
-  "alternateName": "University of Ibadan Students' Union Digital Space",
-  "url": SITE_URL,
-  "description": "The official digital space of the University of Ibadan Students' Union",
-  "publisher": {
-    "@type": "Organization",
-    "name": "University of Ibadan Students' Union"
-  },
-  "potentialAction": {
-    "@type": "SearchAction",
-    "target": {
-      "@type": "EntryPoint",
-      "urlTemplate": `${SITE_URL}/search?q={search_term_string}`
-    },
-    "query-input": "required name=search_term_string"
+const normalizeSocialLinks = (links: SiteSeoSocialLink[]) => links.flatMap((link) => {
+  try {
+    const parsed = new URL(link.url);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? [{ ...link, url: parsed.href }] : [];
+  } catch {
+    return [];
   }
-};
+});
+
+const toSafeJsonLd = (value: unknown) => JSON.stringify(value).replace(/</g, '\\u003c');
 
 export const SEO = ({
   title,
@@ -79,23 +48,71 @@ export const SEO = ({
   breadcrumbs,
   faq
 }: SEOProps) => {
-  const siteTitle = 'UISU SPACE';
-  const fullTitle = title === siteTitle ? title : `${title} | ${siteTitle}`;
+  const { settings } = useSiteSeoSettings();
+  const siteName = settings.siteName.trim() || DEFAULT_SITE_SEO_SETTINGS.siteName;
+  const siteDescription = settings.siteDescription.trim() || DEFAULT_SITE_SEO_SETTINGS.siteDescription;
+  const socialLinks = normalizeSocialLinks(settings.socialLinks);
+  const fullTitle = title === DEFAULT_SITE_SEO_SETTINGS.siteName || title === siteName
+    ? siteName
+    : `${title} | ${siteName}`;
 
-  // Ensure absolute URL for image - use production domain
-  const imageUrl = image 
+  const imageUrl = image
     ? (image.startsWith('http') ? image : `${SITE_URL}${image.startsWith('/') ? '' : '/'}${image}`)
     : DEFAULT_IMAGE;
 
-  // Ensure absolute URL for page
-  const pageUrl = url 
+  const pageUrl = url
     ? (url.startsWith('http') ? url : `${SITE_URL}${url.startsWith('/') ? '' : '/'}${url}`)
     : (typeof window !== 'undefined' ? `${SITE_URL}${window.location.pathname}` : SITE_URL);
 
-  // Truncate description for meta tags
-  const truncatedDesc = description.length > 160 ? description.slice(0, 157) + '...' : description;
+  const pageDescription = description.trim() || siteDescription;
+  const descriptionLimit = 320;
+  const availablePageLength = Math.max(0, descriptionLimit - siteDescription.length - 3);
+  const combinedDescription = pageDescription === siteDescription
+    ? siteDescription
+    : `${pageDescription.slice(0, availablePageLength).trimEnd()} — ${siteDescription}`;
+  const truncatedDesc = combinedDescription.length > descriptionLimit
+    ? `${combinedDescription.slice(0, descriptionLimit - 3)}...`
+    : combinedDescription;
 
-  // Article structured data (for blog posts, inks, etc.)
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": siteName,
+    "alternateName": "UISU",
+    "url": SITE_URL,
+    "logo": `${SITE_URL}/uisu-logo.png`,
+    "description": siteDescription,
+    "foundingDate": "1948",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Ibadan",
+      "addressRegion": "Oyo State",
+      "addressCountry": "Nigeria"
+    },
+    "sameAs": socialLinks.map((link) => link.url)
+  };
+
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": siteName,
+    "alternateName": "University of Ibadan Students' Union Digital Space",
+    "url": SITE_URL,
+    "description": siteDescription,
+    "publisher": {
+      "@type": "Organization",
+      "name": siteName
+    },
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": `${SITE_URL}/search?q={search_term_string}`
+      },
+      "query-input": "required name=search_term_string"
+    }
+  };
+
   const articleSchema = type === 'article' ? {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -110,7 +127,7 @@ export const SEO = ({
     } : undefined,
     "publisher": {
       "@type": "Organization",
-      "name": "UISU SPACE",
+      "name": siteName,
       "logo": {
         "@type": "ImageObject",
         "url": `${SITE_URL}/uisu-logo.png`
@@ -118,7 +135,6 @@ export const SEO = ({
     }
   } : null;
 
-  // Breadcrumb structured data
   const breadcrumbSchema = breadcrumbs && breadcrumbs.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -130,11 +146,10 @@ export const SEO = ({
     }))
   } : null;
 
-  // FAQ structured data
   const faqSchema = faq && faq.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    "mainEntity": faq.map(item => ({
+    "mainEntity": faq.map((item) => ({
       "@type": "Question",
       "name": item.question,
       "acceptedAnswer": {
@@ -144,69 +159,50 @@ export const SEO = ({
     }))
   } : null;
 
+  const twitterLink = socialLinks.find((link) => /^(x|twitter)$/i.test(link.platform));
+  const twitterHandle = twitterLink ? new URL(twitterLink.url).pathname.split('/').filter(Boolean)[0] : null;
+  const isHomePage = url === '/' || url === SITE_URL || !url;
+
   return (
     <Helmet>
-      {/* Primary Meta Tags */}
       <title>{fullTitle}</title>
       <meta name="description" content={truncatedDesc} />
+      <meta name="application-name" content={siteName} />
 
-      {/* Open Graph / Facebook */}
       <meta property="og:type" content={type} />
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={truncatedDesc} />
       <meta property="og:image" content={imageUrl} />
       <meta property="og:url" content={pageUrl} />
-      <meta property="og:site_name" content="UISU SPACE" />
+      <meta property="og:site_name" content={siteName} />
+      {socialLinks.map((link) => (
+        <meta key={`${link.platform}-${link.url}`} property="og:see_also" content={link.url} />
+      ))}
 
-      {/* Article specific */}
-      {type === 'article' && author && (
-        <meta property="article:author" content={author} />
-      )}
-      {type === 'article' && publishedTime && (
-        <meta property="article:published_time" content={publishedTime} />
-      )}
+      {type === 'article' && author && <meta property="article:author" content={author} />}
+      {type === 'article' && publishedTime && <meta property="article:published_time" content={publishedTime} />}
 
-      {/* X (Twitter) */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:url" content={pageUrl} />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={truncatedDesc} />
       <meta name="twitter:image" content={imageUrl} />
-      <meta name="twitter:site" content="@uisu_archive" />
+      {twitterHandle && <meta name="twitter:site" content={`@${twitterHandle}`} />}
 
-      {/* Structured Data - Organization (only on homepage) */}
-      {(url === '/' || url === SITE_URL || !url) && (
-        <script type="application/ld+json">
-          {JSON.stringify(organizationSchema)}
-        </script>
+      {isHomePage && (
+        <script type="application/ld+json">{toSafeJsonLd(organizationSchema)}</script>
       )}
-
-      {/* Structured Data - Website (only on homepage) */}
-      {(url === '/' || url === SITE_URL || !url) && (
-        <script type="application/ld+json">
-          {JSON.stringify(websiteSchema)}
-        </script>
+      {isHomePage && (
+        <script type="application/ld+json">{toSafeJsonLd(websiteSchema)}</script>
       )}
-
-      {/* Structured Data - Article (for articles/inks) */}
       {articleSchema && (
-        <script type="application/ld+json">
-          {JSON.stringify(articleSchema)}
-        </script>
+        <script type="application/ld+json">{toSafeJsonLd(articleSchema)}</script>
       )}
-
-      {/* Structured Data - Breadcrumbs */}
       {breadcrumbSchema && (
-        <script type="application/ld+json">
-          {JSON.stringify(breadcrumbSchema)}
-        </script>
+        <script type="application/ld+json">{toSafeJsonLd(breadcrumbSchema)}</script>
       )}
-
-      {/* Structured Data - FAQ */}
       {faqSchema && (
-        <script type="application/ld+json">
-          {JSON.stringify(faqSchema)}
-        </script>
+        <script type="application/ld+json">{toSafeJsonLd(faqSchema)}</script>
       )}
     </Helmet>
   );

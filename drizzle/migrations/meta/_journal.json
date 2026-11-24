@@ -36,6 +36,13 @@
       "when": 1795434377182,
       "tag": "0004_mask_private_lost_found_metadata",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795434377183,
+      "tag": "0005_site_seo_settings",
+      "breakpoints": true
     }
   ]
 }

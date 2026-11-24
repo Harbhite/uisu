@@ -8,7 +8,7 @@ import {
   ArrowLeft, Star, Plus, Trash2, Edit2, Calendar, FileText, 
   Megaphone, X, Upload, Loader2, Check, Users, Award, ShieldAlert,
   ArrowUpDown, History, Search, Download, Filter, Eye, Mail, BookOpen, Inbox, Send, FlaskConical, MessageSquareWarning,
-  BarChart3, MessageSquare
+  BarChart3, MessageSquare, Globe2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
@@ -27,6 +27,7 @@ import { NewsletterAudiencesManager, type NewsletterAudienceRow } from "@/compon
 import { CampaignSendHistory } from "@/components/admin/CampaignSendHistory";
 import { AdminAnalytics } from "@/components/admin/AdminAnalytics";
 import { AdminFeedback } from "@/components/admin/AdminFeedback";
+import { SiteSeoSettingsPanel } from "@/components/admin/SiteSeoSettingsPanel";
 
 // Validation schemas
 const eventSchema = z.object({
@@ -80,7 +81,7 @@ const administrationSchema = z.object({
   })).optional(),
 });
 
-type TabType = "events" | "announcements" | "documents" | "clubs" | "administrations" | "admins" | "audit" | "publications" | "submissions" | "newsletter" | "complaints" | "analytics" | "feedback";
+type TabType = "events" | "announcements" | "documents" | "clubs" | "administrations" | "admins" | "audit" | "publications" | "submissions" | "newsletter" | "complaints" | "analytics" | "feedback" | "site-seo";
 
 interface AuditLog {
   id: string;
@@ -180,7 +181,7 @@ const AdminDashboard = () => {
   })();
 
   const [activeTab, setActiveTab] = useState<TabType>(() => {
-    if (persistedState.activeTab && ["events","announcements","documents","clubs","administrations","admins","audit","publications","submissions","newsletter","complaints","analytics","feedback"].includes(persistedState.activeTab as string)) {
+    if (persistedState.activeTab && ["events","announcements","documents","clubs","administrations","admins","audit","publications","submissions","newsletter","complaints","analytics","feedback","site-seo"].includes(persistedState.activeTab as string)) {
       return persistedState.activeTab as TabType;
     }
     return "events";
@@ -871,7 +872,7 @@ const AdminDashboard = () => {
     
     try {
       // Map tab to actual table name
-      const tableMap: Record<TabType, string> = {
+      const tableMap: Partial<Record<TabType, string>> = {
         events: "events",
         announcements: "announcements", 
         documents: "documents",
@@ -888,6 +889,7 @@ const AdminDashboard = () => {
       };
       
       const tableName = tableMap[activeTab];
+      if (!tableName) return;
       
       // Log deletion action
       await logAuditAction('delete', tableName, id, null, null);
@@ -936,6 +938,7 @@ const AdminDashboard = () => {
       { id: "newsletter" as TabType, label: "Newsletter", icon: Mail },
       { id: "admins" as TabType, label: "Staff", icon: ShieldAlert },
       { id: "audit" as TabType, label: "Audit Log", icon: History },
+      { id: "site-seo" as TabType, label: "Site SEO", icon: Globe2 },
     ] : []),
   ];
 
@@ -1825,7 +1828,7 @@ const AdminDashboard = () => {
             </h1>
           </div>
           
-          {activeTab !== "admins" && activeTab !== "audit" && (
+          {activeTab !== "admins" && activeTab !== "audit" && activeTab !== "site-seo" && (
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -1881,6 +1884,7 @@ const AdminDashboard = () => {
 
             {activeTab === "analytics" && <AdminAnalytics />}
             {activeTab === "feedback" && <AdminFeedback />}
+            {activeTab === "site-seo" && isAdmin && <SiteSeoSettingsPanel />}
 
             {activeTab === "complaints" && (
               <div className="space-y-3">

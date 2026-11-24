@@ -10,10 +10,77 @@ const SITE_NAME = "UISU SPACE";
 const DEFAULT_DESCRIPTION = "The Digital Space of University of Ibadan Students' Union - connecting students, preserving history, and empowering the community.";
 const DEFAULT_IMAGE = `${SITE_URL}/og-home.png`;
 
+type SocialProfile = { platform: string; url: string };
+type SiteSettings = { siteName: string; siteDescription: string; socialLinks: SocialProfile[] };
+
+const DEFAULT_SITE_SETTINGS: SiteSettings = {
+  siteName: SITE_NAME,
+  siteDescription: "The official digital space of the University of Ibadan Students’ Union — connecting students, preserving history, and empowering the community.",
+  socialLinks: [{ platform: "X", url: "https://twitter.com/uisu_archive" }],
+};
+
 // Initialize Supabase client
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+async function fetchSiteSettings(): Promise<SiteSettings> {
+  try {
+    const { data, error } = await supabase
+      .from("site_seo_settings")
+      .select("site_name, site_description, social_links")
+      .eq("id", true)
+      .maybeSingle();
+    if (error || !data) return DEFAULT_SITE_SETTINGS;
+
+    const socialLinks = Array.isArray(data.social_links)
+      ? data.social_links.flatMap((item) => {
+          if (!item || typeof item !== "object") return [];
+          const candidate = item as Record<string, unknown>;
+          if (typeof candidate.platform !== "string" || typeof candidate.url !== "string") return [];
+          try {
+            const parsed = new URL(candidate.url);
+            if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return [];
+            return [{ platform: candidate.platform, url: parsed.href }];
+          } catch {
+            return [];
+          }
+        })
+      : DEFAULT_SITE_SETTINGS.socialLinks;
+
+    return {
+      siteName: typeof data.site_name === "string" && data.site_name.trim()
+        ? data.site_name.trim()
+        : DEFAULT_SITE_SETTINGS.siteName,
+      siteDescription: typeof data.site_description === "string" && data.site_description.trim()
+        ? data.site_description.trim()
+        : DEFAULT_SITE_SETTINGS.siteDescription,
+      socialLinks,
+    };
+  } catch {
+    return DEFAULT_SITE_SETTINGS;
+  }
+}
+
+function applySiteSettings(
+  metadata: { title: string; description: string; image: string; type: string },
+  settings: SiteSettings,
+) {
+  const title = metadata.title === SITE_NAME
+    ? settings.siteName
+    : metadata.title.replaceAll(SITE_NAME, settings.siteName);
+  const pageDescription = metadata.description.trim();
+  const siteDescription = settings.siteDescription.trim();
+  const description = pageDescription === siteDescription
+    ? siteDescription
+    : `${pageDescription} — ${siteDescription}`;
+
+  return {
+    ...metadata,
+    title,
+    description: description.length > 320 ? `${description.slice(0, 317)}...` : description,
+  };
+}
 
 // Route-specific OG data
 const routeMetadata: Record<string, { title: string; description: string; image?: string; type?: string }> = {
@@ -343,37 +410,72 @@ async function getMetadataForPath(path: string): Promise<{ title: string; descri
   };
 }
 
-function generateHtml(path: string, metadata: { title: string; description: string; image: string; type: string }): string {
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function generateHtml(
+  path: string,
+  metadata: { title: string; description: string; image: string; type: string },
+  settings: SiteSettings,
+): string {
   const fullUrl = `${SITE_URL}${path}`;
+  const safeFullUrl = escapeHtml(fullUrl);
+  const safeTitle = escapeHtml(metadata.title);
+  const safeDescription = escapeHtml(metadata.description);
+  const safeImage = escapeHtml(metadata.image);
+  const safeSiteName = escapeHtml(settings.siteName);
+  const organizationSchema = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: settings.siteName,
+    url: SITE_URL,
+    description: settings.siteDescription,
+    sameAs: settings.socialLinks.map((link) => link.url),
+  }).replace(/</g, "\\u003c");
+  const twitterLink = settings.socialLinks.find((link) => /^(x|twitter)$/i.test(link.platform));
+  const twitterHandle = twitterLink ? new URL(twitterLink.url).pathname.split("/").filter(Boolean)[0] : "uisu_archive";
+  const socialMeta = settings.socialLinks
+    .map((link) => `<meta property="og:see_also" content="${escapeHtml(link.url)}">`)
+    .join("\n  ");
+  const redirectUrl = JSON.stringify(fullUrl).replace(/</g, "\\u003c");
   
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${metadata.title}</title>
-  <meta name="description" content="${metadata.description}">
+  <title>${safeTitle}</title>
+  <meta name="description" content="${safeDescription}">
+  <meta name="application-name" content="${safeSiteName}">
   
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="${metadata.type}">
-  <meta property="og:url" content="${fullUrl}">
-  <meta property="og:title" content="${metadata.title}">
-  <meta property="og:description" content="${metadata.description}">
-  <meta property="og:image" content="${metadata.image}">
+  <meta property="og:url" content="${safeFullUrl}">
+  <meta property="og:title" content="${safeTitle}">
+  <meta property="og:description" content="${safeDescription}">
+  <meta property="og:image" content="${safeImage}">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:site_name" content="${SITE_NAME}">
+  <meta property="og:site_name" content="${safeSiteName}">
+  ${socialMeta}
   
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:url" content="${fullUrl}">
-  <meta name="twitter:title" content="${metadata.title}">
-  <meta name="twitter:description" content="${metadata.description}">
-  <meta name="twitter:image" content="${metadata.image}">
-  <meta name="twitter:site" content="@uisu_archive">
+  <meta name="twitter:url" content="${safeFullUrl}">
+  <meta name="twitter:title" content="${safeTitle}">
+  <meta name="twitter:description" content="${safeDescription}">
+  <meta name="twitter:image" content="${safeImage}">
+  <meta name="twitter:site" content="@${escapeHtml(twitterHandle)}">
+  <script type="application/ld+json">${organizationSchema}</script>
   
   <!-- Canonical -->
-  <link rel="canonical" href="${fullUrl}">
+  <link rel="canonical" href="${safeFullUrl}">
   
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="${SITE_URL}/favicon.png">
@@ -382,14 +484,14 @@ function generateHtml(path: string, metadata: { title: string; description: stri
   <meta name="prerender-status-code" content="200">
 </head>
 <body>
-  <h1>${metadata.title}</h1>
-  <p>${metadata.description}</p>
-  <a href="${fullUrl}">Visit ${SITE_NAME}</a>
+  <h1>${safeTitle}</h1>
+  <p>${safeDescription}</p>
+  <a href="${safeFullUrl}">Visit ${safeSiteName}</a>
   
   <!-- Redirect for non-crawlers -->
   <script>
     if (!navigator.userAgent.match(/bot|crawl|slurp|spider|mediapartners/i)) {
-      window.location.href = "${fullUrl}";
+      window.location.href = ${redirectUrl};
     }
   </script>
 </body>
@@ -420,10 +522,14 @@ serve(async (req: Request) => {
     const crawler = isCrawler(userAgent);
     
     // Get metadata for the path (now async for dynamic routes)
-    const metadata = await getMetadataForPath(path);
+    const [metadata, siteSettings] = await Promise.all([
+      getMetadataForPath(path),
+      fetchSiteSettings(),
+    ]);
+    const sharedMetadata = applySiteSettings(metadata, siteSettings);
     
     // Generate HTML response
-    const html = generateHtml(path, metadata);
+    const html = generateHtml(path, sharedMetadata, siteSettings);
     
     console.log(`[${VERSION}] Successfully generated HTML for path: ${path}`);
     
