@@ -20,6 +20,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { UploadQueue, UploadItem } from './UploadQueue';
 import { format } from 'date-fns';
+import GlassFolder, { type ArtPreset, type FolderFile, type FolderMenuItem } from '@/components/ui/glass-folder-cards';
 
 interface AuditLog {
   id: string;
@@ -48,6 +49,12 @@ interface AcademicResource {
 interface SearchResult extends AcademicResource {
   path: string[];
 }
+
+const hashIndex = (s: string) => {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return h;
+};
 
 const AcademicBankPage = () => {
   const navigate = useNavigate();
@@ -892,6 +899,42 @@ const AcademicBankPage = () => {
     return `https://docs.google.com/gview?url=${encodeURIComponent(resource.file_url)}&embedded=true`;
   };
 
+  // ---- Glass folder helpers ------------------------------------------------
+  const FOLDER_ARTS: ArtPreset[] = ['aurora', 'dusk', 'glacier', 'ember', 'verdant'];
+
+  const getFolderContents = (folderId: string) => {
+    const children = sortItems(resources.filter(r => r.parent_id === folderId)).slice(0, 8);
+    const countOf = (id: string) => resources.filter(r => r.parent_id === id).length;
+    const files: FolderFile[] = children.map(c => ({
+      name: c.name,
+      meta: c.resource_type === 'folder'
+        ? `Folder · ${countOf(c.id)}`
+        : `${c.resource_type.toUpperCase()}${c.file_size ? ` · ${c.file_size}` : ''}`,
+    }));
+    return { children, files };
+  };
+
+  const getFolderMenu = (item: AcademicResource): FolderMenuItem[] => {
+    const menu: FolderMenuItem[] = [
+      { label: 'Browse folder', onSelect: () => handleNavigate(item.id) },
+      {
+        label: 'Copy link',
+        onSelect: () => {
+          navigator.clipboard.writeText(`${window.location.origin}/resources/academic-bank?folder=${item.id}`);
+          toast.success('Folder link copied to clipboard!');
+        },
+      },
+    ];
+    if (isStaff) {
+      menu.push({
+        label: 'Rename',
+        onSelect: () => { setEditingFolder(item); setNewFolderName(item.name); setShowFolderModal(true); },
+      });
+      menu.push({ label: 'Delete', danger: true, onSelect: () => handleDeleteResource(item) });
+    }
+    return menu;
+  };
+
   const breadcrumbPath = [{ id: null, name: 'Academic Bank' }, ...currentPath.map(id => ({ id, name: getFolderName(id) }))];
 
   // Stats for the hero section
@@ -1289,7 +1332,7 @@ const AcademicBankPage = () => {
           {/* File Grid/List with Drag and Drop */}
           <div 
             ref={dropZoneRef}
-            className={`min-h-[500px] p-6 relative transition-colors ${isDragging ? 'bg-ui-blue/5' : ''}`}
+            className={`min-h-[500px] p-3 sm:p-6 relative transition-colors ${isDragging ? 'bg-ui-blue/5' : ''}`}
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
             onDragOver={handleDragOver}
@@ -1425,22 +1468,40 @@ const AcademicBankPage = () => {
                   <div className="space-y-8">
                     {folders.length > 0 && (
                       <div>
-                        <h3 className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">Folders</h3>
-                        <div className="grid grid-cols-3 gap-3 sm:gap-4">
-                          {folders.map((item) => (
-                            <motion.div key={item.id} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                              className="group relative cursor-pointer rounded-lg p-3 sm:p-4 flex flex-col items-center gap-2 bg-white hover:bg-slate-50 transition-all"
-                              onClick={() => handleNavigate(item.id)}
-                            >
-                              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-ui-blue/10 flex items-center justify-center transition-transform group-hover:scale-105">
-                                <Folder className="w-6 h-6 sm:w-7 sm:h-7 text-ui-blue" />
+                        <h3 className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">Folders <span className="normal-case tracking-normal font-normal text-slate-300 ml-2 hidden sm:inline">Click to peek · double-click or ··· to browse</span></h3>
+                        <div className="grid grid-cols-1 min-[560px]:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-4 justify-items-center">
+                          {folders.map((item, idx) => {
+                            const { children, files: folderFiles } = getFolderContents(item.id);
+                            const total = resources.filter(r => r.parent_id === item.id).length;
+                            return (
+                              <div
+                                key={`${item.id}:${total}`}
+                                onDoubleClick={(e) => {
+                                  if ((e.target as HTMLElement).closest('.gf-sheet, .gf-key, .gf-menu')) return;
+                                  handleNavigate(item.id);
+                                }}
+                              >
+                                <GlassFolder
+                                  label={item.name}
+                                  meta={`${total} ${total === 1 ? 'item' : 'items'}`}
+                                  art={FOLDER_ARTS[hashIndex(item.id) % FOLDER_ARTS.length]}
+                                  seed={hashIndex(item.id) % 3}
+                                  width={300}
+                                  action="more"
+                                  files={folderFiles}
+                                  menu={getFolderMenu(item)}
+                                  appearDelay={Math.min(idx, 8) * 70}
+                                  onFileSelect={(_, i) => {
+                                    const child = children[i];
+                                    if (!child) return;
+                                    if (child.resource_type === 'folder') handleNavigate(child.id);
+                                    else if (canPreview(child)) handlePreview(child);
+                                    else handleDownload(child);
+                                  }}
+                                />
                               </div>
-                              <h4 className="text-[11px] sm:text-xs font-medium text-slate-700 group-hover:text-ui-blue text-center line-clamp-2 leading-tight">
-                                {item.name}
-                              </h4>
-                              {renderActions(item, 'absolute top-1 right-1')}
-                            </motion.div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     )}
