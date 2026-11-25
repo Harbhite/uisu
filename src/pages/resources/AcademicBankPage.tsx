@@ -900,6 +900,20 @@ const AcademicBankPage = () => {
   };
 
   // ---- Glass folder helpers ------------------------------------------------
+  // Three folders per row at every screen size: measure the grid and scale the folders to fit.
+  const [folderWidth, setFolderWidth] = useState(300);
+  const folderObserver = useRef<ResizeObserver | null>(null);
+  const folderGridRef = useCallback((el: HTMLDivElement | null) => {
+    folderObserver.current?.disconnect();
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      const w = Math.floor((entry.contentRect.width - 2 * 16) / 3);
+      setFolderWidth(Math.max(96, Math.min(300, w)));
+    });
+    ro.observe(el);
+    folderObserver.current = ro;
+  }, []);
+
   const FOLDER_ARTS: ArtPreset[] = ['aurora', 'dusk', 'glacier', 'ember', 'verdant'];
 
   const getFolderContents = (folderId: string) => {
@@ -1469,7 +1483,7 @@ const AcademicBankPage = () => {
                     {folders.length > 0 && (
                       <div>
                         <h3 className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">Folders <span className="normal-case tracking-normal font-normal text-slate-300 ml-2 hidden sm:inline">Click to peek · double-click or ··· to browse</span></h3>
-                        <div className="grid grid-cols-1 min-[560px]:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-4 justify-items-center">
+                        <div ref={folderGridRef} className="grid grid-cols-3 gap-x-4 gap-y-2 justify-items-center">
                           {folders.map((item, idx) => {
                             const { children, files: folderFiles } = getFolderContents(item.id);
                             const total = resources.filter(r => r.parent_id === item.id).length;
@@ -1486,7 +1500,7 @@ const AcademicBankPage = () => {
                                   meta={`${total} ${total === 1 ? 'item' : 'items'}`}
                                   art={FOLDER_ARTS[hashIndex(item.id) % FOLDER_ARTS.length]}
                                   seed={hashIndex(item.id) % 3}
-                                  width={300}
+                                  width={folderWidth}
                                   action="more"
                                   files={folderFiles}
                                   menu={getFolderMenu(item)}
