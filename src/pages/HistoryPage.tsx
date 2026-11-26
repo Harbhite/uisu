@@ -1,56 +1,37 @@
-import React, { useEffect } from 'react';
-import { VisionSection } from './history/VisionSection';
-import { TimelineJourney } from './history/TimelineJourney';
-import { EstablishmentSection } from './history/EstablishmentSection';
-import { LegacyGallery } from './history/LegacyGallery';
-import { EvolutionCarousel } from './history/EvolutionCarousel';
-import { SEO } from '@/components/SEO';
-import Lenis from 'lenis';
+import { useEffect } from "react";
+import { SEO } from "@/components/SEO";
+import { HistoryHero } from "@/components/history-reel/HistoryHero";
+import { HistoryReel } from "@/components/history-reel/HistoryReel";
+import { HistoryFooter } from "@/components/history-reel/HistoryFooter";
+
+const FONT_ID = "history-reel-fonts";
+const FONT_HREF =
+  "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..700;1,400..700&display=swap";
 
 /**
- * History Page Animation Stack:
- * 1. GSAP (ScrollTrigger for pinning and parallax)
- * 2. Framer Motion (Layout transitions, spring physics for carousel)
- * 3. React Three Fiber (3D Canvas management)
- * 4. React Three Drei (3D helpers: Stars, Text, Camera)
- * 5. Maath (Smooth animation damping for 3D camera rig)
- * 6. React Use Gesture (Draggable interactions for the carousel)
- * 7. Zustand (State management for cross-component animation synchronization)
- * 8. Lenis (High-performance smooth scrolling)
- * 9. Three.js (Core WebGL engine)
+ * History page: hero, the six-chapter cinema reel, and an end section.
+ * The reel owns the mouse wheel, so this page deliberately does NOT run Lenis.
  */
-
-const HistoryPage: React.FC = () => {
+const HistoryPage = () => {
   useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-    });
-
-    function raf(time: number) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-
-    requestAnimationFrame(raf);
-
-    return () => {
-      lenis.destroy();
-    };
+    if (document.getElementById(FONT_ID)) return;
+    const link = document.createElement("link");
+    link.id = FONT_ID;
+    link.rel = "stylesheet";
+    link.href = FONT_HREF;
+    document.head.appendChild(link);
   }, []);
 
   return (
-    <div className="w-full relative">
+    <div className="relative w-full bg-[#0a0908]">
       <SEO
         title="History - University of Ibadan Students' Union"
-        description="The evolution of student unionism from global origins to the University of Ibadan."
+        description="From University College Ibadan in 1948 to the Students' Union today: the history of the University of Ibadan in six chapters."
         image="/og/pages-screenshot/history.png"
       />
-      <VisionSection />
-      <TimelineJourney />
-      <EstablishmentSection />
-      <LegacyGallery />
-      <EvolutionCarousel />
+      <HistoryHero />
+      <HistoryReel />
+      <HistoryFooter />
     </div>
   );
 };
