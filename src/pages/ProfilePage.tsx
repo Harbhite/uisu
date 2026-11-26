@@ -107,22 +107,22 @@ const ProfilePage = () => {
       if (!id) return;
 
       try {
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', id)
-          .maybeSingle();
+        const profileQuery = isOwnProfile
+          ? supabase.from('profiles').select('*').eq('id', id).maybeSingle()
+          : supabase.from('public_profiles').select('*').eq('id', id).maybeSingle();
+        const { data: profileData, error: profileError } = await profileQuery;
 
         if (profileError) throw profileError;
         
         if (profileData) {
-          const socials = profileData.socials as Profile['socials'];
-          const typedProfile = profileData as unknown as Profile;
+          const profileRecord = profileData as unknown as Profile & { email_notifications?: Record<string, boolean> };
+          const socials = profileRecord.socials as Profile['socials'];
+          const typedProfile = profileRecord as Profile;
           setProfile({
             ...typedProfile,
             socials
           });
-          const emailNotifications = (profileData as any).email_notifications || { submission_approved: true, submission_rejected: true };
+          const emailNotifications = profileRecord.email_notifications || { submission_approved: true, submission_rejected: true };
           setEditForm({
             full_name: typedProfile.full_name || '',
             bio: typedProfile.bio || '',
@@ -158,7 +158,7 @@ const ProfilePage = () => {
     };
 
     fetchProfile();
-  }, [id]);
+  }, [id, user?.id]);
 
   const handleSave = async () => {
     if (!user || !isOwnProfile) return;

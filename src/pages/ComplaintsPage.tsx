@@ -107,7 +107,7 @@ const ComplaintsPage = () => {
     const { data, error } = await supabase.from('complaint_comments').select('*').eq('complaint_id', complaintId).order('created_at', { ascending: true });
     if (!error && data) {
       const userIds = [...new Set(data.map(c => c.user_id))];
-      const { data: profiles } = await supabase.from('profiles').select('id, full_name, avatar_url').in('id', userIds);
+      const { data: profiles } = await supabase.from('public_profiles').select('id, full_name, avatar_url').in('id', userIds);
       const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
       setComments(data.map(c => ({ ...c, profile: profileMap.get(c.user_id) || { full_name: null, avatar_url: null } })));
     }

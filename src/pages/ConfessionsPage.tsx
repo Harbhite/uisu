@@ -161,20 +161,18 @@ const ConfessionsPage = () => {
       .not('parent_id', 'is', null)
       .order('created_at');
 
-    const { data: reactionsData } = await supabase
-      .from('confession_reactions')
-      .select('*');
-
     if (data) {
       const allIds = [...(data || []).map(c => c.id), ...(repliesData || []).map(r => r.id)];
+      const { data: reactionData } = allIds.length > 0
+        ? await supabase.rpc('get_public_confession_reaction_counts', { p_confession_ids: allIds })
+        : { data: [] };
       const rxMap: Record<string, ReactionCount[]> = {};
       allIds.forEach(id => {
-        const forThis = (reactionsData || []).filter((r: any) => r.confession_id === id);
         const types = ['like', 'fire', 'funny'];
         rxMap[id] = types.map(t => ({
           reaction_type: t,
-          count: forThis.filter((r: any) => r.reaction_type === t).length,
-          user_reacted: forThis.some((r: any) => r.reaction_type === t && r.user_id === user?.id),
+          count: Number(reactionData?.find(r => r.confession_id === id && r.reaction_type === t)?.reaction_count || 0),
+          user_reacted: reactionData?.some(r => r.confession_id === id && r.reaction_type === t && r.reacted_by_user) || false,
         }));
       });
       setReactions(rxMap);

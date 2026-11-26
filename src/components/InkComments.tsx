@@ -44,7 +44,7 @@ export const InkComments: React.FC<InkCommentsProps> = ({ pieceId }) => {
       const commentsWithProfiles = await Promise.all(
         data.map(async (comment) => {
           const { data: profile } = await supabase
-            .from('profiles')
+            .from('public_profiles')
             .select('full_name, avatar_url')
             .eq('id', comment.user_id)
             .single();

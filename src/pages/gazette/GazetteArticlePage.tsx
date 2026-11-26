@@ -48,17 +48,22 @@ const GazetteArticlePage = () => {
         setArticle(data);
         supabase.from('gazette_articles').update({ view_count: (data.view_count || 0) + 1 }).eq('id', data.id).then();
 
-        const { data: rxns } = await supabase.from('gazette_reactions').select('reaction_type').eq('article_id', data.id);
+        const { data: rxns } = await supabase.rpc('get_public_gazette_reaction_counts', { p_article_id: data.id });
         const counts: Record<string, number> = {};
-        rxns?.forEach(r => { counts[r.reaction_type] = (counts[r.reaction_type] || 0) + 1; });
+        rxns?.forEach(r => { counts[r.reaction_type] = Number(r.reaction_count); });
         setReactions(counts);
 
         const { data: cmts } = await supabase
           .from('gazette_comments')
-          .select('*, profiles:user_id(full_name, avatar_url)')
+          .select('*')
           .eq('article_id', data.id)
           .order('created_at', { ascending: true });
-        setComments(cmts || []);
+        const commentUserIds = [...new Set((cmts || []).map(comment => comment.user_id).filter(Boolean))];
+        const { data: profiles } = commentUserIds.length > 0
+          ? await supabase.from('public_profiles').select('id, full_name, avatar_url').in('id', commentUserIds)
+          : { data: [] };
+        const profileById = new Map((profiles || []).map(profile => [profile.id, profile]));
+        setComments((cmts || []).map(comment => ({ ...comment, profiles: profileById.get(comment.user_id) || null })));
 
         if (user) {
           const [bookmarkRes, userRxnRes] = await Promise.all([
@@ -107,10 +112,15 @@ const GazetteArticlePage = () => {
     const { data, error } = await supabase
       .from('gazette_comments')
       .insert({ article_id: article.id, user_id: user.id, content: newComment.trim() })
-      .select('*, profiles:user_id(full_name, avatar_url)')
+      .select('*')
       .single();
     if (error) { toast.error('Failed to post comment'); }
-    else { setComments(prev => [...prev, data]); setNewComment(''); toast.success('Comment posted'); }
+    else {
+      const { data: profile } = await supabase.from('public_profiles').select('id, full_name, avatar_url').eq('id', user.id).maybeSingle();
+      setComments(prev => [...prev, { ...data, profiles: profile }]);
+      setNewComment('');
+      toast.success('Comment posted');
+    }
     setSubmittingComment(false);
   };
 

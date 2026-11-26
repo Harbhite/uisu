@@ -29,18 +29,14 @@ export const ReactionBar: React.FC<ReactionBarProps> = ({ pieceId, className = '
       const { data: { user } } = await supabase.auth.getUser();
       if (user) setUserId(user.id);
 
-      // Fetch all reaction counts
-      const { data: allReactions } = await supabase
-        .from('ink_reactions' as any)
-        .select('reaction, user_id')
-        .eq('piece_id', pieceId);
+      const { data: allReactions } = await supabase.rpc('get_public_ink_reaction_counts', { p_piece_id: pieceId });
 
       if (allReactions) {
         const newCounts: Record<string, number> = { like: 0, insightful: 0, fire: 0, clap: 0, love: 0 };
         const userSet = new Set<ReactionKey>();
-        (allReactions as any[]).forEach((r) => {
-          newCounts[r.reaction] = (newCounts[r.reaction] || 0) + 1;
-          if (user && r.user_id === user.id) userSet.add(r.reaction as ReactionKey);
+        allReactions.forEach((r) => {
+          newCounts[r.reaction] = Number(r.reaction_count);
+          if (r.reacted_by_user) userSet.add(r.reaction as ReactionKey);
         });
         setCounts(newCounts as Record<ReactionKey, number>);
         setUserReactions(userSet);

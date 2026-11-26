@@ -113,10 +113,7 @@ const InksVaultPage = () => {
         const counts: Record<string, number> = {};
         
         for (const pieceId of pieceIds) {
-          const { count } = await supabase
-            .from('ink_likes')
-            .select('*', { count: 'exact', head: true })
-            .eq('piece_id', pieceId);
+          const { data: count } = await supabase.rpc('get_public_ink_like_count', { p_piece_id: pieceId });
           counts[pieceId] = count || 0;
         }
         setLikeCounts(counts);

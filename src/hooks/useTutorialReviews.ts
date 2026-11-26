@@ -4,7 +4,6 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export interface TutorialReview {
   id: string;
-  user_id: string;
   tutorial_id: string;
   rating: number;
   comment: string | null;
@@ -16,7 +15,7 @@ export const useTutorialReviews = (tutorialId: string) => {
     queryKey: ['tutorial-reviews', tutorialId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('tutorial_reviews')
+        .from('public_tutorial_reviews')
         .select('*')
         .eq('tutorial_id', tutorialId)
         .order('created_at', { ascending: false });

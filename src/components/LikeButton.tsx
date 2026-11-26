@@ -44,12 +44,9 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
       }
 
       // Get total like count
-      const { count } = await supabase
-        .from('ink_likes')
-        .select('*', { count: 'exact', head: true })
-        .eq('piece_id', pieceId);
-      
-      if (count !== null) {
+      const { data: count, error: countError } = await supabase.rpc('get_public_ink_like_count', { p_piece_id: pieceId });
+
+      if (!countError && count !== null) {
         setLikeCount(count);
       }
     };

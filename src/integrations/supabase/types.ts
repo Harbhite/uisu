@@ -3488,6 +3488,13 @@ export type Database = {
             foreignKeyName: "tutorials_tutor_id_fkey"
             columns: ["tutor_id"]
             isOneToOne: false
+            referencedRelation: "public_tutors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tutorials_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
             referencedRelation: "tutors"
             referencedColumns: ["id"]
           },
@@ -3594,11 +3601,134 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          clubs: string[] | null
+          created_at: string | null
+          department: string | null
+          faculty: string | null
+          full_name: string | null
+          hall_of_residence: string | null
+          id: string | null
+          level: string | null
+          socials: Json | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          clubs?: string[] | null
+          created_at?: string | null
+          department?: string | null
+          faculty?: string | null
+          full_name?: string | null
+          hall_of_residence?: string | null
+          id?: string | null
+          level?: string | null
+          socials?: Json | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          clubs?: string[] | null
+          created_at?: string | null
+          department?: string | null
+          faculty?: string | null
+          full_name?: string | null
+          hall_of_residence?: string | null
+          id?: string | null
+          level?: string | null
+          socials?: Json | null
+        }
+        Relationships: []
+      }
+      public_tutorial_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          id: string | null
+          rating: number | null
+          tutorial_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutorial_reviews_tutorial_id_fkey"
+            columns: ["tutorial_id"]
+            isOneToOne: false
+            referencedRelation: "tutorials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      public_tutors: {
+        Row: {
+          avatar: string | null
+          bio: string | null
+          courses_count: number | null
+          id: string | null
+          is_verified: boolean | null
+          name: string | null
+          rating: number | null
+          students_count: number | null
+          tier: Database["public"]["Enums"]["tutor_tier"] | null
+        }
+        Insert: {
+          avatar?: string | null
+          bio?: string | null
+          courses_count?: number | null
+          id?: string | null
+          is_verified?: boolean | null
+          name?: string | null
+          rating?: number | null
+          students_count?: number | null
+          tier?: Database["public"]["Enums"]["tutor_tier"] | null
+        }
+        Update: {
+          avatar?: string | null
+          bio?: string | null
+          courses_count?: number | null
+          id?: string | null
+          is_verified?: boolean | null
+          name?: string | null
+          rating?: number | null
+          students_count?: number | null
+          tier?: Database["public"]["Enums"]["tutor_tier"] | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       bump_shared_session_view: { Args: { _token: string }; Returns: undefined }
       get_event_going_count: { Args: { p_event_id: string }; Returns: number }
+      get_public_confession_reaction_counts: {
+        Args: { p_confession_ids: string[] }
+        Returns: {
+          confession_id: string
+          reacted_by_user: boolean
+          reaction_count: number
+          reaction_type: string
+        }[]
+      }
+      get_public_gazette_reaction_counts: {
+        Args: { p_article_id: string }
+        Returns: {
+          reaction_count: number
+          reaction_type: string
+        }[]
+      }
+      get_public_ink_like_count: {
+        Args: { p_piece_id: string }
+        Returns: number
+      }
+      get_public_ink_reaction_counts: {
+        Args: { p_piece_id: string }
+        Returns: {
+          reacted_by_user: boolean
+          reaction: string
+          reaction_count: number
+        }[]
+      }
       get_public_lost_found_items: {
         Args: never
         Returns: {

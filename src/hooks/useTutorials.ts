@@ -45,7 +45,7 @@ export const useTutors = () => {
     queryKey: ['tutors'],
     queryFn: async (): Promise<DBTutor[]> => {
       const { data, error } = await supabase
-        .from('tutors')
+        .from('public_tutors')
         .select('*')
         .order('tier', { ascending: true });
       if (error) throw error;
@@ -60,7 +60,7 @@ export const useTutor = (id: string) => {
     queryKey: ['tutor', id],
     queryFn: async (): Promise<DBTutor | null> => {
       const { data, error } = await supabase
-        .from('tutors')
+        .from('public_tutors')
         .select('*')
         .eq('id', id)
         .maybeSingle();
