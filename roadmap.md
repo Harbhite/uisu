@@ -7,6 +7,6 @@
 - [ ] Accept and publish after review in a separate turn; published staff access and crawler delivery remain unverified.
 
 ## Selected security findings (Nov 26, 2026)
-- [ ] Verify the requested table policies, safe read paths, and owner-bound uploads.
-- [ ] Re-scan and update only the requested findings.
+- [x] Verify the requested table policies, safe read paths, and owner-bound uploads.
+- [x] Re-scan and update only the requested findings.
 - [ ] Confirm whether public form attachments should require sign-in; leave that upload rule unchanged until answered.
