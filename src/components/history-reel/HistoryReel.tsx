@@ -604,29 +604,13 @@ export function HistoryReel({ className = "" }: HistoryReelProps) {
         />
       )}
 
-      {/* The reel loops forever and captures the wheel, so give people a way out */}
-      <button
-        type="button"
-        data-no-drag
-        onClick={() => scrollToId("history-hero")}
-        className={`absolute left-[var(--cinema-pad-x)] top-[3dvh] z-40 cursor-pointer text-[10px] font-medium uppercase tracking-[0.32em] text-white/55 transition-all duration-300 hover:text-white ${open ? "pointer-events-none opacity-0" : "opacity-100"}`}
-      >
-        ↑ Prologue
-      </button>
-      <button
-        type="button"
-        data-no-drag
-        onClick={() => scrollToId("history-footer")}
-        className={`absolute bottom-[3dvh] left-[var(--cinema-pad-x)] z-40 cursor-pointer text-[10px] font-medium uppercase tracking-[0.32em] text-white/55 transition-all duration-300 hover:text-white ${open ? "pointer-events-none opacity-0" : "opacity-100"}`}
-      >
-        Epilogue ↓
-      </button>
-
       <ReelIndicator
         activeIdx={activeIdx}
         total={N}
         hidden={open}
         onPipClick={(i) => navigateToModRef.current(i)}
+        onExitUp={() => scrollToId("history-hero")}
+        onExitDown={() => scrollToId("history-footer")}
       />
 
       <DetailsPanel open={open} chapter={panelChapter} imgDims={imgDims} onClose={closePanel} />
@@ -735,7 +719,7 @@ function SlideFrame({ chapter, chapterIndex, isFirst, imgDims, autoScrolling, is
             alt=""
             loading="eager"
             decoding="async"
-            fetchPriority={isFirst ? "high" : "auto"}
+            {...({ fetchpriority: isFirst ? "high" : "auto" } as object)}
             draggable={false}
             onError={(e) => {
               e.currentTarget.style.display = "none";
@@ -880,15 +864,31 @@ interface ReelIndicatorProps {
   total: number;
   hidden: boolean;
   onPipClick: (i: number) => void;
+  /** The reel loops forever and owns the wheel, so these arrows are the way out. */
+  onExitUp: () => void;
+  onExitDown: () => void;
 }
 
-function ReelIndicator({ activeIdx, total, hidden, onPipClick }: ReelIndicatorProps) {
+function ReelIndicator({ activeIdx, total, hidden, onPipClick, onExitUp, onExitDown }: ReelIndicatorProps) {
   return (
     <div
       aria-hidden={hidden}
       className={`pointer-events-none absolute right-[3.5dvh] top-1/2 z-40 flex flex-col items-end gap-3 transition-opacity duration-[400ms] ease-out ${hidden ? "opacity-0" : "opacity-100"}`}
       style={{ transform: "translateY(-50%)" }}
     >
+      <button
+        type="button"
+        data-no-drag
+        aria-label="Back to the start of the page"
+        title="Back to the start of the page"
+        onClick={(e) => {
+          e.stopPropagation();
+          onExitUp();
+        }}
+        className={`cursor-pointer text-[13px] leading-none text-white/55 transition-colors hover:text-white ${hidden ? "pointer-events-none" : "pointer-events-auto"}`}
+      >
+        ↑
+      </button>
       <div className="text-[12px] text-white/55" style={serifItalic}>
         {String(activeIdx + 1).padStart(2, "0")}
       </div>
@@ -922,6 +922,20 @@ function ReelIndicator({ activeIdx, total, hidden, onPipClick }: ReelIndicatorPr
       <div className="text-[12px] text-white/35" style={serifItalic}>
         {String(total).padStart(2, "0")}
       </div>
+      <button
+        type="button"
+        data-no-drag
+        aria-label="On to the end of the page"
+        title="On to the end of the page"
+        onClick={(e) => {
+          e.stopPropagation();
+          onExitDown();
+        }}
+        className={`cursor-pointer text-[13px] leading-none text-white/55 transition-colors hover:text-white ${hidden ? "pointer-events-none" : "pointer-events-auto"}`}
+      >
+        ↓
+      </button>
+      
     </div>
   );
 }

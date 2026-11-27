@@ -27,7 +27,7 @@ const SOURCES: FooterLink[] = [
   { label: "University of Ibadan — A Brief History", href: "https://ui.edu.ng/sites/default/files/History%20of%20UI.docx" },
   { label: "University of Ibadan — Foundation history", href: "https://ui.edu.ng/node/42" },
   { label: "Fry, Drew & Partners at Ibadan", href: "https://livinspaces.net/?p=18985" },
-  { label: "Photographs: ASC Leiden via Wikimedia Commons", href: "https://commons.wikimedia.org/wiki/Category:University_of_Ibadan" },
+  { label: "Photographs: ASC Leiden via Wikimedia Commons (CC BY-SA 4.0)", href: "https://commons.wikimedia.org/wiki/Category:University_of_Ibadan" },
 ];
 
 export function HistoryFooter({ links = DEFAULT_LINKS, brand = "UISU" }: HistoryFooterProps) {
@@ -37,7 +37,7 @@ export function HistoryFooter({ links = DEFAULT_LINKS, brand = "UISU" }: History
     <footer
       id="history-footer"
       ref={ref}
-      className="relative flex min-h-[85dvh] w-full flex-col justify-between overflow-hidden px-[7.5dvh] py-[6dvh] text-white max-sm:px-[3dvh]"
+      className="relative flex min-h-[85dvh] w-full flex-col justify-between overflow-hidden px-[7.5dvh] pb-[6dvh] pt-[max(7rem,14dvh)] text-white max-sm:px-[3dvh]"
       style={{ background: BG }}
     >
       <div
