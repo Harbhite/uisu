@@ -6,9 +6,10 @@
  * Cambridge archive catalogues and the Fry & Drew architecture write-ups.
  *
  * IMAGES
- *  - `commons(...)` chapters hotlink Wikimedia Commons (verified file names).
- *  - `local(...)` chapters expect a file in /public/history-reel/. Drop the photo in
- *    and it appears; until then the slide shows a typographic fallback.
+ *  - `commons(...)` chapters hotlink Wikimedia Commons (file names, licences and URLs verified).
+ *  - `local(...)` chapters expect a file in /public/history-reel/. Chapter 1 (1948) has no
+ *    freely licensed photo on Commons: drop one in and it appears; until then the slide
+ *    shows a typographic fallback.
  */
 
 export interface Fact {
@@ -79,8 +80,11 @@ export const CHAPTERS: Chapter[] = [
     titleLines: ["THE SOD", "IS CUT"],
     year: "1948",
     figure: { label: "OBSERVED", value: "EVERY 17 NOVEMBER" },
-    image: local("/history-reel/02-foundation-day.jpg"),
-    credit: "",
+    image: commons(
+      "ASC_Leiden_-_NSAG_-_van_Es_13_-_029_-_Ibadan_University._A_view_of_the_modern_building_from_the_inside_out_with_benches_in_the_open_air_-_Ibadan,_Oyo_State,_Nigeria_-_February_1962.tif",
+      3200,
+    ),
+    credit: "Modern building, Ibadan University, Feb. 1962 · ASC Leiden (van Es) · Wikimedia Commons · CC BY-SA 4.0",
     marks: [
       { label: "17 NOVEMBER 1948", quote: "GROUND IS BROKEN" },
       { label: "ARCHITECTS", quote: "FRY, DREW & PARTNERS" },
@@ -108,7 +112,7 @@ export const CHAPTERS: Chapter[] = [
       "ASC_Leiden_-_NSAG_-_van_Es_13_-_031_-_Ibadan_University._Steps_in_the_innercourt_leading_to_a_three-storey_modern_apartment_flat_building_-_Ibadan,_Oyo_State,_Nigeria_-_February_1962.tif",
       3200,
     ),
-    credit: "Inner court, Ibadan University, Feb. 1962 · ASC Leiden (van Es) · Wikimedia Commons",
+    credit: "Inner court, Ibadan University, Feb. 1962 · ASC Leiden (van Es) · Wikimedia Commons · CC BY-SA 4.0",
     marks: [
       { label: "FIRST HALL", quote: "MELLANBY OPENS" },
       { label: "RAF MARSHAL", quote: "LORD TEDDER OPENS BOTH" },
@@ -133,7 +137,7 @@ export const CHAPTERS: Chapter[] = [
     year: "1954",
     figure: { label: "ARCHITECTS", value: "FRY, DREW & PARTNERS" },
     image: commons("Nigeria.JPG", 1603),
-    credit: "Kenneth Dike Library · Koopman · Wikimedia Commons",
+    credit: "Kenneth Dike Library · S. Koopman / ASC Leiden · Wikimedia Commons · Public domain",
     marks: [
       { label: "THE HALL", quote: "TRENCHARD OPENS" },
       { label: "THE LIBRARY", quote: "THE MAIN LIBRARY IS COMMISSIONED" },
@@ -161,7 +165,7 @@ export const CHAPTERS: Chapter[] = [
       "ASC_Leiden_-_NSAG_-_van_Dis_4_-_200_-_Prime_minister_of_Northern_Nigeria_Ahmadu_Bello_opens_Sultan_Bello_Hall_-_Ibadan,_Oyo_State,_South_West_Nigeria_-_1-13_February_1962.tif",
       3200,
     ),
-    credit: "Opening of Sultan Bello Hall, Feb. 1962 · ASC Leiden (van Dis) · Wikimedia Commons",
+    credit: "Opening of Sultan Bello Hall, Feb. 1962 · ASC Leiden (van Dis) · Wikimedia Commons · CC BY-SA 4.0",
     marks: [
       { label: "STATUS", quote: "OLDEST DEGREE-AWARDING UNIVERSITY" },
       { label: "LEADERSHIP", quote: "A NIGERIAN V-C" },
@@ -185,8 +189,11 @@ export const CHAPTERS: Chapter[] = [
     titleLines: ["THE UNION", "SPEAKS"],
     year: "1952–",
     figure: { label: "UNION ORGAN", value: "THE UNIVERSITY VOICE" },
-    image: local("/history-reel/06-students-union.jpg"),
-    credit: "",
+    image: commons(
+      "ASC_Leiden_-_NSAG_-_van_Es_13_-_028_-_Ibadan_University._Four_students_with_a_book,_bicycles_and_paper_work_in_a_passage_-_Ibadan,_Oyo_State,_Nigeria_-_February_1962.tif",
+      3200,
+    ),
+    credit: "Students, Ibadan University, Feb. 1962 · ASC Leiden (van Es) · Wikimedia Commons · CC BY-SA 4.0",
     marks: [
       { label: "1952", quote: "THE UNIVERSITY VOICE IS PRINTED" },
       { label: "1962", quote: "A NATION-WIDE PROTEST" },

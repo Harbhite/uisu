@@ -18,7 +18,7 @@ export function HistoryHero() {
     <section
       id="history-hero"
       ref={ref}
-      className="relative flex min-h-[100dvh] w-full flex-col justify-between overflow-hidden px-[7.5dvh] py-[6dvh] text-white max-sm:px-[3dvh]"
+      className="relative flex min-h-[100dvh] w-full flex-col justify-between overflow-hidden px-[7.5dvh] pb-[6dvh] pt-[max(7rem,14dvh)] text-white max-sm:px-[3dvh]"
       style={{ background: BG }}
     >
       {/* Warm projector glow + film perforations */}
