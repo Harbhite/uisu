@@ -12,6 +12,6 @@
 - [ ] Confirm whether public form attachments should require sign-in; leave that upload rule unchanged until answered.
 
 ## History light mode and SEO panel
-- [ ] Add a saved light/dark mode switch to the University History page.
+- [ ] Add a saved light/dark mode switch to the Recently Visited history panel.
 - [ ] Expand the admin SEO panel with route previews, search and social previews, metadata checks, and copyable tags.
 - [ ] Verify theme persistence, SEO route previews, copy action, and mobile layout.
