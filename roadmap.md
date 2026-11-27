@@ -10,3 +10,8 @@
 - [x] Verify the requested table policies, safe read paths, and owner-bound uploads.
 - [x] Re-scan and update only the requested findings.
 - [ ] Confirm whether public form attachments should require sign-in; leave that upload rule unchanged until answered.
+
+## History light mode and SEO panel
+- [ ] Add a saved light/dark mode switch to the University History page.
+- [ ] Expand the admin SEO panel with route previews, search and social previews, metadata checks, and copyable tags.
+- [ ] Verify theme persistence, SEO route previews, copy action, and mobile layout.
